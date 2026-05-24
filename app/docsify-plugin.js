@@ -3901,7 +3901,13 @@ window.$docsify = {
           `<div class="paper-figure-viewport">${slides}</div>`,
           items.length > 1 ? '<button class="paper-figure-nav paper-figure-nav-next" type="button" data-figure-next aria-label="下一张">›</button>' : '',
           '</div>',
-          items.length > 1 ? `<div class="paper-figure-thumbs">${thumbs}</div>` : '',
+          items.length > 1 ? [
+            '<div class="paper-figure-thumbs-wrap">',
+            '<button class="paper-figure-thumb-nav paper-figure-thumb-nav-prev" type="button" data-figure-thumb-prev aria-label="上一张缩略图">‹</button>',
+            `<div class="paper-figure-thumbs">${thumbs}</div>`,
+            '<button class="paper-figure-thumb-nav paper-figure-thumb-nav-next" type="button" data-figure-thumb-next aria-label="下一张缩略图">›</button>',
+            '</div>',
+          ].join('') : '',
           '</div>',
           '</div>',
           '',
@@ -4110,12 +4116,29 @@ window.$docsify = {
 
           const slides = Array.from(root.querySelectorAll('[data-figure-slide]'));
           const thumbs = Array.from(root.querySelectorAll('[data-figure-thumb]'));
+          const thumbsTrack = root.querySelector('.paper-figure-thumbs');
           const prevBtn = root.querySelector('[data-figure-prev]');
           const nextBtn = root.querySelector('[data-figure-next]');
+          const thumbPrevBtn = root.querySelector('[data-figure-thumb-prev]');
+          const thumbNextBtn = root.querySelector('[data-figure-thumb-next]');
           const counter = root.querySelector('[data-figure-current]');
           if (!slides.length) return;
 
           let current = 0;
+          const centerActiveThumb = () => {
+            if (!thumbsTrack || !thumbs[current]) return;
+            const activeThumb = thumbs[current];
+            const targetLeft =
+              activeThumb.offsetLeft -
+              (thumbsTrack.clientWidth - activeThumb.offsetWidth) / 2;
+            const maxLeft = Math.max(0, thumbsTrack.scrollWidth - thumbsTrack.clientWidth);
+            const left = Math.min(Math.max(0, targetLeft), maxLeft);
+            try {
+              thumbsTrack.scrollTo({ left, behavior: 'smooth' });
+            } catch (_err) {
+              thumbsTrack.scrollLeft = left;
+            }
+          };
           const render = () => {
             slides.forEach((slide, index) => {
               slide.classList.toggle('is-active', index === current);
@@ -4128,6 +4151,9 @@ window.$docsify = {
             }
             if (prevBtn) prevBtn.disabled = slides.length <= 1;
             if (nextBtn) nextBtn.disabled = slides.length <= 1;
+            if (thumbPrevBtn) thumbPrevBtn.disabled = slides.length <= 1;
+            if (thumbNextBtn) thumbNextBtn.disabled = slides.length <= 1;
+            centerActiveThumb();
           };
 
           if (prevBtn) {
@@ -4138,6 +4164,18 @@ window.$docsify = {
           }
           if (nextBtn) {
             nextBtn.addEventListener('click', () => {
+              current = (current + 1) % slides.length;
+              render();
+            });
+          }
+          if (thumbPrevBtn) {
+            thumbPrevBtn.addEventListener('click', () => {
+              current = (current - 1 + slides.length) % slides.length;
+              render();
+            });
+          }
+          if (thumbNextBtn) {
+            thumbNextBtn.addEventListener('click', () => {
               current = (current + 1) % slides.length;
               render();
             });
