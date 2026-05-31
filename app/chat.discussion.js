@@ -225,8 +225,10 @@ window.PrivateDiscussionChat = (function () {
         </div>
         <div class="input-area">
           <textarea id="user-input" rows="3" placeholder="针对这篇论文提问，仅自己可见..."></textarea>
-          <button id="chat-questions-toggle-btn" class="chat-questions-toggle-btn" type="button" title="最近提问">🕘</button>
-          <button id="send-btn">发送</button>
+          <div class="chat-input-actions">
+            <button id="chat-questions-toggle-btn" class="chat-questions-toggle-btn" type="button" title="最近提问">🕘</button>
+            <button id="send-btn">发送</button>
+          </div>
         </div>
         <div id="chat-questions-panel" class="chat-questions-panel" style="display:none"></div>
         <div class="chat-footer">
