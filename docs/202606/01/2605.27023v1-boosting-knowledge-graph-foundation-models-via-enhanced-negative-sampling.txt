@@ -1,0 +1,945 @@
+Title: Boosting Knowledge Graph Foundation Models via Enhanced Negative Sampling
+
+URL Source: https://arxiv.org/pdf/2605.27023v1
+
+Published Time: Wed, 27 May 2026 01:12:56 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# Boosting Knowledge Graph Foundation Models via Enhanced Negative Sampling 
+
+# Yinan Liu 
+
+Northeastern University Shenyang, China liuyinan@cse.neu.edu.cn 
+
+# Wenjin Xu 
+
+Northeastern University Shenyang, China xuwenjin@mails.neu.edu.cn 
+
+# Zhiyuan Zha 
+
+Northeastern University Shenyang, China chazy@mails.neu.edu.cn 
+
+# Xiaochun Yang ∗
+
+Northeastern University Shenyang, China yangxc@mail.neu.edu.cn 
+
+# Bin Wang 
+
+Northeastern University Shenyang, China binwang@mail.neu.edu.cn 
+
+## Abstract 
+
+Knowledge graphs (KGs) have become the core backbone of nu-merous downstream tasks such as question answering and rec-ommender systems. However, despite all this, KGs are often very incomplete. To perform zero-shot knowledge graph completion in unseen KGs, which have different relational vocabularies from those used for pre-training, KG foundation models (KGFMs) receive a wide range of attention. Existing KGFMs often perform training using random negative triples, which are constructed by replacing the head or tail entity of a positive triple with a random entity. However, these negative triples are often constructed with limited quality, providing weak supervision for KGFM training. In this pa-per, we propose a simple yet effective adaptive negative sampling approach, KMAS, to enhance existing KGFMs. KMAS constructs hard negative triples through the updated relation embeddings generated from the existing KGFM’s relation encoder. To further adaptively align with the evolving capability of the KGFM dur-ing the training process, KMAS adjusts the ratio of hard negative triples dynamically throughout the whole training process: after a warmup phrase, it increases the ratio linearly and then decreases linearly. Extensive experiments are conducted over 44 data sets. Experimental results demonstrate that our proposed negative sam-pling method can enhance many SOTA KGFMs without requiring excessive additional time or memory consumption. 
+
+## Keywords 
+
+Knowledge Graph Foundation Model, Negative Sampling 
+
+## 1 Introduction 
+
+Knowledge graphs (KGs), which consist of massive amounts of knowledge in the form of triples (head entity, relation, tail entity), have become the core backbone of numerous downstream tasks such as question answering [ 28 ] and recommender systems [ 23 ]. However, despite all this, KGs are often very incomplete [ 12 ], mak-ing the task of link prediction [ 13 , 14 ] increasingly important. Tradi-tional transductive link prediction methods (e.g., TransE [ 3 ] and Ro-tatE [ 17 ]) learn entity/relation embeddings constrained by specific entity and relation vocabularies, lacking the ability to generalize to unseen entities/relations on KGs. To address the limitation, partially inductive link prediction approaches [ 11 ] relax the constraint on 
+
+> ∗Corresponding author
+
+entities and generalize to unseen entities while keeping the relation vocabulary fixed. Fully inductive link prediction approaches [ 9 ] fur-ther relax the constraint on relations and generalize to both unseen entities and unseen relations, which motivates the development of knowledge graph foundation models (KGFMs). KGFMs learn invari-ance of the relation structure [ 5] by pre-training on multiple KGs of different entity/relation vocabularies, thereby enabling zero-shot reasoning on unseen KGs. Existing KGFMs (e.g., ULTRA [ 5 ], TRIX [ 27 ], MOTIF [ 7 ], and SEMMA [ 1 ]) usually adopt a common procedure: (1) construct a relation graph based on the KG; (2) apply a relation encoder on this relation graph to obtain relation embeddings; (3) use the obtained relation embeddings and employ an entity encoder on the KG to obtain final link prediction results. It is worth noting that the train-ing process of these KGFMs’ relation and entity encoders is based on random negative triples, which are constructed by replacing the head or tail entity of a positive triple with a random entity. Although straightforward and efficient, these negative triples are often constructed with limited quality (i.e., “easy negative triples”), providing weak supervision. Since these easy negative triples do not be dynamically adjusted throughout the whole training process, they fail to align with the KGFM’s evolving capabilities. For instance, given a positive triple ( Obama , born_in , Hawaii ), a randomly con-structed negative triple like ( Obama , born_in , Basketball ) is trivial for a well-trained KGFM. Conversely, constructing “hard negative triples” such as ( Obama , born_in , Chicago )—which is factually in-correct yet semantically plausible—can provide more challenging training samples to enhance the learned embeddings, improving the generalization ability of the KGFM. In this paper, to enhance existing KGF Ms, we propose a simple yet effective adaptive neg Ative Sampling method KMAS. To con-struct hard negative triples for improving the training process of the KGFM, KMAS leverages the relation embeddings generated by the relation encoder of an existing KGFM to construct the tail (head) entity distribution, which enables hybrid negative sampling. In or-der to adaptively align with the evolving capability of the KGFM during the training process, KMAS iteratively updates relation em-beddings using the encoder from the last training iteration. This update refines the tail (head) entity distribution and thereby gener-ates progressively more effective negative samples. Notably, KMAS dynamically adjusts the ratio of hard negative triples throughout 
+
+> arXiv:2605.27023v1 [cs.AI] 26 May 2026 Yinan Liu, Wenjin Xu, Zhiyuan Zha, Xiaochun Yang, and Bin Wang
+
+the training process: after a warmup phase that employs pure ran-dom negative sampling (as in existing KGFMs), it linearly increases the ratio of hard negative triples to a peak, then linearly decreases it in subsequent iterations. The main contributions of this paper are summarized as follows: 
+
+• To the best of our knowledge, we are the first to enhance the negative sampling method in KGFMs, boosting the existing KGFMs’ performance. 
+
+• We propose a simple yet effective negative sampling method by adaptively constructing hard negative samples with a dynamic hard negative ratio adjustment strategy, which is flexible to adapt to many KGFMs. 
+
+• We conduct extensive experiments on 44 data sets. Exper-imental results demonstrate that our proposed negative sampling method can improve the performance of many SOTA KGFMs without requiring excessive additional time or memory consumption. 
+
+## 2 Preliminaries 
+
+A knowledge graph (KG) is denoted by G = (V , R, T ) , where V
+
+denotes a set of entities, R denotes a set of relations, and T ⊆V × R × V denotes a set of triples. A triple (ℎ, 𝑟, 𝑡 ) ∈ T connects the head entity ℎ ∈ V with the tail entity 𝑡 ∈ V through the relation 𝑟 ∈ R . Given a KG G = (V , R, T ) , the corresponding relation graph GR = (V R, ER ) is a directed graph where nodes 
+
+VR represent the relations R. The edges ER capture interactions between relations based on their connectivity in T .Given a knowledge graph G = (V , R, T ) , the task of link predic-tion aims to infer missing facts based on observed ones. Formally, given a query (ℎ, 𝑟, ?) (resp. (?, 𝑟, 𝑡 )), the goal is to predict the miss-ing tail entity 𝑡 ∈ V (resp. head entity ℎ ∈ V ). During inference, for a query (ℎ, 𝑟, ?), we calculate scores for all candidate entities 
+
+𝑡 ′ ∈ V and rank them in descending order. The objective is to rank the ground-truth entity higher than other candidates. We denote G𝑡𝑟𝑎𝑖𝑛 = (V 𝑡𝑟𝑎𝑖𝑛 , R𝑡𝑟𝑎𝑖𝑛 , T𝑡𝑟𝑎𝑖𝑛 ) as the training graph and 
+
+G𝑡𝑒𝑠𝑡 = (V 𝑡𝑒𝑠𝑡 , R𝑡𝑒𝑠𝑡 , T𝑡𝑒𝑠𝑡 ) as the inference graph. We consider three generalization settings based on the overlap between G𝑡𝑟𝑎𝑖𝑛 
+
+and G𝑡𝑒𝑠𝑡 :
+
+• Transductive setting: The entity and relation sets are shared by the training and inference processes, i.e., V𝑡𝑟𝑎𝑖𝑛 = V𝑡𝑒𝑠𝑡 ,
+
+R𝑡𝑟𝑎𝑖𝑛 = R𝑡𝑒𝑠𝑡 , and T𝑡𝑟𝑎𝑖𝑛 = T𝑡𝑒𝑠𝑡 .
+
+• Partially inductive setting (unseen entities): Entities at in-ference time are unseen during training, while the relation set is shared by the training and inference processes, i.e., 
+
+V𝑡𝑟𝑎𝑖𝑛 ∩ V 𝑡𝑒𝑠𝑡 = ∅, R𝑡𝑟𝑎𝑖𝑛 = R𝑡𝑒𝑠𝑡 , and T𝑡𝑟𝑎𝑖𝑛 ≠ T𝑡𝑒𝑠𝑡 .
+
+• Fully inductive setting (unseen entities & relations): The most challenging foundation model setting, where both entities and relations at inference time are unseen during training, i.e., V𝑡𝑟𝑎𝑖𝑛 ∩ V 𝑡𝑒𝑠𝑡 = ∅, R𝑡𝑟𝑎𝑖𝑛 ∩ R 𝑡𝑒𝑠𝑡 = ∅, and 
+
+T𝑡𝑟𝑎𝑖𝑛 ≠ T𝑡𝑒𝑠𝑡 .For existing KGFMs, we use Encoder 𝜃 𝑟 to denote the relation encoder that generates relation embeddings. Encoder 𝜃 𝑒 denote the entity encoder that generates entity embeddings. 𝑓 𝜔 denotes an MLP that maps these entity embeddings to final scores. 𝜃 𝑟 denotes the parameters of the GNN architecture of Encoder 𝜃 𝑟 . 𝜃 𝑒 denotes the parameters of the GNN architecture of Encoder 𝜃 𝑒 . 𝜔 denotes the parameters of the MLP that generates the final scores. For KGFMs, the GNN architecture often adopts NBFNet [ 29 ]. In KFGMs, a labeling trick is used to initialize relations to generate conditional relation embeddings based on the relation graph GR , which means that 𝑟 of the given query (i.e., (ℎ, 𝑟, ?) or (?, 𝑟, 𝑡 )) is initialized as an all-one vector, while other relations are initialized as all-zero vectors. Encoder 𝜃 𝑟 uses initialized relation embeddings to generate conditional relation embeddings for Encoder 𝜃 𝑒 . In Encoder 𝜃 𝑒 , the entity in query is initialized as the conditional relation embedding of 𝑟 , and other entities are initialized as all-zero vectors. Then, Encoder 𝜃 𝑒 uses the initialized entity embeddings and conditional relation embeddings to generate entity embeddings for 𝑓 𝜔 to obtain the scores, which are used to predict the missing entity in the given query. 
+
+## 3 The Method KMAS 3.1 Overview 
+
+In this section, we briefly introduce our proposed method KMAS. Specifically, during each iteration of an existing KGFM’s training process, KMAS first calculates relation similarities to identify the relations that are semantically similar to the target relation of each positive triple based on the relation embeddings generated through Encoder 𝜃 𝑟 based on the relation graph (Section 3.2). Next, using these similarities, KMAS assigns weights to entities to construct head (tail) entity distributions for hard negative sample genera-tion (Section 3.3). Then, a hybrid sampling strategy is employed to construct the final negative triple set for each triple by combining random and hard negative samples according to different distribu-tions (Section 3.4). Furthermore, KMAS dynamically adjusts the ratio of hard negative samples versus random negative samples throughout training iterations, which follows a trade-off policy by combining both “easier first" as curriculum learning and “harder first" as hard example mining: beginning with a warmup phase without hard negative samples, increasing linearly to a peak, and then decreasing linearly (Section 3.5). Thus, the KGFM’s Encoder 𝜃 𝑟 
+
+can be trained based on the training set consisting of positive triples and adaptively constructed negative triples (Section 3.6). After mul-tiple iterations, the relation embeddings generated from Encoder 𝜃 𝑟 ,together with the KGFM’s entity encoder Encoder 𝑒 and 𝑓 𝜔 , are utilized to score all candidates for each test triple (Section 3.6). 
+
+## 3.2 Relation Similarity Acquisition 
+
+To construct high-quality hard negative samples for positive triples, we first utilize the relation embeddings generated by Encoder 𝜃 𝑟 to measure the similarities between the relations. For the relation 𝑟 of a given positive triple (ℎ, 𝑟, 𝑡 ), we input it into Encoder 𝜃 𝑟 to obtain relation embeddings for all relations in G as follows: 
+
+𝐻 ← Encoder 𝜃 𝑟 (G R, 𝑟, 𝑡 ), (1) where 𝑑 denotes the dimension of embeddings in Encoder 𝜃 𝑟 , 𝐻 ∈
+
+R| R | × 𝑑 denotes the set of relation embeddings. If SEMMA’s relation encoder is selected as Encoder 𝜃 𝑟 , 𝑡 is set to the text of relations. For other KGFMs (i.e, ULTRA, TRIX, and MOTIF), 𝑡 is set to none. Then, based on 𝐻 , we can calculate the similarity vector S ∈ R| R | 
+
+between 𝑟 and the relation 𝑟 𝑜 in R as follows: Boosting Knowledge Graph Foundation Models via Enhanced Negative Sampling Relation Similarity Acquisition 
+
+## KMAS 
+
+> decay
+> 𝑚
+
+Prediction Encoder θr Encoder θe
+
+𝐵 +
+
+KGFM 
+
+Sampling 
+
+Relation -Aware Entity Distribution Generation 
+
+> head candidate entity set tail candidate entity set
+
+Aggregation & Normalization 
+
+prtail 
+
+prhead Relation weights generation  𝑊 ′
+
+…
+
+𝐵 −
+
+> Random sampling
+
+Hybrid Negative Sampling 
+
+> 𝛼 𝑚
+> 𝛼 𝑚𝑎𝑥
+
+Input KGs  Sampling 
+
+> KG 1
+> relation similarities
+> relation embeddings
+
+relation graph   
+
+> e10 r10 r9
+> γ𝑝𝑒𝑎𝑘 𝑇 𝑡𝑎𝑡𝑎𝑙
+
+Hard Negative Ratio Adjustment Strategy       
+
+> increase warmup decrease
+> αmax
+> αm
+> e5
+> e1
+> e2
+> e3
+> e4
+> r1
+> r5r4
+> r3
+> r2
+> e5
+> e1
+> e2
+> e3
+> e4
+> r1
+> r5r4
+> r3
+> r2
+> KG 2
+> e9
+> e7
+> e6
+> r6r8
+> r7e8
+> Hard negative sampling
+
+Figure 1: The overall training process of our proposed negative sampling method KMAS. 
+
+S(𝑟, 𝑟 𝑜 ) = Sim (h𝑟 , h𝑟 𝑜 ) (2) where the function Sim( ·) is implemented by the cosine similarity, 
+
+h𝑟 denotes the relation embedding of 𝑟 and h𝑟 𝑜 denotes the rela-tion embedding of 𝑟 𝑜 . Specifically, we set S(𝑟, 𝑟 ) to −∞ , which will prevent the relation itself from sampling in the following process. Based on this, we construct the vector 𝑊 𝑟 ∈ R| R | for 𝑟 to store relation similarities using the Softmax function with a temperature coefficient 𝜏 as follows: 
+
+𝑊 𝑟,𝑗 = exp (S𝑟,𝑗 /𝜏 )
+
+Í| R |   
+
+> 𝑗 ′=1
+
+exp (S𝑟,𝑗 ′ /𝜏 ) , 𝑗 = 1, 2, . . . , |R| . (3) 
+
+## 3.3 Relation-Aware Entity Distribution Generation 
+
+First, we sort the weights of relations in 𝑊 𝑟 in descending order to obtain 𝑊 ∗ 
+
+> 𝑟
+
+. Next, for 𝑟 , we select the top 𝐾 relations 𝑅 𝑡𝑜𝑝𝐾 (𝑟 )
+
+whose sum of weights exceeds a threshold 𝑞 as follows: 
+
+𝐾 = arg min 
+
+> 𝑧
+
+𝑧, s.t. 
+
+> 𝑧
+
+∑︁ 
+
+> 𝑦 =1
+
+𝑊 ∗ 
+
+> 𝑟,𝑦
+
+≥ 𝑞, 𝑧 ∈ { 1, . . . , |R|} . (4) For the relations not in 𝑅 𝑡𝑜𝑝𝐾 (𝑟 ), we set their weights to zero. Sub-sequently, we reweight the selected relations to construct a weight matrix 𝑊 ′ by calculating the weight 𝑊 ′ 
+
+> 𝑟,𝑏
+
+for every relation 𝑟 and its corresponding selected relation 𝑏 as follows: 
+
+𝑊 ′ 
+
+> 𝑟,𝑏
+
+= 𝑊 ∗
+
+> 𝑟,𝑏
+
+Í𝐾 𝑏 ′=1 𝑊 ∗
+
+> 𝑟,𝑏 ′
+
+, 𝑏 = 1, 2, . . . , 𝐾 . (5) To generate hard negative samples for the given positive triple 
+
+(ℎ, 𝑟, 𝑡 ), we construct the sets of candidate entities 𝑤 𝑡𝑎𝑖𝑙 𝑟 (resp. 𝑤 ℎ𝑒𝑎𝑑 𝑟 )by searching entities in V that can act as tail (resp. head) entities of the selected relations from 𝑅 𝑡𝑜𝑝𝐾 (𝑟 ) in G. Thus, we can obtain the weight 𝑥 𝑡𝑎𝑖𝑙 𝑟,𝑒 of an entity 𝑒 as the tail entity of 𝑟 by aggregating the relation weights as follows: 
+
+𝑥 𝑡𝑎𝑖𝑙 𝑟,𝑒 =∑︁     
+
+> 𝑟 ′∈𝑅 𝑡𝑜𝑝𝐾 (𝑟 )
+
+𝑊 ′  
+
+> 𝑟,𝑟 ′
+
+· 𝐼 𝑡𝑎𝑖𝑙 (𝑟 ′, 𝑒 ). (6) 
+
+𝐼 𝑡𝑎𝑖𝑙 (𝑟 ′, 𝑒 ) =
+
+(
+
+1 if 𝑒 ∈ 𝑤 𝑡𝑎𝑖𝑙 𝑟 and 𝑟 ′ ∈ 𝑅 𝑡𝑜𝑝𝐾 (𝑟 ),
+
+0 otherwise . (7) It can be seen that if an entity frequently appears as the tail entity of the relation that is similar to 𝑟 , this entity will be assigned a high probability score. Then, we normalize these weights of entities to obtain a tail entity probability distribution P𝑡𝑎𝑖𝑙 𝑟 for 𝑟 as follows: 
+
+P𝑡𝑎𝑖𝑙 𝑟 (𝑒 ) = 𝑥 𝑡𝑎𝑖𝑙 𝑟,𝑒 
+
+Í𝑒 ′ ∈ V 𝑥 𝑡𝑎𝑖𝑙 𝑟,𝑒 ′
+
+. (8) Note that, we can obtain the weight 𝑥 ℎ𝑒𝑎𝑑 𝑟,𝑒 of an entity 𝑒 as the head entity of 𝑟 and the head entity probability distribution Pℎ𝑒𝑎𝑑 𝑟 for 𝑟 
+
+in a similar way, which is omitted due to the length of the paper. 
+
+## 3.4 Hybrid Negative Sampling 
+
+To improve the model’s performance, we propose a hybrid sampling strategy to provide more challenging negative samples while still retaining the simpler samples, preserving the fundamental ability to distinguish between positive and negative samples. We denote 
+
+B+ as a batch of positive triples. For each positive triple (ℎ, 𝑟, 𝑡 )
+
+in B+, we construct its corresponding negative sample set B−(ℎ,𝑟,𝑡 ) .Specifically, for (ℎ, 𝑟, 𝑡 ), we draw 𝑁 𝑟𝑎𝑛𝑑 entities randomly from 
+
+V to obtain T 𝑟𝑎𝑛𝑑   
+
+> (ℎ,𝑟,𝑡 )
+
+(resp. H𝑟𝑎𝑛𝑑   
+
+> (ℎ,𝑟,𝑡 )
+
+), and draw the 𝑁 ℎ𝑎𝑟𝑑 entities according to the distribution P𝑡𝑎𝑖𝑙 𝑟 (resp. Pℎ𝑒𝑎𝑑 𝑟 ) to obtain T ℎ𝑎𝑟𝑑  
+
+> (ℎ,𝑟,𝑡 )
+
+(resp. Hℎ𝑎𝑟𝑑   
+
+> (ℎ,𝑟,𝑡 )
+
+). The number of random negative samples 𝑁 𝑟𝑎𝑛𝑑 and hard negative samples 𝑁 ℎ𝑎𝑟𝑑 are calculated as follows: 
+
+𝑁 𝑟𝑎𝑛𝑑 = ⌊𝑁 · ( 1 − 𝛼 𝑚 )⌋ , (9) Yinan Liu, Wenjin Xu, Zhiyuan Zha, Xiaochun Yang, and Bin Wang 
+
+𝑁 ℎ𝑎𝑟𝑑 = 𝑁 − 𝑁 𝑟𝑎𝑛𝑑 . (10) Note that 𝛼 𝑚 denotes the current hard negative ratio, which will be calculated in Section 3.5. The negative sample sets C𝑡𝑎𝑖𝑙   
+
+> (ℎ,𝑟,𝑡 )
+
+and 
+
+Cℎ𝑒𝑎𝑑   
+
+> (ℎ,𝑟,𝑡 )
+
+are constructed as follows: 
+
+C𝑡𝑎𝑖𝑙   
+
+> (ℎ,𝑟,𝑡 )
+
+= {( ℎ, 𝑟, 𝑡 ′)| 𝑡 ′ ∈ T 𝑟𝑎𝑛𝑑   
+
+> (ℎ,𝑟,𝑡 )
+
+∪ T ℎ𝑎𝑟𝑑   
+
+> (ℎ,𝑟,𝑡 )
+
+}, (11) 
+
+Cℎ𝑒𝑎𝑑   
+
+> (ℎ,𝑟,𝑡 )
+
+= {( ℎ′, 𝑟, 𝑡 )| ℎ′ ∈ H 𝑟𝑎𝑛𝑑   
+
+> (ℎ,𝑟,𝑡 )
+
+∪ H ℎ𝑎𝑟𝑑   
+
+> (ℎ,𝑟,𝑡 )
+
+}. (12) Based on these, we can construct the final negative sample set 
+
+B−(ℎ,𝑟,𝑡 ) for (ℎ, 𝑟, 𝑡 ) as follows: 
+
+B−(ℎ,𝑟,𝑡 ) =
+
+(C𝑡𝑎𝑖𝑙   
+
+> (ℎ,𝑟,𝑡 )
+
+if (ℎ, 𝑟, 𝑡 )is in the first half of B+,
+
+Cℎ𝑒𝑎𝑑   
+
+> (ℎ,𝑟,𝑡 )
+
+otherwise . (13) Thus, by constructing negative samples for each positive triple in 
+
+B+ according to the above procedure, we can obtain the corre-sponding negative sample set B− of B+.
+
+## 3.5 Hard Negative Ratio Adjustment Strategy 
+
+Inspired by the previous study [ 22 ], which combines both “easier first" as curriculum learning and “harder first" as hard example mining, we propose a strategy for hard negative sampling to dy-namically adjust the ratio between random negative samples and our constructed hard negative samples. We define the hard negative ratio 𝛼 𝑚 as a piecewise linear function, which is controlled by the warmup ratio 𝛽 𝑤𝑎𝑟𝑚 ranging from 0 to 1, the peak position 𝛾 𝑝𝑒𝑎𝑘 ,and the maximum ratio of the hard negative samples 𝛼 𝑚𝑎𝑥 . Cru-cially, 𝛾 𝑝𝑒𝑎𝑘 determines the point where 𝛼 𝑚 reaches its maximum value 𝛼 𝑚𝑎𝑥 within the remaining training process after the warmup phase, which means 𝛾 𝑝𝑒𝑎𝑘 is greater than 𝛽 𝑤𝑎𝑟𝑚 and less than 1. Let 
+
+𝑚 denote the 𝑚 -th iteration of the whole training iterations and 
+
+𝑇 𝑡𝑜𝑡𝑎𝑙 denote the total number of training iterations. We calculate the ratio of completed iterations 𝑝 𝑚 as follows: 
+
+𝑝 𝑚 = 𝑚 𝑇 𝑡𝑜𝑡𝑎𝑙 
+
+. (14) We can calculate 𝛼 𝑚 for the current 𝑚 -th iteration based on the following rules. 
+
+• If 𝑝 𝑚 is less than 𝛽 𝑤𝑎𝑟𝑚 , we set 𝛼 𝑚 to 0.
+
+• If 𝑝 𝑚 is greater than or equal to 𝛽 𝑤𝑎𝑟𝑚 and less than 𝑃 𝑝𝑒𝑎𝑘 ,
+
+𝛼 𝑚 is calculated as follows: 
+
+𝛼 𝑚 = 𝛼 𝑚𝑎𝑥 · 𝑝 𝑚 − 𝛽 𝑤𝑎𝑟𝑚 
+
+𝑃 𝑝𝑒𝑎𝑘 − 𝛽 𝑤𝑎𝑟𝑚 
+
+. (15) 
+
+• If 𝑝 𝑚 is greater than or equal to 𝑃 𝑝𝑒𝑎𝑘 , 𝛼 𝑚 is calculated as follows: 
+
+𝛼 𝑚 = 𝛼 𝑚𝑎𝑥 · 1 − 𝑝 𝑚 
+
+1 − 𝑃 𝑝𝑒𝑎𝑘 
+
+, (16) where 𝑃 𝑝𝑒𝑎𝑘 equals 𝛽 𝑤𝑎𝑟𝑚 + 𝛾 𝑝𝑒𝑎𝑘 (1 − 𝛽 𝑤𝑎𝑟𝑚 ).For the hard negative ratio during the whole training process, this heuristic adjustment strategy is simple yet effective, which is veri-fied by our experiments (Section 4.5). 
+
+## 3.6 Training 
+
+The KGFM is often trained by minimizing the binary cross-entropy loss function. We obtain the prediction score 𝑠 (ℎ, 𝑟, 𝑡 ) of a triple 
+
+(ℎ, 𝑟, 𝑡 ) via 𝑓 𝜔 . The optimization objective for a given positive triple 
+
+(ℎ, 𝑟, 𝑡 ) and its corresponding negative triple set B−(ℎ,𝑟,𝑡 ) is defined as follows: 
+
+L( ℎ, 𝑟, 𝑡 ) = − log (𝜎 (𝑠 (ℎ, 𝑟, 𝑡 )))− ∑︁    
+
+> (ℎ′,𝑟,𝑡 ′) ∈ B −(ℎ,𝑟,𝑡 )
+
+𝑤 (ℎ′, 𝑟, 𝑡 ′) log (1 − 𝜎 (𝑠 (ℎ′, 𝑟, 𝑡 ′))) , (17) where 𝜎 is the Sigmoid activation function. Additionally, consid-ering that different negative samples have different importance to the training process of the KGFM, we assign the normalized weight to each negative sample using the Softmax function with a temperature coefficient 𝜏 𝑎𝑑𝑣 as follows: 
+
+𝑤 (ℎ′, 𝑟, 𝑡 ′) = exp (𝑠 (ℎ′, 𝑟, 𝑡 ′)/ 𝜏 𝑎𝑑𝑣 )
+
+Í(ℎ𝑘 ,𝑟,𝑡 𝑘 ) ∈ B −(ℎ,𝑟,𝑡 ) exp (𝑠 (ℎ𝑘 , 𝑟, 𝑡 𝑘 )/ 𝜏 𝑎𝑑𝑣 ) . (18) Finally, the total optimization objective for the given batch B+ is calculated by averaging the losses over all positive triples in B+ as follows: 
+
+L𝑡𝑜𝑡𝑎𝑙 = 1
+
+|B + |∑︁ (ℎ,𝑟,𝑡 ) ∈ B +
+
+L( ℎ, 𝑟, 𝑡 ). (19) It is worth mentioning that the processes of the relation similarity acquisition (Section 3.2) and the relation-aware entity distribution generation (Section 3.3) are fully adaptive. Since the parameters of the relation encoder 𝜃 𝑟 are updated continuously through the backpropagation mechanism during the training process of the KGFM, the embeddings of the relations also evolve throughout the whole training process. Consequently, even for the same KG and the same relation sampled in different iterations, the values of weights 
+
+𝑊 𝑟 and the tail (resp. head) entity distribution P𝑡𝑎𝑖𝑙 𝑟 (resp. Pℎ𝑒𝑎𝑑 𝑟 )also change dynamically for each iteration. This mechanism ensures that the constructed negative samples are time-variant. Although these negative samples may not be the most difficult, they represent the most challenging negative samples for the current state of the KGFM. The details of the training process are shown in Algorithm 1. Additionally, we adopt the same inference procedure as previous KGFM studies [1, 5, 7, 27]. 
+
+## 3.7 Complexity Analysis 
+
+Here, we analyze the time and memory complexity of KMAS. |V | 
+
+and |R| denote the numbers of entities and relations, respectively. 
+
+|T | denotes the number of triples in the KG. 𝐿 denotes the number of GNN layers. |B + | denotes the batch size. ¯𝑑 𝑟𝑒𝑙 denotes the average relation degree. The time complexity of KMAS is analyzed as follows. The time complexity of the relation similarity acquisition (Section 3.2) is 
+
+O(|B + | · |R| · 𝑑 ) (line 13 - 14 in Algorithm 1). The time complexity of the relation-aware entity distribution generation (Section 3.3) is O(|B + | · (|R|( log |R| + ¯𝑑 𝑟𝑒𝑙 ) + |V |)) (line 15 - 18 in Algorithm 1). The time complexity of the hybrid sampling strategy (Section 3.4) is O(|B + | · 𝑁 ) (line 19 - 25 in Algorithm 1). Consequently, Boosting Knowledge Graph Foundation Models via Enhanced Negative Sampling 
+
+Algorithm 1: KMAS  
+
+> 1
+
+Input: KGs G1, G2 . . . , G𝑛 , relation graphs G𝑅 1 , G𝑅 2 , . . . , G𝑅 𝑛 ,the entity encoder Encoder 𝜃 𝑒 , the relation encoder Encoder 𝜃 𝑟 , the MLP 𝑓 𝜔 , the number of negatives 𝑁 ,threshold 𝑞 , temperatures 𝜏 and 𝜏 𝑎𝑑𝑣 , total number of iterations 𝑇 total , warmup ratio 𝛽 warm , peak position 𝛾 peak ,maximum ratio of the hard negetive samples 𝛼 max  
+
+> 2
+
+Output: Optimized parameters 𝜃 𝑟 , 𝜃 𝑒 and 𝜔  
+
+> 3
+
+Initialize 𝜃 𝑟 , 𝜃 𝑒 , and 𝜔 randomly  
+
+> 4
+
+for 𝑚 = 1 to 𝑇 𝑡𝑜𝑡𝑎𝑙 do  
+
+> 5
+
+Randomly sample a KG G𝑖 and a batch of positive triples 
+
+B+ from G𝑖  
+
+> 6
+
+Calculate the ratio of completed iterations 𝑝 𝑚 via Formula (14)  
+
+> 7
+
+for each positive triple (ℎ, 𝑟, 𝑡 ) ∈ B + do  
+
+> 8
+
+if 𝑝 𝑚 < 𝛽 𝑤𝑎𝑟𝑚 then  
+
+> 9
+
+𝛼 𝑚 ← 0 
+
+> 10
+
+Draw 𝑁 𝑟𝑎𝑛𝑑 entities from V randomly  
+
+> 11
+
+Construct the negative sample set B−(ℎ,𝑟,𝑡 ) for 
+
+(ℎ, 𝑟, 𝑡 ) by replacing the head/tail entity with a random entity in G𝑖  
+
+> 12
+
+else  
+
+> 13
+
+𝐻 ← Encoder 𝜃 𝑟 (G 𝑅 𝑖 , 𝑟, 𝑡 ) 
+
+> 14
+
+Calculate the weight vector 𝑊 𝑟 via Formula (3)  
+
+> 15
+
+Generate the relation set 𝑅 𝑡𝑜𝑝𝐾 (𝑟 ) based on 𝑊 𝑟  
+
+> 16
+
+Calculate 𝑊 ′ via Formula (5)  
+
+> 17
+
+Calculate the weights of entities 𝑥 𝑡𝑎𝑖𝑙 𝑟,𝑒 and 𝑥 ℎ𝑒𝑎𝑑 𝑟,𝑒 
+
+via Formula (6) based on 𝑊 ′ and 𝑅 𝑡𝑜𝑝𝐾 (𝑟 ) 
+
+> 18
+
+Generate entity probability distributions P𝑡𝑎𝑖𝑙 𝑟 
+
+and Pℎ𝑒𝑎𝑑 𝑟 via Formula (8)  
+
+> 19
+
+if 𝑝 𝑚 < 𝑃 𝑝𝑒𝑎𝑘 then  
+
+> 20
+
+Update 𝛼 𝑚 via Formula (15)  
+
+> 21
+
+else  
+
+> 22
+
+Update 𝛼 𝑚 via Formula (16)  
+
+> 23
+
+Draw 𝑁 𝑟𝑎𝑛𝑑 entities from V randomly  
+
+> 24
+
+Draw 𝑁 − 𝑁 𝑟𝑎𝑛𝑑 entities according to P𝑡𝑎𝑖𝑙 𝑟 and 
+
+Pℎ𝑒𝑎𝑑 𝑟  
+
+> 25
+
+Construct the negative sample set B−(ℎ,𝑟,𝑡 ) for 
+
+(ℎ, 𝑟, 𝑡 ) via Formula (13)  
+
+> 26
+
+Calculate the loss via Formula (19) based on B+ and its corresponding negative triple set 
+
+B− = Ð 
+
+> (ℎ,𝑟,𝑡 ) ∈ B +
+
+B−(ℎ,𝑟,𝑡 ) 
+
+> 27
+
+Update 𝜃 𝑟 , 𝜃 𝑒 , and 𝜔 
+
+the total time complexity for training is O( 𝑇 𝑡𝑜𝑡𝑎𝑙 · |B + | · (|R|( 𝑑 +
+
+log |R| + ¯𝑑 𝑟𝑒𝑙 ) + |V | + 𝑁 )) . Considering |R| is usually small and 
+
+|B + |/ ¯𝑑 𝑟𝑒𝑙 /𝑇 𝑡𝑜𝑡𝑎𝑙 /𝑁 is a constant, therefore the time complexity of KMAS is linear to |V | . The time complexity of the existing base KGFMs is dominated by |T | . Compared with |T | , |V | is small, indi-cating a marginal overhead generated by KMAS, which is verified in Section 4.3. The memory complexity of KMAS is analyzed as follows. The memory complexity of the relation similarity acquisition (Section 3.2) is O(|B + | · |R|) (line 13 - 14 in Algorithm 1). The memory com-plexity of the relation-aware entity distribution generation (Section 3.3) is O(|B + | · |V |) (line 15 - 18 in Algorithm 1). The memory com-plexity of the hybrid negative sampling (Section 3.4) is O(|B + | · 𝑁 )
+
+(line 19 - 25 in Algorithm 1). Consequently, the total memory com-plexity of our method is O(|B + |(|R| + |V | + 𝑁 )) . Considering |R| 
+
+is usually small and 𝑁 is a constant, therefore the memory com-plexity of KMAS is linear to |B + | · |V | . The base KGFMs need to store intermediate node embeddings across all 𝐿 layers to compute gradients during backpropagation, with a memory complexity of 
+
+O(|B + | · |V | · 𝑑 · 𝐿 ). Compared with |B + | · |V | · 𝑑 · 𝐿 , |B + | · |V | is small, indicating a marginal overhead generated by KMAS, which is verified in Section 4.4. 
+
+## 4 Experiments 4.1 Experimental Setting 
+
+4.1.1 Data Sets. We utilize a unified pre-training corpus contain-ing 3 common KGs to train KGFMs: FB15k-237 [ 19 ], WN18RR [ 4 ], and CoDEx-Medium [15]. This combination covers general-world knowledge and diverse Wikipedia domains, enabling the KGFM to learn general structural patterns. We perform extensive experi-ments on 44 data sets that are categorized into transductive, partially inductive, and fully inductive settings to evaluate the generalizabil-ity of our proposed method. The definitions of these settings have been introduced in Section 2. More detailed information of the data sets used in our experiments can be found in Appendix A. 
+
+4.1.2 Evaluation Metrics. We adopt the same evaluation metrics, mean reciprocal rank (MRR) and Hits@10, as previous KGFM stud-ies [ 1, 5, 7 , 27 ] to evaluate the performance of KGFMs and KGFMs using KMAS as the negative sampling method. Both metrics are reported under the filtered ranking protocol [3]. 
+
+4.1.3 Base KGFMs. To demonstrate the effectiveness of KMAS, we perform KMAS on many SOTA KGFMs (i.e., ULTRA, TRIX, MOTIF, and SEMMA), which are introduced in detail as follows. ULTRA [ 5] constructs the relation graph, where nodes denote relations in the KG and edges denote four fundamental interactions between relations in the KG: h2h , t2t , h2t , and t2h . An edge between relation 𝑟 𝑖 and 𝑟 𝑗 is established in GR if there exist triples (ℎ𝑖 , 𝑟 𝑖 , 𝑡 𝑖 )
+
+and (ℎ𝑗 , 𝑟 𝑗 , 𝑡 𝑗 ) ∈ T satisfying one of the following conditions:(1) 
+
+h2h : ℎ𝑖 = ℎ𝑗 ; (2) t2t : 𝑡 𝑖 = 𝑡 𝑗 ; (3) h2t : ℎ𝑖 = 𝑡 𝑗 ; (4) t2h : 𝑡 𝑖 = ℎ𝑗 . Specifi-cally, the four fundamental interactions are learnable embeddings, which form part of 𝜃 𝑟 . Encoder 𝜃 𝑟 works on the relation graph to generate relation embeddings. Encoder 𝜃 𝑒 uses these relation em-beddings to generate entity embeddings for 𝑓 𝜔 to predict entities. TRIX [ 27 ] constructs four relation graphs, where nodes denote relations in the KG and edges denote specific entities that bridge two relations through one of four fundamental interactions: h2h ,
+
+t2t , h2t , and t2h . Encoder 𝜃 𝑟 of TRIX captures relation interactions through this entity-aware edge information. Encoder 𝜃 𝑒 and 𝑓 𝜔 
+
+of TRIX adopt the same mechanism as ULTRA. Specially, TRIX adopts an iterative architecture, stacking modules in the sequence: Encoder 𝜃 𝑟 1 → Encoder 𝜃 𝑒 1 → Encoder 𝜃 𝑟 2 → Encoder 𝜃 𝑒 2 → . . . →
+
+Encoder 𝜃 𝑟𝑛 → Encoder 𝜃 𝑒𝑛 . Note that Encoder 𝜃 𝑟 1 , Encoder 𝜃 𝑟 2 , . . . , Yinan Liu, Wenjin Xu, Zhiyuan Zha, Xiaochun Yang, and Bin Wang 
+
+Table 1: Performance on the task of link prediction under different settings (i.e., inductive (e, r), inductive (e), transductive) over 44 data sets. Since SCR’s source codes are not publicly available, we obtain the results of SCR from [ 20 ]. The performance of other KGFMs (i.e., ULTRA, TRIX, MOTIF, and SEMMA) is reproduced via their open-source solutions. 
+
+Model Inductive (e, r) Inductive (e) Transductive Total Avg 
+
+(19 graphs) (16 graphs) (9 graphs) (44 graphs) 
+
+MRR Hits@10 MRR Hits@10 MRR Hits@10 MRR Hits@10 
+
+SCR (NIPS’25) [20] 0.320 0.498 0.435 0.592 0.298 0.447 0.358 0.523 ULTRA (ICLR’24) [5] 0.317 0.499 0.429 0.578 0.331 0.483 0.360 0.524 ULTRA + KMAS 0.326 0.508 0.434 0.584 0.337 0.490 0.367 0.532 
+
+TRIX (LoG’24) [27] 0.337 0.523 0.445 0.601 0.304 0.467 0.370 0.540 TRIX + KMAS 0.340 0.523 0.454 0.601 0.307 0.471 0.375 0.541 
+
+MOTIF (ICML’25) [7] 0.329 0.498 0.433 0.582 0.324 0.477 0.360 0.516 MOTIF + KMAS 0.333 0.508 0.437 0.588 0.333 0.486 0.365 0.524 
+
+SEMMA (EMNLP’25) [1] 0.331 0.502 0.447 0.590 0.327 0.479 0.372 0.529 SEMMA + KMAS 0.341 0.517 0.451 0.593 0.336 0.487 0.380 0.539 
+
+Encoder 𝜃 𝑟𝑛 work on the same four relation graphs and Encoder 𝜃 𝑒 1 ,
+
+Encoder 𝜃 𝑒 2 , . . . , Encoder 𝜃 𝑒𝑛 work on the same KG. MOTIF [ 7 ] constructs the relation hypergraph, where hyper-edges are matches of arbitrary graph motifs (i.e., 2-path and 3-path motifs) from the KG, and nodes are relations in the KG. Encoder 𝜃 𝑟 
+
+of MOTIF works on the hypergraph, and the arbitrary graph mo-tifs are the learnable embeddings that are part of 𝜃 𝑟 for Encoder 𝜃 𝑟 .Encoder 𝜃 𝑒 and 𝑓 𝜔 of MOTIF adopt the same mechanism as ULTRA. SEMMA [ 1] constructs a structural relation graph and a tex-tual relation graph. For the textual relation graph, nodes denote relations, and weighted edges between them denote the cosine sim-ilarity of their textual embeddings. Encoder 𝜃 𝑟 of SEMMA works on the two relation graphs in parallel and uses an MLP to inte-grate their information and obtain the final relation embeddings. Encoder 𝜃 𝑒 and 𝑓 𝜔 of SEMMA adopt the same mechanism as ULTRA. 
+
+4.1.4 Implementation Details. We adopt the official implementa-tion of 4 KGFMs (i.e, ULTRA, TRIX, MOTIF, and SEMMA) as base KGFMs. Hyperparameters 𝑁 , 𝑞 , 𝜏 , 𝜏 𝑎𝑑𝑣 , 𝛽 𝑤𝑎𝑟𝑚 , 𝛾 𝑝𝑒𝑎𝑘 , and 𝛼 𝑚𝑎𝑥 are set to 512 , 0.4, 0.8, 1, 0.25 , 0.25 and 0.4 for all KGFMs with KMAS as the negative sampling method, respectively. 𝑇 𝑡𝑜𝑡𝑎𝑙 is set to 800000 
+
+for ULTRA and SEMMA and 10000 for TRIX and MOTIF. All ex-periments are conducted on NVIDIA 4080 GPUs with the same version of PyTorch and PyG. We make the data sets and source code available for future research 1.
+
+## 4.2 Effectiveness Study 
+
+We utilize Encoder 𝜃 𝑟 to generate relation embeddings for the con-struction of hard negative samples in ULTRA, TRIX, MOTIF, and SEMMA. Specifically, for TRIX, we use Encoder 𝜃 𝑟 1 to generate rela-tion embeddings to construct hard negative samples. Additionally, for SCR, the relation graph is enhanced by deriving both global and query-aware relation embeddings and injecting them to guide semantic-conditioned message passing on the KG. Note that SCR does not open-source their code, so we show the results from the 
+
+> 1https://anonymous.4open.science/r/KGFMs-8C8B ULTRA
+> ULTRA + KMAS
+> TRIX
+> TRIX + KMAS
+> MOTIF
+> MOTIF + KMAS
+> SEMMA
+> SEMMA + KMAS
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Training time (h)
+> 8.67
+> 19.12
+> 91.06
+> 7.16 8.78
+> 21.74
+> 91.89
+> 7.44
+
+Figure 2: Training time cost comparison of KGFMs (i.e, UL-TRA, TRIX, MOTIF, and SEMMA) and these KGFMs using KMAS as the negative sampling method. 
+
+original paper [ 20 ]. From the experimental results shown in Table 1, it can be seen that our proposed method KMAS can enhance various SOTA KGFMs (i.e., ULTRA, TRIX, MOTIF, and SEMMA) under dif-ferent settings (i.e., inductive (e, r), inductive (e), and transductive) in terms of MRR and Hits@10, demonstrating the effectiveness of KMAS. We report the detailed results in Appendix B. 
+
+## 4.3 Efficiency Study 
+
+To evaluate the efficiency of KMAS, we test the training time for KMAS combined with different KGFMs on the same training data set (i.e., FB15k-237, WN18RR, and CoDEx-Medium). Since KMAS only performs in the training process, we do not show the inference time. The experimental results plotted in Figure 2 show that KMAS brings a very slight overhead to training time cost across different Boosting Knowledge Graph Foundation Models via Enhanced Negative Sampling 
+
+Table 2: Performance of different variants of KMAS with Ultra/SEMMA as the base KGFM for analysis of the hard negative ratio adjustment strategy under different settings (i.e., inductive (e, r), inductive (e), transductive) over 44 data sets. 
+
+Variant Inductive (e, r) Inductive (e) Transductive Total Avg 
+
+(19 graphs) ( 16 graphs) (9 graphs) (44 graphs) 
+
+MRR Hits@10 MRR Hits@10 MRR Hits@10 MRR Hits@10 
+
+ULTRA + KMAS ℎ𝑜𝑙𝑑 0.326 0.507 0.431 0.578 0.318 0.469 0.362 0.525 ULTRA + KMAS 𝑖𝑛𝑐𝑟𝑒𝑎𝑠𝑒 0.321 0.495 0.427 0.573 0.323 0.472 0.360 0.518 ULTRA + KMAS 𝑑𝑒𝑐𝑟𝑒𝑎𝑠𝑒 0.316 0.497 0.429 0.574 0.328 0.482 0.359 0.522 ULTRA + KMAS 0.326 0.508 0.434 0.584 0.337 0.490 0.367 0.532 
+
+SEMMA + KMAS ℎ𝑜𝑙𝑑 0.331 0.502 0.444 0.585 0.327 0.479 0.371 0.527 SEMMA + KMAS 𝑖𝑛𝑐𝑟𝑒𝑎𝑠𝑒 0.328 0.509 0.447 0.589 0.328 0.480 0.371 0.532 SEMMA + KMAS 𝑑𝑒𝑐𝑟𝑒𝑎𝑠𝑒 0.318 0.488 0.447 0.590 0.328 0.478 0.367 0.523 SEMMA + KMAS 0.341 0.517 0.451 0.593 0.336 0.487 0.380 0.539 ULTRA 
+
+> ULTRA + KMAS
+> TRIX
+> TRIX + KMAS
+> MOTIF
+> MOTIF + KMAS
+> SEMMA
+> SEMMA + KMAS
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> GPU memory cost (GB)
+> 30.67
+> 18.44
+> 11.66
+> 46.49
+> 30.67
+> 18.44
+> 11.67
+> 46.49
+
+Figure 3: Memory cost comparison of KGFMs (i.e, ULTRA, TRIX, MOTIF, and SEMMA) and these KGFMs using KMAS as the negative sampling method. 
+
+KGFMs (i.e., ULTRA, TRIX, MOTIF, and SEMMA), demonstrating the efficiency of KMAS. These results are consistent with the time complexity analysis in Section 3.7. 
+
+## 4.4 Memory Cost Study 
+
+To evaluate the training memory cost of KMAS, we test the memory cost for KMAS combined with different KGFMs on the same training data set (i.e., FB15k-237, WN18RR, and CoDEx-Medium) by tracking the peak memory usage via the nvidia-smi command. As plotted in Figure 3, the experimental results show that KMAS does not incur significant additional memory overhead across different KGFMs (i.e., ULTRA, TRIX, MOTIF, and SEMMA), demonstrating that KMAS is a memory-efficient method. These results are consistent with the memory complexity analysis in Section 3.7. 
+
+## 4.5 Effect Analysis of Hard Negative Ratio Adjustment 
+
+To evaluate the effect of hard negative ratio adjustment strategy, we define 3 different variants of KMAS: (1) KMAS ℎ𝑜𝑙𝑑 (i.e., KMAS using the hard negative ratio 𝛼 𝑚𝑎𝑥 as 𝛼 𝑚 for the whole training process); (2) KMAS 𝑖𝑛𝑐𝑟𝑒𝑎𝑠𝑒 (i.e., KMAS increasing the hard negative ratio 𝛼 𝑚 from 0 to 𝛼 𝑚𝑎𝑥 without decreasing); (3) KMAS 𝑑𝑒𝑐𝑟𝑒𝑎𝑠𝑒 (i.e., KMAS decreasing 𝛼 𝑚 from 𝛼 𝑚𝑎𝑥 to 0 without increasing). From the experimental results shown in Table 2, we can see that KMAS outperforms these three variants (i.e., KMAS ℎ𝑜𝑙𝑑 , KMAS 𝑖𝑛𝑐𝑟𝑒𝑎𝑠𝑒 , and KMAS 𝑑𝑒𝑐𝑟𝑒𝑎𝑠𝑒 ) in terms of MRR and Hits@10, whether ULTRA or SEMMA is used as the base KGFM, demonstrating the superiority of our hard negative ratio adjustment strategy. 
+
+## 4.6 Parameter Study 
+
+To investigate the robustness of KMAS, we conduct a parameter analysis to understand the impact of 𝑞 , 𝛾 𝑝𝑒𝑎𝑘 , and 𝛼 𝑚𝑎𝑥 on the per-formance of SEMMA and KMAS using SEMMA as the base KGFM. Experimental results shown in Figure 4 show that the performance of KMAS using SEMMA as the KGFM outperforms SEMMA itself under different settings (i.e., inductive (e) and transductive) for the different ranges of the three parameters in terms of MRR and Hits@10, demonstrating the robustness of KMAS. 
+
+## 5 Related Work 
+
+Three aspects of studies are related to our work: (1) knowledge graph foundation model; (2) negative sampling; (3) curriculum learning. We will introduce them in detail as follows. Knowledge graph foundation models (KGFMs) have emerged as a paradigm for enabling zero-shot reasoning over unseen KGs by learning invariance of the relational structure across diverse KGs. ULTRA [ 5] pioneered KGFM through the construction of a rela-tion graph G𝑅 that edges are four fundamental interaction(i.e., h2h ,
+
+t2h , h2t , t2t ), enabling zero-shot inference on unseen entities and relations. TRIX [ 27 ] enhances ULTRA by using entities as edges bridging relation pairs in its relation graphs and introduces an iterative update schema for joint representation refinement. MO-TIF [ 7 ] provides a theoretical framework formalizing KGFMs based on graph motifs through three steps: Lift , Relation encoder ,Yinan Liu, Wenjin Xu, Zhiyuan Zha, Xiaochun Yang, and Bin Wang 0.30 0.35 0.40 0.45 0.50                                                                 
+
+> (a) inductive (e), varying q
+> 0.43
+> 0.44
+> 0.45
+> 0.46
+> 0.47
+> MRR
+> SEMMA + KMAS SEMMA
+> 0.30 0.35 0.40 0.45 0.50
+> (b) inductive (e), varying q
+> 0.56
+> 0.57
+> 0.58
+> 0.59
+> 0.60
+> 0.61
+> 0.62
+> Hit@10
+> SEMMA + KMAS SEMMA
+> 0.30 0.35 0.40 0.45 0.50
+> (c) transductive, varying q
+> 0.30
+> 0.31
+> 0.32
+> 0.33
+> 0.34
+> 0.35
+> 0.36
+> MRR
+> SEMMA + KMAS SEMMA
+> 0.30 0.35 0.40 0.45 0.50
+> (d) transductive, varying q
+> 0.45
+> 0.46
+> 0.47
+> 0.48
+> 0.49
+> 0.50
+> 0.51
+> 0.52
+> Hit@10
+> SEMMA + KMAS SEMMA
+> 0.20 0.25 0.30 0.35 0.40
+> (e) inductive (e), varying peak
+> 0.43
+> 0.44
+> 0.45
+> 0.46
+> 0.47
+> MRR
+> SEMMA + KMAS SEMMA
+> 0.20 0.25 0.30 0.35 0.40
+> (f) inductive (e), varying peak
+> 0.56
+> 0.57
+> 0.58
+> 0.59
+> 0.60
+> 0.61
+> 0.62
+> Hit@10
+> SEMMA + KMAS SEMMA
+> 0.20 0.25 0.30 0.35 0.40
+> (g) transductive, varying peak
+> 0.30
+> 0.31
+> 0.32
+> 0.33
+> 0.34
+> 0.35
+> 0.36
+> MRR
+> SEMMA + KMAS SEMMA
+> 0.20 0.25 0.30 0.35 0.40
+> (h) transductive, varying peak
+> 0.45
+> 0.46
+> 0.47
+> 0.48
+> 0.49
+> 0.50
+> 0.51
+> 0.52
+> Hit@10
+> SEMMA + KMAS SEMMA
+> 0.30 0.35 0.40 0.45 0.50
+> (i) inductive (e), varying max
+> 0.43
+> 0.44
+> 0.45
+> 0.46
+> 0.47
+> MRR
+> SEMMA + KMAS SEMMA
+> 0.30 0.35 0.40 0.45 0.50
+> (j) inductive (e), varying max
+> 0.56
+> 0.57
+> 0.58
+> 0.59
+> 0.60
+> 0.61
+> 0.62
+> Hit@10
+> SEMMA + KMAS SEMMA
+> 0.30 0.35 0.40 0.45 0.50
+> (k) transductive, varying max
+> 0.30
+> 0.31
+> 0.32
+> 0.33
+> 0.34
+> 0.35
+> 0.36
+> MRR
+> SEMMA + KMAS SEMMA
+> 0.30 0.35 0.40 0.45 0.50
+> (l) transductive, varying max
+> 0.45
+> 0.46
+> 0.47
+> 0.48
+> 0.49
+> 0.50
+> 0.51
+> 0.52
+> Hit@10
+> SEMMA + KMAS SEMMA
+
+Figure 4: Parameter study results of 𝑞 , 𝛾 peak , and 𝛼 max .
+
+and Entity Encoder . It reveals ULTRA’s equivalence to binary 2-path motifs and finds that new motifs increase expressiveness only when not covered by core-onto homomorphisms. SEMMA [ 1] extends KGFMs by combining structural and textual signals. SEMMA obtains textual information via a text relation graph. The outputs from the parallel structural and textual modules are fused via an MLP to generate the final relation embeddings, empower-ing robust zero-shot link prediction across diverse KGs. SCR [ 20 ]improves KGFMs by bridging the gap between structural patterns and node semantic features, while unifying diverse graph tasks into a single reasoning framework. KG-ICL [28] enables universal transfer across diverse KGs by employing a unified tokenizer that maps different entities/relations to the shared tokens based on their relative structural roles and query identity. This mechanism does not rely on the relation graph and processes query-specific prompt graphs, which comprise example facts and their local neighbor and path contexts. Despite significant progress that has been made in KGFMs, the negative sample quality issue is ignored. All KGFMs above rely on corrupting either the head or tail entity of the posi-tive sample to obtain negative samples where negative triples are independent of the invariance of the relation structure. Our work focuses on boosting KGFMs, which are based on relation graphs via an effective negative sampling method. The negative sampling method serves as an effective strategy applied in many tasks, such as KG-based recommendation [ 25 ], KG completion [ 21 ], and KG embedding [ 8, 10 ]. In this paper, we dynamically construct hard negative samples for KGFMs through a hybrid negative sampling strategy, enhancing existing KGFMs. Curriculum learning [ 2 ] functions as a sophisticated training paradigm that organizes training examples from easy to hard. Its core idea is applied across various tasks, e.g., complex reasoning over KG [ 24 , 26 ], KG embedding [ 6, 18 ], and joint open knowledge graph canonicalization and linking [ 16 ]. Specially, we propose a hard negative ratio adjustment strategy inspired by the trade-off policy, which combines the strategy of “easier first" as curriculum learning and “harder first" as hard example mining [22]. 
+
+## 6 Conclusion and Future Work 
+
+To enhance existing KGFMs, we propose a simple yet effective adap-tive negative sampling method to generate hard negative samples whose ratio is dynamically adjusted to train KGFMs. KMAS is flexi-ble to adapt to many KGFMs. Extensive experiments are conducted on 44 data sets. Experimental results have demonstrated that KMAS Boosting Knowledge Graph Foundation Models via Enhanced Negative Sampling 
+
+can improve the performance of many SOTA KGFMs without re-quiring excessive additional time or memory consumption. In the future, we will evaluate the performance of KMAS on more KGFMs and data sets. 
+
+## References 
+
+[1] Arvindh Arun, Sumit Kumar, Mojtaba Nayyeri, Bo Xiong, Ponnurangam Ku-maraguru, Antonio Vergari, and Steffen Staab. 2025. SEMMA: A Semantic Aware Knowledge Graph Foundation Model. In EMNLP . 31825–31848. [2] Yoshua Bengio, Jérôme Louradour, Ronan Collobert, and Jason Weston. 2009. Curriculum learning. In ICML . 41–48. [3] Antoine Bordes, Nicolas Usunier, Alberto Garcia-Duran, Jason Weston, and Oksana Yakhnenko. 2013. Translating Embeddings for Modeling Multi-relational Data. In NIPS . 2787–2795. [4] Tim Dettmers, Pasquale Minervini, Pontus Stenetorp, and Sebastian Riedel. 2018. Convolutional 2d knowledge graph embeddings. In AAAI . 1811–1818. [5] Mikhail Galkin, Xinyu Yuan, Hesham Mostafa, Jian Tang, and Zhaocheng Zhu. 2024. Towards Foundation Models for Knowledge Graph Reasoning. In ICLR .[6] Shu Guo, Quan Wang, Lihong Wang, Bin Wang, and Li Guo. 2018. Knowledge Graph Embedding with Iterative Guidance from Soft Rules. In AAAI . 4816–4823. [7] Xingyue Huang, Pablo Barceló, Michael M. Bronstein, İsmail İlkan Ceylan, Mikhail Galkin, Juan L. Reutter, and Miguel Romero Orth. 2025. How Expressive are Knowledge Graph Foundation Models?. In ICML .[8] Vibhor Kanojia, Hideyuki Maeda, Riku Togashi, and Sumio Fujita. 2017. En-hancing Knowledge Graph Embedding with Probabilistic Negative Sampling. In 
+
+WWW . 801–802. [9] Jaejun Lee, Chanyoung Chung, and Joyce Jiyoung Whang. 2023. INGRAM: inductive knowledge graph embedding via relation graphs. In ICML .[10] Zhenzhou Lin, Zishuo Zhao, Jingyou Xie, and Ying Shen. 2023. Hierarchical Type Enhanced Negative Sampling for Knowledge Graph Embedding. In SIGIR .2047–2051. [11] Shuwen Liu, Bernardo Cuenca Grau, Ian Horrocks, and Egor V. Kostylev. 2021. INDIGO: GNN-Based Inductive Knowledge Graph Completion Using Pair-Wise Encoding. In NIPS . 2034–2045. [12] Shirui Pan, Linhao Luo, Yufei Wang, Chen Chen, Jiapu Wang, and Xindong Wu. 2024. Unifying Large Language Models and Knowledge Graphs: A Roadmap. 
+
+IEEE Transactions on Knowledge and Data Engineering 36, 7 (2024), 3580–3599. [13] Andrea Rossi, Denilson Barbosa, Donatella Firmani, Antonio Matinata, and Paolo Merialdo. 2021. Knowledge Graph Embedding for Link Prediction: A Comparative Analysis. ACM Transactions on Knowledge Discovery from Data 15, 2 (2021). [14] Andrea Rossi, Donatella Firmani, Paolo Merialdo, and Tommaso Teofili. 2022. Explaining Link Prediction Systems based on Knowledge Graph Embeddings. In 
+
+SIGMOD . 2062–2075. [15] Tara Safavi and Danai Koutra. 2020. CoDEx: A Comprehensive Knowledge Graph Completion Benchmark. In EMNLP . 8328–8350. [16] Wei Shen, Binhan Yang, and Yinan Liu. 2024. Jointly Canonicalizing and Linking Open Knowledge Base via Unified Embedding Learning. In WWW . 2304–2314. [17] Zhiqing Sun, Zhi-Hong Deng, Jian-Yun Nie, and Jian Tang. 2019. RotatE: Knowl-edge Graph Embedding by Relational Rotation in Complex Space. In ICLR .[18] Zequn Sun, Wei Hu, Qingheng Zhang, and Yuzhong Qu. 2018. Bootstrapping Entity Alignment with Knowledge Graph Embedding. In IJCAI . 4396–4402. [19] Kristina Toutanova and Danqi Chen. 2015. Observed versus latent features for knowledge base and text inference. In Proceedings of the 3rd workshop on continuous vector space models and their compositionality . 57–66. [20] Kai Wang, Siqiang Luo, Caihua Shan, and Yifei Shen. 2025. Towards graph foundation models: Training on knowledge graphs enables transferability to general graphs. In NIPS .[21] Liang Wang, Wei Zhao, Zhuoyu Wei, and Jingming Liu. 2022. SimKGC: Simple Contrastive Knowledge Graph Completion with Pre-trained Language Models. In ACL . 4281–4294. [22] Xin Wang, Yudong Chen, and Wenwu Zhu. 2021. A Survey on Curriculum Learning. IEEE Transactions on Pattern Analysis and Machine Intelligence 14, 8 (2021), 1–20. [23] Xiang Wang, Xiangnan He, Yixin Cao, Meng Liu, and Tat-Seng Chua. 2019. KGAT: Knowledge Graph Attention Network for Recommendation. In SIGKDD .950–958. [24] Tianle Xia, Liang Ding, Guojia Wan, Yibing Zhan, Bo Du, and Dacheng Tao. 2025. Improving Complex Reasoning over Knowledge Graph with Logic-Aware Curriculum Tuning. In AAAI . 12881–12889. [25] Yuhao Yang, Chao Huang, Lianghao Xia, and Chenliang Li. 2022. Knowledge Graph Contrastive Learning for Recommendation. In SIGIR . 1434–1443. [26] Wen Zhang, Bibek Paudel, Liang Wang, Jiaoyan Chen, Hai Zhu, Wei Zhang, Abraham Bernstein, and Huajun Chen. 2019. Iteratively Learning Embeddings and Rules for Knowledge Graph Reasoning. In WWW . 2366–2377. [27] Yucheng Zhang, Beatrice Bevilacqua, Mikhail Galkin, and Bruno Ribeiro. 2024. TRIX: A More Expressive Model for Zero-shot Domain Transfer in Knowledge Graphs. In LoG .[28] Ruilin Zhao, Feng Zhao, Long Wang, Xianzhi Wang, and Guandong Xu. 2024. KG-CoT: Chain-of-thought prompting of large language models over knowledge graphs for knowledge-aware question answering. In IJCAI . 6642–6650. [29] Zhaocheng Zhu, Zuobai Zhang, Louis-Pascal Xhonneux, and Jian Tang. 2021. Neural bellman-ford networks: A general graph neural network framework for link prediction. In NIPS . 29476–29490. 
+
+## Appendix A Data Sets 
+
+We train KGFMs on 3 KGs and inference on 44 data sets. The statis-tics of 3 KGs for training in Table 3 and 9 data sets of the transductive setting for inference are shown in Table 4. The statistics of 16 data sets of the partially inductive setting (i.e., inductive (e)) for infer-ence are shown in Table 5. The statistics of 19 data sets of the fully inductive setting (i.e., inductive (e, r)) for inference are shown in Table 6. 
+
+## B Detailed Results 
+
+We show detailed results of four KGFMs (i.e., ULTRA, TRIX, MOTIF, and SEMMA) and these KGFMs enhanced by KMAS over 44 data sets in Table 7, Table 8, Table 9, and Table 10 corresponding to the results in Table 1. 
+
+Table 3: 3 KGs for training. E denotes the number of entities. R denotes the number of relations. Train, Valid, and Test denote the number of triples for training, validation, and test in the corresponding data set. Task denotes the prediction task. h/t means the task of predicting both head entities and tail entities. 
+
+Data set E R Train Valid Test Task 
+
+CoDExMedium 17050 51 185584 10310 10311 h/t FB15k237 14541 237 272115 17535 20466 h/t WN18RR 40943 11 86835 3034 3134 h/t 
+
+Table 4: 9 data sets of the transductive setting for inference. Task denotes the prediction task. h/t means the task of pre-dicting both head entities and tail entities, tails means the task of predicting the tail entity. 
+
+Data set E R Train Valid Test Task 
+
+CoDExSmall 2034 42 32888 1827 1828 h/t CoDExLarge 77113 69 511359 30622 30622 h/t NELL995 74536 200 149678 543 2818 h/t WDsinger 10282 135 16142 2163 2203 h/t NELL23k 22925 200 25445 4961 4952 h/t FB15k237_10 11512 237 27211 15624 18150 tails FB15k237_20 13166 237 54423 16963 19776 tails FB15k237_50 14149 237 136057 17449 20324 tails Hetionet 45158 24 2025177 112510 112510 h/t Yinan Liu, Wenjin Xu, Zhiyuan Zha, Xiaochun Yang, and Bin Wang 
+
+Table 5: 16 data sets of the partially inductive setting. T denotes the number of triples in their corresponding graph. Valid and Test denote the triples that need to be predicted in the validation and test data sets in their corresponding graph. We predict both head entities and tail entities for these data sets. 
+
+Data set R Train Graph Validation Graph Test Graph E T E T Valid E T Test 
+
+WN18RRInductive:v1 9 2746 5410 2746 5410 630 922 1618 373 WN18RRInductive:v2 10 6954 15262 6954 15262 1838 2757 4011 852 WN18RRInductive:v3 11 12078 25901 12078 25901 3097 5084 6327 1143 WN18RRInductive:v4 9 3861 7940 3861 7940 934 7084 12334 2823 FB15k237Inductive:v1 180 1594 4245 1594 4245 489 1093 1993 411 FB15k237Inductive:v2 200 2608 9739 2608 9739 1166 1660 4145 947 FB15k237Inductive:v3 215 3668 17986 3668 17986 2194 2501 7406 1731 FB15k237Inductive:v4 219 4707 27203 4707 27203 3352 3051 11714 2840 NELLInductive:v2 88 2564 8219 2564 8219 922 2086 4586 935 NELLInductive:v3 142 4647 16393 4647 16393 1851 3566 8048 1620 NELLInductive:v4 76 2092 7546 2092 7546 876 2795 7073 1447 ILPC2022:small 48 10230 78616 6653 20960 2908 6653 20960 2902 ILPC2022:large 65 46626 202446 29246 77044 10179 29246 77044 10184 HM 3k 11 32118 71097 32250 71097 1201 19218 38285 1349 HM 5k 11 28601 57601 28744 57601 900 23792 48425 2124 IndigoBM 229 12721 121601 12797 121601 14121 14775 250195 14904 
+
+Table 6: 19 data sets of the fully inductive setting. We predict both head entities and tail entities for these data sets. 
+
+Data set Train Graph Validation Graph Test Graph E R T E R T Valid E R T Test 
+
+FBIngram:100 4659 134 62809 2624 77 6987 2329 2624 77 6987 2329 FBIngram:75 4659 134 62809 2792 186 9316 3106 2792 186 9316 3106 FBIngram:50 5190 153 85375 4445 205 11636 3879 4445 205 11636 3879 FBIngram:25 5190 163 91571 4097 216 17147 5716 4097 216 17147 5716 WKIngram:100 9784 67 49875 12136 37 13487 4496 12136 37 13487 4496 WKIngram:75 6853 52 28741 2722 65 3430 1143 2722 65 3430 1144 WKIngram:50 12022 72 82481 9328 93 9672 3224 9328 93 9672 3225 WKIngram:25 12659 47 41873 3228 74 3391 1130 3228 74 3391 1131 NLIngram:75 2607 96 11058 1578 116 1818 606 1578 116 1818 607 NLIngram:50 4396 106 17578 2335 119 2576 859 2335 119 2576 859 NLIngram:25 4396 106 17578 2146 120 2230 743 2146 120 2230 744 MT1 tax 10000 10 17178 10000 10 17178 1908 10000 9 16526 1834 MT2 org 10000 10 23233 10000 10 23233 2581 10000 11 21976 2441 MT2 sci 10000 16 16471 10000 16 16471 1830 10000 16 14852 1650 MT3 art 10000 45 27262 10000 45 27262 3026 10000 45 28023 3113 MT3 infra 10000 24 21990 10000 24 21990 2443 10000 27 21646 2405 MT4 sci 10000 42 12576 10000 42 12576 1397 10000 42 12516 1388 Metafam 1316 28 13821 1316 28 13821 590 656 28 7257 184 FBNELL 4636 100 10275 4636 100 10275 1055 4752 183 10685 597 Boosting Knowledge Graph Foundation Models via Enhanced Negative Sampling 
+
+Table 7: Detail results of the KGFM ULTRA and ULTRA using KMAS as the negative sampling method. 
+
+Data set ULTRA ULTRA + KMAS 
+
+MRR Hits@10 MRR Hits@10 
+
+Transductive 
+
+CoDExSmall 0.473 0.670 0.476 0.670 CoDExLarge 0.340 0.474 0.339 0.471 NELL995 0.472 0.594 0.476 0.605 WDsinger 0.351 0.480 0.387 0.504 NELL23k 0.235 0.402 0.235 0.408 FB15k237_10 0.235 0.380 0.240 0.391 FB15k237_20 0.265 0.423 0.268 0.431 FB15k237_50 0.323 0.519 0.324 0.523 Hetionet 0.284 0.406 0.284 0.406 
+
+Inductive (e) 
+
+WN18RRInductive:v1 0.658 0.776 0.652 0.794 WN18RRInductive:v2 0.658 0.772 0.657 0.771 WN18RRInductive:v3 0.373 0.496 0.383 0.510 WN18RRInductive:v4 0.605 0.714 0.605 0.716 FB15k237Inductive:v1 0.484 0.645 0.495 0.647 FB15k237Inductive:v2 0.486 0.684 0.491 0.693 FB15k237Inductive:v3 0.483 0.650 0.485 0.646 FB15k237Inductive:v4 0.483 0.672 0.482 0.674 NELLInductive:v2 0.499 0.696 0.536 0.720 NELLInductive:v3 0.521 0.706 0.530 0.713 NELLInductive:v4 0.477 0.711 0.495 0.729 ILPC2022:small 0.292 0.444 0.293 0.452 ILPC2022:large 0.283 0.420 0.295 0.424 HM:3k 0.061 0.107 0.054 0.109 HM:5k 0.054 0.102 0.050 0.099 HM:indigo 0.440 0.649 0.436 0.646 
+
+Inductive (e, r) 
+
+FBIngram:100 0.439 0.627 0.439 0.632 FBIngram:75 0.394 0.595 0.400 0.599 FBIngram:50 0.329 0.532 0.333 0.541 FBIngram:25 0.387 0.634 0.392 0.639 WKIngram:100 0.178 0.291 0.184 0.302 WKIngram:75 0.373 0.520 0.379 0.536 WKIngram:50 0.143 0.295 0.151 0.308 WKIngram:25 0.286 0.498 0.297 0.512 NLIngram:75 0.347 0.513 0.325 0.502 NLIngram:50 0.382 0.559 0.376 0.532 NLIngram:25 0.381 0.556 0.371 0.558 WikiTopicsMT1:tax 0.223 0.308 0.233 0.320 WikiTopicsMT2:org 0.088 0.153 0.090 0.153 WikiTopicsMT2:sci 0.236 0.390 0.296 0.428 WikiTopicsMT3:art 0.244 0.409 0.261 0.422 WikiTopicsMT3:infra 0.640 0.779 0.636 0.780 WikiTopicsMT4:sci 0.298 0.455 0.299 0.460 Metafam 0.177 0.726 0.267 0.788 FBNELL 0.479 0.646 0.482 0.646 
+
+Table 8: Detail results of the KGFM TRIX and TRIX using KMAS as the negative sampling method. 
+
+Data set TRIX TRIX + KMAS 
+
+MRR Hits@10 MRR Hits@10 
+
+Transductive 
+
+CoDExSmall 0.391 0.638 0.390 0.637 CoDExLarge 0.317 0.446 0.310 0.446 NELL995 0.432 0.588 0.472 0.612 WDsinger 0.370 0.495 0.379 0.501 NELL23k 0.228 0.388 0.224 0.380 FB15k237_10 0.233 0.379 0.223 0.369 FB15k237_20 0.259 0.415 0.258 0.416 FB15k237_50 0.314 0.506 0.312 0.509 Hetionet 0.191 0.352 0.195 0.366 
+
+Inductive (e) 
+
+WN18RRInductive:v1 0.644 0.798 0.687 0.804 WN18RRInductive:v2 0.646 0.787 0.684 0.785 WN18RRInductive:v3 0.445 0.569 0.446 0.569 WN18RRInductive:v4 0.588 0.710 0.647 0.727 FB15k237Inductive:v1 0.484 0.646 0.489 0.651 FB15k237Inductive:v2 0.499 0.711 0.516 0.709 FB15k237Inductive:v3 0.486 0.658 0.492 0.656 FB15k237Inductive:v4 0.476 0.683 0.485 0.676 NELLInductive:v2 0.563 0.769 0.558 0.761 NELLInductive:v3 0.567 0.757 0.563 0.749 NELLInductive:v4 0.538 0.764 0.533 0.765 ILPC2022:small 0.303 0.455 0.303 0.453 ILPC2022:large 0.305 0.430 0.300 0.427 HM:3k 0.072 0.126 0.066 0.122 HM:5k 0.066 0.109 0.063 0.110 HM:indigo 0.432 0.640 0.433 0.644 
+
+Inductive (e, r) 
+
+FBIngram:100 0.441 0.640 0.445 0.642 FBIngram:75 0.397 0.606 0.392 0.595 FBIngram:50 0.338 0.545 0.327 0.540 FBIngram:25 0.391 0.647 0.391 0.644 WKIngram:100 0.184 0.294 0.184 0.294 WKIngram:75 0.384 0.524 0.376 0.519 WKIngram:50 0.170 0.305 0.160 0.291 WKIngram:25 0.299 0.485 0.296 0.466 NLIngram:75 0.348 0.521 0.347 0.526 NLIngram:50 0.391 0.582 0.382 0.551 NLIngram:25 0.389 0.589 0.368 0.562 WikiTopicsMT1:tax 0.270 0.433 0.276 0.445 WikiTopicsMT2:org 0.096 0.153 0.094 0.151 WikiTopicsMT2:sci 0.279 0.433 0.328 0.466 WikiTopicsMT3:art 0.296 0.450 0.296 0.454 WikiTopicsMT3:infra 0.638 0.781 0.661 0.793 WikiTopicsMT4:sci 0.294 0.451 0.292 0.448 Metafam 0.316 0.823 0.377 0.880 FBNELL 0.491 0.681 0.475 0.670 Yinan Liu, Wenjin Xu, Zhiyuan Zha, Xiaochun Yang, and Bin Wang 
+
+Table 9: Detail results of the KGFM MOTIF and MOTIF using KMAS as the negative sampling method. 
+
+Data set MOTIF MOTIF + KMAS 
+
+MRR Hits@10 MRR Hits@10 
+
+Transductive 
+
+CoDExSmall 0.472 0.668 0.470 0.667 CoDExLarge 0.331 0.462 0.340 0.471 NELL995 0.440 0.596 0.468 0.616 WDsinger 0.372 0.485 0.379 0.498 NELL23k 0.220 0.374 0.223 0.389 FB15k237_10 0.244 0.390 0.244 0.390 FB15k237_20 0.263 0.421 0.266 0.424 FB15k237_50 0.313 0.510 0.318 0.514 Hetionet 0.264 0.386 0.284 0.406 
+
+Inductive (e) 
+
+WN18RRInductive:v1 0.663 0.777 0.686 0.787 WN18RRInductive:v2 0.663 0.769 0.658 0.773 WN18RRInductive:v3 0.430 0.565 0.425 0.547 WN18RRInductive:v4 0.629 0.705 0.630 0.709 FB15k237Inductive:v1 0.485 0.669 0.484 0.681 FB15k237Inductive:v2 0.494 0.719 0.494 0.715 FB15k237Inductive:v3 0.486 0.664 0.471 0.663 FB15k237Inductive:v4 0.480 0.673 0.478 0.668 NELLInductive:v2 0.527 0.724 0.532 0.742 NELLInductive:v3 0.504 0.678 0.521 0.696 NELLInductive:v4 0.475 0.685 0.471 0.731 ILPC2022:small 0.286 0.439 0.292 0.445 ILPC2022:large 0.274 0.416 0.269 0.413 HM:3k 0.059 0.100 0.100 0.107 HM:5k 0.050 0.087 0.056 0.099 HM:indigo 0.428 0.638 0.431 0.640 
+
+Inductive (e, r) 
+
+FBIngram:100 0.437 0.629 0.428 0.625 FBIngram:75 0.394 0.601 0.389 0.601 FBIngram:50 0.332 0.528 0.336 0.542 FBIngram:25 0.380 0.626 0.388 0.637 WKIngram:100 0.174 0.294 0.164 0.288 WKIngram:75 0.366 0.531 0.368 0.518 WKIngram:50 0.165 0.318 0.165 0.311 WKIngram:25 0.321 0.514 0.309 0.506 NLIngram:75 0.324 0.488 0.327 0.498 NLIngram:50 0.380 0.527 0.374 0.538 NLIngram:25 0.326 0.454 0.336 0.519 WikiTopicsMT1:tax 0.244 0.342 0.258 0.408 WikiTopicsMT2:org 0.094 0.153 0.090 0.153 WikiTopicsMT2:sci 0.275 0.422 0.266 0.428 WikiTopicsMT3:art 0.259 0.409 0.263 0.412 WikiTopicsMT3:infra 0.620 0.764 0.638 0.772 WikiTopicsMT4:sci 0.287 0.462 0.276 0.429 Metafam 0.417 0.764 0.488 0.807 FBNELL 0.463 0.633 0.468 0.651 
+
+Table 10: Detail results of the KGFM SEMMA and SEMMA using KMAS as the negative sampling method. 
+
+Data set SEMMA SEMMA + KMAS 
+
+MRR Hits@10 MRR Hits@10 
+
+Transductive 
+
+CoDExSmall 0.489 0.676 0.484 0.679 CoDExLarge 0.346 0.479 0.337 0.473 NELL995 0.416 0.546 0.468 0.604 WDsinger 0.390 0.503 0.395 0.502 NELL23k 0.241 0.413 0.238 0.412 FB15k237_10 0.233 0.385 0.241 0.385 FB15k237_20 0.262 0.430 0.266 0.427 FB15k237_50 0.326 0.524 0.329 0.525 Hetionet 0.237 0.356 0.264 0.375 
+
+Inductive (e) 
+
+WN18RRInductive:v1 0.709 0.806 0.702 0.808 WN18RRInductive:v2 0.695 0.795 0.702 0.800 WN18RRInductive:v3 0.445 0.591 0.445 0.592 WN18RRInductive:v4 0.658 0.739 0.654 0.730 FB15k237Inductive:v1 0.495 0.647 0.504 0.656 FB15k237Inductive:v2 0.513 0.696 0.508 0.695 FB15k237Inductive:v3 0.496 0.654 0.504 0.658 FB15k237Inductive:v4 0.498 0.674 0.496 0.681 NELLInductive:v2 0.526 0.711 0.531 0.728 NELLInductive:v3 0.497 0.691 0.525 0.715 NELLInductive:v4 0.480 0.726 0.492 0.727 ILPC2022:small 0.303 0.455 0.301 0.452 ILPC2022:large 0.303 0.426 0.304 0.426 HM:3k 0.053 0.084 0.057 0.094 HM:5k 0.051 0.096 0.051 0.086 HM:indigo 0.430 0.643 0.433 0.644 
+
+Inductive (e, r) 
+
+FBIngram:100 0.454 0.643 0.452 0.639 FBIngram:75 0.403 0.598 0.409 0.607 FBIngram:50 0.342 0.548 0.341 0.546 FBIngram:25 0.399 0.644 0.400 0.649 WKIngram:100 0.185 0.295 0.187 0.303 WKIngram:75 0.382 0.526 0.381 0.515 WKIngram:50 0.173 0.319 0.175 0.322 WKIngram:25 0.312 0.481 0.308 0.489 NLIngram:75 0.349 0.523 0.386 0.528 NLIngram:50 0.394 0.573 0.386 0.550 NLIngram:25 0.382 0.532 0.388 0.573 WikiTopicsMT1:tax 0.233 0.310 0.252 0.398 WikiTopicsMT2:org 0.095 0.158 0.095 0.159 WikiTopicsMT2:sci 0.237 0.340 0.258 0.398 WikiTopicsMT3:art 0.270 0.416 0.277 0.423 WikiTopicsMT3:infra 0.634 0.769 0.643 0.778 WikiTopicsMT4:sci 0.283 0.448 0.278 0.447 Metafam 0.300 0.769 0.408 0.856 FBNELL 0.464 0.644 0.485 0.647

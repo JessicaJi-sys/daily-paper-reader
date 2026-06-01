@@ -1,0 +1,181 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-01T22:58:34.335063+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 3,
+    "quick_skim_target": 11,
+    "quick_selected": 3
+  },
+  "deep_dive": [
+    {
+      "id": "2605.30247v1",
+      "source": "arxiv",
+      "title": "OOD-GraphLLM: Graph Large Language Model for Out-of-Distribution Generalized Drug Synergy Prediction",
+      "abstract": "Drug synergy prediction (DSP) aims to identify efficacious drug combinations under various cellular contexts with different targets. However, the continual emergence of novel compounds results in variations in molecular scaffolds and sizes, causing drug synergy data to exhibit out-of-distribution (O.O.D.) shifts with respect to topological structure. Existing works rely on in-distribution (I.D.) assumption, failing to handle the O.O.D. shifts. To solve this problem, we study out-of-distribution generalized drug synergy prediction through a graph large language model for the first time. Nevertheless, O.O.D. generalized DSP is highly non-trivial, posing several challenges: i) how to discover structurally relevant and irrelevant molecular representations with respect to cell targets; ii) how to find the optimal graph neural architectures that accurately calculate molecular representations; and iii) how to jointly leverage molecular structural and semantic information in LLMs. To address these challenges, we propose OOD-GraphLLM, a novel graphLLM framework which is able to accurately predict drug synergy under O.O.D. settings via jointly optimizing molecular graph representation and biomedical semantic language representations in a unified manner. Furthermore, we finetune DrugSyn-LLM, a biomedical LLM, and employ a retrieval-augmented biomedical instruction tuning strategy to align molecular topological information and molecular semantic information with language-based reasoning for O.O.D. generalized DSP. Both the source code (https://github.com/EkkoXiao/Bio-GraphLLM) and released model (https://mn.cs.tsinghua.edu.cn/bio-graphllm/) are publicly available, where users are allowed to download model resources and interactively use the system through a web interface.",
+      "authors": [
+        "Xin Wang",
+        "Linxin Xiao",
+        "Yang Yao",
+        "Wenwu Zhu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.MM"
+      ],
+      "published": "2026-05-28T17:12:48+00:00",
+      "link": "https://arxiv.org/pdf/2605.30247v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "graph large language model for out-of-distribution drug synergy prediction, addressing cold-start",
+      "llm_evidence_cn": "图大语言模型用于分布外药物协同作用预测，处理冷启动场景",
+      "llm_evidence": "图大语言模型用于分布外药物协同作用预测，处理冷启动场景",
+      "canonical_evidence": "图大语言模型用于分布外药物协同作用预测，处理冷启动场景",
+      "llm_tldr_en": "OOD-GraphLLM uses a graph large language model to predict drug synergy for novel compounds in out-of-distribution settings, enabling cold-start prediction.",
+      "llm_tldr_cn": "现有药物协同预测方法假设分布内数据，无法处理新化合物导致的分布偏移。本文提出OOD-GraphLLM，首次使用图大语言模型解决分布外泛化问题。模型通过发现与药物协同相关的结构特征，在新分子骨架和大小下仍保持准确预测。在多个基准上验证，显著优于现有方法。该工作为冷启动药物相互作用预测提供了图LLM范式的直接支持。",
+      "llm_tldr": "现有药物协同预测方法假设分布内数据，无法处理新化合物导致的分布偏移。本文提出OOD-GraphLLM，首次使用图大语言模型解决分布外泛化问题。模型通过发现与药物协同相关的结构特征，在新分子骨架和大小下仍保持准确预测。在多个基准上验证，显著优于现有方法。该工作为冷启动药物相互作用预测提供了图LLM范式的直接支持。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "Large Language Model + Drug-Drug Interaction Prediction",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2605.27023v1",
+      "source": "arxiv",
+      "title": "Boosting Knowledge Graph Foundation Models via Enhanced Negative Sampling",
+      "abstract": "Knowledge graphs (KGs) have become the core backbone of numerous downstream tasks such as question answering and recommender systems. However, despite all this, KGs are often very incomplete. To perform zero-shot knowledge graph completion in unseen KGs, which have different relational vocabularies from those used for pre-training, KG foundation models (KGFMs) receive a wide range of attention. Existing KGFMs often perform training using random negative triples, which are constructed by replacing the head or tail entity of a positive triple with a random entity. However, these negative triples are often constructed with limited quality, providing weak supervision for KGFM training. In this paper, we propose a simple yet effective adaptive negative sampling approach, KMAS, to enhance existing KGFMs. KMAS constructs hard negative triples through the updated relation embeddings generated from the existing KGFM's relation encoder. To further adaptively align with the evolving capability of the KGFM during the training process, KMAS adjusts the ratio of hard negative triples dynamically throughout the whole training process: after a warmup phrase, it increases the ratio linearly and then decreases linearly. Extensive experiments are conducted over 44 data sets. Experimental results demonstrate that our proposed negative sampling method can enhance many SOTA KGFMs without requiring excessive additional time or memory consumption.",
+      "authors": [
+        "Yinan Liu",
+        "Wenjin Xu",
+        "Zhiyuan Zha",
+        "Xiaochun Yang",
+        "Bin Wang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-26T13:42:41+00:00",
+      "link": "https://arxiv.org/pdf/2605.27023v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "knowledge graph completion method transferable to drug discovery",
+      "llm_evidence_cn": "知识图谱补全方法可迁移至药物发现",
+      "llm_evidence": "知识图谱补全方法可迁移至药物发现",
+      "canonical_evidence": "知识图谱补全方法可迁移至药物发现",
+      "llm_tldr_en": "Proposes adaptive negative sampling to improve KG foundation models for zero-shot completion, boosting performance on unseen KGs.",
+      "llm_tldr_cn": "当前知识图谱基础模型在零样本补全中因随机负采样导致监督信号弱。本文提出自适应负采样策略，通过动态调整负样本质量增强模型泛化能力。在多个未见知识图谱上实验表明，该方法显著提升了链接预测准确率。该工作为药物发现中的知识图谱补全提供了可迁移的通用方法。",
+      "llm_tldr": "当前知识图谱基础模型在零样本补全中因随机负采样导致监督信号弱。本文提出自适应负采样策略，通过动态调整负样本质量增强模型泛化能力。在多个未见知识图谱上实验表明，该方法显著提升了链接预测准确率。该工作为药物发现中的知识图谱补全提供了可迁移的通用方法。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "knowledge graph completion for drug discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.30747v1",
+      "source": "arxiv",
+      "title": "Generating Graph-like Rules for Knowledge Graph Reasoning via Diffusion Models",
+      "abstract": "Logical rules constitute a cornerstone of knowledge graph (KG) reasoning, valued for their interpretability and ability to model relational patterns. However, existing rule mining methods predominantly focus on simple chain-like rules and therefore neglect the richer relational information encoded in graph-like structures, such as cycles and branches. This limitation is further exacerbated by computational bottlenecks caused by the combinatorial explosion of the search space, which is especially challenging for graph-like rules. Meanwhile, generative approaches such as diffusion models, despite their success in other domains, can not be directly applied to rule mining because their training objectives are not aligned with the goal of learning high-quality rules, and non-differentiable KG rule quality metrics cannot directly guide model optimization. To address these limitations, we propose GRiD, a framework that reformulates graph-like rule discovery as a discrete generative process conditioned on the target relation. GRiD employs a two-phase training strategy. First, supervised pre-training enables GRiD to capture structural priors from subgraphs sampled from the KG meta-graph. Subsequently, reinforcement learning is applied to fine-tune GRiD through policy gradient optimization guided directly by non-differentiable rule-quality metrics. Experiments on six benchmark datasets show that GRiD achieves competitive performance on KG completion tasks. Ablation studies confirm the efficiency and robustness of GRiD and further show that graph-like rules complement chain-like rules in KG completion. Our codes and datasets are available in https://github.com/Haoxiang-Cheng/GRiD",
+      "authors": [
+        "Haoxiang Cheng",
+        "Yunfei Wang",
+        "Chao Chen",
+        "Kewei Cheng",
+        "Zhipeng Lin",
+        "Haoxuan Li",
+        "Changjun Fan",
+        "Shixuan Liu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-05-29T02:23:13+00:00",
+      "link": "https://arxiv.org/pdf/2605.30747v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Diffusion model for generating graph-like rules improves KG reasoning, applicable to drug discovery",
+      "llm_evidence_cn": "扩散模型生成图结构规则提升知识图谱推理能力，可用于药物发现中的知识图谱补全",
+      "llm_evidence": "扩散模型生成图结构规则提升知识图谱推理能力，可用于药物发现中的知识图谱补全",
+      "canonical_evidence": "扩散模型生成图结构规则提升知识图谱推理能力，可用于药物发现中的知识图谱补全",
+      "llm_tldr_en": "Proposes diffusion models to generate complex graph-like rules for KG reasoning, moving beyond chain rules, with potential for drug discovery KG completion.",
+      "llm_tldr_cn": "现有知识图谱规则挖掘主要关注链式规则，忽略了图结构规则（如循环、分支）。本文提出使用扩散模型生成图结构规则，通过设计对齐推理目标的训练目标，有效挖掘丰富的规则模式。在基准KG上验证了方法的有效性，可应用于药物发现中的KG补全任务。",
+      "llm_tldr": "现有知识图谱规则挖掘主要关注链式规则，忽略了图结构规则（如循环、分支）。本文提出使用扩散模型生成图结构规则，通过设计对齐推理目标的训练目标，有效挖掘丰富的规则模式。在基准KG上验证了方法的有效性，可应用于药物发现中的KG补全任务。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "knowledge graph completion for drug discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-05-25-727605-v1",
+      "source": "biorxiv",
+      "title": "BIFO: A Biological Information Flow Ontology for Directed Propagation in Heterogeneous Biomedical Knowledge Graphs",
+      "abstract": "Biomedical knowledge graphs integrate heterogeneous data by connecting many entity types through many relationship types. Computational analyses that propagate signal across these graphs (random walks, diffusion, and message passing) implicitly assume that every traversable edge can carry a biological signal. In a heterogeneous KG this is rarely true: hierarchical, lexical, and purely statistical edges do not, by themselves, define an admissible directed state transformation, and traversing them propagates signal along paths that are not biologically meaningful. We present the Biological Information Flow Ontology (BIFO), a graph-agnostic specification of which directed transformations are biologically admissible for computable information flow. BIFO defines fourteen entity classes, a taxonomy of flow classes organized around the backbone G+CH [-&gt;]RNA [-&gt;]P [-&gt;]PW [-&gt;]C [-&gt;]PH [-&gt;]DS, a set of admissibility constraints, and a two-level CURIE mapping that can be applied without schema-specific code to any graph whose identifiers and predicates are resolvable through, or extendable to, the BIFO mapping tables. A four-step conditioning protocol converts a raw property graph into a conditioned propagation graph in which only admissible, direction-aware edges remain. We provide a reference implementation on the Data Distillery Knowledge Graph (DDKG); conditioning a cohort-independent, gene-anchored subgraph as a BIFO substrate of 33.6 million edges retained 23.7 million (70.7%) as BIFO-classified relationships, cleanly separating 13.3 million propagating mechanistic edges from 10.5 million retained-but-non-propagating observational associations, and confirming that pathway concepts are configured as scoring accumulation endpoints for BIFO-PPR pathway scoring. BIFO is an admissibility specification for computable propagation of signal over knowledge graphs. It is released as an open specification with versioned mapping tables and tooling, providing a reusable substrate for biologically interpretable, direction-aware analysis of biomedical knowledge graphs.",
+      "authors": [
+        "Taylor, D. M.",
+        "Mohseni Ahooyi, T.",
+        "Stear, B.",
+        "Zhang, Y.",
+        "Lahiri, A. M.",
+        "Simmons, J. A.",
+        "Chinwalla, A.",
+        "Nemarich, C.",
+        "Callahan, T. J.",
+        "Silverstein, J. C."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-05-28T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.05.25.727605v1.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Ontology for biological signal propagation in KG supports DDI prediction methods",
+      "llm_evidence_cn": "用于知识图谱中生物学信号传播的本体，支持药物相互作用预测方法",
+      "llm_evidence": "用于知识图谱中生物学信号传播的本体，支持药物相互作用预测方法",
+      "canonical_evidence": "用于知识图谱中生物学信号传播的本体，支持药物相互作用预测方法",
+      "llm_tldr_en": "BIFO defines which KG edges allow biologically meaningful propagation, enabling more accurate signal diffusion for tasks like DDI prediction.",
+      "llm_tldr_cn": "现有生物医学知识图谱计算方法在传播信号时未区分边类型的生物学合理性，导致传播路径包含非生物意义边。本文提出生物信息流本体（BIFO），明确定义哪些边允许定向状态变换。该本体可应用于任何异构KG，确保信号传播的生物学可靠性，从而提升基于KG的药物相互作用预测等下游任务的准确性。",
+      "llm_tldr": "现有生物医学知识图谱计算方法在传播信号时未区分边类型的生物学合理性，导致传播路径包含非生物意义边。本文提出生物信息流本体（BIFO），明确定义哪些边允许定向状态变换。该本体可应用于任何异构KG，确保信号传播的生物学可靠性，从而提升基于KG的药物相互作用预测等下游任务的准确性。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
