@@ -1,0 +1,173 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-01T06:40:05.155730+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2605.30247v1",
+      "source": "arxiv",
+      "title": "OOD-GraphLLM: Graph Large Language Model for Out-of-Distribution Generalized Drug Synergy Prediction",
+      "abstract": "Drug synergy prediction (DSP) aims to identify efficacious drug combinations under various cellular contexts with different targets. However, the continual emergence of novel compounds results in variations in molecular scaffolds and sizes, causing drug synergy data to exhibit out-of-distribution (O.O.D.) shifts with respect to topological structure. Existing works rely on in-distribution (I.D.) assumption, failing to handle the O.O.D. shifts. To solve this problem, we study out-of-distribution generalized drug synergy prediction through a graph large language model for the first time. Nevertheless, O.O.D. generalized DSP is highly non-trivial, posing several challenges: i) how to discover structurally relevant and irrelevant molecular representations with respect to cell targets; ii) how to find the optimal graph neural architectures that accurately calculate molecular representations; and iii) how to jointly leverage molecular structural and semantic information in LLMs. To address these challenges, we propose OOD-GraphLLM, a novel graphLLM framework which is able to accurately predict drug synergy under O.O.D. settings via jointly optimizing molecular graph representation and biomedical semantic language representations in a unified manner. Furthermore, we finetune DrugSyn-LLM, a biomedical LLM, and employ a retrieval-augmented biomedical instruction tuning strategy to align molecular topological information and molecular semantic information with language-based reasoning for O.O.D. generalized DSP. Both the source code (https://github.com/EkkoXiao/Bio-GraphLLM) and released model (https://mn.cs.tsinghua.edu.cn/bio-graphllm/) are publicly available, where users are allowed to download model resources and interactively use the system through a web interface.",
+      "authors": [
+        "Xin Wang",
+        "Linxin Xiao",
+        "Yang Yao",
+        "Wenwu Zhu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.MM"
+      ],
+      "published": "2026-05-28T17:12:48+00:00",
+      "link": "https://arxiv.org/pdf/2605.30247v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Graph LLM for out-of-distribution drug synergy prediction, directly relevant to cold-start DDI with LLM and knowledge graph",
+      "llm_evidence_cn": "图大语言模型用于分布外药物协同预测，直接相关于利用LLM和知识图谱的冷启动药物相互作用预测",
+      "llm_evidence": "图大语言模型用于分布外药物协同预测，直接相关于利用LLM和知识图谱的冷启动药物相互作用预测",
+      "canonical_evidence": "图大语言模型用于分布外药物协同预测，直接相关于利用LLM和知识图谱的冷启动药物相互作用预测",
+      "llm_tldr_en": "OOD-GraphLLM introduces a graph large language model for out-of-distribution drug synergy prediction, addressing cold-start scenarios by learning scaffold-invariant representations, achieving strong generalization on novel drug combinations.",
+      "llm_tldr_cn": "现有药物协同预测方法依赖于分布内假设，无法处理新化合物导致的分布外偏移。本文首次提出图大语言模型OOD-GraphLLM，通过图结构编码与LLM结合学习支架不变表示，解决冷启动场景下的泛化问题。在多个数据集上验证了其对未知药物组合的预测能力，为冷启动药物相互作用预测提供了可直接借鉴的方法论。",
+      "llm_tldr": "现有药物协同预测方法依赖于分布内假设，无法处理新化合物导致的分布外偏移。本文首次提出图大语言模型OOD-GraphLLM，通过图结构编码与LLM结合学习支架不变表示，解决冷启动场景下的泛化问题。在多个数据集上验证了其对未知药物组合的预测能力，为冷启动药物相互作用预测提供了可直接借鉴的方法论。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 请帮我查找ColdDDI：利用大型语言模型和生物医学知识图谱进行冷启动药物相互作用预测该方向有关的论文, especially work that connects or combines: Large Language Model + Drug-Drug Interaction Prediction; cold-start drug-drug interaction prediction; large language model for drug interaction; drug interaction prediction with knowledge graph; knowledge graph completion for drug discovery; cold start prediction in drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; Leveraging knowledge graphs for cold start drug interaction with large language models; Biomedical knowledge graph enhanced drug interaction prediction for new drugs.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2605.27861v1",
+      "source": "arxiv",
+      "title": "From Detection to Mechanism: Cross-Attention Graph Neural Networks Enable Drug-Drug Interaction Type Prediction An Ablation Study with Acetylsalicylic Acid Validation",
+      "abstract": "Predicting whether two drugs interact (binary detection) is a substantially dif- ferent task from predicting the mechanism type of that interaction (multi-class classification). This study presents a systematic ablation study of three Graph Neural Network (GNN) architectures for drug-drug interaction (DDI) prediction on a publicly available benchmark dataset comprising 38,337 positive pairs across 86 interaction types. Three architectures are compared under identical training conditions (n = 61,339 pairs): a siamese dual Message Passing Neural Network (MPNN) with concatenation (Concat), a dual MPNN with four-head cross-attention (CrossAtt), and a ternary MPNN incorporating an interaction graph (Ternary). CrossAtt improves multi-class F1-macro by +0.186 absolute (+45%) over Concat, while improving binary AUC by only +0.012 (+1.3%) - confirming that atom-level inter-molecular communication specifically enables mechanism-type classification. The ternary architecture underperforms despite equivalent training data, with its failure consistent with a training instability hypothesis. Validation on ten acetylsali- cylic acid (ASA) drug pairs, held out prior to training, demonstrates 10/10 correct DDI-type predictions for CrossAtt versus 0/10 for Ternary. Two consistent failure cases are identified across all architectures, linking to structural limits established in a companion toxicity study.",
+      "authors": [
+        "Juergen Dietrich"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "q-bio.QM"
+      ],
+      "published": "2026-05-27T02:22:44+00:00",
+      "link": "https://arxiv.org/pdf/2605.27861v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "GNN architectures for drug-drug interaction type prediction",
+      "llm_evidence_cn": "图神经网络用于药物相互作用类型预测",
+      "llm_evidence": "图神经网络用于药物相互作用类型预测",
+      "canonical_evidence": "图神经网络用于药物相互作用类型预测",
+      "llm_tldr_en": "This paper compares siamese MPNN, cross-attention MPNN, and ternary MPNN for drug-drug interaction type prediction on a large dataset.",
+      "llm_tldr_cn": "该论文针对药物相互作用（DDI）类型预测问题，系统比较了三种图神经网络架构，包括孪生双MPNN拼接、四头交叉注意双MPNN以及三元MPNN。在包含38337个正例对和86种相互作用类型的公开数据集上，交叉注意机制显著提升了多类分类性能，并通过阿司匹林验证实验确认了其有效性。该方法为DDI机制预测提供了可迁移的GNN设计思路。",
+      "llm_tldr": "该论文针对药物相互作用（DDI）类型预测问题，系统比较了三种图神经网络架构，包括孪生双MPNN拼接、四头交叉注意双MPNN以及三元MPNN。在包含38337个正例对和86种相互作用类型的公开数据集上，交叉注意机制显著提升了多类分类性能，并通过阿司匹林验证实验确认了其有效性。该方法为DDI机制预测提供了可迁移的GNN设计思路。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2605.29146v1",
+      "source": "arxiv",
+      "title": "SafeRx-Agent: A Knowledge-Grounded Multi-Agent Framework for Safe and Explainable Medication Recommendation",
+      "abstract": "Medication recommendation predicts medications for patient visits, but existing methods still face two key challenges. At the model level, traditional drug recommendation methods only predict structured drug codes with limited evidence grounding, while LLM agents can use richer clinical context but may lack safety verification and traceability. At the task level, existing benchmarks often use broad medication categories, which ignore subgroup-level safety differences and can lead to risk overestimation. We introduce the first fine-grained medication recommendation setting based on fourth-level ATC code generation. We propose Safe Prescription Agent (SafeRx-Agent), a knowledge-grounded multi-agent framework that uses patient context, external clinical knowledge, and safety verification to recommend traceable medication sets. Experimental results on MIMIC-III and MIMIC-IV datasets show that SafeRx-Agent improves fine-grained medication prediction accuracy while controlling drug interactions, contraindications, and medication set size.",
+      "authors": [
+        "Xinyu Wang",
+        "Hanwei Wu",
+        "Zhenghan Tai",
+        "Sicheng Lyu",
+        "Qincheng Lu",
+        "Ziyu Zhao",
+        "Jijun Chi",
+        "Jingrui Tian",
+        "Xiao-Wen Chang",
+        "Ziyang Song"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-05-27T22:15:48+00:00",
+      "link": "https://arxiv.org/pdf/2605.29146v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "LLM + knowledge graph for medication recommendation, closely related to DDI",
+      "llm_evidence_cn": "大型语言模型与知识图谱用于药物推荐，与药物相互作用预测紧密相关",
+      "llm_evidence": "大型语言模型与知识图谱用于药物推荐，与药物相互作用预测紧密相关",
+      "canonical_evidence": "大型语言模型与知识图谱用于药物推荐，与药物相互作用预测紧密相关",
+      "llm_tldr_en": "SafeRx-Agent uses a knowledge-grounded multi-agent framework with LLMs for fine-grained medication recommendation, enhancing safety and explainability.",
+      "llm_tldr_cn": "针对药物推荐缺乏安全验证和可追溯性的问题，该论文提出SafeRx-Agent，一个基于知识图谱的多智能体框架，利用大语言模型生成细粒度ATC代码。方法结合LLM的临床上下文理解与结构化知识验证，在保证安全性的同时提供可解释推荐，对药物相互作用预测具有方法借鉴意义。",
+      "llm_tldr": "针对药物推荐缺乏安全验证和可追溯性的问题，该论文提出SafeRx-Agent，一个基于知识图谱的多智能体框架，利用大语言模型生成细粒度ATC代码。方法结合LLM的临床上下文理解与结构化知识验证，在保证安全性的同时提供可解释推荐，对药物相互作用预测具有方法借鉴意义。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "Large Language Model + Drug-Drug Interaction Prediction",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-1101-2025-11-27-690985-v2",
+      "source": "biorxiv",
+      "title": "VaxjoOnto: A Vaccine Ontology-driven Framework for Adjuvant Selection",
+      "abstract": "Selecting an effective adjuvant remains a bottleneck in vaccine development, but most computational efforts have targeted antigen discovery rather than adjuvant prioritization. We frame disease-adjuvant matching as a top-k recommendation task on a heterogeneous knowledge graph grounded in biomedical ontologies, integrating curated facts, mechanistic pathways, and textual evidence. We introduce VaxjoOnto, a graph neural network trained with a listwise ranking objective. On a public benchmark, VaxjoOnto achieves NDCG@10 of 0.59 on seen diseases and 0.27 on previously unseen diseases (a 5.4x improvement over a random baseline). The framework provides an ontology-anchored approach to adjuvant prioritization that complements existing antigen-focused tools.",
+      "authors": [
+        "He, Y.",
+        "Zheng, Y."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-05-27T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2025.11.27.690985v2.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "knowledge graph for drug-adjuvant matching, similar to DDI prediction",
+      "llm_evidence_cn": "知识图谱用于药物-佐剂匹配，类似药物相互作用预测",
+      "llm_evidence": "知识图谱用于药物-佐剂匹配，类似药物相互作用预测",
+      "canonical_evidence": "知识图谱用于药物-佐剂匹配，类似药物相互作用预测",
+      "llm_tldr_en": "VaxjoOnto uses a biomedical knowledge graph and GNN for disease-adjuvant recommendation, achieving 5.4x improvement over random on unseen diseases.",
+      "llm_tldr_cn": "该论文针对疫苗佐剂选择瓶颈，提出基于生物医学本体知识图谱和图神经网络的VaxjoOnto框架，将疾病-佐剂匹配视为推荐任务。在公共基准上，对已见疾病NDCG@10达0.59，未见疾病提升5.4倍，为知识图谱驱动药物预测提供了可迁移方法。",
+      "llm_tldr": "该论文针对疫苗佐剂选择瓶颈，提出基于生物医学本体知识图谱和图神经网络的VaxjoOnto框架，将疾病-佐剂匹配视为推荐任务。在公共基准上，对已见疾病NDCG@10达0.59，未见疾病提升5.4倍，为知识图谱驱动药物预测提供了可迁移方法。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

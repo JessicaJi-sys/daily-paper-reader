@@ -1,0 +1,996 @@
+Title: OOD-GraphLLM: Graph Large Language Model for Out-of-Distribution Generalized Drug Synergy Prediction
+
+URL Source: https://arxiv.org/pdf/2605.30247v1
+
+Published Time: Fri, 29 May 2026 01:53:11 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# OOD-GraphLLM: Graph Large Language Model for Out-of-Distribution Generalized Drug Synergy Prediction 
+
+## Xin Wang 
+
+DCST, BNRist, Tsinghua University Beijing, China xin_wang@tsinghua.edu.cn 
+
+## Linxin Xiao 
+
+DCST, Tsinghua University Beijing, China xlx21@mails.tsinghua.edu.cn 
+
+## Yang Yao 
+
+DCST, Tsinghua University Beijing, China yaoyang21@mails.tsinghua.edu.cn 
+
+## Wenwu Zhu ∗
+
+DCST, BNRist, Tsinghua University Beijing, China wwzhu@tsinghua.edu.cn 
+
+## Abstract 
+
+Drug synergy prediction (DSP) aims to identify efficacious drug combinations under various cellular contexts with different targets. However, the continual emergence of novel compounds results in variations in molecular scaffolds and sizes, causing drug synergy data to exhibit out-of-distribution (O.O.D.) shifts with respect to topological structure. Existing works rely on in-distribution (I.D.) assumption, failing to handle the O.O.D. shifts. To solve this prob-lem, we study out-of-distribution generalized drug synergy pre-diction through a graph large language model for the first time. Nevertheless, O.O.D. generalized DSP is highly non-trivial, posing several challenges: i) how to discover structurally relevant and ir-relevant molecular representations with respect to cell targets; ii) how to find the optimal graph neural architectures that accurately calculate molecular representations; and iii) how to jointly lever-age molecular structural and semantic information in LLMs. To address these challenges, we propose OOD-GraphLLM , a novel graphLLM framework which is able to accurately predict drug syn-ergy under O.O.D. settings via jointly optimizing molecular graph representation and biomedical semantic language representations in a unified manner. Concretely, we first propose a target-adaptive disentangled molecular graph encoding model to distinguish target-relevant and target-irrelevant molecular representations for both seen and unseen drugs, then introduce a pairwise attentive graph architecture search algorithm that dynamically finds the best neural architectures to calculate molecular representations for different and new drug pairs, followed by our design of multi-level contextu-alized cellular feature alignment mechanism to incorporate cell line context information at both structural and semantic levels. Further-more, we finetune DrugSyn-LLM, a biomedical LLM, and employ  
+
+> ∗Corresponding author. DCST is the abbreviation for Department of Computer Science and Technology. BNRist is the abbreviation for Beijing National Research Center for Information Science and Technology. Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org.
+> Conference’17, Washington, DC, USA
+> ©2026 Copyright held by the owner/author(s). Publication rights licensed to ACM. ACM ISBN 978-x-xxxx-xxxx-x/YYYY/MM https://doi.org/10.1145/nnnnnnn.nnnnnnn
+
+a retrieval-augmented biomedical instruction tuning strategy to align molecular topological information and molecular semantic information with language-based reasoning for O.O.D. generalized DSP. Extensive experiments under several O.O.D. settings demon-strate that the proposed OOD-GraphLLM consistently outperforms state-of-the-art approaches on various DSP tasks. Both the source code 1 and released model 2 are publicly available, where users are allowed to download model resources and interactively use the system through a web interface. 
+
+## CCS Concepts 
+
+• Applied computing → Bioinformatics ; • Computing method-ologies → Neural networks .
+
+## Keywords 
+
+Graph Neural Network (GNN), Large Language Model (LLM), Drug Synergy Prediction (DSP), Out-of-distribution (O.O.D.) 
+
+ACM Reference Format: 
+
+Xin Wang, Linxin Xiao, Yang Yao, and Wenwu Zhu. 2026. OOD-GraphLLM: Graph Large Language Model for Out-of-Distribution Generalized Drug Synergy Prediction. In . ACM, New York, NY, USA, 12 pages. https://doi. org/10.1145/nnnnnnn.nnnnnnn 
+
+## 1 Introduction 
+
+Drug combination therapy [ 9] has emerged as a promising strategy for treating complex diseases such as cancer and drug-resistant infections. Compared to single-drug treatments, effective drug com-binations can enhance therapeutic efficacy, reduce toxicity, and mitigate the development of resistance. Therefore, Drug synergy prediction (DSP) [ 15 , 20 , 24 , 31 ] has become a critical and funda-mental problem in computational drug discovery, aiming to identify efficacious drug combinations under various cellular contexts with different cell targets. Recent advances in machine learning, partic-ularly graph neural networks (GNNs) [ 22 , 32 , 37 ], have substan-tially improved DSP by conducting representation learning over the molecular topological structures of drugs to predict drug-drug synergies. By representing drugs as molecular graphs, existing lit-erature is able to capture topological structural information that  
+
+> 1https://github.com/EkkoXiao/Bio-GraphLLM
+> 2https://mn.cs.tsinghua.edu.cn/bio-graphllm/
+> arXiv:2605.30247v1 [cs.LG] 28 May 2026 Conference’17, July 2017, Washington, DC, USA Xin Wang et al.
+
+plays an important role in determining the corresponding molecular chemical properties. However, due to the continuous emergence of novel compounds in drug discovery, drug synergy data often exhibit out-of-distribution (O.O.D.) shifts with respect to topological structure at the drug level, primarily caused by variations in molecular scaffolds and compound sizes. This out-of-distribution generalized drug synergy prediction (O.O.D. generalized DSP) problem requires models to generalize well to new drugs and previously unseen molecular scaf-folds. Fig. 1 (a) illustrates one example of O.O.D. generalized DSP. Existing works on DSP heavily rely on the in-distribution (I.D.) assumption, where the drug structures tend to remain the same for training and testing data, failing to handle the O.O.D. shifts. In this paper, we study out-of-distribution generalized drug synergy prediction by resorting to a graph large language model (shown in Fig. 1 (c)), to the best of our knowledge, for the first time. Nevertheless, O.O.D. generalized DSP is highly non-trivial, with several key challenges. For drugs with O.O.D. topological structures, (1) it is challenging to obtain structurally relevant and irrelevant molecular representations with respect to cell targets; (2) it is challenging to find the optimal graph neural architecture that can calculate accurate molecular representations; (3) it is challenging to jointly leverage structural and semantic information from molecules within LLMs. To address these challenges, we propose OOD-GraphLLM , a novel graphLLM framework capable of accurately predicting drug synergy under O.O.D. setting via joint optimization of molecular graph representation and biomedical semantic language represen-tations in a unified manner. Given new drugs, the proposed OOD-GraphLLM treats cell lines as contexts, obtains the best graph neu-ral network (GNN) architecture for calculating the new molecular graph representations, aligns these representations with both topo-logical and semantic cellular features, tokenizes all the features as input to a biomedically finetuned LLM for O.O.D. generalized DSP, and optimizes the whole procedure within one single framework. In concrete, we first propose a target-adaptive disentangled molecular graph encoding model that learns target-relevant and target-irrelevant molecular representations, conditioning the target-relevant representations on various cell targets with disen-tanglement constraint to preserve target-aware information for new molecular structures. Building upon the target-adaptive disen-tangled molecular graph representations, we introduce a pairwise attentive graph architecture search algorithm that dynamically finds the optimal graph neural architectures for new drug pairs, allowing for accurate molecular representation learning under dis-tribution shifts. We then design a multi-level contextualized cellular feature alignment mechanism to incorporate cell line information into molecular graph representations as contexts at both the structural and semantic levels. Last but not least, we fine-tune DrugSyn-LLM, a biomedical LLM, with retrieval-augmented biomedical instruction tuning strategy , aligning molecular topological and semantic information with language-based reason-ing to accomplish O.O.D. generalized DSP. We conduct extensive experiments to demonstrate the superiority of OOD-GraphLLM over state-of-the-art baselines under various O.O.D. settings. The contributions of this paper are summarized as follows: 
+
+• We are the first to study the problem of out-of-distribution generalized drug synergy prediction (O.O.D. generalized DSP) by resorting to graph large language models, to the best of our knowledge. 
+
+• We propose OOD-GraphLLM , a novel graphLLM framework for accurate O.O.D. generalized DSP, which jointly optimizes our proposed four components, i.e., (1) target-adaptive disen-tangled molecular graph encoding, (2) pairwise attentive graph architecture search, (3) multi-level contextualized cellular fea-ture alignment and (4) finetuned biomedical LLM DrugSyn-LLM with retrieval-augmented instruction tuning, within a unified framework. 
+
+• We conduct extensive experiments under multiple O.O.D. evalu-ation settings to demonstrate that the proposed OOD-GraphLLM is able to consistently outperform state-of-the-art baselines, highlighting its superior generalization ability and prediction accuracy under molecular topological distribution shifts. c1cc2c(s1)CNCC      
+
+> O=c1cccc2c(c1)CCC
+> c1ccccc1-2
+> O=C1C=CC(=O)C2= C1CC1C3NC3CN21
+> TCS 401 Fingolimod Mitomycin C Colchicine
+> Ring Count, Bertz Complexity Index ↑
+> Topological
+> Shift
+> (a) O.O.D. generalized DSP problem Prediction for New Drugs
+> In -Distribution (I.D.) Out -Of -Distribution (O.O.D.)
+> Handcrafted Features
+> Fixed Neural Architecture
+> Cell Line
+> (b) Current methods
+> New
+> Drugs
+> Adaptive Neural Architecture
+> DrugSyn-LLM
+> Knowledge Retrieval
+> Contextualized
+> Embedding
+> (c) OOD -GraphLLM
+> Target Cell Line
+> New
+> Drugs
+> c1ccccc1
+> Training on Existing Drugs
+> V.S
+> Target-Adaptive Disentangled Features
+
+Figure 1: Comparisons between current methods (b) and OOD-GraphLLM (c) under O.O.D. generalized DSP (a) settings. 
+
+## 2 Related Works 
+
+Drug Synergy Prediction (DSP) . Deep learning-based models have been widely adopted for drug synergy prediction due to their ability to model complex drug–drug and drug–cell interac-tions. Early methods, such as DeepSynergy [ 31 ], MatchMaker [ 20 ], and TreeCombo [ 15 ], mainly used molecular descriptors and cell-line gene expression profiles with deep neural networks or gradi-ent boosting models. With the development of graph neural net-works (GNNs), methods such as DeepDDS [ 37 ], DDoS [ 32 ], and GAECDS [ 22 ] represented drugs as molecular graphs to capture atom-level structural information. Meanwhile, DFFNDDS [ 41 ] ex-ploited pretrained language models such as BERT [ 4 ] to extract semantic representations from SMILES strings, while DTSyn [ 11 ]and AttenSyn [ 38 ] further introduced attention-based Transformer architectures for drug–drug and drug–cell interaction modeling. More recently, BAITSAO [ 29 ] has explored large language models as predictors for drug synergy tasks. Despite these advances, most existing methods are developed under the in-distribution assump-tion and are rarely designed for O.O.D. generalization, leaving the OOD-GraphLLM: Graph Large Language Model for Out-of-Distribution Generalized Drug Synergy Prediction Conference’17, July 2017, Washington, DC, USA 
+
+integration of GNNs and LLMs for distribution-shift-aware drug synergy prediction underexplored. 
+
+Graph Large Language Models (GraphLLMs) . Graph large lan-guage models (GraphLLMs) extend the reasoning and generation abilities of LLMs to graph-structured data, enabling tasks such as graph understanding and question answering [ 12 , 17 , 39 ]. Ex-isting studies mainly follow two directions. Prompt-based meth-ods, such as InstructGLM [ 43 ] and NLGraph [ 36 ], translate graph structures into textual prompts that can be interpreted by LLMs. Representation-alignment methods, such as GraphGPT [ 34 ] and GraphLLM [ 2], encode graphs with GNNs and feed the result-ing graph tokens into language models. Further works, including GLEM [ 45 ] and PATTON [ 18 ], explore iterative co-training and alignment between GNNs and LLMs to improve representation learning. Motivated by the graph structure of molecules and the semantic information in SMILES, recent studies such as MolTC [ 7 ]and DyNAS-DDI [ 40 ] have applied GraphLLM-style architectures to drug-related tasks. However, existing GraphLLM frameworks are mostly designed for constrained prediction or reasoning scenarios, and have not fully addressed complex drug synergy prediction set-tings that require modeling higher-order drug–drug–cell context and O.O.D. shifts. 
+
+## 3 OOD-GraphLLM 
+
+In this section, we describe the proposed OOD-GraphLLMin detail. Sec 3.1 formally formulates the drug synergy prediction problem and defines the learning objectives. Sec 3.2 and Sec 3.3 present the target-adaptive disentangled molecular graph encoding model and the pairwise attentive graph architecture search algorithm, respectively. Sec 3.4 describes the multi-level contextualized cel-lular feature alignment mechanism, and finally, Sec 3.5 details the design of finetuning DrugSyn-LLM with the retrieval-augmented biomedical instruction tuning strategy and outlines the overall multi-stage training procedure. Fig. 2 shows the overall framework of OOD-GraphLLM. 
+
+## 3.1 Problem Formulation 
+
+Drug synergy prediction (DSP) aims to characterize the com-bined effect of multiple drugs under a specific cell line context. Take the most common setting, i.e., DSP for two drugs, as an example, we formally define DSP as follows. Let D = {𝑑 1, 𝑑 2, . . . , 𝑑 𝑛 } denote the universe of drug molecules and let C = {𝑐 1, 𝑐 2, . . . , 𝑐 𝑚 } denote the set of cell lines representing distinct biological environments. Each data instance is characterized by a triplet (𝑑 𝑖 , 𝑑 𝑗 , 𝑐 𝑘 ), where 
+
+𝑑 𝑖 , 𝑑 𝑗 ∈ D are two drugs administered in combination and 𝑐 𝑘 ∈ C 
+
+specifies the cellular condition. The learning objective is to infer a predictive function 𝑓 as follows:         
+
+> 𝑓 :(𝑑 𝑖 , 𝑑 𝑗 , 𝑐 𝑘 ) ↦ → ( 𝑦 𝑘 𝑖 𝑗 , 𝑠 𝑘 𝑖 𝑗 ),(1)
+
+where 𝑦 𝑘 𝑖 𝑗 ∈ Y denotes a discrete interaction label, and 𝑠 𝑘 𝑖 𝑗 ∈ R
+
+represents a continuous synergy score quantifying the strength of the combinatorial effect. 
+
+Out-of-distribution generalized drug synergy prediction (O.O.D. generalized DSP) studies generalization beyond observed drug distributions. Specifically, the drug space D is partitioned into an in-distribution subset DI.D. and an out-of-distribution subset 
+
+DO.O.D. , according to criteria such as molecular scaffolds and sizes etc. These subsets satisfy DI.D. ∩D O.O.D. = ∅ and DI.D. ∪D O.O.D. = D.Under this protocol, the training set solely consists of drugs drawn from DI.D. , while validation and test sets include drug pairs where at least one drug belongs to DO.O.D. .                     
+
+> Dtrain ={ ( 𝑑 𝑖 , 𝑑 𝑗 , 𝑐 𝑘 ) | 𝑑 𝑖 , 𝑑 𝑗 ∈ D I.D. , 𝑐 𝑘 ∈ C } ,
+> Dvalid ∪ D test ={ ( 𝑑 𝑖 , 𝑑 𝑗 , 𝑐 𝑘 ) | 𝑑 𝑖 ∈ D O.O.D. ∨𝑑 𝑗 ∈ D O.O.D. , 𝑐 𝑘 ∈ C } .
+> (2)
+
+## 3.2 Target-Adaptive Disentangled Molecular Graph Encoding 
+
+To capture both intrinsic molecular topological structures and target-dependent characteristics, we propose the target-adaptive disentangled molecular graph encoding model. We first learn target-relevant and target-irrelevant molecular representations through 
+
+disentangled molecular graph encoding , then condition the target-relevant representations on various cell targets through cross-attention with associated target proteins by target-adaptive representation learning . To further encourage target-adaptive disentanglement, we explicitly impose a decorrelation constraint on the conditioned target-relevant representations so that they can well preserve dif-ferent target-specific information. 
+
+Disentangled Molecular Graph Encoding. Each drug molecule 
+
+𝑑 is represented as a molecular graph G𝑑 = (V 𝑑 , E𝑑 ) where V𝑑 
+
+and E𝑑 denote the node set and edge set respectively. For each node 𝑣 ∈ V 𝑑 , we extract a set of node-level representations from 
+
+𝑀 heterogeneous GNNs, and aggregate them into a graph-level vector:        
+
+> zG𝑑 =Φpool
+> ∑︁
+> 𝑣 ∈V 𝑑
+> Ψ GNN 1(𝑣 ), . . . , GNN 𝑀 (𝑣 )
+> ,(3)
+
+where Ψ(·) denotes a feature fusion operator over multiple GNN views, and Φpool (·) represents the pooling function. The resulting embedding zG𝑑 ∈ R𝐷 captures structural and chemical charac-teristics of the molecular graph. To separate intrinsic molecular characteristics from target-dependent characteristics, we introduce a disentanglement head that decomposes zG𝑑 into target-irrelevant representations and target-relevant representations:         
+
+> zirr
+> 𝑑 =Wirr zG𝑑 ,zrel
+> 𝑑 =Wrel zG𝑑 ,(4)
+
+where zirr  
+
+> 𝑑
+
+∈ R𝐷 irr captures intrinsic properties of the molecular graph that are independent of specific target protein instantiations, while zrel  
+
+> 𝑑
+
+∈ R𝐷 rel carries the target-relevant information, with 
+
+𝐷 irr + 𝐷 rel = 𝐷 .
+
+Target-Adaptive Representation Learning. Target proteins play a critical role in drug synergy prediction, as they mediate the molec-ular mechanisms through which drugs exert their effects. To incor-porate target-specific biological context, we further condition zrel 
+
+> 𝑑
+
+on drug-associated targets. Let {t(𝑘 ) }𝐾 𝑘 =1 denote the embeddings of the 𝐾 corresponding targets related to drug 𝑑 , obtained from a pretrained protein encoder ESM-2 [ 27 ]. We apply a cross-attention mechanism between zrel  
+
+> 𝑑
+
+and {t(𝑘 ) }𝐾 𝑘 =1 to produce target-adaptive representations:            
+
+> ˜z(𝑘 )
+> 𝑑 =CrossAttn
+> 
+> zrel
+> 𝑑 ,t(𝑘 )
+> ,𝑘 =1, . . . , 𝐾 . (5)
+
+The final molecular representations are formed by concatenat-ing the target-irrelevant representations with all target-adaptive Conference’17, July 2017, Washington, DC, USA Xin Wang et al. Targets   
+
+> Targets
+> Disentangle Head
+> Cross Attn
+> Attention Mechanism
+> Concatenate
+> 𝐸𝐸 1
+> 𝐸𝐸 2
+> �𝐸𝐸
+> 𝐸𝐸 1|| �𝐸𝐸
+> 𝐸𝐸 2|| �𝐸𝐸
+> 𝐻𝐻 1
+> Attention-based
+> Pairwise Router
+> Operation Vectors
+> Cosine Similarities
+
+𝑳𝑳 𝒔𝒔𝒔𝒔𝒔𝒔       
+
+> Operation Weights
+> op 2,1
+> op 2,2
+> op 2,3
+> op 2,1
+> op 2,2
+> op 2,3
+
+𝑀𝑀𝑀𝑀 1𝑐𝑐𝑐𝑐𝑐𝑐𝑐𝑐       
+
+> op 1,1
+> op 1,2
+> op 1,3
+> op 1,1
+> op 1,2
+> op 1,3
+> Attention-based
+> Pairwise Router
+> Molecular
+> Representations
+> Customized GNN Architecture
+> Mapping
+> 𝐻𝐻 1
+
+(1) Target-Adaptive 
+
+Disentangled Molecular Graph Encoding 
+
+(2) Pairwise Attentive 
+
+Graph Architecture Search 
+
+Contextualized 
+
+Molecular Graphs 
+
+> Gene
+> Expression Profiles
+> Cellular
+> Context
+> Features
+> Molecular Graphs
+> Cell
+> Line
+
+Graph Neural Network 
+
+> Cross Attn
+
+ESM-2 
+
+ESM-2 
+
+𝑳𝑳 𝒅𝒅 𝒔𝒔 𝒅𝒅𝒅𝒅𝒅𝒅𝒅𝒅 ,𝟏𝟏 
+
+𝑳𝑳 𝒅𝒅 𝒔𝒔 𝒅𝒅𝒅𝒅𝒅𝒅𝒅𝒅 ,𝟐𝟐 
+
+> 𝐸𝐸 1
+> 𝐸𝐸 2
+> Decorrelation
+> Layer
+> Decorrelation
+> Layer
+> Drug Syn - L L M Query Tokens
+
+Q-Former 
+
+Q-Former 
+
+> Biomedical
+> Repositories
+> Drug Info
+> Drug Info Drug-based
+> Retrieval
+
+(4) Retrieval-augmented 
+
+Biomedical Instruction Tuning 
+
+> Instruction-Tuning
+> Q: What are the [Property Description] of #Drug1 and #Drug2?
+> A: [#Drug1 Info] [#Drug2 Info]
+> Task Training
+> Q: Do the two drugs exhibit synergy?
+> What is their [Score]?
+> A: Yes./No. Their score is [Score].
+
+Q/A 
+
+Prompts 
+
+Tokenizer 
+
+> Drug Projector
+> Query Tokens
+
+Q-Former 
+
+> Cell Projector
+
+Drug 
+
+Synergy Prediction 
+
+Input 
+
+𝑀𝑀𝑀𝑀 2𝑐𝑐𝑐𝑐𝑐𝑐𝑐𝑐 
+
+Semantic Level 
+
+Structural Level  A2058 is a cell exhibiting epithelial morphology isolated from the skin... 
+
+> Cell Line Text Description
+> Cell Representations
+
+(3) Multi-Level Contextualized Cellular Feature Alignment  
+
+> Flattening
+
+𝑳𝑳 𝒊𝒊𝒊𝒊 𝒔𝒔 𝒊𝒊 
+
+𝑳𝑳 𝒊𝒊 𝒕𝒕 𝒔𝒔 𝒕𝒕  
+
+> Molecular Graphs
+> Operation Weights
+> Drug 2 SMILES Drug 1 SMILES
+
+Input 
+
+Input 
+
+Input 
+
+Input 
+
+# OOD-GraphLLM:  𝑳𝑳 𝒅𝒅 𝒔𝒔 𝒅𝒅𝒅𝒅𝒅𝒅𝒅𝒅 ,𝟏𝟏  𝑳𝑳 𝒅𝒅 𝒔𝒔 𝒅𝒅𝒅𝒅𝒅𝒅𝒅𝒅 ,𝟐𝟐  𝑳𝑳 𝒔𝒔𝒔𝒔𝒔𝒔 
+
+𝑳𝑳 𝒅𝒅𝒔𝒔𝒔𝒔  = 𝜶𝜶 ( + ) + 𝜷𝜷 
+
++ 𝑳𝑳 𝒊𝒊𝒊𝒊 𝒔𝒔 𝒊𝒊  𝑳𝑳 𝒊𝒊 𝒕𝒕 𝒔𝒔 𝒕𝒕 +𝜹𝜹  (𝟏𝟏 − 𝜹𝜹 ) 𝜹𝜹 ∈ {𝟎𝟎 , 𝟏𝟏 }
+
+Total 
+
+Loss 
+
+Figure 2: The overall framework of OOD-GraphLLM . OOD-GraphLLM is able to conduct accurate O.O.D. generalized DSP by integrating cellular contextualized molecular graph representation learning and LLMs together through four jointly optimized components, i.e., (1) Target-Adaptive Disentangled Molecular Graph Encoding; (2) Pairwise Attentive Graph Architecture Search; (3) Multi-Level Contextualized Cellular Feature Alignment; and (4) Finetuned DrugSyn-LLM with Retrieval-Augmented Biomedical Instruction Tuning. 
+
+representations, 
+
+e𝑑 =
+
+h
+
+zirr  
+
+> 𝑑
+
+∥ ˜z(1) 
+
+> 𝑑
+
+∥ · · · ∥ ˜z(𝐾 )
+
+> 𝑑
+
+i
+
+. (6) 
+
+To further encourage disentanglement across different target con-ditioned representations, we impose a decorrelation constraint di-rectly on the set of target-adaptive representations. Specifically, for 
+
+𝐾 target-adaptive representations {˜z(𝑘 )
+
+𝑑 }𝐾 𝑘 =1, we explicitly penalize statistical dependencies between every pair of these representa-tions. For (𝑘, 𝑘 ′) with 𝑘 ≠ 𝑘 ′, we first normalize the representations within a mini-batch and compute their cross-correlation matrix: 
+
+C𝑘,𝑘 ′ = 1
+
+𝐷 𝑘 
+
+˜z(𝑘 ) 
+
+˜z(𝑘 ′ ) ⊤
+
+, (7) 
+
+where 𝐷 𝑘 denotes the dimensionality of each target-adaptive rep-resentation. The decorrelation loss is then defined as the average squared Frobenius norm of the cross-correlation matrices over all pairs: 
+
+Ldecorr = 1
+
+𝐾 (𝐾 − 1)∑︁ 𝑘 ≠𝑘 ′
+
+C𝑘,𝑘 ′ 2 
+
+> 𝐹
+
+. (8) 
+
+By minimizing Ldecorr , the model is encouraged to learn represen-tations that encode distinct aspects of target-relevant drug informa-tion, thereby reducing redundancy in representation spaces. This design enforces functional disentanglement across target-irrelevant and target-relevant representations under different cell target con-texts, and plays a critical role in improving generalization under drug-level O.O.D. settings. 
+
+## 3.3 Pairwise Attentive Graph Architecture Search 
+
+Given new pairs of drugs, we propose the pairwise attentive graph architecture search algorithm to discover the optimal GNN archi-tectures for calculating drug molecular graph representations ac-curately. There are three core parts for completing this task: i) 
+
+molecular pairwise attention that injects bidirectional drug pair context into molecular graph representations, ii) latent operator space parameterization that projects candidate message-passing operators into a continuous and differentiable latent space, and iii) adaptive routing for architecture search that dynamically selects and assembles the most appropriate operators based on molecular graph representations in the projected latent space. 
+
+Molecular Pairwise Attention. Let e𝑑 1 and e𝑑 2 denote molecular graph representations of the two drugs (i.e., 𝑑 1 and 𝑑 2) obtained in Sec 3.2. To incorporate the influence of one molecule on the other, we introduce a bidirectional drug pair context injection module based on multi-head attention. Specifically, the representation of OOD-GraphLLM: Graph Large Language Model for Out-of-Distribution Generalized Drug Synergy Prediction Conference’17, July 2017, Washington, DC, USA 
+
+drug 𝑑 1 is expressed as follows:          
+
+> h𝑑 1=e𝑑 1+FFN  Amh (Q,K,V),(9)
+
+where the query is constructed by Q = W𝑄 e𝑑 1 , while the key-value pairs are derived from 𝑑 2 as K, V = W𝐾,𝑉 e𝑑 2 . An analogous operation is applied symmetrically to obtain h𝑑 2 .Building upon the target-adaptive disentangled molecular graph representations from Sec 3.2, this attention mechanism allows the pairwise attentive representations to encode pharmacophoric sig-nals that are critical for extrapolating to drug combinations under distribution shifts. 
+
+Latent Operator Space Parameterization. To support pairwise at-tentive architectural customization while preserving differentiable trainability, we introduce a latent parameterization of candidate message-passing operators. At each GNN layer 𝑙 , we maintain a collection of aggregation primitives O (𝑙 ) = {op (𝑙 ) 
+
+> 1
+
+, op (𝑙 ) 
+
+> 2
+
+, . . . , op (𝑙 ) 
+
+> 𝑚
+
+},where each primitive encodes a distinct strategy for information propagation in molecular graph. We project them into a shared la-tent operator space by associating each operator op (𝑙 ) 
+
+> 𝑖
+
+with a learn-able vector o(𝑙 ) 
+
+> 𝑖
+
+∈ R𝑑 op . The resulting set E (𝑙 ) = {o(𝑙 ) 
+
+> 1
+
+, . . . , o(𝑙 ) 
+
+> 𝑚
+
+}
+
+defines a continuous operator space that enables smooth interpola-tion between aggregation patterns. To ensure that different operators remain functionally distin-guishable within this latent space, we explicitly discourage exces-sive similarity among their representations. Specifically, we intro-duce a layerwise separation constraint that penalizes high cosine similarity between distinct operator descriptors:                 
+
+> L(𝑙 )
+> sep =1
+> 𝑚 (𝑚 −1)∑︁ 𝑖 ≠𝑗
+> ©«
+> o(𝑙 )
+> 𝑖
+> ∥o(𝑙 )
+> 𝑖 ∥2
+> ·o(𝑙 )
+> 𝑗
+> ∥o(𝑙 )
+> 𝑗 ∥2
+> ª®¬
+> 2
+> .(10)
+
+This regularization term softly enforces angular separation among operator representations, preventing the latent operator space from collapsing into a low-rank configuration. The overall Lsep is ob-tained by averaging L (𝑙 ) 
+
+> sep
+
+across all layers. 
+
+Adaptive Routing for Architecture Search. Given the drug rep-resentation h𝑑 , we modulate the contribution of each candidate operator at layer 𝑙 through an adaptive routing mechanism. The routing weight assigned to operator op (𝑙 ) 
+
+> 𝑖
+
+is computed as follows:                
+
+> 𝛼 (𝑙 )
+> 𝑖 =
+> exp
+> 
+> ⟨h𝑑 ,o(𝑙 )
+> 𝑖 ⟩
+> Í𝑚 𝑗 =1exp
+> 
+> ⟨h𝑑 ,o(𝑙 )
+> 𝑗 ⟩
+> ,(11)
+
+where ⟨· , ·⟩ denotes the dot-product similarity. These routing weights can be used to select the best operators for assembling the optimal graph neural architecture. As such, molecular graph representa-tions of the corresponding drugs can be computed through the 
+
+optimal graph neural network as follows:            
+
+> x(𝑙 +1)
+> 𝑑 =
+> 𝑚 ∑︁
+> 𝑖 =1
+> 𝛼 (𝑙 )
+> 𝑖 op (𝑙 )
+> 𝑖
+> 
+> x(𝑙 )
+> 𝑑
+> 
+> ,x(0)
+> 𝑑 =˜z𝑣 ,(12)
+
+where x(𝑙 +1) 
+
+> 𝑑
+
+denotes the computed molecule representation at layer 
+
+𝑙 . This algorithm allows operator parameters and routing weights to be jointly optimized during finetuning, effectively inducing pair-aware computational graphs. By conditioning operator routing on pairwise attentive molecular graph representations, this adaptive mechanism prevents the model from over-specializing to spurious correlations observed in the training distribution. As a result, the learned representations x𝑑 1
+
+and x𝑑 2 capture not only intrinsic molecular structures, but also pair-aware structural adaptations that are capable of generalization to O.O.D. settings for new drugs. 
+
+## 3.4 Multi-Level Contextualized Cellular Feature Alignment 
+
+Drug synergy is inherently cell line dependent, as cellular envi-ronments determine drug sensitivity, pathway activation, and syn-ergistic effect. To explicitly incorporate cellular context into drug representations and LLM finetuning, we introduce the multi-level contextualized cellular feature alignment mechanism. At the struc-tural level , molecular graph representations are augmented with cell line information in the form of context feature concatenation. At the semantic level , cellular textual descriptions and gene expression profiles are utilized to align with the LLM input space. 
+
+Structural Level Feature Alignment. We utilize cell line gene ex-pression profiles to capture context-dependent atomic interactions when learning molecular graph representation. Given a cell line 
+
+𝑐 , let x𝑐 ∈ R𝐷 𝑐 denote its gene expression feature vector, which is transformed into context representations e𝑐 via a projection func-tion: e𝑐 = 𝜙 ctx (x𝑐 ). For drug 𝑑 characterized via a molecular graph 
+
+G𝑑 = (V 𝑑 , E𝑑 ), each atom in drug 𝑑 can be described by node 
+
+𝑣 ∈ V 𝑑 , which is associated with an initial atomic feature vector z𝑣 .We augment the molecular graph representation by concatenating the context representations with atomic feature vectors as follows:           
+
+> ˜z𝑣 =[z𝑣 ∥e𝑐 ],∀𝑣 ∈ V 𝑑 .(13)
+
+This results in a contextualized molecular graph G𝑐𝑒𝑙𝑙 𝑑 , in which the atom (i.e., node) representations contain the cellular contexts. Such structural level contextualization allows downstream graph encoders to take the influence of cell specific biological contexts into consideration. 
+
+Semantic Level Feature Alignment. In addition to structural level concatenation, we further align cellular information at the semantic level by projecting cell line descriptions into the input space of the LLM. Specifically, given textual descriptions of cell line 𝑐 together with its gene expression vector x𝑐 , we employ a tokenizer and a BERT-based projector [ 23 ] to obtain a set of cell specific tokens and representations:          
+
+> T𝑐 =Tokenizer (𝑐 ),E𝑐 =𝜙 proj 𝑐 (x𝑐 ),(14)
+
+where T𝑐 denotes the discrete cell tokens and E𝑐 represents con-tinuous cell representations aligned with the input space of the LLM. By jointly leveraging structural and semantic level represen-tation contextualization, we are able to align cellular contexts to molecular graphs and language models simultaneously, which is a critical support for O.O.D. generalized DSP for new drugs. 
+
+## 3.5 DrugSyn-LLM with Retrieval-Augmented Biomedical Instruction Tuning 
+
+We finetune DrugSyn-LLM, our biomedical LLM, with the pro-posed Retrieval-Augmented Biomedical Instruction Tuning strategy to inject various domain knowledge into LLM while enabling task-specific reasoning. Given an input prompt P, the tokenized textual Conference’17, July 2017, Washington, DC, USA Xin Wang et al. 
+
+descriptions of the cell line T𝑐 , its projected representations E𝑐 , the tokenized SMILES sequences of two drugs TSMILES 1 and TSMILES 2 ,DrugSyn-LLM aims to produce an appropriate response 𝑅 with accurate prediction. To bridge molecular graph representations and natural language reasoning, the drug representations x𝑑 1 and x𝑑 2 obtained in Sec 3.4 are first projected into the language-aligned space via 𝜙 proj 𝑑 ,which adopts the same BERT-based architecture as 𝜙 proj 𝑐 but is parameterized independently, yielding E𝑑 1 = 𝜙 proj 𝑑 (x𝑑 1 ) and E𝑑 2 =
+
+𝜙 proj 𝑑 (x𝑑 2 ). The overall training procedure consists of two stages: biomedical instruction tuning and task-specific training. 
+
+Stage I: Biomedical Instruction Tuning. In the instruction tun-ing stage, we aim to ground the LLM with biomedical knowledge relevant to drug and cell contexts. For each training instance, we first retrieve domain-specific biomedical knowledge from curated databases. The retrieved information is organized into a structured biomedical description and utilized by the target response 𝑅 . The instruction prompt P𝑖𝑛𝑠𝑡 is then deliberately designed to query, ex-plain, or summarize such biomedical evidence, guiding the language model to generate expert level domain knowledge. During instruction tuning, the large language model is optimized to reproduce the retrieved biomedical descriptions conditioned on the corresponding prompts. Formally, the training objective maximizes the likelihood of generating the target response 𝑅 in the autoregressive token space as follows: 
+
+Linst = − log 𝑝  𝑅 | P 𝑖𝑛𝑠𝑡 , T𝑐 , TSMILES 1 , TSMILES 2
+
+ , (15) 
+
+which encourages the model to internalize pharmacological and biological priors through retrieval-augmented supervision. 
+
+Stage II: Task-Specific Training. In the second stage, we adapt the instruction-tuned DrugSyn-LLM to the DSP task. The prompt P𝑡𝑎𝑠𝑘 
+
+is instantiated with task-oriented instructions, while the expected response 𝑅 corresponds to the predicted category and its associated synergy score. In addition to textual inputs, the projected repre-sentations E𝑐 , E𝑑 1 , and E𝑑 2 are injected into the LLM as auxiliary continuous representations. The task training objective is defined in the generative output space of the language model. Specifically, the model is optimized to maximize the likelihood of producing a structured task response 𝑅 = {𝑅 label , 𝑅 score }, which encodes both the synergy type and the corresponding synergy score as follows: 
+
+Ltask = − log 𝑝  𝑅 | P 𝑡𝑎𝑠𝑘 , T𝑐 , TSMILES 1 , TSMILES 2 , E𝑐 , E𝑑 1 , E𝑑 2
+
+ . (16) 
+
+Putting All Together . The overall training objective combines the generative task loss with representation and architecture regular-ization terms as follows: 
+
+L = 𝛿 Linst + ( 1 − 𝛿 ) L task + 𝛼 Ldecorr + 𝛽 Lsep , (17) 
+
+where 𝛿 is a stage indicator that activates the instruction-tuning objective, i.e., 𝛿 = 1 during biomedical instruction tuning and 𝛿 = 0
+
+during task-specific training. 
+
+## 4 Experiment 
+
+We conduct extensive experiments under two O.O.D. settings for both synergy classification and score regression to evaluate the ef-fectiveness of our proposed OOD-GraphLLM model. Comparisons against a wide range of baselines demonstrate that our method con-sistently achieves superior performance under distribution shifts. 
+
+Table 1: O.O.D. Dataset Splitting Statistics based on Scaffold and Size. 𝜃 scaffold and 𝜃 size denote the splitting thresholds used to partition the dataset into in-distribution ( DI.D. ) and out-of-distribution ( DO.O.D. ) subsets. 
+
+Scaffold-based Splitting 
+
+Dataset 𝜃 scaffold (mol) DI.D. DO.O.D. Dtrain Dvalid Dtest 
+
+Bliss 13 1364 424 84766 20391 20391 Hsa 13 912 243 72830 17864 17865 Loewe 9 1775 272 109676 27070 27070 Zip 13 1320 413 59513 14767 14767 
+
+Size-based Splitting 
+
+Dataset 𝜃 size (Da) DI.D. DO.O.D. Dtrain Dvalid Dtest 
+
+Bliss 305 1305 480 83318 21115 21115 Hsa 305 878 277 71964 18302 18302 Loewe 260 1753 294 112276 25770 25770 Zip 300 1295 438 60330 14358 14359 
+
+## 4.1 Settings Chemical Space Visualization (t-SNE) — Bliss Dataset       
+
+> Chemical Space Visualization (t-SNE) —Loewe Dataset
+> Scaffold Split Size Split Random Split
+> Scaffold Split Size Split Random Split
+> Test Set Train Set
+
+Figure 3: Chemical space visualization. 
+
+Dataset. We derive all drug combination data from DrugComb [ 46 ], which contains totally 1,432,351 unique <drug, drug, cell line> triplets. Each triplet is annotated with synergy measurements under four scoring schemes, namely Loewe, Bliss, HSA, and ZIP. Detailed definitions and computation rules for these synergy scores are provided in Appendix A. Drug-related information and features is primarily obtained from DrugBank [ 19 ], while gene expression profiles of cell lines are collected from the CancerRx-Gene [ 42 ]database. We first filter the samples following the recommendation of the SynergyFinder software [ 13 ] documentation, retaining only drug combinations that exhibit pronounced synergistic or antago-nistic effects ( |score | ≥ 10 ). Subsequently, the filtered dataset is par-titioned into DI.D. and DO.O.D. according to the protocol described in Sec 3.1, where scaffold refers to the core chemical framework of a molecule that defines its structural backbone, while size denotes the molecular weight of the compound. Specifically, domains with descriptor values exceeding a predefined threshold 𝜃 are assigned to the training split, while the remaining domains are used for validation and testing, following common practice [ 16 ]. Training, OOD-GraphLLM: Graph Large Language Model for Out-of-Distribution Generalized Drug Synergy Prediction Conference’17, July 2017, Washington, DC, USA 
+
+Table 2: Comparative performance on scaffold-based and size-based O.O.D. DSP classification and regression tasks. The top-performing method is highlighted in bold. We also report the percentage improvement of these metrics compared to the second-best performing method. “-” indicates that the corresponding method does not support this task. 
+
+Setting Model Bliss HSA Loewe ZIP ACC ↑ AUC ↑ MAE ↓ RMSE ↓ ACC ↑ AUC ↑ MAE ↓ RMSE ↓ ACC ↑ AUC ↑ MAE ↓ RMSE ↓ ACC ↑ AUC ↑ MAE ↓ RMSE ↓
+
+Scaffold-Based O.O.D. Drug Synergy Prediction Tasks 
+
+DNN-Based DeepSynergy 64.53 72.14 24.83 34.05 72.88 75.62 14.19 18.61 93.01 82.28 13.31 17.73 67.16 75.61 17.73 22.32 DFFNDDS 55.98 47.75 - - 66.04 49.58 - - 80.74 53.59 - - 49.91 48.17 - -TranSynergy 54.95 61.21 26.69 34.41 76.79 73.14 14.51 18.74 92.93 77.66 12.62 17.51 57.46 65.16 17.42 21.17 MatchMaker 59.80 62.92 25.56 34.29 77.97 73.71 14.28 18.52 93.11 78.55 12.35 17.33 57.49 67.35 17.07 20.71 TreeCombo 61.80 68.70 28.08 43.62 72.35 76.32 15.70 19.51 93.05 80.14 14.52 22.90 65.65 75.23 16.24 19.93 MarSY 58.51 61.32 27.17 36.07 74.67 73.18 15.42 19.39 92.92 77.22 12.36 17.71 55.19 66.21 17.35 20.89 DTSyn 56.89 59.79 - - 74.42 69.49 - - 63.08 77.67 - - 62.03 69.22 - -SynergyX - - 27.76 35.28 - - 15.58 19.34 - - 13.82 19.60 - - 17.51 21.16 GNN-Based DeepDDS 62.10 66.82 - - 68.70 73.95 - - 91.18 74.30 - - 66.61 74.21 - -DDoS 63.71 70.26 - - 71.16 73.03 - - 91.53 76.38 - - 68.97 76.27 - -GAECDS 61.54 61.82 - - 71.23 72.56 - - 91.93 78.94 - - 65.96 71.90 - -JointSyn 59.07 62.86 26.56 34.41 77.26 69.62 14.73 18.99 92.81 73.56 12.59 18.01 62.36 71.09 16.16 20.33 MFSynDCP 65.01 70.60 - - 67.31 73.42 - - 75.21 70.93 - - 68.83 76.07 - -AttenSyn 55.91 58.51 - - 76.62 70.90 - - 92.76 72.73 - - 58.00 61.15 - -LLM-Based CancerGPT 71.74 81.17 21.74 32.63 77.65 80.66 13.74 18.72 89.52 85.64 13.49 19.30 76.08 78.11 14.21 19.29 BAITSAO 68.29 75.18 24.77 33.28 75.13 79.85 15.07 18.88 91.61 80.42 14.01 19.18 68.03 76.21 15.02 19.00 
+
+OOD-GraphLLM 77.27 85.31 20.63 29.24 80.98 83.48 11.74 16.91 93.55 86.19 10.09 15.80 76.98 85.84 11.56 17.17 
+
+%↑ +7.71% +5.10% -5.11% -10.39% +3.86% +3.50% -14.56% -8.69% +0.54% +0.64% -25.20% -12.27% +1.18% +9.90% -18.65% -9.63% Size-Based O.O.D. Drug Synergy Prediction Tasks 
+
+DNN-Based DeepSynergy 68.31 78.05 27.46 35.86 75.85 75.95 14.74 18.57 91.31 78.07 12.99 17.67 73.34 83.12 17.04 24.07 DFFNDDS 54.51 50.95 - - 68.40 50.78 - - 87.46 57.84 - - 51.32 50.67 - -TranSynergy 59.31 62.45 26.66 35.82 76.48 77.46 14.53 18.43 92.86 76.96 12.19 17.03 61.65 65.17 17.92 22.39 MatchMaker 58.18 62.66 26.87 35.58 75.76 71.80 14.39 19.21 92.72 76.54 12.13 17.06 63.98 69.97 17.30 22.02 TreeCombo 62.54 67.87 27.74 39.09 69.38 73.39 15.83 19.97 92.60 78.35 13.58 19.43 68.22 76.03 16.22 20.53 MarSY 56.73 59.26 27.97 36.85 74.11 70.35 14.91 19.53 92.86 77.82 12.13 17.33 53.98 68.49 18.10 22.21 DTSyn 54.76 57.33 - - 73.01 68.03 - - 92.46 77.66 - - 64.28 69.40 - -SynergyX - - 26.95 35.98 - - 14.69 19.50 - - 12.48 18.08 - - 18.35 22.56 GNN-Based DeepDDS 65.69 71.29 - - 71.92 77.07 - - 87.98 79.25 - - 68.06 74.09 - -DDoS 66.90 73.37 - - 72.00 75.37 - - 90.48 72.49 - - 69.06 74.09 - -GAECDS 58.54 62.28 - - 71.65 70.23 - - 90.48 79.09 - - 60.87 72.00 - -JointSyn 59.12 62.40 26.60 34.45 76.08 66.98 15.27 19.78 92.70 79.61 12.23 17.74 63.03 70.14 16.62 21.35 MFSynDCP 65.28 69.85 - - 65.99 70.61 - - 77.10 71.35 - - 65.94 71.89 - -AttenSyn 53.86 56.38 - - 72.47 67.60 - - 92.76 78.71 - - 61.93 65.36 - -LLM-Based CancerGPT 71.92 80.30 23.97 35.39 77.75 78.14 14.00 19.10 93.17 85.23 11.66 17.47 73.99 81.75 14.07 21.65 BAITSAO 69.38 76.91 24.36 33.13 76.59 79.63 14.96 18.79 92.65 80.67 12.65 17.57 69.39 76.40 15.93 21.19 
+
+OOD-GraphLLM 77.66 85.79 20.85 30.05 79.97 83.00 10.95 16.30 96.17 96.80 10.42 16.00 76.56 85.25 12.66 19.72 
+
+%↑ +7.98% +6.84% -13.02% -9.30% +2.86% +4.23% -21.79% -11.56% +3.22% +13.58% -10.63% -6.21% +3.47% +2.56% -10.02% -3.95% 
+
+validation, and test sets are organized with an approximate ratio of 
+
+4:1:1 . Dtailed statistics are reported in Table 1. 
+
+Distribution Analysis. Based on a set of generic chemical space descriptors, we visualize the molecular distributions of the Bliss and Loewe datasets under different splitting strategies using t-SNE. As illustrated in Fig. 3, the proposed O.O.D. split yields a clear separation between the train set ( DI.D.) and the test set ( DO.O.D.)across multiple chemical dimensions. This separation substantially increases the difficulty of model generalization, as test compounds reside in chemically distinct regions from those observed during training. In contrast, conventional random splitting, although in-troducing unseen drugs in the test set, leads to strong overlap and coupling between seen and unseen compounds in chemical space, thereby failing to provide a reliable assessment of a model’s gener-alization capability. 
+
+Baselines. We perform extensive benchmarking against three categories of baseline methods: (i) Conventional DNN-based mod-els: DeepSynergy [ 31 ], DFFNDDS [ 41 ], TranSynergy [ 28 ], Match-Maker [ 20 ], TreeCombo [ 15 ], MarSY [ 6], DTSyn [ 11 ], and Syn-ergyX [ 8 ]; (ii) GNN-based methods: DeepDDS [ 37 ], DDoS [ 32 ], GAECDS [ 22 ], JointSyn [ 26 ], MFSynDCP [ 5 ], and AttenSyn [ 38 ]; (iii) State-of-the-art LLM-based approaches: CancerGPT [ 25 ] and BAITSAO [ 29 ]. The comparisons across multiple paradigms en-sure rigorous evaluations under diverse architectural and learning settings. 
+
+Drug Descriptors. We retrieve drug-related information from the DrugBank [ 19 ] database, including SMILES sequence and basic physicochemical properties for each drug. These drug descriptors are aligned with the downstream drug–drug–cell line triplets using drug names as a common identifier. The SMILES sequences are further processed using the RDKit [ 21 ] toolkit to construct graph-structured molecular representations, where atoms and bonds are modeled as nodes and edges. In addition to molecular structures, other retrieved drug attributes are incorporated through carefully designed prompts and corresponding target outputs, which are Conference’17, July 2017, Washington, DC, USA Xin Wang et al. 
+
+used during the instruction tuning stage in Sec 3.5 to enhance the model’s ability to leverage heterogeneous drug knowledge. 
+
+Cell Line Representations. We obtain cell line features from the CancerRx-Gene [42] resource, which provides Robust Multi-array Average (RMA)–normalized [ 14 ] basal gene expression profiles for approximately 1000 human cancer cell lines. Each cell line is origi-nally characterized by genome-wide transcriptional measurements covering 17,737 genes. In this study, we focus on a subset of 908 landmark genes curated by the L1000 project [33]. 
+
+Protein Representations. We obtain the amino acid sequences of target proteins from UniProt [ 3 ] and encode them using ESM-2 [ 27 ]. ESM-2 is a large-scale protein language model pre-trained on millions of protein sequences, which captures rich evolutionary and structural information through self-supervised learning. 
+
+Implementation Details. For classification settings, we evaluate model performance using Accuracy and Area Under the Receiver Operating Characteristic Curve (AUC-ROC). For regression tasks, we adopt Mean Absolute Error (MAE) and Root Mean Squared Error (RMSE) as evaluation metrics. We employ galactica [ 35 ] pre-trained on large-scale scientific corpora as the backbone LLM architecture. In addition, the cross-modal projection layers are initialized with representations derived from SciBERT [ 1 ], providing a semantically informed starting point for multimodal alignment. Most experi-ments are conducted on NVIDIA A100-SXM4 GPUs with 40 GB memory. 
+
+## 4.2 Results 
+
+As shown in Table 2, OOD-GraphLLM consistently outperforms all other baselines across all metrics, datasets, and settings. This demon-strates the superior performance of OOD-GraphLLM in addressing O.O.D. generalized DSP. We have the following key observations: 
+
+Classification Results . i) The classification metrics on Loewe are consistently higher than those on others. This phenomenon can be attributed to the severe class imbalance in Loewe, under which conditions AUC provides a more reliable measure of discriminative performance. Notably, our method achieves a clear advantage on this metric, highlighting its superior classification capability despite the biased label distribution. ii) LLM-based methods demonstrate superior advantages, suggesting that large language models can leverage semantic information to generalize to O.O.D. drug pairs. By explicitly retrieving and injecting domain-specific medical knowl-edge, our method achieves a clear performance margin over generic LLM-based approaches. iii) DNN-based and GNN-based methods exhibit no substantial difference in overall performance. Notably, some even underperform DeepSynergy [31], which relies on drug fingerprints, in O.O.D. settings. This suggests that incorporating ex-cessive or highly complex features may introduce significant noise and redundancy, leading models to capture spurious correlations that fail to generalize beyond the training distributions. 
+
+Regression Results . i) Regression constitutes a more challenging task, as it requires accurate modeling of fine-grained numerical outcomes rather than coarse decision boundaries. Compared with corresponding baselines, our method exhibits a markedly larger performance margin, providing stronger evidence of its effective-ness and accuracy. ii) Several methods are not inherently designed to handle both tasks in a unified manner or are limited to a single prediction paradigm, while others derive classification outcomes indirectly from regression value ranges, which may introduce eval-uation bias and compromise result fidelity. Our method is capable of simultaneously generating both outputs in a chain-of-thought manner, enabling coherent reasoning across tasks, which endows OOD-GraphLLM with greater flexibility and scalability. 72 
+
+> 74
+> 76
+> 78
+> 80
+> 82
+> ACC(%)
+> Scaffold Split - ACC
+> 16
+> 17
+> 18
+> 19
+> RMSE
+> Scaffold Split - RMSE
+> 72
+> 74
+> 76
+> 78
+> 80
+> 82
+> ACC(%)
+> Size Split - ACC
+> 16
+> 17
+> 18
+> 19
+> RMSE
+> Size Split - RMSE
+> Full
+> w/o-IT
+> w/o-Decor
+> w/o-Ctx
+> w/o-Sep
+> w/o-Att
+> w/o-NAS
+
+Figure 4: Ablation studies of OOD-GraphLLM. 
+
+## 4.3 Ablation Study 
+
+To assess the impact of individual components within our OOD-GraphLLM, we perform an ablation study on HSA score dataset un-der both splits. Model performance is evaluated using accuracy for classification and RMSE for regression. We design multiple model variants, where each variant excludes a particular component: 
+
+• w/o R-IT : We remove the retrieval-augmented biomedical in-struction tuning and directly perform task-specific training without external knowledge retrieval. 
+
+• w/o Decor : We discard the decorrelation constraint Ldecorr ,thus removing the enforcement of disentanglement among target-conditioned drug representations. 
+
+• w/o NAS : We disable the neural architecture search process and instead adopt a handcrafted graph neural network to represent molecular structures. 
+
+• w/o Attn : We eliminate the pairwise attention mechanism and guide the architecture search using independent drug represen-tations solely. 
+
+• w/o Sep : We remove the separation constraint Lsep , which enforces the dispersion of operation representations. 
+
+• w/o Ctx : We exclude structural level cell line features as the contexts and only utilize raw molecular graph topological fea-tures. The ablation results are summarized in Fig. 4. Removing any single component consistently leads to noticeable performance degradation across different metrics, indicating that each compo-nent contributes meaningfully to our OOD-GraphLLM. Among all variants, w/o Ctx and w/o NAS incur the most pronounced per-formance drops, particularly on the more challenging regression task. This observation highlights the importance of explicitly mod-eling cell line contextual information, as well as tailoring neural architectures based on target-adaptive molecular encodings. OOD-GraphLLM: Graph Large Language Model for Out-of-Distribution Generalized Drug Synergy Prediction Conference’17, July 2017, Washington, DC, USA 
+
+## 4.4 Hyperparameter Analysis 
+
+To investigate the sensitivity of our framework to key hyperparame-ters, we analyze the impact of varying 𝛼 and 𝛽 in Eq. 17 on both clas-sification and regression performance in the size-based splitted zip dataset. Specifically, we consider 𝛼, 𝛽 ∈ { 0.0, 1e −3, 5e −3, 1e −2, 1e −1},and report the results in Fig. 5. 0.0 1e-3 5e-3 1e-2 1e-1         
+
+> 75.25
+> 75.50
+> 75.75
+> 76.00
+> 76.25
+> 76.50
+> ACC (%)
+> (a) Sensitivity to
+> ACC
+> RMSE
+> 0.0 1e-3 5e-3 1e-2 1e-1
+> 74.0
+> 74.5
+> 75.0
+> 75.5
+> 76.0
+> 76.5
+> ACC (%)
+> (b) Sensitivity to
+> ACC
+> RMSE
+> P1 P2 P3
+> Prompt
+> 75
+> 76
+> 77
+> 78
+> 79
+> ACC (%)
+> (c) Prompt Design
+> Scaffold ACC
+> Size ACC
+> Scaffold RMSE
+> Size RMSE
+> 246
+> Number of prototypes
+> 72
+> 74
+> 76
+> 78
+> ACC (%)
+> (d) Prototypes per Layer
+> Scaffold ACC
+> Size ACC
+> Scaffold RMSE
+> Size RMSE
+> 19.75
+> 20.00
+> 20.25
+> 20.50
+> 20.75
+> 21.00
+> 21.25
+> RMSE
+> 20.0
+> 20.5
+> 21.0
+> 21.5
+> RMSE
+> 29.0
+> 29.5
+> 30.0
+> 30.5
+> RMSE
+> 29
+> 30
+> 31
+> 32
+> RMSE
+
+Figure 5: Hyperparameter sensitivity analysis for 𝛼 , 𝛽 , differ-ent prompts and prototypes per layer. 
+
+As shown in the figure, the model achieves the best overall performance when 𝛼 = 5e −3, while increasing or decreasing 𝛼 leads to noticeable performance degradation across different tasks. In contrast, increasing 𝛽 beyond this range has a relatively minor effect on both accuracy and RMSE, whereas reducing 𝛽 results in a more pronounced decline. Consistent with the ablation study, removing either loss term corresponding to 𝛼 or 𝛽 causes a significant drop in performance, highlighting the necessity of both components in our objective. We further evaluate the robustness of our framework to different prompt formulations. We consider three prompts under the same experimental setting on the Bliss dataset: P1 : “Do the two drugs exhibit synergy effects? What is their [score] synergy score?”; P2 :“Classify the synergy effects between the two drugs and report their [score] synergy score.”; and P3 : “As a pharmacovigilance officer, how would you classify and calculate the [score] synergy score between the two drugs?”. The performance remains stable across these prompt variants, suggesting that our framework is not overly sensitive to surface-level prompt wording. This robustness indicates that the model primarily relies on the learned structural, contextual, and semantic representations rather than exploiting a specific prompt template. Finally, we analyze the effect of the number of prototypes per layer in the architecture search module. This hyperparameter con-trols the capacity of the architecture search space by determining how many prototype operations are maintained at each layer. The results show that increasing the number of prototypes from 2 to 
+
+6 consistently improves both classification and regression perfor-mance. We use 6 prototypes per layer as the default setting, which achieves the best overall performance in our experiments. 
+
+## 4.5 Case Study Survival Motor   
+
+> Neuron Protein
+> Histone
+> Deacetylase 4 Histone deacetylase-
+> like amidohydrolase
+> Thymidylate synthase Prelamin-A/C
+> BRD4
+> NCI-H226
+> 5-Fluorouracil
+> Vorinostat
+> Mitoxantrone
+> Romidepsin
+> Bliss Score: 10.74 Bliss Score: 10.28
+
+Testing Training 
+
+Figure 6: A case study on 5-Fluorouracil and Vorinostat. 
+
+We further present a case study on 5-Fluorouracil and Vorinostat, whose molecular scaffolds and sizes both exhibit substantial topo-logical shifts relative to the training distributions, in the NCI-H226 cell line under Bliss score. Specifically, as shown in Fig. 6, 5-Fluorouracil and Mitoxantrone share a target-conditioned clue related to the survival motor neu-ron (SMN) protein. Although structurally distinct, both contain polar carbonyl-bearing planar motifs that can support hydrogen-bond-mediated interactions around SMN-associated protein-RNA interfaces, suggesting a shared biochemical basis for modulating SMN complex stability rather than acting through direct enzymatic inhibition. This shared polar interaction pattern provides a trans-ferable SMN-related signal for O.O.D. inference. Similarly, Vorino-stat and Romidepsin converge on histone deacetylase regulation, particularly HDAC4 and related zinc-dependent HDAC isoforms. Vorinostat inhibits HDACs through hydroxamate-based Zn 2+ chela-tion, whereas Romidepsin, after intracellular reduction, exposes a thiol group that serves an analogous metal-coordinating role. These shared SMN- and HDAC4-centered clues indicate that our target-adaptive modeling can align mechanistically related signals across structurally divergent drugs, thereby supporting generalization under O.O.D. settings. 
+
+## 5 Conclusion 
+
+In this work, we propose OOD-GraphLLM, a novel graph LLM framework for out-of-distribution (O.O.D.) generalized drug syn-ergy prediction (DSP) that unifies molecular graph representation and biomedical semantic language representations through a joint optimization. Extensive experiments demonstrate that the pro-posed OOD-GraphLLM consistently outperforms state-of-the-art approaches on various DSP tasks. To the best of our knowledge, OOD-GraphLLM is the first attempt to study O.O.D. generalized DSP by resorting to graph large language models. 
+
+## Acknowledgement 
+
+This work was supported by the National Key Research and Devel-opment Program of China No.2023YFF1205001. 
+
+## References 
+
+[1] Iz Beltagy, Kyle Lo, and Arman Cohan. 2019. SciBERT: A pretrained language model for scientific text. arXiv preprint arXiv:1903.10676 (2019). Conference’17, July 2017, Washington, DC, USA Xin Wang et al. 
+
+[2] Ziwei Chai, Tianjie Zhang, Liang Wu, Kaiqiang Han, Xiaohai Hu, Xuanwen Huang, and Yang Yang. 2025. Graphllm: Boosting graph reasoning ability of large language model. IEEE Transactions on Big Data (2025). [3] UniProt Consortium. 2019. UniProt: a worldwide hub of protein knowledge. 
+
+Nucleic acids research 47, D1 (2019), D506–D515. [4] Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019. Bert: Pre-training of deep bidirectional transformers for language understanding. In 
+
+Proceedings of the 2019 conference of the North American chapter of the association for computational linguistics: human language technologies, volume 1 (long and short papers) . 4171–4186. [5] Yunyun Dong, Yunqing Chang, Yuxiang Wang, Qixuan Han, Xiaoyuan Wen, Ziting Yang, Yan Zhang, Yan Qiang, Kun Wu, Xiaole Fan, et al . 2024. MFSynDCP: multi-source feature collaborative interactive learning for drug combination synergy prediction. BMC bioinformatics 25, 1 (2024), 140. [6] Mohamed Reda El Khili, Safyan Aman Memon, and Amin Emad. 2023. MARSY: a multitask deep-learning framework for prediction of drug combination synergy scores. Bioinformatics 39, 4 (2023), btad177. [7] Junfeng Fang, Shuai Zhang, Chang Wu, Zhengyi Yang, Zhiyuan Liu, Sihang Li, Kun Wang, Wenjie Du, and Xiang Wang. 2024. Moltc: Towards molecular relational modeling in language models. arXiv preprint arXiv:2402.03781 (2024). [8] Yue Guo, Haitao Hu, Wenbo Chen, Hao Yin, Jian Wu, Chang-Yu Hsieh, Qiaojun He, and Ji Cao. 2024. SynergyX: a multi-modality mutual attention network for interpretable drug synergy prediction. Briefings in Bioinformatics 25, 2 (2024), bbae015. [9] Betül Güvenç Paltun, Samuel Kaski, and Hiroshi Mamitsuka. 2021. Machine learning approaches for drug combination therapies. Briefings in Bioinfor-matics 22, 6 (08 2021), bbab293. arXiv:https://academic.oup.com/bib/article-pdf/22/6/bbab293/41088416/bbab293.pdf doi:10.1093/bib/bbab293 [10] Edward J Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen, et al . 2022. Lora: Low-rank adaptation of large language models. ICLR 1, 2 (2022), 3. [11] Jing Hu, Jie Gao, Xiaomin Fang, Zijing Liu, Fan Wang, Weili Huang, Hua Wu, and Guodong Zhao. 2022. DTSyn: a dual-transformer-based neural network to predict synergistic drug combinations. Briefings in Bioinformatics 23, 5 (2022), bbac302. [12] Chao Huang, Xubin Ren, Jiabin Tang, Dawei Yin, and Nitesh Chawla. 2024. Large language models for graphs: Progresses and directions. In Companion Proceedings of the ACM Web Conference 2024 . 1284–1287. [13] Aleksandr Ianevski, Anil K Giri, and Tero Aittokallio. 2022. SynergyFinder 3.0: an interactive analysis and consensus interpretation of multi-drug synergies across multiple samples. Nucleic acids research 50, W1 (2022), W739–W743. [14] Francesco Iorio, Theo A Knijnenburg, Daniel J Vis, Graham R Bignell, Michael P Menden, Michael Schubert, Nanne Aben, Emanuel Gonçalves, Syd Barthorpe, Howard Lightfoot, et al . 2016. A landscape of pharmacogenomic interactions in cancer. Cell 166, 3 (2016), 740–754. [15] Joseph D Janizek, Safiye Celik, and Su-In Lee. 2018. Explainable machine learn-ing prediction of synergistic drug combinations for precision cancer medicine. 
+
+BioRxiv (2018), 331769. [16] Yuanfeng Ji, Lu Zhang, Jiaxiang Wu, Bingzhe Wu, Lanqing Li, Long-Kai Huang, Tingyang Xu, Yu Rong, Jie Ren, Ding Xue, et al . 2023. Drugood: Out-of-distribution dataset curator and benchmark for ai-aided drug discovery–a focus on affinity prediction problems with noise annotations. In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 37. 8023–8031. [17] Bowen Jin, Gang Liu, Chi Han, Meng Jiang, Heng Ji, and Jiawei Han. 2024. Large language models on graphs: A comprehensive survey. IEEE Transactions on Knowledge and Data Engineering (2024). [18] Bowen Jin, Wentao Zhang, Yu Zhang, Yu Meng, Xinyang Zhang, Qi Zhu, and Jiawei Han. 2023. Patton: Language model pretraining on text-rich networks. 
+
+arXiv preprint arXiv:2305.12268 (2023). [19] Craig Knox, Mike Wilson, Christen M Klinger, Mark Franklin, Eponine Oler, Alex Wilson, Allison Pon, Jordan Cox, Na Eun Chin, Seth A Strawbridge, et al . 2024. DrugBank 6.0: the DrugBank knowledgebase for 2024. Nucleic acids research 52, D1 (2024), D1265–D1275. [20] Halil Ibrahim Kuru, Oznur Tastan, and A Ercument Cicek. 2021. MatchMaker: a deep learning framework for drug synergy prediction. IEEE/ACM transactions on computational biology and bioinformatics 19, 4 (2021), 2334–2344. [21] Greg Landrum. 2013. Rdkit documentation. Release 1, 1-79 (2013), 4. [22] Huijun Li, Lin Zou, Jamal AH Kowah, Dongqiong He, Lisheng Wang, Mingqing Yuan, and Xu Liu. 2023. Predicting drug synergy and discovering new drug combinations based on a graph autoencoder and convolutional neural network. 
+
+Interdisciplinary Sciences: Computational Life Sciences 15, 2 (2023), 316–330. [23] Junnan Li, Dongxu Li, Silvio Savarese, and Steven Hoi. 2023. Blip-2: Bootstrapping language-image pre-training with frozen image encoders and large language models. In International conference on machine learning . PMLR, 19730–19742. [24] Lei Li, Hongyu Zhang, Chunhou Zheng, and Yansen Su. 2025. A review of deep learning approaches for drug synergy prediction in cancer. npj Drug Discovery 2, 1 (Dec. 2025), 30. doi:10.1038/s44386-025-00034-1 [25] Tianhao Li, Sandesh Shetty, Advaith Kamath, Ajay Jaiswal, Xiaoqian Jiang, Ying Ding, and Yejin Kim. 2024. CancerGPT for few shot drug pair synergy prediction using large pretrained language models. NPJ Digital Medicine 7, 1 (2024), 40. [26] Xueliang Li, Bihan Shen, Fangyoumin Feng, Kunshi Li, Zhixuan Tang, Liangxiao Ma, and Hong Li. 2024. Dual-view jointly learning improves personalized drug synergy prediction. Bioinformatics 40, 10 (2024), btae604. [27] Zeming Lin, Halil Akin, Roshan Rao, Brian Hie, Zhongkai Zhu, Wenting Lu, Nikita Smetanin, Robert Verkuil, Ori Kabeli, Yaniv Shmueli, Allan dos Santos Costa, Maryam Fazel-Zarandi, Tom Sercu, Salvatore Candido, and Alexander Rives. 2023. Evolutionary-scale prediction of atomic-level pro-tein structure with a language model. Science 379, 6637 (2023), 1123– 1130. arXiv:https://www.science.org/doi/pdf/10.1126/science.ade2574 doi:10. 1126/science.ade2574 [28] Qiao Liu and Lei Xie. 2021. TranSynergy: Mechanism-driven interpretable deep neural network for the synergistic prediction and pathway deconvolution of drug combinations. PLoS computational biology 17, 2 (2021), e1008653. [29] Tianyu Liu, Tinyi Chu, Xiao Luo, and Hongyu Zhao. 2025. Building a unified model for drug synergy analysis powered by large language models. Nature Communications 16, 1 (2025), 4537. [30] Ilya Loshchilov and Frank Hutter. 2017. Decoupled weight decay regularization. 
+
+arXiv preprint arXiv:1711.05101 (2017). [31] Kristina Preuer, Richard PI Lewis, Sepp Hochreiter, Andreas Bender, Krishna C Bulusu, and Günter Klambauer. 2018. DeepSynergy: predicting anti-cancer drug synergy with deep learning. Bioinformatics 34, 9 (2018), 1538–1546. [32] Kyriakos Schwarz, Alicia Pliego-Mendieta, Amina Mollaysa, Lara Planas-Paz, Chantal Pauli, Ahmed Allam, and Michael Krauthammer. 2022. Ddos: a graph neural network based drug synergy prediction algorithm. arXiv preprint arXiv:2210.00802 (2022). [33] Aravind Subramanian, Rajiv Narayan, Steven M Corsello, David D Peck, Ted E Natoli, Xiaodong Lu, Joshua Gould, John F Davis, Andrew A Tubelli, Jacob K Asiedu, et al . 2017. A next generation connectivity map: L1000 platform and the first 1,000,000 profiles. Cell 171, 6 (2017), 1437–1452. [34] Jiabin Tang, Yuhao Yang, Wei Wei, Lei Shi, Lixin Su, Suqi Cheng, Dawei Yin, and Chao Huang. 2024. Graphgpt: Graph instruction tuning for large language models. In Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval . 491–500. [35] Ross Taylor, Marcin Kardas, Guillem Cucurull, Thomas Scialom, Anthony Hartshorn, Elvis Saravia, Andrew Poulton, Viktor Kerkez, and Robert Sto-jnic. 2022. Galactica: A large language model for science. arXiv preprint arXiv:2211.09085 (2022). [36] Heng Wang, Shangbin Feng, Tianxing He, Zhaoxuan Tan, Xiaochuang Han, and Yulia Tsvetkov. 2023. Can language models solve graph problems in natural language? Advances in Neural Information Processing Systems 36 (2023), 30840– 30861. [37] Jinxian Wang, Xuejun Liu, Siyuan Shen, Lei Deng, and Hui Liu. 2022. DeepDDS: deep graph neural network with attention mechanism to predict synergistic drug combinations. Briefings in Bioinformatics 23, 1 (2022). [38] Tianshuo Wang, Ruheng Wang, and Leyi Wei. 2023. AttenSyn: an attention-based deep graph neural network for anticancer synergistic drug combination prediction. Journal of Chemical Information and Modeling 64, 7 (2023), 2854–2862. [39] Xin Wang, Zeyang Zhang, Linxin Xiao, Haibo Chen, Chendi Ge, and Wenwu Zhu. 2025. Towards Multi-modal Graph Large Language Model. arXiv preprint arXiv:2506.09738 (2025). [40] Linxin Xiao, Xin Wang, Zeyang Zhang, Yang Yao, and Wenwu Zhu. 2025. DyNAS-DDI: Dynamic Pairwise Architecture Search for Generalizable Drug-Drug Interac-tion LLM. In Proceedings of the 33rd ACM International Conference on Multimedia .2216–2225. [41] Mengdie Xu, Xinwei Zhao, Jingyu Wang, Wei Feng, Naifeng Wen, Chunyu Wang, Junjie Wang, Yun Liu, and Lingling Zhao. 2023. DFFNDDS: prediction of syner-gistic drug combinations with dual feature fusion networks. Journal of Chemin-formatics 15, 1 (2023), 33. [42] Wanjuan Yang, Jorge Soares, Patricia Greninger, Elena J Edelman, Howard Light-foot, Simon Forbes, Nidhi Bindal, Dave Beare, James A Smith, I Richard Thompson, et al . 2012. Genomics of Drug Sensitivity in Cancer (GDSC): a resource for thera-peutic biomarker discovery in cancer cells. Nucleic acids research 41, D1 (2012), D955–D961. [43] Ruosong Ye, Caiqi Zhang, Runhui Wang, Shuyuan Xu, and Yongfeng Zhang. 2024. Language is all a graph needs. In Findings of the association for computational linguistics: EACL 2024 . 1955–1973. [44] Barbara Zdrazil, Eloy Felix, Fiona Hunter, Emma J Manners, James Blackshaw, Sybilla Corbett, Marleen De Veij, Harris Ioannidis, David Mendez Lopez, Juan F Mosquera, et al . 2024. The ChEMBL Database in 2023: a drug discovery platform spanning multiple bioactivity data types and time periods. Nucleic acids research 
+
+52, D1 (2024), D1180–D1192. [45] Jianan Zhao, Meng Qu, Chaozhuo Li, Hao Yan, Qian Liu, Rui Li, Xing Xie, and Jian Tang. 2022. Learning on large-scale text-attributed graphs via variational inference. arXiv preprint arXiv:2210.14709 (2022). OOD-GraphLLM: Graph Large Language Model for Out-of-Distribution Generalized Drug Synergy Prediction Conference’17, July 2017, Washington, DC, USA    
+
+> [46] Shuyu Zheng, Jehad Aldahdooh, Tolou Shadbahr, Yinyin Wang, Dalal Aldah-dooh, Jie Bao, Wenyu Wang, and Jing Tang. 2021. DrugComb update: a more comprehensive drug sensitivity data repository and analysis portal. Nucleic acids research 49, W1 (2021), W174–W184.
+
+## A Experiment Details A.1 Operations 
+
+To enable flexible architecture search over molecular graph en-coders, we define a candidate operator set O (𝑙 ) at each layer 𝑙 . All operators are implemented as bond-aware message-passing func-tions, where node features 𝑥 𝑖 and bond features 𝑒 𝑖 𝑗 are jointly used to construct molecular messages. 
+
+• GCNmol . A GCN-style operator that combines neighboring node features with bond features and performs degree-normalized aggregation. 
+
+• GINmol . A GIN-style operator that applies an MLP to the central node feature and aggregated bond-aware neighbor messages: 
+
+ℎ𝑖 = MLP ©«
+
+(1 + 𝜖 )𝑥 𝑖 +∑︁   
+
+> 𝑗 ∈N ( 𝑖 )
+
+ReLU (𝑥 𝑗 + 𝑒 𝑖 𝑗 )ª®¬
+
+. (18) 
+
+• GATmol . An attention-based operator that weights bond-aware neighbor messages with attention coefficients 𝛼 𝑖 𝑗 :
+
+ℎ𝑖 =∑︁   
+
+> 𝑗 ∈N ( 𝑖 )
+
+𝛼 𝑖 𝑗 ReLU (𝑥 𝑗 + 𝑒 𝑖 𝑗 ). (19) 
+
+• SAGEmol . A GraphSAGE-style operator that aggregates bond-aware neighborhood information and fuses it with a trans-formed root-node representation. 
+
+• Graphmol . A GraphConv-style operator that applies separate transformations to the central node and aggregated neighbor messages before combining them. 
+
+• MLPmol . A graph-agnostic operator that only applies a learn-able linear transformation to the current node feature, serv-ing as a skip-like transformation candidate. All candidate operators share a unified interface. During archi-tecture search, the model learns a weighted combination over these operators, allowing each layer to adaptively select suitable message-passing functions for molecular representation learning. 
+
+## A.2 Prompt Design Prompt :       
+
+> The cell line of this drug pair is [START_CELL]<DESC>[END_CELL]<Cell Embed>
+> The first drug is [START_SMILES]< SMILES 1>[END_SMILES]< Drug Embed 1>
+> The second drug is [START_SMILES]< SMILES 2>[END_SMILES]< Drug Embed 2>
+> Q: What are the descriptions of the two
+> drugs?
+> A: The first drug is <drugname1> and
+> has property <property1>. The second
+> drug is <drug-name2> and has property
+> <property2>.
+> Instruction Tuning Stage
+> Q: Do the two drugs exhibit synergy
+> effects? What is their <Score_Name>
+> score?
+> A: Yes./No. The absolute value is above
+> <LB> and below <UB>, thus the accu-
+> rate value is <Score>.
+> Task Training Stage
+
+Figure 7: Detailed input prompt design for DrugSyn-LLM. 
+
+As illustrated in Fig. 7, we carefully design the prompts used to fine-tune DrugSyn-LLM. Specifically, cell line information and drug smiles are incorporated as the backbone prompt to provide sufficient biological and chemical context. During the instruction tuning stage, the question-answer format is centered on describing and reasoning about intrinsic drug properties. In the subsequent task-specific training stage, we adopt a Chain-of-Thought (CoT) prompting strategy. The model is first guided to predict the categor-ical synergy outcome, after which it is prompted to infer a bounded interval by specifying the lower and upper bounds of the synergy score. Finally, the model is instructed to output an exact numerical value within this range. 
+
+## A.3 Instruction Tuning Stategy 
+
+To inject reliable biomedical knowledge into the instruction tun-ing process, we design the retrieval procedure as a curated and deterministic grounding mechanism, which aims to ensure that the language model receives high-quality and consistent textual knowledge during training. Specifically, we construct a local drug-description database from DrugBank [ 19 ]. For each drug, we collect its metadata from the 
+
+IDENTIFICATION section, where the Summary field is used as the primary textual description. For a small number of drugs with missing or incomplete structured entries in DrugBank, we manually verify and supplement their descriptions using trusted biomedical sources such as ChEMBL [44]. During instruction tuning, retrieval is performed by exact match-ing with DrugBank identifiers. Given a drug in a training instance, its DrugBank ID is used to deterministically map the drug to its corresponding description in the local database. This description is directly formatted into the target instruction text as structured biomedical knowledge. 
+
+## A.4 Implementation Details 
+
+We train the model using the AdamW [ 30 ] optimizer with a numeri-cal stability constant of 𝜖 = 1e −8 and apply weight decay ( 𝜆 = 0.05 )as a regularization mechanism. The learning rate is governed by a two-stage schedule, where it is first gradually increased from 
+
+1e −6 to 1e −4 during the warm-up phase, and subsequently reduced following a cosine decay strategy until 1e −5. Although different parameter groups are assigned distinct base learning rates, they all share the same global scheduling policy. To enable efficient fine-tuning of the LLM, we adopt Low-Rank Adaptation (LoRA) [ 10 ]with rank 𝑟 = 16 , while keeping approximately 99 .8% of the original model parameters frozen. 
+
+## B More Analyses B.1 Message Passing 
+
+To further understand how information propagates during archi-tecture search, we analyze the operation weights and relate them to molecular structural properties. For each molecule occurrence, we extract the learned operation weights and compute their associ-ations with multiple structural properties. For the correlation between operation weights and structural metrics, we noticed that the operation weights are not uniformly distributed across molecular structures. In particular, GATmol shows a positive Spearman correlation with heavy atom count ( 𝜌 = 0.4701 ). Similarly, GRAPHmol is positively correlated with aromatic ring Conference’17, July 2017, Washington, DC, USA Xin Wang et al. 
+
+count ( 𝜌 = 0.4495 ), suggesting that graph-level aggregation be-comes more important for ring-rich molecular structures. We visualize operation preferences across molecular structural groups in Fig. 8. The visualization reveals clear structural special-ization. Small and hetero-atom-rich molecules show stronger pref-erence for GINmol . In contrast, GINmol is suppressed in ring-rich molecules. Ring-rich molecules instead show increased preference for MLPmol , suggesting that the model relies more on feature trans-formation and less on GINmol -style local expressive aggregation for ring-rich structures. Representative molecule-level examples further support this trend. A small hetero-atom-rich molecule, CN1C(=O)N2C=NC(=C2N =N1)C(=O)N , assigns high weight to GINmol , indicating that expres-sive local aggregation is useful for compact structures with dense hetero-atom patterns. By contrast, a larger aromatic multi-ring molecule, CS(=O)(=O)C1=CC(=C(C=C1)C(=O)NC2=CC(=C(C=C2)Cl)C3= CC=CC=N3)Cl , shows increased weights for GATmol and GRAPH-mol , consistent with the need for attention-based and graph-level propagation over larger aromatic systems. GCNmol 
+
+> GINmol
+> GATmol
+> SAGEmol
+> GRAPHmol
+> MLPmol
+> Operation
+> large
+> hetero_rich
+> aromatic_rich
+> ring_rich
+> few_rings
+> moderate
+> Structural group
+> 0.10
+> 0.05
+> 0.00
+> 0.05
+> 0.10
+> Preference
+
+Figure 8: Structural-group preferences of diverse message-passing operations. Colors indicate relative within-group operation preference after subtracting the mean operation weight of each structural group. Positive values indicate op-erations emphasized within a group, while negative values indicate relatively suppressed operations. 
+
+## B.2 Interpretability 
+
+We further examine whether the internal representations of our framework provide biologically and chemically meaningful sig-nals. We conduct interpretability analyses at two levels: target-level attention and substructure-level SMILES attention. 
+
+Target-level interpretability. We first inspect the cross-attention scores between drug representations and protein-target embed-dings. For each analyzed drug-combination sample, we identify the target receiving the highest attention weight and compare it with known pharmacological mechanisms. Representative examples are summarized in Table 3. The attended targets are consistent with established biological knowledge in several cases. For example, KU-55933 attends strongly to ATM, which agrees with its known role as an ATM inhibitor involved in DNA damage response. Similarly, Im-iquimod attends to Toll-like receptor 7, consistent with its function as a TLR7 agonist. 
+
+Table 3: Target-level interpretability examples. 
+
+Drug Pair Top Attended Target Mechanistic Rele-vance 
+
+Perifosine + KU-55933 Serine-protein kinase ATM ATM inhibition / DNA damage response 5-Fluorouracil + Im-iquimod Toll-like receptor 7 Immune activation via TLR7 signaling Melphalan hydrochlo-ride + Carmustine Glutathione reductase Oxidative stress and detoxification path-ways 
+
+Substructure-level interpretability. We further analyze whether the model focuses on chemically meaningful molecular substruc-tures. Specifically, we project the final-layer language-model at-tention scores back to the SMILES characters and identify high-attention local fragments. Figure 9 visualizes three representative drugs. Each panel shows the character-level SMILES attention heatmap, with cyan boxes marking the highest-attention fragment. Fingolimod in IPC-298                                      
+
+> CCCCCCCCC1=CC=C(C=C1)CCC(CO)(CO)N
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1=CC=C(C=C1)
+> (C=C1)CCC(CO
+> CCC(CO)(CO)N
+> 17.5%
+> 65.1%
+> 74.4%
+> 0.000
+> 0.002
+> 0.004
+> 0.006
+> 0.008
+> 0.010
+> Attention
+
+Decitabine in A375                                  
+
+> C1C(C(OC1N2C=NC(=NC2=O)N)CO)O
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> (C(OC1N2C=NC
+> N2C=NC(=NC2=
+> NC2=O)N)CO)O
+> 15.0%
+> 31.1%
+> 83.1%
+> 0.000
+> 0.002
+> 0.004
+> 0.006
+> 0.008
+> 0.010
+> Attention
+
+Nilutamide in A101D                                                            
+
+> CC1(C(=O)N(C(=O)N1)C2=CC(=C(C=C2)[
+> N+](=O)[O-])C(F)(F)F)C
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Fraction of total SMILES attention
+> )[N+](=O)[O-
+> =O)[O-])C(F)
+> ])C(F)(F)F)C
+> 15.0%
+> 25.2%
+> 76.9%
+> 0.000
+> 0.002
+> 0.004
+> 0.006
+> 0.008
+> 0.010
+> Attention
+
+Figure 9: Substructure-level SMILES attention visualization for Fingolimod, Decitabine, and Nilutamide. Warmer col-ors indicate higher character-level attention. Highlighted regions correspond to high-attention local fragments, and the bar plots report their fractions of total SMILES attention. 
+
+The highlighted fragments are chemically interpretable. For Fin-golimod, the model assigns high attention to the amino-alcohol-containing region, which is consistent with the polar head-group characteristics of this molecule. For Decitabine, the attention con-centrates on an N/O-rich nucleoside-like region, matching its chem-ically distinctive heteroatom-rich structure. For Nilutamide, the model emphasizes the fluorinated aromatic-side fragment, includ-ing the trifluoromethyl-related region, which is relevant to lipophilic-ity and molecular recognition in medicinal chemistry. Overall, these results provide supporting evidence that the learned representations capture signals aligned with known pharmacologi-cal and medicinal-chemistry knowledge.
