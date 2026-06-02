@@ -6,32 +6,31 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-01
-- 运行时间：2026-06-01 23:00:05 UTC
+- 最新运行日期：2026-06-02
+- 运行时间：2026-06-02 22:52:20 UTC
 - 运行状态：成功
-- 本次总论文数：4
-- 精读区：1
-- 速读区：3
+- 本次总论文数：2
+- 精读区：0
+- 速读区：2
 
 ### 今日简报（AI）
-今日共4篇论文，精读《OOD-GraphLLM》获9分高分，主要方向为图大语言模型与药物协同预测。推荐关注该文解决分布外泛化问题的思路。若研究知识图谱，可参考速读中的负采样、规则生成与生物信息传播建模。
-- 详情：[/202606/01/README](/202606/01/README)
+今日推荐两篇药物相关论文，分别聚焦安全用药可解释性和药物发现推理。
+
+其中《SafeRx-Agent》提出多智能体框架确保用药安全可解释，《UniD³》用知识图谱增强检索提升药物发现推理效果，两篇均值得关注。
+
+普通读者可重点留意多智能体协同和知识图谱在医疗决策中的应用，后续可跟踪这些方法的临床验证进展。
+- 详情：[/202606/02/README](/202606/02/README)
 
 ### 精读区论文标签
-1. [OOD-GraphLLM: Graph Large Language Model for Out-of-Distribution Generalized Drug Synergy Prediction](/202606/01/2605.30247v1-ood-graphllm-graph-large-language-model-for-out-of-distribution-generalized-drug-synergy-prediction)  
-   标签：评分：9.0/10、query:cold-ddi
-   evidence：图大语言模型用于分布外药物协同作用预测，处理冷启动场景
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Boosting Knowledge Graph Foundation Models via Enhanced Negative Sampling](/202606/01/2605.27023v1-boosting-knowledge-graph-foundation-models-via-enhanced-negative-sampling)  
+1. [SafeRx-Agent: A Knowledge-Grounded Multi-Agent Framework for Safe and Explainable Medication Recommendation](/202606/02/2605.29146v2-saferx-agent-a-knowledge-grounded-multi-agent-framework-for-safe-and-explainable-medication-recommendation)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：知识图谱补全方法可迁移至药物发现
-2. [Generating Graph-like Rules for Knowledge Graph Reasoning via Diffusion Models](/202606/01/2605.30747v1-generating-graph-like-rules-for-knowledge-graph-reasoning-via-diffusion-models)  
+   evidence：基于知识的多智能体框架，利用大语言模型进行药物推荐
+2. [UniD$^3$: A Knowledge Graph-Enhanced RAG Framework for Drug-Disease Discovery and Reasoning](/202606/02/2606.01394v1-unid3-a-knowledge-graph-enhanced-rag-framework-for-drug-disease-discovery-and-reasoning)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：扩散模型生成图结构规则提升知识图谱推理能力，可用于药物发现中的知识图谱补全
-3. [BIFO: A Biological Information Flow Ontology for Directed Propagation in Heterogeneous Biomedical Knowledge Graphs](/202606/01/biorxiv-10-64898-2026-05-25-727605-v1-bifo-a-biological-information-flow-ontology-for-directed-propagation-in-heterogeneous-biomedical-knowledge-graphs)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：用于知识图谱中生物学信号传播的本体，支持药物相互作用预测方法
+   evidence：利用知识图谱增强的RAG和大语言模型进行药物发现
 
 
 <div class="dpr-home-promo-card">

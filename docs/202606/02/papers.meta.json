@@ -1,0 +1,39 @@
+{
+  "label": "2026-06-02",
+  "date": "2026-06-02",
+  "generated_at": "2026-06-02T22:52:25",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202606/02/2605.29146v2-saferx-agent-a-knowledge-grounded-multi-agent-framework-for-safe-and-explainable-medication-recommendation",
+      "section": "quick",
+      "title_en": "SafeRx-Agent: A Knowledge-Grounded Multi-Agent Framework for Safe and Explainable Medication Recommendation",
+      "authors": "Xinyu Wang, Hanwei Wu, Zhenghan Tai, Sicheng Lyu, Qincheng Lu, Ziyu Zhao, Jijun Chi, Jingrui Tian, Xiao-Wen Chang, Ziyang Song",
+      "date": "2026-05-27",
+      "pdf": "https://arxiv.org/pdf/2605.29146v2",
+      "score": "6.0",
+      "evidence": "基于知识的多智能体框架，利用大语言模型进行药物推荐",
+      "tldr": "传统药物推荐方法仅预测结构化代码，缺乏证据支撑，而大语言模型代理虽能利用临床上下文，但缺少安全验证和可追溯性。现有基准使用宽泛药物类别，忽略亚组安全差异，导致风险高估。为此，提出SafeRx-Agent，一个知识引导的多代理框架，融合患者上下文、外部知识和安全验证，生成可追踪的第四级ATC代码药物集合。在MIMIC-III和MIMIC-IV上，该方法在提升细粒度预测准确性的同时，有效控制药物相互作用、禁忌症及处方规模。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Medication recommendation predicts medications for patient visits, but existing methods still face two key challenges. At the model level, traditional drug recommendation methods only predict structured drug codes with limited evidence grounding, while LLM agents can use richer clinical context but may lack safety verification and traceability. At the task level, existing benchmarks often use broad medication categories, which ignore subgroup-level safety differences and can lead to risk overestimation. We introduce the first fine-grained medication recommendation setting based on fourth-level ATC code generation. We propose Safe Prescription Agent (SafeRx-Agent), a knowledge-grounded multi-agent framework that uses patient context, external clinical knowledge, and safety verification to recommend traceable medication sets. Experimental results on MIMIC-III and MIMIC-IV datasets show that SafeRx-Agent improves fine-grained medication prediction accuracy while controlling drug interactions, contraindications, and medication set size.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/02/2606.01394v1-unid3-a-knowledge-graph-enhanced-rag-framework-for-drug-disease-discovery-and-reasoning",
+      "section": "quick",
+      "title_en": "UniD$^3$: A Knowledge Graph-Enhanced RAG Framework for Drug-Disease Discovery and Reasoning",
+      "authors": "Qing Wang, Tianshi Liu, Minghao Zhou, Jialu Liang, Sen Guo, Guangyu Wang, Jing Su, Qianqian Song",
+      "date": "2026-05-31",
+      "pdf": "https://arxiv.org/pdf/2606.01394v1",
+      "score": "6.0",
+      "evidence": "利用知识图谱增强的RAG和大语言模型进行药物发现",
+      "tldr": "药物-疾病关系发现受限于文献异构性和人工标注的不足。UniD$^3$框架集成大语言模型与知识图谱增强的检索增强生成（KG-RAG），处理157,849篇PubMed文章，通过双阶段策略构建知识图谱并生成大规模结构化数据集。外部验证表明其在药物-疾病匹配（F1=0.87）和药物-靶点分析（F1=0.82）上表现优异，且KG-RAG模型显著优于纯LLM。该框架为AI驱动的药物发现和精准医学提供了可扩展、可解释的知识支撑。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Systematic characterization of drug-disease relationships is essential for drug discovery and repurposing, yet is hindered by the heterogeneity and rapid growth of biomedical literature. Existing datasets rely on labor-intensive curation and are often incomplete, while LLM-only approaches suffer from hallucination and weak evidence grounding. We introduce UniD$^3$, a unified framework that integrates Large Language Models with Knowledge Graph-enhanced Retrieval-Augmented Generation (KG-RAG) to extract, organize, and validate drug-disease knowledge across Drug-Disease Matching (DDM), Drug Effectiveness Assessment (DEA), and Drug-Target Analysis (DTA). UniD$^3$ processes 157,849 PubMed articles with Llama 3.3-70B and constructs knowledge graphs via a dual-stage strategy combining paper-level extraction with KG-level consolidation centered on drug and disease entities. These graphs support KG-RAG-based generation of structured datasets, evaluated through external benchmarks, fuzzy matching with curated resources, and clinician review. UniD$^3$ produces six knowledge graphs and large-scale datasets, including 28,915 DDM, 15,042 DEA, and over 4,000 DTA QA pairs. External validation shows strong performance (F1: 0.85-0.87 for DDM/DEA; 0.82 for DTA), with clinician review confirming high reliability (AUROC = 0.90). KG-RAG-augmented models outperform standalone LLMs, and the UniD$^3$ chatbot enables interpretable, citation-supported exploration of drug-disease relationships. UniD$^3$ provides a scalable, extensible framework for transforming unstructured biomedical literature into high-quality, structured drug-disease knowledge, supporting AI-driven discovery, repurposing, and precision medicine.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
