@@ -6,31 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-02
-- 运行时间：2026-06-02 22:52:20 UTC
+- 最新运行日期：2026-06-03
+- 运行时间：2026-06-03 22:50:37 UTC
 - 运行状态：成功
-- 本次总论文数：2
+- 本次总论文数：1
 - 精读区：0
-- 速读区：2
+- 速读区：1
 
 ### 今日简报（AI）
-今日推荐两篇药物相关论文，分别聚焦安全用药可解释性和药物发现推理。
-
-其中《SafeRx-Agent》提出多智能体框架确保用药安全可解释，《UniD³》用知识图谱增强检索提升药物发现推理效果，两篇均值得关注。
-
-普通读者可重点留意多智能体协同和知识图谱在医疗决策中的应用，后续可跟踪这些方法的临床验证进展。
-- 详情：[/202606/02/README](/202606/02/README)
+今日精读知识图谱增强RAG的药物发现框架，速读1篇UniD³论文获评7分。  
+该框架利用知识图谱提升药物-疾病推理的准确性与可解释性，值得关注知识图谱+RAG的交叉方向。  
+建议了解RAG与结构化知识结合的思路，适用于生物医药领域的检索增强应用。
+- 详情：[/202606/03/README](/202606/03/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [SafeRx-Agent: A Knowledge-Grounded Multi-Agent Framework for Safe and Explainable Medication Recommendation](/202606/02/2605.29146v2-saferx-agent-a-knowledge-grounded-multi-agent-framework-for-safe-and-explainable-medication-recommendation)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：基于知识的多智能体框架，利用大语言模型进行药物推荐
-2. [UniD$^3$: A Knowledge Graph-Enhanced RAG Framework for Drug-Disease Discovery and Reasoning](/202606/02/2606.01394v1-unid3-a-knowledge-graph-enhanced-rag-framework-for-drug-disease-discovery-and-reasoning)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：利用知识图谱增强的RAG和大语言模型进行药物发现
+1. [UniD$^3$: A Knowledge Graph-Enhanced RAG Framework for Drug-Disease Discovery and Reasoning](/202606/03/2606.01394v1-unid3-a-knowledge-graph-enhanced-rag-framework-for-drug-disease-discovery-and-reasoning)  
+   标签：评分：7.0/10、query:cold-ddi
+   evidence：知识图谱增强的RAG用于药物-疾病发现，使用LLM和KG
 
 
 <div class="dpr-home-promo-card">

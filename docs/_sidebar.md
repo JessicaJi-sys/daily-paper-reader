@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-06-03 <!--dpr-date:20260603-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/03/2606.01394v1-unid3-a-knowledge-graph-enhanced-rag-framework-for-drug-disease-discovery-and-reasoning" data-sidebar-item="{&quot;title&quot;: &quot;UniD$^3$: A Knowledge Graph-Enhanced RAG Framework for Drug-Disease Discovery and Reasoning&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2606.01394v1-unid3-a-knowledge-graph-enhanced-rag-framework-for-drug-disease-discovery-and-reasoning&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;知识图谱增强的RAG用于药物-疾病发现，使用LLM和KG&quot;}">UniD$^3$: A Knowledge Graph-Enhanced RAG Framework for Drug-Disease Discovery and Reasoning</a>
   * 2026-06-02 <!--dpr-date:20260602-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/02/2605.29146v2-saferx-agent-a-knowledge-grounded-multi-agent-framework-for-safe-and-explainable-medication-recommendation" data-sidebar-item="{&quot;title&quot;: &quot;SafeRx-Agent: A Knowledge-Grounded Multi-Agent Framework for Safe and Explainable Medication Recommendation&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2605.29146v2-saferx-agent-a-knowledge-grounded-multi-agent-framework-for-safe-and-explainable-medication-recommendation&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;基于知识的多智能体框架，利用大语言模型进行药物推荐&quot;}">SafeRx-Agent: A Knowledge-Grounded Multi-Agent Framework for Safe and Explainable Medication Recommendation</a>
