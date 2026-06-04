@@ -1,0 +1,308 @@
+Title: KGBN: Augmenting and optimizing logical gene regulatory networks using knowledge graphs
+
+URL Source: https://www.biorxiv.org/content/10.64898/2026.01.29.702644v2.full.pdf
+
+Number of Pages: 9
+
+Markdown Content:
+bioRxiv, 2026, pp. 1–9 
+
+> doi: DOI HERE
+> Advance Access Publication Date: Day Month Year Paper
+
+## PAPER 
+
+# KGBN: Augmenting and optimizing logical gene regulatory networks using knowledge graphs 
+
+# Luna Xingyu Li ,1,2 Yue Zhang ,1 Boris Aguilar ,1 Tazein Shah, 1 John H Gennari 2
+
+# and Guangrong Qin 1, ∗    
+
+> 1Institute for Systems Biology, 401 Terry Ave N, 98109, WA, United States and 2Department of Medical Education and Biomedical Informatics, University of Washington, 1410 NE Campus Pkwy, 98195, WA, United States
+> ∗Corresponding author. gqin@systemsbiology.org
+
+# Abstract 
+
+Logical gene regulatory network (GRN) models provide interpretable, mechanistic representations of cellular regulation and are widely used in systems biology. However, most existing models remain incomplete, context-specific, and difficult to extend to comprehensive GRNs, limiting their broader applicability to tasks such as drug-response prediction and precision medicine. Here, add some ideas about virtual twins: With AML patients, we can use comprehensive GRNs to predict drug response. We present KGBN (Knowledge Graph–augmented Boolean Network modeling), a computational workflow for systematically augmenting logical GRN models. KGBN incorporates regulatory interactions derived from curated knowledge graphs as alternative logical rules while preserving the validated structure of existing models. Rule probabilities are optimized against experimental data to represent regulatory uncertainty and achieve data-driven calibration. Applying KGBN to acute myeloid leukemia, we show that extending an existing GRN with drug-target pathways and training against ex vivo drug-response data yields mutation-specific models that recapitulate known therapeutic sensitivities and signaling dependencies, demonstrating the utility of KGBN for interpretable, context-aware GRN modeling. (Should be predict) 
+
+Key words: gene regulatory networks, logical models, knowledge graphs, acute myeloid leukemia, systems biology 
+
+# Introduction 
+
+Systems biology aims to explain how molecular components interact to produce emergent cellular behaviors, disease phenotypes, and treatment responses. Mathematical models play a central role in this effort by translating biological knowledge into executable representations that can be simulated and tested (1; 2). Among them, logical models have become a widely adopted formalism for representing gene regulatory networks (GRNs) by describing the qualitative activation states of genes and proteins and using logical rules to capture their regulatory relationships (3–5). GRN modeling has been instrumental in revealing the mechanisms of complex diseases. In acute myeloid leukemia (AML), for example, logical models have been used to capture hematopoietic stem cell differentiation and the dysregulation of transcriptional programs driven by oncogenic mutations such as FLT3 , NPM1 , and RUNX1 (6–8). They have been used to study a wide range of biological processes, including signaling crosstalk, drug response, and resistance mechanisms in various diseases (e.g., breast cancer (9) and pancreatic cancer (10)). However, these models are typically constructed for specific biological questions, often omitting drug targets or signaling intermediates, and encode a single deterministic regulatory logic per node (11; 12). These limitations hinder their ability to represent regulatory uncertainty, capture patient heterogeneity, or adapt to new experimental contexts such as drug perturbation screens. Recent advances provide an opportunity to address these challenges. First, biomedical knowledge graphs systematically curate causal relationships among genes, proteins, drugs, and phenotypes, offering a scalable resource for identifying missing regulatory interactions and drug–target connections (13; 14). Second, probabilistic Boolean networks (PBNs) extend classical Boolean models by allowing multiple alternative regulatory rules per node, thereby explicitly representing uncertainty, context dependence, and competing biological hypotheses (15; 16). Third, large-scale experimental datasets, including ex vivo drug-response and multi-omics profiling, enable data-driven calibration of model parameters, transforming static logic models into quantitatively informed predictive systems. Here, we introduce KGBN (Knowledge Graph-augmented Boolean Network modeling), a computational framework that integrates these elements into a unified workflow for augmentation and optimization of GRN models. KGBN uses knowledge graphs to augment existing logical models with disease- and drug-relevant regulators, encodes alternative regulatory hypotheses using PBNs, and optimizes rule probabilities against experimental data to improve predictive  
+
+> ©The Author 2026.
+> 1
+
+.CC-BY 4.0 International license made available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is The copyright holder for this preprint this version posted May 28, 2026. ;https://doi.org/10.64898/2026.01.29.702644 doi: bioRxiv preprint 2 Li et al.         
+
+> Fig. 1. Overview of the workflow and KGBN core functionalities. aIdentifying and standardizing existing models, genes, phenotypes, and experimental data. bExtending the model via knowledge graph (KG) and probabilistic Boolean networks (PBNs). cOptimizing the PBN using experimental data.
+> dSimulating and evaluating the optimized model.
+
+fidelity. We demonstrate the utility of this framework through drug response prediction in AML and through reproduction of a published pancreatic cancer model, illustrating both its predictive capability and its reliability as a general execution and extension platform for GRN models. With the potential to apply to diverse biological and disease contexts, this framework will facilitate mechanistic hypothesis generation, mutation-specific drug response analysis, and in silico exploration of therapeutic combinations. 
+
+# Results 
+
+# The KGBN toolkit 
+
+We developed KGBN, an open-source Python library for Boolean network and probabilistic Boolean network modeling, extension, optimization, and analysis, available at https://github.com/IlyaLab/KGBN. It supports the full workflow summarized in Figure 1 and described in the Methods. Its core functionality includes: 1. Network construction and manipulation: Load or build models from SBML-qual, text, or connectivity matrices; merge and extend networks; 2. Boolean network modeling: Perform deterministic or stochastic updates, steady-state analysis, and trajectory simulation; 3. Probabilistic modeling: Simulate PBNs stochastically, perform steady-state analysis, and visualize the network; 4. Knowledge-graph integration: Query KGs to derive models from causal relations between biochemical entities and phenotypes; 
+
+.CC-BY 4.0 International license made available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is The copyright holder for this preprint this version posted May 28, 2026. ;https://doi.org/10.64898/2026.01.29.702644 doi: bioRxiv preprint KGBN 3           
+
+> Fig. 2. Knowledge-guided augmentation and optimization of an AML model for drug-response prediction. aAugmention of the AML Boolean network, with newly introduced nodes and edges highlighted. b,cCorrelation between measured Beat AML AUC and the predicted reversed apoptosis score in the training cohort (Waves 1+2) and test cohort (Waves 3+4), respectively. Each dot represents a mutation-defined patient group and is colored by drug. dComparison of representative logical rules in the original and optimized models, highlighting rewiring of MAPK1 ,STAT5A , and AKT1 .
+
+5. Optimization and evaluation: Fit model predictions to quantitative experimental data, and evaluate on test cases. To demonstrate the correctness and practical applicability of the toolkit, we evaluated KGBN on a published logical model of pancreatic cancer signaling (17). Using the same model structure and simulation protocol reported in that study, we reproduced the published simulation-based ranking of drug combinations (Supplementary Fig. S1). This reproduction provides a validation benchmark for the software and afoundation for the AML use case below. 
+
+# A use case: AML drug response prediction 
+
+We next applied KGBN to a published Boolean model of AML to test whether knowledge-guided augmentation and probabilistic rule selection can recover drug-response phenotypes across mutational contexts (7). The starting model captures major AML regulators but lacks parts of the signaling circuitry needed to represent several targeted therapies. KGBN therefore augments the network with KG-supported interactions and converts affected nodes into PBN junctions whose rule probabilities are learned from drug-response data. 
+
+.CC-BY 4.0 International license made available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is The copyright holder for this preprint this version posted May 28, 2026. ;https://doi.org/10.64898/2026.01.29.702644 doi: bioRxiv preprint 4 Li et al. 
+
+Knowledge-guided augmentation predicts drug response 
+
+To test whether one shared regulatory logic could explain responses to multiple therapies, we optimized a single augmented PBN against the combined response profiles of five targeted AML drugs. As summarized in Figure 2A,B, the KG-augmented network adds missing drug-target circuitry and increases connectivity around major survival regulators, most visibly through the introduction of BTK and SYK and their links to nodes such as MAPK1 , AKT1 , and MYC .These additions place the original AML model in a more realistic therapeutic context, where FLT3-centered signaling converges with MAPK, AKT, and STAT5 survival programs and where SYK and BTK associated pathways can modulate drug response (18–20). After training on drug response seperated by mutation status of FLT3 -ITD, NPM1 and DNMT3A , the augmented model remained aligned with measured drug response in the Beat AML training cohort, in the held-out Beat AML test cohort, and after transfer to the independent FPMTB dataset (Figure 2C–E; panel statistics shown in the figure). The main mechanistic insight comes from Figure 2F, which compares the dominant rules for three key signaling hubs before and after optimization. MAPK1 shifts away from strict FLT3 
+
+dependence toward a permissive rule that can be sustained through AKT1 , MAP2K1 , MAP2K2 , and self-maintenance, consistent with effector uncoupling and rapid bypass of receptor-level inhibition. STAT5A similarly moves from exclusive FLT3 control to a redundant BTK /FLT3 /MAPK1 
+
+gate, providing a mechanistic explanation for why BTK-directed therapy can suppress a survival axis that would be invisible in a purely FLT3-centered model. Finally, AKT1 
+
+acquires self-sustaining logic, consistent with the persistence of AKT signaling through positive-feedback circuits that continue to support leukemic survival after upstream blockade. Together, these rule shifts point to a resistant network architecture in which AML cells preserve viability by distributing control across parallel MAPK, BTK/STAT5, and AKT modules rather than relying on a single dominant receptor input (20; 21). 
+
+LOCO validation reveals generalizable logic 
+
+We next asked whether the optimized rule probabilities reflect generalizable regulatory logic rather than cohort-specific noise by performing leave-one-mutation-out (LOCO) cross-validation across mutation-defined groups. Predictions for mutation profiles that were completely withheld during optimization remained informative overall ( ?? A–C), with the best prediction observed for isolated DNMT3A and NPM1 states. This pattern is biologically consistent with the idea that single-mutation contexts can be represented as modular perturbations of ashared signaling backbone, whereas the wild-type baseline and more complex multi-mutant states depend more strongly on cooperative rewiring that is harder to infer without direct contextual data. The rule-probability heatmap in ?? D reinforces this interpretation. Some nodes preserve a stable core logic across folds, such as the near-complete retention of the original rule for NPM1 , whereas integrative nodes such as 
+
+MAP2K1 repeatedly favor KG-derived inhibitor-wins logic. The model consistently recovers a mixture of conserved regulatory backbone and context-dependent escape logic. It is expected if the optimized PBN were capturing biologically reproducible pathway structure rather than arbitrary dataset-specific fits.                        
+
+> Fig. 3. Extension of the AML model with NRAS .aNetwork extended by adding NRAS ,DAB2IP ,and their KG-supported interactions. b–c
+> Correlation between measured drug response and predicted apoptosis score for the NRAS-extended model across the training cohort and test cohort. dComparison of representative rule probabilities in the NRAS-extended model and the previous model, highlighting rewiring of TP53
+> and MYC .
+
+NRAS extension reveals Ras-driven rewiring 
+
+Finally, we asked whether KGBN can be further leveraged to augment the model with an additional recurrent mutation that is well known to reshape therapeutic response. As a proof of concept, we extended the AML network with NRAS and the intermediary regulator DAB2IP (Figure 3A,B), creating explicit routes by which oncogenic Ras signaling can connect to AKT1 , MAPK1 , GSK3B , and TP53 . By training the extended model on drug response grouped by FLT3 -ITD, 
+
+NPM1 , DNMT3A , and NRAS mutation status, we obtained an optimized model that covers additional patient mutation profile (purple-colored nodes in ?? C-E), allowing direct representation of a clinically relevant relapse-associated bypass program. We compared the two PBNs before and after NRAS -extension in Figure 3F ((Supplementary Table. S2)). In the baseline model, TP53 is controlled primarily through CDKN2A /ARF-associated stabilization. After NRAS 
+
+augmentation, TP53 becomes dominated instead by a GSK3B -
+
+MAPK1 rule, consistent with oncogene-induced stress signaling in which excessive Ras/MAPK flux is interpreted as DNA damage or replication stress and is routed directly into senescence or apoptosis associated control. At the same time, 
+
+MYC shifts from a stringent rule that required simultaneous escape from several degradation constraints to a far more permissive logic. This rewiring is consistent with sustained Ras/MAPK activity stabilizing MYC and allowing proliferative 
+
+.CC-BY 4.0 International license made available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is The copyright holder for this preprint this version posted May 28, 2026. ;https://doi.org/10.64898/2026.01.29.702644 doi: bioRxiv preprint KGBN 5
+
+drive to persist even when the normal GSK3B /FBXW7 -dependent degradation machinery is not fully disabled. Together, these two changes show that NRAS does not simply add another proliferative branch to the network; it reorganizes both the stress-response module ( TP53 ) and the proliferative module ( MYC ), creating a more Ras/MAPK-dominated state with reduced dependence on upstream receptor control (21–24). This interpretation also helps explain why NRAS -mutant AML can be especially difficult to suppress with therapies aimed at a single upstream target. By wiring Ras signaling through DAB2IP into both survival and stress-response circuits, the extended model suggests that mutation acquisition produces network-wide rewiring rather than a simple additive effect. In that setting, restoring durable drug sensitivity is likely to require interrupting the downstream Ras/MAPK and AKT escape routes that become dominant after the mutation is introduced. 
+
+# Discussion 
+
+In this study, we introduced KGBN, a knowledge graph augmented framework to improve logical GRN models using probabilistic representations and experimental calibration. Applying the framework to AML, we demonstrated that augmenting an existing GRN with drug-target pathways and optimizing rule probabilities against ex vivo drug-response data allows the model to capture mutation-specific therapeutic sensitivities and decipher signaling dependencies. A key strength of KGBN lies in its explicit representation of regulatory uncertainty. Rather than committing to a single deterministic logic, the PBN formulation allows multiple competing regulatory hypotheses to coexist, with their relative influence learned from data. In the AML use case, the optimized rule probabilities were reproducible across cohort splits and LOCO folds, and sensitivity analysis highlighted a compact set of control points that dominate the phenotype prediction. This illustrates how data-trained PBNs can serve not only as predictive models but also as interpretable summaries of pathway utilization and parameter identifiability. Further, by grounding newly introduced nodes and edges in curated knowledge resources, KGBN provides transparent and traceable biological provenance for model augmentation. This is particularly valuable for modeling drug mechanisms of action and resistance, where regulatory context and pathway crosstalk play a critical role. Moreover, the phenotype scoring strategy enables alignment between qualitative network states and quantitative experimental readouts, bridging a longstanding gap between logical modeling and experimental data. KGBN complements our prior work on LM-Merger, which integrates multiple existing GRN models to improve robustness and regulatory coverage (25). While LM-Merger demonstrated improved generalization by combining AML and hematopoiesis models (7; 26), KGBN addresses a complementary setting in which curated knowledge graphs are used to extend a single validated model with new genes, pathways, and regulatory hypotheses. Together, these approaches support flexible GRN construction through either model–model integration or knowledge-driven extension, depending on data availability and modeling goals. Although this study focuses on AML as a primary use case, the workflow is not disease-specific. We have demonstrated its generalizability by reproducing a published pancreatic cancer logical model. Building on this validated baseline, we are currently augmenting the pancreatic cancer model with drug-target pathways and probabilistic logic to enable data-driven prediction of combination therapies. Beyond extending existing models, KGBN can use knowledge graphs to extract regulatory topology directly from a set of genes and phenotypes of interest and construct novel logical models for system-level simulation. More broadly, the modular design of KGBN allows integration of additional structured knowledge sources beyond SIGNOR. As a future direction, we are actively incorporating causal and drug-response knowledge from NCATS Translator resources to expand regulatory coverage, improve drug-target representation, and support cross-disease modeling (13). These extensions will further strengthen the workflow’s applicability to diverse contexts and advance its role as a general framework for GRN modeling. We would like to acknowledge a few limitations of our study. First, the quality of model extension depends on the completeness and accuracy of underlying knowledge graphs, which may contain conflicting or context-agnostic interactions. While the probabilistic framework partially mitigates this issue, our future work will incorporate evidence weighting, disease-specific filtering, or ensemble knowledge graph integration. Second, optimization against limited datasets risks overfitting, particularly for large networks. With the data we have, we have carried out cross-validation and external validation with another independent dataset. Another strategy to avoid overfitting would be to try model compression strategies, especially as models become larger. Overall, KGBN advances logical GRN modeling by providing a reproducible, extensible, and data-informed pathway from curated mechanistic knowledge to predictive, context-aware models. By enabling systematic incorporation of drug targets, regulatory uncertainty, and experimental calibration, this framework lays the groundwork for scalable mechanistic modeling in systems biology and supports the broader vision of precision medicine. 
+
+# Methods 
+
+# Boolean networks and PBNs 
+
+We model a gene regulatory network as a discrete dynamical system composed of binary state variables. Let V =
+
+{x1, . . . , x n} denote the set of nodes, where each node xi(t) ∈{0, 1} represents the activity state of a gene, protein, or phenotype at discrete time t. In a Boolean network, the state of each node is updated by a Boolean function xi(t + 1) =
+
+fi
+
+ x1(t), . . . , x n(t), where fi : {0, 1}n → {0, 1} encodes the regulatory logic of node i. The global network state is given by x(t) = (x1(t), . . . , x n(t)). In KGBN, we adopt asynchronous update scheme, where all node states are updated simultaneously at each discrete time step. PBNs generalize this formulation by allowing multiple alternative update rules per node. For each node xi,we define a set of candidate Boolean functions Fi =
+
+{fi1, . . . , f iK i } together with an associated probability vector 
+
+pi = ( pi1, . . . , p iK i ), PKi 
+
+> j=1
+
+pij = 1. At each update step, one function fij is selected according to pi, and the network state is updated accordingly. This stochastic rule selection induces a Markov chain over the global state space {0, 1}n.In KGBN, this formulation provides a natural mechanism for incorporating regulatory information derived from knowledge graphs. The original Boolean rule of a node is preserved as one 
+
+.CC-BY 4.0 International license made available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is The copyright holder for this preprint this version posted May 28, 2026. ;https://doi.org/10.64898/2026.01.29.702644 doi: bioRxiv preprint 6 Li et al. 
+
+element of Fi, while additional rules derived from knowledge-graph interactions are introduced as alternative elements of 
+
+Fi. The probability vector pi therefore controls the relative contribution of competing regulatory hypotheses. The steady-state distribution π is defined as the invariant distribution of the Markov chain induced by the PBN, satisfying 
+
+π = πP , where P is the state transition matrix determined by probabilistic rule selection (27). Steady states in KGBN are estimated using either Monte Carlo simulation, by sampling long stochastic trajectories, or a two-state Markov chain approximation for ergodic PBNs, enabling efficient evaluation of model outputs during rule-probability optimization (15). 
+
+# The KGBN workflow 
+
+KGBN is designed as a modular workflow that augments existing logical gene regulatory network models with knowledge-driven structure and data-driven calibration. As illustrated in Figure 1, the workflow proceeds from standardized model and data preparation (a), through systematic network augmentation using curated causal knowledge (b), to probabilistic model optimization (c) and downstream simulation (d). Users can adapt the workflow to different disease contexts, data types, and modeling objectives. The following subsections describe each step of the workflow in detail. 
+
+Identifying and standardizing models 
+
+The workflow starts with collecting existing models based on the biological questions. We identify additional genes and phenotypes of interest that were not included in the model, including frequent mutated genes, key regulators of disease, drug targets, and phenotypes linked to experimental observations. Conventional names are often used in models, e.g., RAS ,a gene family involved in cell growth and cancer development that includes KRAS and NRAS . To facilitate knowledge graph lookup, all entities in the network should be normalized to their standard formats. For genes, KGBN accepts either standard names/symbols in HGNC (for human models) and NCBI Gene (for other species), or gene IDs in NCBI; for proteins, it accepts their IDs or names as in UniProt. 
+
+Extending the model via knowledge graphs 
+
+To augment existing GRN models, we develop a pipeline to query the SIGNOR database (the SIGnaling Network Open Resource) (28) and construct Boolean network models from curated molecular interactions (Figure 4). Given a query list of genes or proteins, we identify their interactions by computing the Steiner subgraph (29). This minimal connected subgraph contains all query nodes and their shortest paths through the knowledge graph. Within the extracted subgraph, we classify each directed edge as activating or inhibiting. We then apply a configurable joiner function to generate Boolean update rules: 
+
+• OR: the node is active if at least one activator is active. 
+
+• AND: the node is active only if all activators are active. 
+
+• Inhibitor wins: if any inhibitor is active, the target is inactive regardless of the activator state. 
+
+• Majority(Plurality): if the number of active activators is greater than (or equal to) the number of active inhibitors, then the target is active.                    
+
+> Fig. 4. KG–based model extension in KGBN. Query genes (blue-colored) and phenotype (orange) of interest are connected via mediators (gray) based on their regulatory relations from the KG. Steiner subgraph extraction retains the minimal set of intermediate nodes and signed causal edges by removing extra ones (dashed). The resulting subgraph is converted into Boolean rules using configurable joiner functions. Example rules are shown for GeneE, the important intermediate node identified from the KG.
+
+The knowledge graph query process includes both the genes present in the original model and additional genes of interest, allowing us to retrieve both the direct interactions among the new components and their connections to the pre-existing model. The resulting network captures a broader range of molecular events that influence phenotypes and enables simulations that more accurately reflect mutation–drug response relationships and uncover regulatory dependencies that may represent novel therapeutic targets. To help quantify the impact of the network on phenotypes, we leverage the ProxPath framework (30). ProxPath quantifies how close genes are to a phenotype by filtering significantly short paths based on Z-score distribution of all relevant paths in SIGNOR. We take the resulting significant relationships and compute a phenotype score directly from simulated node states: regulators whose net path sign is positive are added, while regulators with a net negative sign are subtracted. This yields a quantitative and interpretable signed sum for each phenotype, ready for connecting network simulations with experimental data in the next step. 
+
+Probabilistic Boolean Networks extension 
+
+We consider two complementary strategies for incorporating new regulatory information derived from knowledge graphs into existing logical models. One strategy fully merges the base model with a knowledge graph–derived network, combining overlapping and unique nodes and regulatory rules into a single, expanded Boolean network. This approach, implemented in our previously described LM-Merger framework, produces a unified model with increased coverage and integrated logic across components (25). In this work, we focus on a more targeted 
+
+.CC-BY 4.0 International license made available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is The copyright holder for this preprint this version posted May 28, 2026. ;https://doi.org/10.64898/2026.01.29.702644 doi: bioRxiv preprint KGBN 7
+
+extension strategy based on PBNs, where alternative regulatory rules derived from knowledge graphs are introduced, while the validated structure of the original model is still preserved. Let the base model be a Boolean network defined on nodes 
+
+V = x1, . . . , x n, where each node xi is associated with aBoolean update function f (0)  
+
+> i
+
+. For each node xi affected by model extension, we construct a set of alternative Boolean rules Fi = f (0)  
+
+> i
+
+, f (1)  
+
+> i
+
+, . . . , f (Ki ) 
+
+> i
+
+, where f (0)  
+
+> i
+
+is the original rule from the base model and f (k) 
+
+> i
+
+, k ≥ 1, are additional rules derived from knowledge-graph interactions. Each rule set Fi is associated with a probability vector pi = ( p(0)  
+
+> i
+
+, p (1)  
+
+> i
+
+, . . . , p (Ki ) 
+
+> i
+
+), subject to the constraint P k = 0 Ki p(k) 
+
+> i
+
+= 1. This formulation yields a probabilistic Boolean network in which stochastic selection among alternative rules induces a Markov chain over the global state space {0, 1}n. The PBN explicitly represents regulatory uncertainty by allowing multiple competing mechanisms to coexist, with their relative influence controlled by the probability vectors pi. This structure provides a principled bridge between curated mechanistic knowledge and data-driven model calibration. 
+
+Optimizing the PBN using experimental data 
+
+To calibrate the extended PBN against experimental observations, we optimize the rule probability vectors {pi} using quantitative phenotype measurements. Each experimental condition m ∈ C 
+
+is defined by a set of node perturbations (e.g., gene inhibition or activation), their efficacies, and an observed phenotype value 
+
+ym, such as drug response or cell viability. The predicted output for condition m is denoted by ˆ ym(p) and is obtained as a signed linear combination of steady-state node activation probabilities. The optimization problem is formulated as minimization of the mean squared error between simulated and observed phenotype values across all experimental conditions: min  
+
+> p
+
+L(p) = 1
+
+|C| 
+
+X
+
+> m∈C
+
+(ˆ ym(p) − ym)2 ,
+
+subject to p(k) 
+
+> i
+
+≥ 0 and P 
+
+> k
+
+p(k) 
+
+> i
+
+= 1 for all nodes i.Because the objective is non-convex and the steady-state distribution depends on p, we employ global optimization strategies, specifically particle swarm optimization and differential evolution (31). Early stopping is applied when improvements in the objective fall below a predefined threshold. Model performance is assessed using prediction–observation correlations, residual analysis, and convergence diagnostics to ensure improved fidelity without overfitting. 
+
+Simulation and evaluation 
+
+After optimization, the PBN is used for steady-state and perturbation simulations to evaluate model behavior under disease and therapeutic contexts. Genetic mutations, knockouts, and drug treatments are modeled by fixing node states or assigning probabilistic activity levels that reflect partial efficacy. Differences in optimized rule probabilities and simulated phenotypes across conditions are examined to identify regulatory rewiring and pathway dependencies associated with specific mutation backgrounds or treatments. The optimized model also enables predictive analysis of therapeutic response. Models trained on single-drug perturbation data can be used to simulate drug combinations and to predict relative phenotypic changes across genomic contexts. Model predictions are evaluated by comparison with independent experimental datasets and published evidence. In addition, simulated phenotype scores can be linked to clinical outcomes, such as overall survival, to assess the model’s ability to capture disease progression and treatment response. 
+
+# Datasets 
+
+The Beat AML dataset 
+
+To optimize and evaluate the augmented model for AML drug response prediction, the Beat AML dataset was used, which comprises a cumulative cohort of 805 AML patients (942 specimens) (32). WES/targeted sequencing mutation calls, inhibitor AUC values, and clinical summary were retrieved from https://biodev.github.io/BeatAML2/ in December 2025. 
+
+The FPMTB dataset 
+
+The functional precision medicine tumor board (FPMTB) dataset was used to externally validate the model, which contains ex vivo drug-response and multiomics profiling data for 252 samples from 186 patients with AML (33). Mutation data and drug response DSS scores were retrieved from https://zenodo.org/records/7370747 in December 2025. 
+
+Data processing 
+
+For both datasets, raw mutation calls and drug-response measurements were processed following the same procedures described in the original publications. Briefly, somatic mutation calls were used to define patient-specific mutation profiles. For drug-response, we focused on five targeted drugs for AML (FDA-approved or clinically investigated): Venetoclax, Entospletinib, Ibrutinib, Selumetinib, and Midostaurin —which represent key inhibitors in AML treatment strategies (reviewed in (34)). For both datasets, we created cohorts where patient response data was available for one of these treatments. Drug-response measurements (AUC for Beat AML and DSS for FPMTB) were reversed. and normalized using min–max scaling to the [0 , 1] range, enabling direct comparison between experimental responses and simulated phenotypic outputs. Patients were stratified into mutation-defined subgroups based on the presence or absence of recurrent AML drivers, specifically FLT3 -ITD, NPM1 , and DNMT3A . NRAS 
+
+mutation status is also considered in the NRAS -extended model. These mutation profiles were used to define distinct patient groups for model training, simulation, and downstream analysis. They were mapped to model genes and encoded as fixed node states based on curated gene roles (1 for oncogene and 0 for tumor suppressor genes). Drug-response data were aligned to the corresponding inhibitors and samples, and cohorts were split according to the original Beat AML wave definitions (wave 1+2 for training; wave 3+4 for evaluation). Due to the limited sample size in the FPMTB data, we include only mutation groups with at least five patients to reduce variability in drug response. Cross validation 
+
+# Competing interests 
+
+No competing interest is declared. 
+
+# Author contributions statement 
+
+The work was initially proposed and conceptualized by GQ and JG. LL developed the workflow, conducted data analyses, and wrote the initial draft of the manuscript. YZ designed and implemented the knowledge graph query and model 
+
+.CC-BY 4.0 International license made available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is The copyright holder for this preprint this version posted May 28, 2026. ;https://doi.org/10.64898/2026.01.29.702644 doi: bioRxiv preprint 8 Li et al. 
+
+construction methods. BA contributed to the conceptualization and methodological design of the study, and implemented BN and PBN simulation methods. GQ provided supervision throughout the project. All authors reviewed, revised, and approved the final version of the manuscript. 
+
+# Acknowledgments 
+
+This project was supported by NIH/NCI grants U01CA282109, R01CA296872, R01CA270210 and 5P41EB023912. Support for this work was also provided by the National Center for Advancing Translational Sciences, National Institutes of Health, through the Biomedical Data Translator program, award 1OT2TR005706. The content is solely the responsibility of the authors and does not necessarily represent the official views of the NIH. We gratefully acknowledge the late Professor Ilya Shmulevich from the Institute for Systems Biology– apioneer of probabilistic boolean networks, an esteemed mentor, and a dear friend for his inspiring guidance for this work. 
+
+# References 
+
+1. Karlebach, G. & Shamir, R. Modelling and analysis of gene regulatory networks. Nature Reviews Molecular Cell Biology 9, 770–780 (2008). URL https://www.nature.com/ articles/nrm2503 . Publisher: Nature Publishing Group. 2. Le Nov` ere, N. Quantitative and logic modelling of molecular and gene networks. Nature Reviews Genetics 16 ,146–158 (2015). URL https://www-nature-com.offcampus. lib.washington.edu/articles/nrg3885 . Publisher: Nature Publishing Group. 3. Abou-Jaoud´ e, W. et al. Logical Modeling and Dynamical Analysis of Cellular Networks. Frontiers in Genetics 7, 94 (2016). URL https://www.ncbi.nlm.nih.gov/pmc/articles/ PMC4885885/ .4. Samaga, R. & Klamt, S. Modeling approaches for qualitative and semi-quantitative analysis of cellular signaling networks. Cell Communication and Signaling 11 , 43 (2013). URL https://doi.org/10. 1186/1478-811X-11-43 .5. Hemedan, A. A., Niarakis, A., Schneider, R. & Ostaszewski, M. Boolean modelling as a logic-based dynamic approach in systems medicine. Computational and Structural Biotechnology Journal 20 , 3161–3172 (2022). URL https: //www.ncbi.nlm.nih.gov/pmc/articles/PMC9234349/ .6. Bonzanni, N. et al. Hard-wired heterogeneity in blood stem cells revealed using a dynamic regulatory network model. Bioinformatics 29 , i80–i88 (2013). URL https: //dx.doi.org/10.1093/bioinformatics/btt243 . Publisher: Oxford Academic. 7. Palma, A. et al. Integrating Patient-Specific Information into Logic Models of Complex Diseases: Application to Acute Myeloid Leukemia. Journal of Personalized Medicine 11 , 117 (2021). URL https://www.ncbi.nlm.nih. gov/pmc/articles/PMC7916657/ .8. Wooten, D. J., Gebru, M., Wang, H.-G. & Albert, R. Data-Driven Math Model of FLT3-ITD Acute Myeloid Leukemia Reveals Potential Therapeutic Targets. Journal of personalized medicine 11 (2021). Place: Switzerland. 9. Sgariglia, D. et al. Optimizing therapeutic targets for breast cancer using boolean network models. 
+
+Computational Biology and Chemistry 109 , 108022 (2024). 10. Plaugher, D., Aguilar, B. & Murrugarra, D. Uncovering potential interventions for pancreatic cancer patients via mathematical modeling. Journal of Theoretical Biology 
+
+548 , 111197 (2022). 11. Niarakis, A. et al. Addressing barriers in comprehensiveness, accessibility, reusability, interoperability and reproducibility of computational models in systems biology. Briefings in Bioinformatics 
+
+23 , bbac212 (2022). URL https://doi.org/10.1093/bib/ bbac212 .12. Niarakis, A. et al. Setting the basis of best practices and standards for curation and annotation of logical models in biology—highlights of the [BC]2 2019 CoLoMoTo/SysMod Workshop. Briefings in Bioinformatics 22 , 1848–1859 (2021). URL https://doi.org/10.1093/bib/bbaa046 .13. Fecho, K. et al. Progress toward a universal biomedical data translator. Clinical and Translational Science 
+
+15 , 1838–1847 (2022). URL https://onlinelibrary. wiley.com/doi/abs/10.1111/cts.13301 . eprint: https://ascpt.onlinelibrary.wiley.com/doi/pdf/10.1111/cts.13301. 14. Qin, G., Zhang, Y., Tyner, J. W., Kemp, C. J. &Shmulevich, I. Knowledge graphs facilitate prediction of drug response for acute myeloid leukemia. iScience 27 ,110755 (2024). 15. Shmulevich, I., Dougherty, E. R., Kim, S. & Zhang, W. Probabilistic Boolean networks: a rule-based uncertainty model for gene regulatory networks. Bioinformatics 
+
+18 , 261–274 (2002). URL https://doi.org/10.1093/ bioinformatics/18.2.261 .16. Trairatphisan, P. et al. Recent development and biomedical applications of probabilistic Boolean networks. 
+
+Cell Communication and Signaling 11 , 46 (2013). URL http://biosignaling.biomedcentral.com/articles/10. 1186/1478-811X-11-46 .17. Vundavilli, H. et al. In Silico Design and Experimental Validation of Combination Therapy for Pancreatic Cancer. 
+
+IEEE/ACM transactions on computational biology and bioinformatics 17 , 1010–1018 (2020). 18. Stancioaica, M.-C., Coriu, D. & Ghiaur, G. FLT3: A35-Year Voyage from Discovery to the Next Generation of Targeted Therapy in AML. Cancers 17 , 3415 (2025). URL 
+
+https://pmc.ncbi.nlm.nih.gov/articles/PMC12608606/ .19. Walker, A. R. et al. Entospletinib in Combination with Induction Chemotherapy in Previously Untreated Acute Myeloid Leukemia: Response and Predictive Significance of HOXA9 and MEIS1 Expression. Clinical Cancer Research: An Official Journal of the American Association for Cancer Research 26 , 5852–5859 (2020). 20. Pillinger, G. et al. Targeting BTK for the treatment of FLT3-ITD mutated acute myeloid leukemia. Scientific Reports 5, 12949 (2015). 21. Zhang, Q. et al. Activation of RAS/MAPK pathway confers MCL-1 mediated acquired resistance to BCL-2 inhibitor venetoclax in acute myeloid leukemia. Signal Transduction and Targeted Therapy 7, 51 (2022). URL https:// www.nature.com/articles/s41392-021-00870-3 . Publisher: Nature Publishing Group. 22. Lin, A. W. & Lowe, S. W. Oncogenic ras activates the ARF-p53 pathway to suppress epithelial cell transformation. 
+
+Proceedings of the National Academy of Sciences of the United States of America 98 , 5025–5030 (2001). 23. Sears, R. et al. Multiple Ras-dependent phosphorylation pathways regulate Myc protein stability. Genes &Development 14 , 2501–2514 (2000). URL https://pmc. 
+
+.CC-BY 4.0 International license made available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is The copyright holder for this preprint this version posted May 28, 2026. ;https://doi.org/10.64898/2026.01.29.702644 doi: bioRxiv preprint KGBN 9
+
+ncbi.nlm.nih.gov/articles/PMC316970/ .24. Sango, J. et al. RAS-mutant leukaemia stem cells drive clinical resistance to venetoclax. Nature 636 ,241–250 (2024). URL https://www.nature.com/articles/ s41586-024-08137-x . Publisher: Nature Publishing Group. 25. Li, L. X., Aguilar, B., Gennari, J. & Qin, G. LM-Merger: a workflow for merging logical models with an application to gene regulatory network models. BMC Bioinformatics 
+
+26 , 178 (2025). URL https://www.ncbi.nlm.nih.gov/pmc/ articles/PMC12265115/ .26. Ikonomi, N., K¨ uhlwein, S. D., Schwab, J. D. & Kestler, H. A. Awakening the HSC: Dynamic Modeling of HSC Maintenance Unravels Regulation of the TP53 Pathway and Quiescence. Frontiers in physiology 11 , 848 (2020). Place: Switzerland. 27. Shmulevich, I. & Dougherty, E. R. Probabilistic Boolean Networks: The Modeling and Control of Gene Regulatory Networks (SIAM, 2010). Google-Books-ID: KKGAqjG11KcC. 28. Lo Surdo, P. et al. SIGNOR 4.0: the 2025 update with focus on phosphorylation data. Nucleic Acids Research 
+
+54 , D682–D690 (2026). URL https://doi.org/10.1093/nar/ gkaf1237 .29. Sadeghi, A. & Fr¨ ohlich, H. Steiner tree methods for optimal sub-network identification: an empirical study. BMC Bioinformatics 14 , 144 (2013). URL https://doi.org/10. 1186/1471-2105-14-144 .30. Iannuccelli, M. et al. Curation of causal interactions mediated by genes associated with autism accelerates the understanding of gene-phenotype relationships underlying neurodevelopmental disorders. Molecular Psychiatry 
+
+1–11 (2023). URL https://www.nature.com/articles/ s41380-023-02317-3 . Publisher: Nature Publishing Group. 31. Trairatphisan, P., Mizera, A., Pang, J., Tantar, A. A. & Sauter, T. optPBN: An Optimisation Toolbox for Probabilistic Boolean Networks. PLOS ONE 9, e98001 (2014). URL https://journals.plos.org/plosone/article? id=10.1371/journal.pone.0098001 . Publisher: Public Library of Science. 32. Bottomly, D. et al. Integrative analysis of drug response and clinical outcome in acute myeloid leukemia. Cancer Cell 40 , 850–864.e9 (2022). 33. Malani, D. et al. Implementing a Functional Precision Medicine Tumor Board for Acute Myeloid Leukemia. 
+
+Cancer Discovery 12 , 388–401 (2022). 34. Bhansali, R. S., Pratz, K. W. & Lai, C. Recent advances in targeted therapies in acute myeloid leukemia. Journal of Hematology & Oncology 16 , 29 (2023). URL https: //pmc.ncbi.nlm.nih.gov/articles/PMC10039574/ .
+
+.CC-BY 4.0 International license made available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is The copyright holder for this preprint this version posted May 28, 2026. ;https://doi.org/10.64898/2026.01.29.702644 doi: bioRxiv preprint

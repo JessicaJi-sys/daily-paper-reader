@@ -1,0 +1,39 @@
+{
+  "label": "2026-06-04",
+  "date": "2026-06-04",
+  "generated_at": "2026-06-04T21:51:16",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202606/04/biorxiv-10-64898-2026-01-29-702644-v2-kgbn-augmenting-and-optimizing-logical-gene-regulatory-networks-using-knowledge-graphs",
+      "section": "quick",
+      "title_en": "KGBN: Augmenting and optimizing logical gene regulatory networks using knowledge graphs",
+      "authors": "Li, L. X., Zhang, Y., Aguilar, B., Shah, T., Gennari, J., Qin, G.",
+      "date": "2026-05-28",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.01.29.702644v2.full.pdf",
+      "score": "7.0",
+      "evidence": "知识图谱增强逻辑基因网络用于药物反应预测",
+      "tldr": "逻辑基因调控网络模型通常不完整且难以扩展。本文提出KGBN工作流，利用知识图谱中的调控关系作为替代逻辑规则，并通过实验数据优化规则概率。在急性髓系白血病中，扩展的模型能依据突变信息预测药物敏感性。该方法实现了可解释、上下文感知的GRN建模，助力精准医学。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Logical gene regulatory network (GRN) models provide interpretable, mechanistic representations of cellular regulation and are widely used in systems biology. However, most existing models remain incomplete, context-specific, and difficult to extend to comprehensive GRNs, limiting their broader applicability to tasks such as drug-response prediction and precision medicine. Here, add some ideas about virtual twins: With AML patients, we can use comprehensive GRNs to predict drug response. We present KGBN (Knowledge Graph-augmented Boolean Network modeling), a computational workflow for systematically augmenting logical GRN models. KGBN incorporates regulatory interactions derived from curated knowledge graphs as alternative logical rules while preserving the validated structure of existing models. Rule probabilities are optimized against experimental data to represent regulatory uncertainty and achieve data-driven calibration. Applying KGBN to acute myeloid leukemia, we show that extending an existing GRN with drug-target pathways and training against ex vivo drug-response data yields mutation-specific models that recapitulate known therapeutic sensitivities and signaling dependencies, demonstrating the utility of KGBN for interpretable, context-aware GRN modeling. (Should be predict)",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/04/2606.03057v1-rethinking-molecular-text-representations-for-llms-an-empirical-study",
+      "section": "quick",
+      "title_en": "Rethinking Molecular Text Representations for LLMs: An Empirical Study",
+      "authors": "Arun Raja, Garrett M. Morris, Kian Ming A. Chai",
+      "date": "2026-06-02",
+      "pdf": "https://arxiv.org/pdf/2606.03057v1",
+      "score": "6.0",
+      "evidence": "分子表示用于大语言模型，可应用于药物相互作用任务",
+      "tldr": "分子表示对LLM执行化学任务的影响尚不明确。本研究对16个LLM在9种表示和8个任务上进行系统基准测试，发现性能高度依赖表示，CML和MolJSON在结构任务最优，IUPAC在语义任务最强，而SMILES很少最优。结果挑战了表示无关的评估，建议任务感知的表示路由。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Large language models (LLMs) are increasingly used for molecular tasks, but it remains unclear which molecular representation to use. We present a systematic benchmark evaluating LLM molecular competence across nine representations and eight chemical tasks. We benchmark 16 LLMs across five model families, including reasoning and non-reasoning variants, chemistry-specialized LLMs, and closed frontier models. Performance is strongly representation-dependent and no single representation wins across tasks, though CML is the best, followed by MolJSON, InChI, and then canonical SMILES. Explicit structured text representations (CML and MolJSON) dominate structural tasks; IUPAC dominates semantic tasks, winning molecule retrieval for all 16 LLMs; and SMILES variants are rarely optimal despite their prevalence in pretraining. Chemistry-specialized models perform well with SMILES at the cost of large degradations with structured text representations, suggesting SMILES-only evaluation rewards specialization that does not generalize. Using LLM-as-a-judge, we find that IUPAC produces the highest fraction of correct molecule generations. A mechanistic study via tokenization audits, linear probes and attention shows that representations are encoded differently inside the model; for example, structured representations require higher attention across the molecular span. Our results argue against representation-invariant evaluation and motivate task-aware representation routing for LLM-based chemistry.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
