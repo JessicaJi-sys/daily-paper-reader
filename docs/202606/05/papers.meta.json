@@ -1,0 +1,69 @@
+{
+  "label": "2026-06-05",
+  "date": "2026-06-05",
+  "generated_at": "2026-06-05T21:25:51",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202606/05/2606.05693v1-mole-rag-molecular-structure-enhanced-retrieval-augmented-generation-for-chemistry",
+      "section": "quick",
+      "title_en": "MolE-RAG: Molecular Structure-Enhanced Retrieval-Augmented Generation for Chemistry",
+      "authors": "Joey Chan, Wonbin Kweon, Ashley Shin, Niharika Bhattacharjee, Pengcheng Jiang, Yue Guo, Jiawei Han",
+      "date": "2026-06-04",
+      "pdf": "https://arxiv.org/pdf/2606.05693v1",
+      "score": "7.0",
+      "evidence": "利用LLM和RAG进行分子属性预测",
+      "tldr": "大型语言模型在分子性质预测中受限于SMILES与自然语言的语义鸿沟。为此提出MolE-RAG，一个免训练的分子中心检索增强框架，为预测提供文献、分子信息和结构相似分子三种互补上下文。在9个任务上，通用LLM分类ROC-AUC提升28个百分点，回归RMSE降低67%。该方法无需微调即可显著提升性能，为集成异构化学知识提供灵活方案。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Large language models (LLMs) have shown promise for molecular property prediction, but their ability to reason over chemical structures remains limited, as molecular representations such as SMILES differ substantially from the natural language on which LLMs are primarily trained. To bridge this semantic and chemical knowledge gap, we propose MolE-RAG, a training-free, molecule-centric retrieval-augmented generation framework for LLM-based molecular property prediction. MolE-RAG augments each prediction with three complementary sources of inference-time context: retrieved chemistry literature, molecule-specific information including compound synonyms, identifiers, functional group annotations, and physicochemical descriptors, and structurally similar molecules retrieved from the training set. We evaluate MolE-RAG across nine molecular property prediction tasks using proprietary, chemistry-specialized, and open-source LLMs. Across general-purpose LLMs, MolE-RAG improves ROC-AUC by up to 28 percentage points on classification tasks and reduces regression RMSE by up to 67% relative to a SMILES-only baseline. We further find that the utility of each context source varies across models and tasks, with different models benefiting most from textual retrieval, molecular context, or structural retrieval. These results suggest that molecule-centric retrieval can improve LLM-based molecular property prediction without model fine-tuning while providing a flexible framework for integrating heterogeneous chemical knowledge at inference time.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/05/2605.30237v1-grasp-plan-guided-graph-retrieval-with-adaptive-fusion-and-reranking-on-semi-structured-knowledge-bases",
+      "section": "quick",
+      "title_en": "GRASP: Plan-Guided Graph Retrieval with Adaptive Fusion and Reranking on Semi-Structured Knowledge Bases",
+      "authors": "Yicheng Tao, Yiqun Wang, Xiangchen Song, Xin Luo, Kai Liu, Jie Liu",
+      "date": "2026-05-28",
+      "pdf": "https://arxiv.org/pdf/2605.30237v1",
+      "score": "6.0",
+      "evidence": "面向知识库的图检索方法",
+      "tldr": "半结构化知识库的混合检索面临图利用不充分、融合机制单一等挑战。提出GRASP三阶段框架：先基于计划进行图检索，再与稠密检索结果进行计划条件融合，最后用精排器重排。在三个STaRK基准上，平均Hit@1从62.0提升至73.9。消融实验验证了各模块的有效性，显著推动了该领域的最优水平。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Semi-structured knowledge bases (SKBs) embed textual documents in a typed graph of entities and relations, and underpin applications such as product search, academic paper search, and precision-medicine inquiries. Existing hybrid retrieval systems on SKBs either use the graph only for query expansion, mix textual and structural branches under a global weighting, or rely on fine-tuned graph-traversal generators. We present GRASP, a three-stage SKB retrieval framework unifying plan-based graph retrieval, plan-conditioned fusion with a dense retriever, and a fine-tuned reranker over the fused candidates. GRASP substantially advances the state of the art on every metric across the three STaRK benchmarks, lifting average Hit@1 from 62.0 to 73.9. Ablation and sensitivity studies further confirm the effectiveness and robustness of GRASP.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/05/2605.31010v1-mog-mixture-of-experts-for-graph-based-retrieval-augmented-generation",
+      "section": "quick",
+      "title_en": "MoG: Mixture of Experts for Graph-based Retrieval-Augmented Generation",
+      "authors": "Zheng Yuan, Chuang Zhou, Linhao Luo, Siyu An, Di Yin, Xing Sun, Xiao Huang",
+      "date": "2026-05-29",
+      "pdf": "https://arxiv.org/pdf/2605.31010v1",
+      "score": "6.0",
+      "evidence": "基于图的检索增强生成的专家混合模型",
+      "tldr": "检索增强生成中统一知识库可能引入无关信息，误导复杂推理。受混合专家启发，提出MoG，将知识组织为中心图（始终可访问）和稀疏激活的专家图（领域特定）。先通过中心图获取上下文线索，再由拓扑感知路由器动态选择专家图，将检索限定在聚焦子空间。在MuSiQue等基准上显著超过强基线，相对提升超20%。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Retrieval-augmented generation is intensively studied to ground large language models on external evidence. However, retrieving from a unified knowledge base could inevitably introduce irrelevant information that may mislead generation for complex reasoning. Inspired by the conditional computation of mixture of experts (MoE), where a router sparsely selects specialized experts alongside shared ones for each input, we propose \\textbf{M}ixture \\textbf{o}f experts for \\textbf{G}raph-based Retrieval-Augmented Generation, i.e., \\textbf{MoG}. It organizes knowledge into two core components: (i) diverse, always-accessible hub graphs that encode semantically and structurally central knowledge and provide contextual clues for expert activation, and (ii) sparsely activated expert graphs that contain domain-specific evidence. MoG first accesses hub graphs to identify general evidence and derive contextual clues. Then, a topology-aware router dynamically activates a limited set of expert graphs conditioned on the query, thereby confining retrieval to a focused evidence subspace. Extensive experiments on challenging benchmarks show that MoG consistently outperforms strong baselines, with over 20\\% relative improvement on MuSiQue. Our code is available in https://github.com/DEEP-PolyU/MoG.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/05/2606.03365v1-link-prediction-or-perdition-the-seeds-of-instability-in-knowledge-graph-embeddings",
+      "section": "quick",
+      "title_en": "Link Prediction or Perdition: the Seeds of Instability in Knowledge Graph Embeddings",
+      "authors": "Guillaume Méroué, Fabien Gandon, Pierre Monnin",
+      "date": "2026-06-02",
+      "pdf": "https://arxiv.org/pdf/2606.03365v1",
+      "score": "6.0",
+      "evidence": "知识图谱链接预测方法",
+      "tldr": "知识图谱嵌入模型在链接预测中表现优异，但标准评估协议忽略随机种子对结果稳定性的影响。本文系统分析多个模型，发现高性能模型在预测层面存在分歧且嵌入空间高度可变。初始化、三元组顺序、负采样、dropout和硬件等随机因素独立引起同等量级的不稳定性，且更好的MRR不保证更稳定。投票仅有限增强稳定性，表明当前基准测试存在根本局限，质疑模型在知识图谱补全中的可靠性。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Embedding models (KGEMs) constitute the main link prediction approach to complete knowledge graphs. Standard evaluation protocols emphasize rank-based metrics such as MRR or Hits@$K$, but usually overlook the influence of random seeds on result stability. Moreover, these metrics conceal potential instabilities in individual predictions and in the organization of embedding spaces. In this work, we conduct a systematic stability analysis of multiple KGEMs across several datasets. We find that high-performance models actually produce divergent predictions at the triple level and highly variable embedding spaces. By isolating stochastic factors (i.e., initialization, triple ordering, negative sampling, dropout, hardware), we show that each independently induces instability of comparable magnitude. Furthermore, for a given model, hyperparameter configurations with better MRR are not guaranteed to be more stable. Moreover, voting, albeit a known remediation mechanism, only provides a limited enhancement of stability. These findings highlight critical limitations of current benchmarking protocols, and raise concerns about the reliability of KGEMs for knowledge graph completion.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

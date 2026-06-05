@@ -6,31 +6,33 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-04
-- 运行时间：2026-06-04 21:51:09 UTC
+- 最新运行日期：2026-06-05
+- 运行时间：2026-06-05 21:25:42 UTC
 - 运行状态：成功
-- 本次总论文数：2
+- 本次总论文数：4
 - 精读区：0
-- 速读区：2
+- 速读区：4
 
 ### 今日简报（AI）
-今日速读2篇，聚焦知识图谱优化基因调控网络及LLM分子文本表示新思考。
-
-最值得关注的是评分7.0的《KGBN》，它用知识图谱增强并优化逻辑基因调控网络，为系统生物学提供新方法。
-
-建议优先深入阅读KGBN论文，理解知识图谱如何提升网络构建效率。
-- 详情：[/202606/04/README](/202606/04/README)
+今日速读4篇论文，重点聚焦分子结构增强的检索增强生成（RAG）及图检索方法。最值得关注的是《MolE-RAG》（7.0分）提出分子结构增强的RAG框架，另外《GRASP》和《MoG》均获6.0分，分别针对半结构化知识库图检索和图RAG的专家混合。建议后续优先精读MolE-RAG的架构细节，并留意图检索与RAG融合的演化方向。
+- 详情：[/202606/05/README](/202606/05/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [KGBN: Augmenting and optimizing logical gene regulatory networks using knowledge graphs](/202606/04/biorxiv-10-64898-2026-01-29-702644-v2-kgbn-augmenting-and-optimizing-logical-gene-regulatory-networks-using-knowledge-graphs)  
+1. [MolE-RAG: Molecular Structure-Enhanced Retrieval-Augmented Generation for Chemistry](/202606/05/2606.05693v1-mole-rag-molecular-structure-enhanced-retrieval-augmented-generation-for-chemistry)  
    标签：评分：7.0/10、query:cold-ddi
-   evidence：知识图谱增强逻辑基因网络用于药物反应预测
-2. [Rethinking Molecular Text Representations for LLMs: An Empirical Study](/202606/04/2606.03057v1-rethinking-molecular-text-representations-for-llms-an-empirical-study)  
+   evidence：利用LLM和RAG进行分子属性预测
+2. [GRASP: Plan-Guided Graph Retrieval with Adaptive Fusion and Reranking on Semi-Structured Knowledge Bases](/202606/05/2605.30237v1-grasp-plan-guided-graph-retrieval-with-adaptive-fusion-and-reranking-on-semi-structured-knowledge-bases)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：分子表示用于大语言模型，可应用于药物相互作用任务
+   evidence：面向知识库的图检索方法
+3. [MoG: Mixture of Experts for Graph-based Retrieval-Augmented Generation](/202606/05/2605.31010v1-mog-mixture-of-experts-for-graph-based-retrieval-augmented-generation)  
+   标签：评分：6.0/10、query:cold-ddi
+   evidence：基于图的检索增强生成的专家混合模型
+4. [Link Prediction or Perdition: the Seeds of Instability in Knowledge Graph Embeddings](/202606/05/2606.03365v1-link-prediction-or-perdition-the-seeds-of-instability-in-knowledge-graph-embeddings)  
+   标签：评分：6.0/10、query:cold-ddi
+   evidence：知识图谱链接预测方法
 
 
 <div class="dpr-home-promo-card">

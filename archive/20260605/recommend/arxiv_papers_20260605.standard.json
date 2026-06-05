@@ -1,0 +1,179 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-05T21:23:10.522109+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 4,
+    "quick_skim_target": 11,
+    "quick_selected": 4
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.05693v1",
+      "source": "arxiv",
+      "title": "MolE-RAG: Molecular Structure-Enhanced Retrieval-Augmented Generation for Chemistry",
+      "abstract": "Large language models (LLMs) have shown promise for molecular property prediction, but their ability to reason over chemical structures remains limited, as molecular representations such as SMILES differ substantially from the natural language on which LLMs are primarily trained. To bridge this semantic and chemical knowledge gap, we propose MolE-RAG, a training-free, molecule-centric retrieval-augmented generation framework for LLM-based molecular property prediction. MolE-RAG augments each prediction with three complementary sources of inference-time context: retrieved chemistry literature, molecule-specific information including compound synonyms, identifiers, functional group annotations, and physicochemical descriptors, and structurally similar molecules retrieved from the training set. We evaluate MolE-RAG across nine molecular property prediction tasks using proprietary, chemistry-specialized, and open-source LLMs. Across general-purpose LLMs, MolE-RAG improves ROC-AUC by up to 28 percentage points on classification tasks and reduces regression RMSE by up to 67% relative to a SMILES-only baseline. We further find that the utility of each context source varies across models and tasks, with different models benefiting most from textual retrieval, molecular context, or structural retrieval. These results suggest that molecule-centric retrieval can improve LLM-based molecular property prediction without model fine-tuning while providing a flexible framework for integrating heterogeneous chemical knowledge at inference time.",
+      "authors": [
+        "Joey Chan",
+        "Wonbin Kweon",
+        "Ashley Shin",
+        "Niharika Bhattacharjee",
+        "Pengcheng Jiang",
+        "Yue Guo",
+        "Jiawei Han"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.IR"
+      ],
+      "published": "2026-06-04T04:19:53+00:00",
+      "link": "https://arxiv.org/pdf/2606.05693v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "molecular property prediction with LLM and RAG",
+      "llm_evidence_cn": "利用LLM和RAG进行分子属性预测",
+      "llm_evidence": "利用LLM和RAG进行分子属性预测",
+      "canonical_evidence": "利用LLM和RAG进行分子属性预测",
+      "llm_tldr_en": "Proposes MolE-RAG, a training-free molecule-centric retrieval-augmented generation framework for LLM-based molecular property prediction; directly applicable to drug-drug interaction prediction.",
+      "llm_tldr_cn": "大语言模型在分子属性预测中因SMILES与自然语言语义差距而表现有限。本文提出MolE-RAG，通过检索化学文献、分子标识符和理化描述符增强推理，无需额外训练。该框架可直接用于药物相互作用预测，为冷启动场景提供分子级上下文支持。",
+      "llm_tldr": "大语言模型在分子属性预测中因SMILES与自然语言语义差距而表现有限。本文提出MolE-RAG，通过检索化学文献、分子标识符和理化描述符增强推理，无需额外训练。该框架可直接用于药物相互作用预测，为冷启动场景提供分子级上下文支持。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "large language model for drug interaction",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2605.30237v1",
+      "source": "arxiv",
+      "title": "GRASP: Plan-Guided Graph Retrieval with Adaptive Fusion and Reranking on Semi-Structured Knowledge Bases",
+      "abstract": "Semi-structured knowledge bases (SKBs) embed textual documents in a typed graph of entities and relations, and underpin applications such as product search, academic paper search, and precision-medicine inquiries. Existing hybrid retrieval systems on SKBs either use the graph only for query expansion, mix textual and structural branches under a global weighting, or rely on fine-tuned graph-traversal generators. We present GRASP, a three-stage SKB retrieval framework unifying plan-based graph retrieval, plan-conditioned fusion with a dense retriever, and a fine-tuned reranker over the fused candidates. GRASP substantially advances the state of the art on every metric across the three STaRK benchmarks, lifting average Hit@1 from 62.0 to 73.9. Ablation and sensitivity studies further confirm the effectiveness and robustness of GRASP.",
+      "authors": [
+        "Yicheng Tao",
+        "Yiqun Wang",
+        "Xiangchen Song",
+        "Xin Luo",
+        "Kai Liu",
+        "Jie Liu"
+      ],
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR",
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-05-28T17:07:32+00:00",
+      "link": "https://arxiv.org/pdf/2605.30237v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "graph retrieval method for knowledge bases",
+      "llm_evidence_cn": "面向知识库的图检索方法",
+      "llm_evidence": "面向知识库的图检索方法",
+      "canonical_evidence": "面向知识库的图检索方法",
+      "llm_tldr_en": "Proposes a three-stage graph retrieval framework (GRASP) for semi-structured knowledge bases with plan-guided graph retrieval, adaptive fusion and reranking; applicable to drug interaction knowledge retrieval.",
+      "llm_tldr_cn": "现有半结构化知识库混合检索方法性能有限。本文提出GRASP框架，结合基于计划的图检索、自适应融合和精排，在多个基准上达到最优。该框架可直接用于药物相互作用知识图谱的检索，支持冷启动DDI预测中的证据获取。",
+      "llm_tldr": "现有半结构化知识库混合检索方法性能有限。本文提出GRASP框架，结合基于计划的图检索、自适应融合和精排，在多个基准上达到最优。该框架可直接用于药物相互作用知识图谱的检索，支持冷启动DDI预测中的证据获取。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2605.31010v1",
+      "source": "arxiv",
+      "title": "MoG: Mixture of Experts for Graph-based Retrieval-Augmented Generation",
+      "abstract": "Retrieval-augmented generation is intensively studied to ground large language models on external evidence. However, retrieving from a unified knowledge base could inevitably introduce irrelevant information that may mislead generation for complex reasoning. Inspired by the conditional computation of mixture of experts (MoE), where a router sparsely selects specialized experts alongside shared ones for each input, we propose \\textbf{M}ixture \\textbf{o}f experts for \\textbf{G}raph-based Retrieval-Augmented Generation, i.e., \\textbf{MoG}. It organizes knowledge into two core components: (i) diverse, always-accessible hub graphs that encode semantically and structurally central knowledge and provide contextual clues for expert activation, and (ii) sparsely activated expert graphs that contain domain-specific evidence. MoG first accesses hub graphs to identify general evidence and derive contextual clues. Then, a topology-aware router dynamically activates a limited set of expert graphs conditioned on the query, thereby confining retrieval to a focused evidence subspace. Extensive experiments on challenging benchmarks show that MoG consistently outperforms strong baselines, with over 20\\% relative improvement on MuSiQue. Our code is available in https://github.com/DEEP-PolyU/MoG.",
+      "authors": [
+        "Zheng Yuan",
+        "Chuang Zhou",
+        "Linhao Luo",
+        "Siyu An",
+        "Di Yin",
+        "Xing Sun",
+        "Xiao Huang"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-05-29T08:43:12+00:00",
+      "link": "https://arxiv.org/pdf/2605.31010v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "mixture of experts for graph-based RAG",
+      "llm_evidence_cn": "基于图的检索增强生成的专家混合模型",
+      "llm_evidence": "基于图的检索增强生成的专家混合模型",
+      "canonical_evidence": "基于图的检索增强生成的专家混合模型",
+      "llm_tldr_en": "Proposes MoG, a mixture-of-experts framework for graph-based RAG, selectively activating specialized experts alongside shared ones to improve complex reasoning; transferable to LLM+KG for DDI.",
+      "llm_tldr_cn": "现有检索增强生成在引入无关信息时误导推理。本文提出MoG，利用专家混合机制对图知识进行条件性激活，实现更精准的上下文选择。该方法可迁移至药物相互作用预测任务，利用知识图谱增强大语言模型，减少噪声、提升预测准确性。",
+      "llm_tldr": "现有检索增强生成在引入无关信息时误导推理。本文提出MoG，利用专家混合机制对图知识进行条件性激活，实现更精准的上下文选择。该方法可迁移至药物相互作用预测任务，利用知识图谱增强大语言模型，减少噪声、提升预测准确性。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "Large Language Model + Drug-Drug Interaction Prediction",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.03365v1",
+      "source": "arxiv",
+      "title": "Link Prediction or Perdition: the Seeds of Instability in Knowledge Graph Embeddings",
+      "abstract": "Embedding models (KGEMs) constitute the main link prediction approach to complete knowledge graphs. Standard evaluation protocols emphasize rank-based metrics such as MRR or Hits@$K$, but usually overlook the influence of random seeds on result stability. Moreover, these metrics conceal potential instabilities in individual predictions and in the organization of embedding spaces. In this work, we conduct a systematic stability analysis of multiple KGEMs across several datasets. We find that high-performance models actually produce divergent predictions at the triple level and highly variable embedding spaces. By isolating stochastic factors (i.e., initialization, triple ordering, negative sampling, dropout, hardware), we show that each independently induces instability of comparable magnitude. Furthermore, for a given model, hyperparameter configurations with better MRR are not guaranteed to be more stable. Moreover, voting, albeit a known remediation mechanism, only provides a limited enhancement of stability. These findings highlight critical limitations of current benchmarking protocols, and raise concerns about the reliability of KGEMs for knowledge graph completion.",
+      "authors": [
+        "Guillaume Méroué",
+        "Fabien Gandon",
+        "Pierre Monnin"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-02T09:13:50+00:00",
+      "link": "https://arxiv.org/pdf/2606.03365v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "knowledge graph link prediction method",
+      "llm_evidence_cn": "知识图谱链接预测方法",
+      "llm_evidence": "知识图谱链接预测方法",
+      "canonical_evidence": "知识图谱链接预测方法",
+      "llm_tldr_en": "Systematic stability analysis of knowledge graph embedding models for link prediction; relevant as DDI prediction often uses KG embeddings.",
+      "llm_tldr_cn": "知识图谱嵌入模型的链接预测结果常存在不稳定性。本文系统分析了随机种子等因素对预测一致性的影响，发现高性能模型产生分歧预测。对于依赖知识图谱嵌入的药物相互作用预测任务，该分析提供了方法学洞察，有助于提高预测可靠性。",
+      "llm_tldr": "知识图谱嵌入模型的链接预测结果常存在不稳定性。本文系统分析了随机种子等因素对预测一致性的影响，发现高性能模型产生分歧预测。对于依赖知识图谱嵌入的药物相互作用预测任务，该分析提供了方法学洞察，有助于提高预测可靠性。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "knowledge graph completion for drug discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
