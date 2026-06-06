@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-06-06 <!--dpr-date:20260606-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/06/2605.30747v2-generating-graph-like-logical-rules-for-knowledge-graph-reasoning-via-diffusion-models" data-sidebar-item="{&quot;title&quot;: &quot;Generating Graph-Like Logical Rules for Knowledge Graph Reasoning via Diffusion Models&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2605.30747v2-generating-graph-like-logical-rules-for-knowledge-graph-reasoning-via-diffusion-models&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;生成图逻辑规则用于知识图谱推理，可应用于药物相互作用知识图谱&quot;}">Generating Graph-Like Logical Rules for Knowledge Graph Reasoning via Diffusion Models</a>
   * 2026-06-05 <!--dpr-date:20260605-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/05/2606.05693v1-mole-rag-molecular-structure-enhanced-retrieval-augmented-generation-for-chemistry" data-sidebar-item="{&quot;title&quot;: &quot;MolE-RAG: Molecular Structure-Enhanced Retrieval-Augmented Generation for Chemistry&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2606.05693v1-mole-rag-molecular-structure-enhanced-retrieval-augmented-generation-for-chemistry&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;利用LLM和RAG进行分子属性预测&quot;}">MolE-RAG: Molecular Structure-Enhanced Retrieval-Augmented Generation for Chemistry</a>
