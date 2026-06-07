@@ -1,0 +1,54 @@
+{
+  "label": "2026-06-07",
+  "date": "2026-06-07",
+  "generated_at": "2026-06-07T20:29:36",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202606/07/2606.05639v1-q-gnn-query-conditioned-graph-neural-networks-with-type-awareness-for-knowledge-graph-completion",
+      "section": "quick",
+      "title_en": "Q-GNN: Query-Conditioned Graph Neural Networks with Type Awareness for Knowledge Graph Completion",
+      "authors": "Dongxiao He, Ruqiong Zhang, Zhizhi Yu, Ling Ding, Di Jin, Guangquan Xu, Zhiyong Feng",
+      "date": "2026-06-04",
+      "pdf": "https://arxiv.org/pdf/2606.05639v1",
+      "score": "7.0",
+      "evidence": "知识图谱补全方法，使用GNN，可迁移至药物发现",
+      "tldr": "知识图谱补全任务中，现有GNN方法仅利用查询关系引导推理，忽视了查询实体的关键信息。本文提出Q-GNN，从结构上下文（用专用编码器调制消息）和语义类型（用大语言模型推断并融入注意力与评分）两方面引入查询实体信息。在标准基准数据集上，Q-GNN取得了优于现有方法的性能。其贡献在于首次将查询实体的结构与类型信息同时纳入GNN推理，实现了更全面的查询引导。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Knowledge Graph Completion (KGC) aims at predicting missing triplets from incomplete knowledge graphs, which is crucial for downstream applications. Recently, Graph Neural Network (GNN)-based methods have achieved remarkable success by performing message passing over query-centered local subgraphs. However, in practice, a query is jointly defined by both the entity and the relation, with both carrying information indispensable for reasoning, yet these methods rely solely on the query relation as the guiding signal, while the information inherent in the query entity is not leveraged to guide inference - the entity serves merely as a structural anchor for subgraph extraction. To this end, we incorporate query entity information into the reasoning process from two perspectives: the first is structural context, i.e., the neighboring structure and relation patterns around the entity, which is encoded by a dedicated context encoder and used to modulate messages; the second is semantic type of the entity, inferred by a large language model, which is incorporated into attention computation and final scoring to provide type-level prior constraints. Together, these two sources of information enable the reasoning process to be guided by both the query relation and the query entity. Experimental results on standard benchmarks demonstrate the effectiveness of the proposed Q-GNN.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/07/2606.05994v1-hot-ssmhigher-order-temporal-knowledge-graph-reasoning-with-state-space-models-for-health-care",
+      "section": "quick",
+      "title_en": "HoT-SSM:Higher-order Temporal Knowledge Graph Reasoning with State Space Models for Health Care",
+      "authors": "Thummaluru Siddartha Reddy, Vempalli Naga Sai Saketh, Yash Punjabi, Mahesh Chandran",
+      "date": "2026-06-04",
+      "pdf": "https://arxiv.org/pdf/2606.05994v1",
+      "score": "6.0",
+      "evidence": "使用状态空间模型的医学知识图谱推理，可应用于药物相互作用预测",
+      "tldr": "现有医疗知识图谱推理方法局限于二元关系，无法建模临床概念间的高阶交互和长程时序依赖。本文提出HoT-SSM，为每次就诊构建超图以保留就诊上下文，并引入动态超图状态空间模型捕捉患者状态演化。在MIMIC-III和MIMIC-IV上显著优于现有方法。联合建模高阶交互和长程依赖有效提升临床预测性能。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Medical knowledge graphs (MKGs) infused with clinical knowledge have been increasingly used to model electronic health records (EHRs) to support interpretable predictions in healthcare domain. However, existing MKG-based approaches are limited in capturing pairwise relations between clinical concepts (e.g., conditions, procedures, and medications), and restricts their ability to model higher-order interactions among co-occurring or semantically related concepts. In addition, most representation learning methods that leverage MKGs either collapse temporal information across visits or lack an explicit mechanism for modeling long-range temporal dependencies, which is critical for clinical tasks such as mortality prediction. To mitigate these limitations, we propose HoT-SSM, a parameter efficient and higher-order temporal graph reasoning with state space models. For each visit, HoT-SSM constructs hypergraphs by grouping semantically related clinical concepts into hyperedges using domain knowledge, thereby preserving visit-level clinical context. Further, to model the temporal dynamics while learning the representations, we introduce a novel dynamic hypergraph-based state space model that explicitly captures patients latent state evolution over time while preserving long-range information. The learned representations are used for downstream clinical prediction and reasoning. Experiments on MIMIC-III and MIMIC-IV datasets shows significant performance improvement over the current state-of-the-art models, demonstrating the effectiveness of jointly modeling higher-order clinical interactions and long-range temporal dependencies.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/07/biorxiv-10-64898-2026-06-04-730229-v1-bactereason-a-reasoning-model-for-antimicrobial-resistance-prediction",
+      "section": "quick",
+      "title_en": "BacteReason: A Reasoning Model for Antimicrobial Resistance Prediction",
+      "authors": "Oikawa, Y., Kawashima, S., Kinjo, A. R., Demizu, Y., Tamura, R., Tsuda, K.",
+      "date": "2026-06-07",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.06.04.730229v1.full.pdf",
+      "score": "6.0",
+      "evidence": "使用LLM和KG进行药物敏感性预测，方法可迁移至冷启动DDI",
+      "tldr": "抗菌药物耐药性（AMR）的快速传播给临床决策带来压力，现有机器学习预测缺乏机械基础。本文提出BacteReason，通过微调开放权重大语言模型，利用教师LLM经知识图谱生成的机理理由进行监督训练。在推广泛化基准上，BacteReason相比未调优基线准确率相对提升43%，比无理由微调提升38%。结果表明，引入机理推理监督能显著提升预测准确性，增强模型可信度。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "The rapid global spread of antimicrobial resistance (AMR) has placed unprecedented pressure on clinical decision-making. Machine learning predictors of antibiotic susceptibility exist, but their lack of mechanistic grounding limits credibility. We present BacteReason, a reasoning large language model (LLM) that predicts bacterial susceptibility to a target antibiotic, together with a mechanistic rationale. BacteReason is obtained by fine-tuning an open-weight LLM on clinical susceptibility data augmented with rationales that explain the molecular mechanisms. These rationales are produced by a proprietary teacher LLM prompted to explain known susceptibility outcomes. The teacher is interfaced via TogoMCP with a collection of biomedical knowledge-graph databases, grounding each reasoning step in retrieved evidence. On an extrapolation benchmark, BacteReason achieves a relative improvement of 43% over the untuned baseline and 38% over the same base LLM fine-tuned without rationales, demonstrating that reasoning supervision improves prediction accuracy.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,137 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-07T20:28:01.135462+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 3,
+    "quick_skim_target": 11,
+    "quick_selected": 3
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.05639v1",
+      "source": "arxiv",
+      "title": "Q-GNN: Query-Conditioned Graph Neural Networks with Type Awareness for Knowledge Graph Completion",
+      "abstract": "Knowledge Graph Completion (KGC) aims at predicting missing triplets from incomplete knowledge graphs, which is crucial for downstream applications. Recently, Graph Neural Network (GNN)-based methods have achieved remarkable success by performing message passing over query-centered local subgraphs. However, in practice, a query is jointly defined by both the entity and the relation, with both carrying information indispensable for reasoning, yet these methods rely solely on the query relation as the guiding signal, while the information inherent in the query entity is not leveraged to guide inference - the entity serves merely as a structural anchor for subgraph extraction. To this end, we incorporate query entity information into the reasoning process from two perspectives: the first is structural context, i.e., the neighboring structure and relation patterns around the entity, which is encoded by a dedicated context encoder and used to modulate messages; the second is semantic type of the entity, inferred by a large language model, which is incorporated into attention computation and final scoring to provide type-level prior constraints. Together, these two sources of information enable the reasoning process to be guided by both the query relation and the query entity. Experimental results on standard benchmarks demonstrate the effectiveness of the proposed Q-GNN.",
+      "authors": [
+        "Dongxiao He",
+        "Ruqiong Zhang",
+        "Zhizhi Yu",
+        "Ling Ding",
+        "Di Jin",
+        "Guangquan Xu",
+        "Zhiyong Feng"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-04T03:07:22+00:00",
+      "link": "https://arxiv.org/pdf/2606.05639v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Knowledge graph completion method with GNN, transferable to drug discovery",
+      "llm_evidence_cn": "知识图谱补全方法，使用GNN，可迁移至药物发现",
+      "llm_evidence": "知识图谱补全方法，使用GNN，可迁移至药物发现",
+      "canonical_evidence": "知识图谱补全方法，使用GNN，可迁移至药物发现",
+      "llm_tldr_en": "Q-GNN proposes query-conditioned GNN with type awareness for KGC, leveraging both query entity and relation, improving reasoning.",
+      "llm_tldr_cn": "该论文针对知识图谱补全中现有GNN方法仅利用查询关系而忽略查询实体信息的局限，提出了查询条件图神经网络，通过考虑实体和关系共同指导推理，提升了知识图谱补全性能，可迁移至药物知识图谱用于药物相互作用预测。",
+      "llm_tldr": "该论文针对知识图谱补全中现有GNN方法仅利用查询关系而忽略查询实体信息的局限，提出了查询条件图神经网络，通过考虑实体和关系共同指导推理，提升了知识图谱补全性能，可迁移至药物知识图谱用于药物相互作用预测。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "knowledge graph completion for drug discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.05994v1",
+      "source": "arxiv",
+      "title": "HoT-SSM:Higher-order Temporal Knowledge Graph Reasoning with State Space Models for Health Care",
+      "abstract": "Medical knowledge graphs (MKGs) infused with clinical knowledge have been increasingly used to model electronic health records (EHRs) to support interpretable predictions in healthcare domain. However, existing MKG-based approaches are limited in capturing pairwise relations between clinical concepts (e.g., conditions, procedures, and medications), and restricts their ability to model higher-order interactions among co-occurring or semantically related concepts. In addition, most representation learning methods that leverage MKGs either collapse temporal information across visits or lack an explicit mechanism for modeling long-range temporal dependencies, which is critical for clinical tasks such as mortality prediction. To mitigate these limitations, we propose HoT-SSM, a parameter efficient and higher-order temporal graph reasoning with state space models. For each visit, HoT-SSM constructs hypergraphs by grouping semantically related clinical concepts into hyperedges using domain knowledge, thereby preserving visit-level clinical context. Further, to model the temporal dynamics while learning the representations, we introduce a novel dynamic hypergraph-based state space model that explicitly captures patients latent state evolution over time while preserving long-range information. The learned representations are used for downstream clinical prediction and reasoning. Experiments on MIMIC-III and MIMIC-IV datasets shows significant performance improvement over the current state-of-the-art models, demonstrating the effectiveness of jointly modeling higher-order clinical interactions and long-range temporal dependencies.",
+      "authors": [
+        "Thummaluru Siddartha Reddy",
+        "Vempalli Naga Sai Saketh",
+        "Yash Punjabi",
+        "Mahesh Chandran"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SP"
+      ],
+      "published": "2026-06-04T10:42:18+00:00",
+      "link": "https://arxiv.org/pdf/2606.05994v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Medical knowledge graph reasoning with state space models for higher-order temporal predictions; applicable to drug interaction prediction",
+      "llm_evidence_cn": "使用状态空间模型的医学知识图谱推理，可应用于药物相互作用预测",
+      "llm_evidence": "使用状态空间模型的医学知识图谱推理，可应用于药物相互作用预测",
+      "canonical_evidence": "使用状态空间模型的医学知识图谱推理，可应用于药物相互作用预测",
+      "llm_tldr_en": "HoT-SSM uses state space models for higher-order temporal reasoning on medical knowledge graphs, enabling prediction of complex clinical interactions.",
+      "llm_tldr_cn": "现有医学知识图谱方法局限于二元关系且忽略长程时间依赖，无法捕捉高阶临床概念交互。本文提出HoT-SSM，利用状态空间模型对医学知识图谱进行高阶时间推理，保留时间顺序并建模复杂交互。在死亡预测等任务上表现优越，其方法可直接迁移至药物-药物相互作用预测，尤其适用于需要时序信息的冷启动场景。",
+      "llm_tldr": "现有医学知识图谱方法局限于二元关系且忽略长程时间依赖，无法捕捉高阶临床概念交互。本文提出HoT-SSM，利用状态空间模型对医学知识图谱进行高阶时间推理，保留时间顺序并建模复杂交互。在死亡预测等任务上表现优越，其方法可直接迁移至药物-药物相互作用预测，尤其适用于需要时序信息的冷启动场景。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-04-730229-v1",
+      "source": "biorxiv",
+      "title": "BacteReason: A Reasoning Model for Antimicrobial Resistance Prediction",
+      "abstract": "The rapid global spread of antimicrobial resistance (AMR) has placed unprecedented pressure on clinical decision-making. Machine learning predictors of antibiotic susceptibility exist, but their lack of mechanistic grounding limits credibility. We present BacteReason, a reasoning large language model (LLM) that predicts bacterial susceptibility to a target antibiotic, together with a mechanistic rationale. BacteReason is obtained by fine-tuning an open-weight LLM on clinical susceptibility data augmented with rationales that explain the molecular mechanisms. These rationales are produced by a proprietary teacher LLM prompted to explain known susceptibility outcomes. The teacher is interfaced via TogoMCP with a collection of biomedical knowledge-graph databases, grounding each reasoning step in retrieved evidence. On an extrapolation benchmark, BacteReason achieves a relative improvement of 43% over the untuned baseline and 38% over the same base LLM fine-tuned without rationales, demonstrating that reasoning supervision improves prediction accuracy.",
+      "authors": [
+        "Oikawa, Y.",
+        "Kawashima, S.",
+        "Kinjo, A. R.",
+        "Demizu, Y.",
+        "Tamura, R.",
+        "Tsuda, K."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-07T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.04.730229v1.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Uses LLM and KG for drug susceptibility prediction, method transferable to cold-start DDI",
+      "llm_evidence_cn": "使用LLM和KG进行药物敏感性预测，方法可迁移至冷启动DDI",
+      "llm_evidence": "使用LLM和KG进行药物敏感性预测，方法可迁移至冷启动DDI",
+      "canonical_evidence": "使用LLM和KG进行药物敏感性预测，方法可迁移至冷启动DDI",
+      "llm_tldr_en": "BacteReason fine-tunes an LLM on clinical susceptibility data with mechanistic rationales generated by a teacher LLM connected to biomedical knowledge graphs, achieving interpretable antimicrobial resistance prediction. The framework combines LLM reasoning with KG evidence, offering a template for cold-start drug-drug interaction prediction.",
+      "llm_tldr_cn": "该论文针对抗菌药物耐药性预测中机器学习模型缺乏机制解释的问题，提出BacteReason模型。通过使用教师LLM结合生物医学知识图谱生成机制性理由，微调开源LLM在临床敏感性数据上，实现可解释的耐药性预测。该方法展示了LLM与知识图谱结合的预测范式，为冷启动药物-药物相互作用预测提供了可迁移的技术框架。实验表明模型具备良好的预测性能与可解释性，在药物相互作用领域具有重要借鉴意义。",
+      "llm_tldr": "该论文针对抗菌药物耐药性预测中机器学习模型缺乏机制解释的问题，提出BacteReason模型。通过使用教师LLM结合生物医学知识图谱生成机制性理由，微调开源LLM在临床敏感性数据上，实现可解释的耐药性预测。该方法展示了LLM与知识图谱结合的预测范式，为冷启动药物-药物相互作用预测提供了可迁移的技术框架。实验表明模型具备良好的预测性能与可解释性，在药物相互作用领域具有重要借鉴意义。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 请帮我查找ColdDDI：利用大型语言模型和生物医学知识图谱进行冷启动药物相互作用预测该方向有关的论文, especially work that connects or combines: Large Language Model + Drug-Drug Interaction Prediction; cold-start drug-drug interaction prediction; large language model for drug interaction; drug interaction prediction with knowledge graph; knowledge graph completion for drug discovery; cold start prediction in drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; Leveraging knowledge graphs for cold start drug interaction with large language models; Biomedical knowledge graph enhanced drug interaction prediction for new drugs.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

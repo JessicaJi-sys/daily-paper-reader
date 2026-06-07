@@ -1,0 +1,1393 @@
+Title: HoT-SSM:Higher-order Temporal Knowledge Graph Reasoning with State Space Models for Health Care
+
+URL Source: https://arxiv.org/pdf/2606.05994v1
+
+Published Time: Fri, 05 Jun 2026 01:32:31 GMT
+
+Number of Pages: 24
+
+Markdown Content:
+# HoT-SSM:Higher-order Temporal Knowledge Graph Reasoning with State Space Models for Health Care 
+
+Thummaluru Siddartha Reddy ∗ Vempalli Naga Sai Saketh ∗ Yash Punjabi ∗
+
+Mahesh Chandran Fujitsu Research of India, Bangalore 
+
+{Thummaluru.Siddarthareddy, nagasaisaketh.vempalli}@fujitsu.com {yash.punjabi, mahesh.chandran}@fujitsu.com 
+
+Medical knowledge graphs (MKGs) infused with clinical knowledge have been increasingly used to model electronic health records (EHRs) to support interpretable predictions in healthcare domain. However, existing MKG-based approaches are limited in capturing pairwise relations between clinical concepts (e.g., conditions, procedures, and medications), and restricts their ability to model higher-order interactions among co-occurring or semantically related concepts. In addition, most representation learning methods that leverage MKGs either collapse temporal information across visits or lack an explicit mechanism for modeling long-range temporal dependencies, which is critical for clinical tasks such as mortality prediction. To mitigate these limitations, we propose HoT-SSM , a parameter efficient and higher-order temporal graph reasoning with state space models. For each visit, HoT-SSM constructs hypergraphs by grouping semantically related clinical concepts into hyperedges using domain knowledge, thereby preserving visit-level clinical context. Further, to model the temporal dynamics while learning the representations, we introduce a novel dynamic hypergraph-based state space model that explicitly captures patients latent state evolution over time while preserving long-range information. The learned representations are used for downstream clinical prediction and reasoning. Experiments on MIMIC-III and MIMIC-IV datasets shows significant performance improvement over the current state-of-the-art models, demonstrating the effectiveness of jointly modeling higher-order clinical interactions and long-range temporal dependencies. 
+
+# 1 Introduction 
+
+Knowledge graphs (KGs) offer a structured and relational representation of domain-specific knowledge, encoding the semantic relationships between the entities [Hogan et al., 2021, Gao et al., 2025]. Specifically, KGs augmented with large language models (LLMs) as an inductive bias are increasingly becoming popular in enhancing the reasoning and generalization capabilities of LLMs, particularly in domains where factual consistency and interpretability are critical [Wu et al., 2024, 2025, Jiang et al., 2023]. In the medical domain, medical knowledge graphs (MKGs) encode clinical ontologies that formalize medical concepts-such as diagnoses, procedures, and medications-and their clinical relationships [Aldughayfiq et al., 2023, Shirai et al., 2021]. Integrating MKGs with electronic health record (EHR) data has demonstrated improved performance and interpretability on downstream clinical tasks such as mortality prediction, drug recommendation, to name a few [Jiang et al., 2025, 2024, Gao et al., 2025, Jiang et al., 2023]. Applications of artificial intelligence in healthcare have evolved from traditional machine learning based models for clinical decision support [Choi et al., 2016a,b, 2017, Zhang et al., 2021] to more recent approaches that employ large language models (LLMs) to perform complex clinical reasoning [Jiang et al., 2023, Wu et al., 2024, 2025]. Existing methods for modeling EHR data can be broadly classified into two categories. The first category focuses on representation learning, where deep neural networks or graph neural networks are used to learn latent patient-level or concept-level embeddings for downstream prediction tasks [Ma et al., 2018, 2020, Zhang et al., 2021, Jiang et al., 2024]. The second category are 
+
+> ∗Equal Contribution.
+> arXiv:2606.05994v1 [cs.LG] 4 Jun 2026
+
+LLM driven approaches, in which LLM’s pretrained on general and biomedical corpus are integrated with medical knowledge graphs (MKGs). In these methods, structured medical concepts and relations from MKGs are used to ground and constrain the reasoning process of LLMs, enabling more interpretable and clinically meaningful inference [Jiang et al., 2025, 2024, Gao et al., 2025]. While representation-based models excel at capturing global contextual patterns in EHR data, LLM-based approaches offer enhanced interpretability through explicit reasoning. These complementary strengths have motivated recent efforts to integrate structured knowledge representations with neural models for clinical prediction. Approaches such as KARE [Jiang et al., 2025] and GraphCare [Jiang et al., 2024] leverage domain knowledge to build personalized KGs and subsequently perform inference using either LLM-based reasoning or graph neural networks. While effective in incorporating external medical knowledge, these methods exhibit important limitations. In particular, both KARE and GraphCare restrict interactions between medical concepts to pairwise relations, which fundamentally limits their ability to model higher-order clinical patterns. In real-world EHR data, clinical outcomes are often driven by the joint co-occurrence of multiple related concepts within a visit. For example, severe respiratory failure is characterized by the simultaneous presence of acute respiratory distress syndrome, hypoxemia, and mechanical ventilation; modeling such concepts using pairwise relations fails to capture their collective severity which is critical for tasks such as mortality prediction. Furthermore, existing MKG-based approaches either collapse temporal information across visits or lack an explicit mechanism for modeling latent temporal state evolution, thereby limiting their ability to capture long-range disease progression and patient history. In addition, they incur significant computational costs to obtain the predictions (see Fig. 1). These challenges motivate the need for a unified parameter efficient framework that can simultaneously represent higher-order clinical interactions and explicitly model temporal dynamics while preserving the information for long range.  
+
+> Figure 1. Performance vs model size on MIMIC-IV (mortality).
+
+In this work, we introduce HoT-SSM , a new parameter-efficient framework for EHR modeling that preserves long-range temporal information across clinical visits while capturing higher-order relationships among medical con-cepts through knowledge infused hypergraphs. Specifically, 
+
+HoT-SSM represents patient-specific EHR data as a temporal sequence of knowledge infused hypergraphs pertaining to each clinical visit; the knowledge infusion is achieved by connecting semantically related conditions, medications, and procedures by hyperedges, extracted from a global hyperknowledge graph constructed over the dataset. Re-sulting temporal hypergraphs are processed by the proposed dynamic state space model (SSM) to explicitly learn the evolving latent state of the patient which simultaneously encodes higher-order relational structure (due to hyper-graphs) and preserves long-range temporal information (due to SSM). Empirical results on MIMIC-III and MIMIC-IV across multiple clinical tasks shows markedly improved performance, demonstrating its the effectiveness. We summarize the main contributions as follows: 
+
+• A Temporal Knowledge infused hypergraphs is introduced to model patient-specific EHR data, explicitly capturing higher-order clinical relationships and their temporal evolution across visits. 
+
+• A dynamic hypergraph state space model that jointly preserves higher-order spatial interactions and long-range temporal information is proposed to model the temporal evolution of the patient state. Furthermore, we establish theoretical guarantees for the robustness of the representations from HoT-SSM to perturbations and permutation of graph structure. 
+
+• A temporal reasoning mechanism is proposed to extract structured reasoning paths from the learned latent state representations, which are subsequently verbalized using a lightweight language model to produce human-interpretable explanations. 
+
+# 2 Preliminaries 
+
+In this section, we setup the mathematical background required for the proposed framework. 
+
+2.1 Knowledge Graphs and Temporal Knowledge Graphs 
+
+Let V denote a finite set of entities (subjects and objects), and R denote a set of relations. A KG encodes the structured relationships and is represented as G = ( V, R, E), where E ⊆ V × R × V is a set of relational triples. In particular, each triple e = ( s, r, o ) ∈ E represents a relationship of type r ∈ R between a subject entity s ∈ V and an object entity o ∈ V .
+
+2Figure 2. (a) Sample from EHR data. (b) Pairwise knowledge graph. (c) Knowledge hypergraph. 
+
+Temporal knowledge graphs (TKGs) are a sequence of time-indexed KGs TG = {G 1, G2, . . . , GT } with each Gt ∈ T G and relations are timestamped. In particular, each temporal triple et = ( s, r, o ) ∈ E t encodes the relationship between the entities at time t.
+
+2.2 Hypergraphs 
+
+Hypergraphs are higher order abstractions of graphs where the hyperedges encodes relationship between multiple entities ≥ 2 [Yadati et al., 2019, Feng et al., 2019]. Formally, a hypergraph is defined as H = ( V, E),where E denotes the set of hyperedges, with each hyperedge eh ∈ E connects a subset of entities such that |eh| ≥ 2. The relationship between entities and hyperedges is encoded by the incidence matrix 
+
+I ∈ R|V|×|E| , and has non-zero entries if an entity participates in a hyperedge. 
+
+2.3 Temporal Graph State Space Models 
+
+State Space Models (SSMs) are computationally efficient temporal representation learning architectures that are well suited for modeling long-range temporal dependencies [Gu and Dao, 2024]. Temporal Graph State Space Models (T-SSM) extends classical SSMs to dynamic graph-structured data [Li et al., 2024]. At each time step k, T-SSM updates the latent node representations Sk as 
+
+Sk = Sk−1 exp(∆ kA) + ˜Xk
+
+  exp(∆ kA) − IA−1,
+
+Here ˜Xk encodes the spatial structure of the graph and is obtained by ˜Xk = GNN Θ(Lk, Xk)BT . Whereas 
+
+Lk and Xk denotes the graph Laplacian and feature matrix at time step k and ∆k is the step size. The matrices A and B are state and input parameters, respectively. 
+
+# 3 Knowledge Infused Hypergraph Reasoning with SSM 
+
+In this section, we introduce the proposed HoT-SSM framework for modeling EHR data. We first present a knowledge infused temporal hypergraph representation, where domain knowledge guides the hyperedge construction while patient-specific graphs are instantiated from observed clinical data. We then introduce a dynamic hypergraph-based state space model (SSM) to capture temporal dependencies, followed by methods for extracting interpretable temporal reasoning paths. Figure 3 illustrates the overall architecture. 
+
+3.1 Knowledge Infused Hypergraph Representation of EHR Data 
+
+Traditional knowledge graph that captures the pairwise relationship between the entities, does not exploit the full complexities of the multi-way relationships among the clinical concepts, including conditions, procedures, and medications. To explicitly include these higher-order relations that is intrinsic to EHR data, we introduce a temporal hypergraph-based knowledge representation of it. Let P = {P1, P 2, . . . , P N } denote a set of N patients with each patient Pi being associated with a sequence of clinical visits over time. In particular, considering that patient Pi has Ti visits, in-dexed by t ∈ { 1, 2, . . . , T i}. The clinical data corresponding to patient Pi at visit t is denoted by 
+
+Ci,t = {C i,t , Di,t , Ri,t }, where Ci,t , Di,t , and Ri,t represent conditions, drugs, and procedures. 
+
+Knowledge Infused Hypergraph Construction : For each visit t ∈ Ti of patient Pi, we construct a visit-level hypergraph to model higher-order clinical interactions through hyperedges that explicitly 
+
+3Figure 3. Model workflow, where patient specific temporal hypergraphs are processed through dynamic state space model to learn temporal representations, followed by decoder for prediction and reasoning module for explanation. 
+
+captures co-occurring conditions, medications, and procedures within a single visit. A naive approach would invoke a large language model (LLM) to construct a hypergraph independently for each visit. However, such a strategy incurs prohibitive token and computational costs. To address this limitation, we propose a cost-efficient two-stage procedure: 
+
+Stage 1 : We first construct a global hyperknowledge graph (HKG) over the EHR concept vocabulary by aggregating unique clinical concepts across all patients. Using LLM prompting, we group semantically related conditions, medications, and procedures into clinically coherent concept sets. Each group defines a hyperedge, capturing meaningful higher-order clinical context. The HKG can be expanded by pooling information from external sources such as PubMed and UMLS along with the derived medical ontologies. 
+
+Stage 2 : In the second step, the knowledge from global HKG is transferred to patient-specific hypergraph, instantiated for each visit, by selecting the subset of global hyperedges whose concepts are present in that visit. This approach of infusing knowledge into the hypergraph avoids repeated LLM calls, thus optimizing the compute and cost that accompanies use of LLM. To explicitly encode visit-level context, we introduce a dedicated visit node connected to all hyperedges in the corresponding hypergraph. Further details on the prompting strategy and construction are provided in Appendix C.1. Formally, for a visit t of patient Pi, we define a hypergraph as Hi,t = ( Vi,t , Ei,t ), where Vi,t denotes the set of unique clinical entities appearing in Ci,t and visit node, Ei,t = {e(1)  
+
+> i,t
+
+, e (2)  
+
+> i,t
+
+, . . . , e (Ki,t ) 
+
+> i,t
+
+} is the set of hyperedges inferred by the LLM. A single visit can include multiple hyperedges, indicating that patient has multiple dissimilar concepts ( Ki,t for patient i). The hyperedge set is therefore a collection of unique concepts at time t and is given by Ei,t = SKi,t  
+
+> k=1
+
+e(k) 
+
+> i,t
+
+. The structure of this hypergraph is encoded by an incidence matrix Ii,t ∈ R|V i,t |×|E i,t |. Node features are initialized using BERT embeddings [Devlin et al., 2019] and projected to the latent space via a learnable linear layer. Figure 2(c) illustrates a knowledge-infused hypergraph constructed from a single visit sample from the MIMIC-III dataset, with clinical concepts shown in Figure 2(a). In contrast, Figure 2(b) presents the corresponding pairwise KG, which models conditions, procedures, and medications independently despite their co-occurrence within the same visit. Consequently, it fails to capture the joint clinical context and interdependencies among factors such as neurological, infectious, and respiratory conditions. The knowledge-infused hypergraph addresses this limitation by encoding visit-level information through hyperedges that group clinically related concepts, enabling representation of higher-order disease patterns. For instance, in Figure 2(c), a hyperedge for respiratory disorders jointly connects pleurisy, respiratory intubation, mechanical ventilation, and associated medications. By modeling such multi-way interactions, the hypergraph provides a more expressive representation that supports richer clinical reasoning and improved downstream performance. 
+
+Knowledge Infused Temporal Hypergraphs. For each patient Pi, we construct a sequence of visit-level hypergraphs ordered by time i.e., Hi = {H i, 1, Hi, 2, . . . , Hi,T i }. This enables the proposed model to effectively capture the patient history as sequences of static hypergraphs. Further, this allows us to apply dynamic representation learning technique to exploit the temporal evolution. 
+
+43.2 Representation Learning with Hypergraph based Dynamic State Space Model 
+
+In this section, we introduce proposed dynamic state-space model (SSM) over temporal hypergraphs. 
+
+Static Hypergraph Embedding. We first obtain static representations for each visit leveraging the corresponding hypergraph as an inductive bias for capturing higher-order clinical dependencies. Let 
+
+Xi,t ∈ R|V i,t |× F , denote the feature matrix for patient i at time t with F being feature dimension, and 
+
+Ii,t ∈ R|V i,t |×|E i,t | denote the hypergraph incidence matrix. We compute node embeddings Zi,t ∈ R|V i,t |× d,using a hypergraph convolution operator (HConv) [Bai et al., 2021] as 
+
+Z(l+1)  
+
+> i,t
+
+= σ
+
+
+
+Dv −1/2 
+
+> i,t
+
+Ii,t WDe −1 
+
+> i,t
+
+I⊤
+
+> i,t
+
+Z(l) 
+
+> i,t
+
+Θ(l+1) 
+
+, (1) where Dv i,t ∈ R|V i,t |×|V i,t | and De i,t ∈ R|E i,t |×|E i,t | denote the node and hyperedge degree matrices, respectively, W represents learnable hyperedge-specific weights, Θ(l+1) is the layer-specific trainable parameter matrix, and σ(·) is a non-linear activation function. The update in Eq. (1) implements a spectral hypergraph convolution, generalizing graph convolution to higher-order relational structures. Message passing is performed via hyperedges, allowing information to be aggregated across groups of related clinical concepts. Further stacking multiple such hypergraph convolution layers, we obtain visit node embeddings that encode rich structural information from the static hypergraphs. These embeddings serve as inputs to temporal state-space model, which captures the temporal evolution of clinical states across visits. 
+
+Remark 3.1 . The HConv operator aggregates information from neighboring nodes using uniform weights and therefore does not provide an explicit mechanism for identifying the most influential clinical concepts. To address this limitation, we introduce an attention-based variant [Ding et al., 2020], to learns weights for neighborhood aggregation and further can be leveraged to extract interpretable reasoning paths underlying the model ’s predictions (more details in Sec 3.3). 
+
+Dynamic State-Space Model over Temporal Hypergraphs . The temporal hypergraphs associated with a patient is naturally represented as a sequence of static knowledge infused hypergraphs evolving over discrete time. We model this sequence as a discrete-time dynamic hypergraphs, enabling principled temporal representation learning over higher-order structures. In particular for EHR data, clinically relevant signals may span long temporal horizons, necessitating framework for capturing long-range temporal information propagation. To address this, we adopt a state-space modeling (SSM) framework, which is well-suited for preserving and updating long-range temporal dependencies. Specifically, for a patient Pi with sequence of hypergraphs as Hi = {H i, 1, Hi, 2, . . . , Hi,T i }
+
+the goal is to learn temporal latent representations si ∈ R1×f that summarize the patient ’s clinical trajectory and support downstream prediction. 
+
+HiPPO-based Memory Representation. To model long-range temporal dependencies, we employ a Higher-Order Polynomial Projection Operator (HiPPO) framework [Gu et al., 2020]. HiPPO-based models compress the entire history of inputs into a fixed-dimensional memory by maintaining coefficients of a polynomial basis, which are updated through a state-space formulation. Let k ∈ { 1, 2, . . . T i} index the discrete time clinical visits of patient i, with the kth visit at time instant 
+
+tk and the interval between the visits as ∆k = tk − tk−1. Then the resulting discrete-time state-space update for patient Pi (following T-SSM framework) is given by 
+
+si,k = si,k −1 exp(∆ kA) + ˜ xi,k (exp(∆ kA) − I) A−1, (2) where A ∈ Rf ×f , is a HiPPO matrix and ˜xi,k = HConv v (Xi,k , Hi,k )BT ∈ R1×f , represents the hypergraph-aware embeddings obtained via the hypergraph convolution operator defined in Eq. (1) with 
+
+B ∈ Rf ×d is a trainable input matrix. Importantly HConv v (Xi,k , Hi,k ) ∈ R1×d output the visit node embedding by indexing the visit node in Zi,k . It can be observed from Eq. (2) , the proposed model jointly captures higher-order spatial dependencies within individual visits and long-range temporal dependencies across visits due to SSM modeling. Thus the learned temporal representations are highly expressive and well-suited for downstream clinical tasks. After processing the full visit sequence for patient Pi, the final output representation is obtained as 
+
+yi = Cs Ti,K , where si,K denotes the memory representation after the final visit and C ∈ Rd1×f is a learnable output matrix. Depending on the downstream task, the representation yi is subsequently passed through a task-specific decoder to produce the final prediction. 
+
+3.3 Temporal Reasoning Paths 
+
+In this section, we discuss the proposed method for extracting temporal reasoning paths. We discuss two variants based on attention and gradient-based attribution. 
+
+5Attention based approach : To mitigate the challenges from HConv layer as discussed in Remark 3.1, we introduce an attention based hypergraph convolution ( HGAT )[Bai et al., 2021] that assigns learnable importance weights to nodes and hyperedges, which can be subsequently leveraged to extract reasoning paths [Ding et al., 2020]. Let vr ∈ V i,t denote a vertex r (clinical concept) of patient i at visit t. To learn the representation of node r, the attention-based hypergraph convolution operates in two stages: (1) node to hyperedge aggregation, (2) hyperedge to node aggregation. In particular, the representation of node r in layer l i.e., 
+
+z(l+1)  
+
+> r
+
+∈ Rd×1 is obtained as 
+
+z(l+1)  
+
+> r
+
+= σ
+
+ X  
+
+> ej∈E i,t (vr)
+
+βr,j W(2) ˆe(l+1) 
+
+> j
+
+ , βr,j =exp 
+
+
+
+n⊤ ˜hi,j 
+
+P   
+
+> eq∈E i,t (vr)
+
+exp 
+
+
+
+n⊤ ˜hq,j 
+
+ , (3) where Ei,t (vr ) denotes set of hyperedges incident to node vr , ej denotes jth hyperedge, ˆe(l+1)  
+
+> j
+
+is the updated representation of hyperedge ej (see Appendix C.2 for detailed derivation) and W(2) ∈ Rd×d is a learnable weight matrix. βr,j is the hyperedge to node attention coefficient that quantifies the influence of hyperedge ej on node vr . Here 
+
+n is a learnable vector and 
+
+˜hi,j = LeakyReLU 
+
+
+
+W(2) ˆe(l+1)  
+
+> j
+
+|| W(1) z(l)
+
+> r
+
+
+
+. Learning the coefficients βr,j enables the model to explicitly identify the most influential hyperedges contributing to final representation. To extract interpretable reasoning paths, we sort the learned attention coefficients of visit node and select the top-ω concepts with the highest attention scores using (α, β ). Further, these top-ω concepts are used to generate the temporal reasoning paths as detailed in the Appendix C.2. 
+
+Gradient based approach : While the attention-based approach introduced above enables fine-grained identification of important nodes and hyperedges, it requires learning both node- and edge-level attention weights and therefore incurs substantially higher parameter and computational complexity than the HConv 
+
+operator. In resource constrained settings, we instead adopt a gradient based attribution strategy that directly leverages the embeddings produced by HConv , without introducing additional learnable parameters. Let x(j) 
+
+> i,k
+
+∈ Rd denote the embedding of clinical entity j for patient i at visit k. To quantify the contribution of this entity to the final prediction ˆyi, we compute the gradient of ˆyi with respect to x(j) 
+
+> i,k
+
+i.e, ∇x(j)
+
+> i,k
+
+ˆyi.This gradient reflects how changes in an entity ’s representation at a given visit propagate through the latent SSM dynamics and affect the final prediction. Leveraging the gradients we then compute the saliency score [Shrikumar et al., 2017] which accounts for feature presence and sensitivity. In particular the saliency score Sc (e, k ) for entity j of patient i at visit k is given by Sc (e, k ) = x(j)T 
+
+> i,k
+
+· ∇ x(j)
+
+> i,k
+
+ˆyi.A higher positive saliency score indicates that the corresponding clinical entity contributes more strongly toward increasing the outcome. To translate saliency scores into an interpretable temporal reasoning path, we perform gradient-based backtracking using a set of anchors , defined as the top-ω entities in the final visit K with the highest saliency scores. For each anchor, we reconstruct a reasoning path by tracing backward through time and selecting the entity at visit k i.e., e∗ 
+
+> k
+
+which maximizes the saliency score Sc (e, k ).
+
+# 4 Theoretical Guarantees 
+
+Theorem 4.1 (Perturbation to hypergraph structures) . Let ˆL = L + ∆ L, be the perturbed hypergraph Laplacian with ∥∆L∥2 ≤ ϵ and σ(.) being Lipschitz continous with constant C, number of layers as 
+
+L and weight parameter satisfies max l || Θ(l)|| 2 ≤ K. Further if the state matrices satisfy ∥B∥2 ≤ γ
+
+and ∥(exp (∆ kA) − I)A−1∥ ≤ δ then the error between representations are bounded as ∥ˆsi,k − si,k ∥2 ≤
+
+const · ϵ|| Xi,k|| 2, where const = CKL γδ 
+
+The proof of this theorem is relegated to the Appendix B.1. It shows that the error in between the representations learned by HoT-SSM scales linearly with the energy of the perturbation matrix i.e. , ϵ
+
+demonstrating the robustness of the proposed model to structural perturbations. 
+
+Corollary 1 (Error accounting for temporal propagation) . Assume additionally if the discretized state matrix satisfies ∥exp (∆ k)A∥2 ≤ η, ∀k. Then for K steps the error between the state representations accounting for temporal residual propogations are bounded as ∥ˆsi,K − si,K ∥2 ≤ const 1ϵ, where const 1 =LKC δγ PK  
+
+> τ=1
+
+ηK−τ ∥Xi,τ ∥2.
+
+6Table 1. Mortality Prediction. 
+
+Model MIMIC-III MIMIC-IV 
+
+AUPRC AUROC AUPRC AUROC GRU 11.8 (0 .5) 61.3 (0 .9) 4.2 (0 .1) 69.0 (0 .8) 
+
+Transformer 10.1 (0 .9) 57.2 (1 .3) 4.0 (0 .4) 65.1 (1 .2) 
+
+RETAIN 9.6 (0 .6) 59.4 (1 .5) 3.8 (0 .4) 64.8 (1 .6) 
+
+GRAM 11.4 (0 .7) 60.4 (0 .9) 4.4 (0 .3) 66.7 (0 .7) 
+
+Deepr 13.2 (1 .1) 60.8 (0 .4) 4.2 (0 .2) 68.9 (0 .9) 
+
+StageNet 12.4 (0 .3) 61.5 (0 .7) 4.2 (0 .3) 69.6 (0 .8) 
+
+GraphCARE 16.7 (0 .5) 70.3 (0 .5) 6.7 (0 .3) 73.1 (0 .5) 
+
+HoT-SSM (v1) 34.4 (1 .0) 74.2 (0 .6) 23.8 (0 .9) 84.7 (0 .2) 
+
+HoT-SSM (v2) 32.8 (2 .3) 73.2 (1 .5) 24.4 (0 .8) 82.8 (0 .1) 
+
+Table 2. Drug Recommendation 
+
+Model MIMIC-III MIMIC-IV 
+
+Jaccard F1 Jaccard F1 GRU 47.8 (0 .3) 60.2 (0 .2) 44.0 (0 .4) 60.2 (0 .2) 
+
+Transformer 47.1 (0 .4) 55.9 (0 .2) 40.4 (0 .1) 55.9 (0 .2) 
+
+RETAIN 48.8 (0 .2) 60.3 (0 .1) 45.0 (0 .1) 60.3 (0 .1) 
+
+GRAM 47.9 (0 .3) 60.1 (0 .2) 45.3 (0 .3) 60.1 (0 .1) 
+
+Deepr 44.7 (0 .3) 59.1 (0 .4) 43.8 (0 .4) 59.1 (0 .4) 
+
+StageNet 45.8 (0 .4) 60.2 (0 .3) 45.4 (0 .4) 60.2 (0 .3) 
+
+GraphCARE 49.8 (0 .4) 63.9 (0 .3) 48.1 (0 .3) 63.9 (0 .3) 
+
+HoT-SSM (v1) 52.2 (0 .5) 66.5 (0 .4) 50.6 (0 .6) 64.1 (0 .8) 
+
+HoT-SSM (v2) 52.6 (0 .5) 66.9 (0 .5) 54.3 (0 .4) 68.3 (0 .4) 
+
+We relegate the proof to Appendix B.2. It can be observed that the error remains linear in the energy of perturbation matrix magnitude ϵ even while accounting temporal cascading effects. 
+
+Remark 4.2 . Theorem 4.1 and Corollary 1 characterize the error in terms of energy of the perturbation energy. Extending this analysis, we derive an alternative bound expressed in terms of the spectrum of the hypergraph Laplacian (see Appendix B.3 for details). 
+
+Theorem 4.3 (Permutation invariance) . Let P = { P ∈ { 0, 1}|V i,t |×|V i,t | : P⊤P = PP ⊤ = I|V i,t |} be the set of all valid permutation matrices . Under the permutation of node indices of the visit-level hypergraph, the representation from the HConv operator remains equivariant, i.e., Zperm  
+
+> i,t
+
+= PZ i,t . However, the output of the dynamic hypergraph SSM module remains invariant. 
+
+The proof of this theorem is relegated to Appendix B.4. It states that if node labels are permuted then only the representations from Hconv are relabeled whereas SSM output remains unchanged. 
+
+# 5 Numerical Experiments 
+
+In this section, we present results on the MIMIC III [Johnson et al., 2016] and MIMIC IV [Johnson et al., 2021] datasets with downstream tasks as mortality prediction, length of stay (LOS) prediction, drug recommendation and readmission task. More details on datasets and tasks in Appendix D. 
+
+Implementation details . Visit-level hypergraphs for each patient are generated using Azure GPT-4.1, following the same procedure as described in Section 3.1 with prompts as in Fig. 6 and Fig 7. These hypergraphs are then leveraged to compute spatial representations via either the HConv or HGAT operators [Bai et al., 2021]. Accordingly, we consider two variants of the proposed framework: HoT-SSM (v1), which employs HConv as the spatial encoder, and HoT-SSM (v2), which employs HGAT . The resulting spatial representations are propagated over time using the hypergraph-based state-space model (SSM) to produce the final predictions. Whereas the temporal reasoning paths are generated following the procedure in Sec 3.3. Details of hyperparameters and training configurations are provided in Appendix D.3. 
+
+5.1 Discussion on Results 
+
+In Tables 1, 2, and 3 we present results (mean and standard deviation in brackets (.)) on three downstream clinical prediction tasks on the MIMIC-III and MIMIC-IV datasets. It can be observed that HoT-SSM 
+
+demonstrates strong performance across all tasks compared to the baselines. In particular, it is important to notice that on mortality prediction, the proposed model achieves a improvement of +17.7% in AUPRC and +3.9% in AUROC over GraphCARE on the MIMIC-III dataset, asserting the importance of capturing higher-order relations for critical tasks. Whereas, on MIMIC-IV, we observe that the relative gains are much stronger with +17.1% in AUPRC and +11.6% in AUROC improvements compared to MIMIC-III, as the dataset includes patients with more visits, which showcases the ability of the model to capture long-range patient history. It can also be observed that the proposed model outperforms state-of-the-art algorithms on other clinical tasks, asserting the importance of hypergraphs and SSMs. Additional results on readmission prediction task are provided in Appendix E.3. 
+
+7Table 3. Performance on LOS prediction task. 
+
+Model MIMIC-III MIMIC-IV Kappa F1 Kappa F1 
+
+GRU 26.2 (0 .2) 34.9 (0 .5) 26.0 (0 .1) 31.6 (0 .2) 
+
+Transformer 25.4 (0 .4) 34.8 (0 .2) 25.3 (0 .4) 31.4 (0 .3) 
+
+RETAIN 26.1 (0 .4) 34.9 (0 .4) 26.3 (0 .2) 32.0 (0 .2) 
+
+GRAM 26.3 (0 .3) 34.5 (0 .2) 26.1 (0 .4) 31.9 (0 .3) 
+
+Deepr 25.3 (0 .4) 35.0 (0 .4) 26.4 (0 .2) 32.3 (0 .1) 
+
+StageNet 24.8 (0 .3) 34.4 (0 .4) 26.0 (0 .2) 31.3 (0 .3) 
+
+GraphCARE 29.5 (0 .4) 37.5 (0 .2) 29.8 (0 .3) 34.2 (0 .3) 
+
+HoT-SSM (v1) 30.2 (0 .8) 37.7 (0 .8) 27.5 (0 .3) 34.0 (0 .3) 
+
+HoT-SSM (v2) 31.0 (0 .7) 38.1 (0 .8) 28.8 (0 .4) 33.5 (0 .5) 
+
+5.2 Ablation Study 1: Effect of Hypergraph Modeling 
+
+To study the impact of modeling higher-order clinical relationships with hypergraphs, we compare our proposed HoT-SSM framework against its graph-based counterpart, denoted as GNN-SSM . The latter models clinical relationships using knowledge graphs, similar to GraphCare [Jiang et al., 2024]. Table 4 reports the results on the mortality prediction task for both the MIMIC-III and MIMIC-IV datasets. As shown, 
+
+HoT-SSM consistently outperforms GNN-SSM , demonstrating the advantage of explicitly modeling EHR data through hypergraphs. 
+
+5.3 Ablation study 2: Effect of using SSM 
+
+To examine the impact of long-range temporal information propagation on predictive performance, we conduct an ablation study on a subset of patients with extended clinical histories (those with more than 10 recorded visits) with the mortality prediction task on the MIMIC-IV dataset. This setting is particularly challenging, as accurate prediction requires preserving clinically relevant information over long temporal horizons. We compare HoT-SSM against two architectural variants with SSM module is replaced by (i) Long Short-Term Memory (LSTM), ( HoT-LSTM ), and (ii) Hyper-GNN , which directly aggregates visit-level hypergraph representations without temporal modelling. In Table 5, we report the results where it can be observed that HoT-SSM consistently outperforms both variants across all evaluation metrics. Notably, 
+
+HoT-SSM achieves larger gains with +15% in Sensitivity and +6.5% in Macro-F1 score compared to the LSTM- baseline, thereby asserting the importance of proposed SSM framework for effectively capturing the long range clinical histories especially in critical tasks such as mortality prediction. Further, to ensure that the observed gains are not solely due to LLM-based hyperedge construction, we investigate the following questions (see Appendix E.1). Mortality label=1, Predicted label=1 
+
+Visit 1: 
+
+,→ Entities: respiratory failure, insufficiency arrest 
+
+↓
+
+Visit 2: 
+
+,→ Entities: Respiratory intubation, mechanical ventilation 
+
+↓
+
+Visit 3: 
+
+,→ Entities: Other liver diseases, acute and unspecified renal failure 
+
+LLM explanation: The model identifies this patient as high-risk due to a clinical trajectory consistent with multi-organ system failure. The sequence progresses from respiratory arrest requiring immediate resuscitation to mechanical ventilation for life support, culminating in liver disease at the final visit.  
+
+> Figure 4. Gradient based temporal reasoning path.
+
+8Table 4. Ablation on hypergraphs and graphs. 
+
+Model MIMIC-III MIMIC-IV 
+
+AUPRC AUROC AUPRC AUROC 
+
+GNN-SSM 22.9 69.5 19.8 77.4 
+
+HoT-SSM 34.4 74.2 23.7 84.6  
+
+> Table 5. Ablation on long-range task.
+
+Model AUPRC Macro F1 Sensitivity 
+
+Hyper-GNN 60.6 62.8 25.0 HoT-LSTM 65.1 68.9 40.0 
+
+HoT-SSM 67.1 75.4 55.0 
+
+• Q.1 . How does HoT-SSM perform with non-LLM based hypergraph constructions? 
+
+• Q.2 . How robust and reliable are the performance gains? 
+
+5.4 Example Temporal Reasoning Path 
+
+The temporal reasoning module in the HoT-SSM pipeline extracts the reasoning paths by gradient or attention based methods. In Fig. 4, we present the reasoning path generated by gradient based approach that selects the top-2 most influential clinical entities per visit based on gradient contribution for a representative mortality case from the MIMIC-III dataset. Grounding the reasoning abilities to extracted reasoning chains we also show an LLM output explaining the reasons for models prediction towards high mortality risk. More examples on temporal reasoning paths are presented in Appendix F. 
+
+# 6 Conclusions 
+
+We proposed HoT-SSM , a novel higher-order temporal reasoning framework that integrates hypergraph modeling with state-space models for healthcare. The proposed framework constructs knowledge in-fused temporal hypergraphs to encode co-occurring clinical concepts within visits and leverages a novel hypergraph-based SSM to capture long-range dependencies across patient visits. We also extract reasoning paths based on attention and gradient-based approaches, allowing LLM-assisted explanation for the interpretable inference. Results on MIMIC-III and MIMIC-IV demonstrate that HoT-SSM effectively captures higher-order relations and long-range temporal information, leading to substantial gains in the predictive performance. 
+
+# References 
+
+Aidan Hogan, Eva Blomqvist, Michael Cochez, Claudia d ’Amato, Gerard De Melo, Claudio Gutierrez, Sabrina Kirrane, José Emilio Labra Gayo, Roberto Navigli, Sebastian Neumaier, et al. Knowledge graphs. ACM Computing Surveys (Csur) , 54(4):1–37, 2021. Yanjun Gao, Ruizhe Li, Emma Croxford, John Caskey, Brian W Patterson, Matthew Churpek, Timothy Miller, Dmitriy Dligach, and Majid Afshar. Leveraging medical knowledge graphs into large language models for diagnosis prediction: Design and application study. Jmir Ai , 4:e58670, 2025. Junde Wu, Jiayuan Zhu, Yunli Qi, Jingkun Chen, Min Xu, Filippo Menolascina, and Vicente Grau. Medical graph rag: Towards safe medical large language model via graph retrieval-augmented generation. 
+
+arXiv preprint arXiv:2408.04187 , 2024. Junde Wu, Jiayuan Zhu, Yunli Qi, Jingkun Chen, Min Xu, Filippo Menolascina, Yueming Jin, and Vicente Grau. Medical graph rag: Evidence-based medical large language model via graph retrieval-augmented generation. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 28443–28467, 2025. Xinke Jiang, Ruizhe Zhang, Yongxin Xu, Rihong Qiu, Yue Fang, Zhiyuan Wang, Jinyi Tang, Hongxin Ding, Xu Chu, Junfeng Zhao, et al. Think and retrieval: A hypothesis knowledge graph enhanced medical large language models. CoRR , 2023. Bader Aldughayfiq, Farzeen Ashfaq, NZ Jhanjhi, and Mamoona Humayun. Capturing semantic relation-ships in electronic health records using knowledge graphs: An implementation using mimic iii dataset 
+
+9and graphdb. In Healthcare , volume 11, page 1762. MDPI, 2023. Sola Shirai, Oshani Seneviratne, and Deborah L McGuinness. Applying personal knowledge graphs to health. arXiv preprint arXiv:2104.07587 , 2021. Pengcheng Jiang, Cao Xiao, Minhao Jiang, Parminder Bhatia, Taha Kass-Hout, Jimeng Sun, and Jiawei Han. Reasoning-enhanced healthcare predictions with knowledge graph community retrieval. In The Thirteenth International Conference on Learning Representations , 2025. Pengcheng Jiang, Cao Xiao, Adam Richard Cross, and Jimeng Sun. Graphcare: Enhancing healthcare predictions with personalized knowledge graphs. In The Twelfth International Conference on Learning Representations , 2024. Edward Choi, Mohammad Taha Bahadori, Jimeng Sun, Joshua Kulas, Andy Schuetz, and Walter Stewart. Retain: An interpretable predictive model for healthcare using reverse time attention mechanism. 
+
+Advances in neural information processing systems , 29, 2016a. Edward Choi, Mohammad Taha Bahadori, Andy Schuetz, Walter F Stewart, and Jimeng Sun. Doctor ai: Predicting clinical events via recurrent neural networks. In Machine learning for healthcare conference ,pages 301–318. PMLR, 2016b. Edward Choi, Mohammad Taha Bahadori, Le Song, Walter F Stewart, and Jimeng Sun. Gram: graph-based attention model for healthcare representation learning. In Proceedings of the 23rd ACM SIGKDD international conference on knowledge discovery and data mining , pages 787–795, 2017. Chaohe Zhang, Xin Gao, Liantao Ma, Yasha Wang, Jiangtao Wang, and Wen Tang. Grasp: generic framework for health status representation learning based on incorporating knowledge from similar patients. In Proceedings of the AAAI conference on artificial intelligence , volume 35, pages 715–723, 2021. Fenglong Ma, Quanzeng You, Houping Xiao, Radha Chitta, Jing Zhou, and Jing Gao. Kame: Knowledge-based attention model for diagnosis prediction in healthcare. In Proceedings of the 27th ACM interna-tional conference on information and knowledge management , pages 743–752, 2018. Liantao Ma, Chaohe Zhang, Yasha Wang, Wenjie Ruan, Jiangtao Wang, Wen Tang, Xinyu Ma, Xin Gao, and Junyi Gao. Concare: Personalized clinical feature embedding via capturing the healthcare context. In Proceedings of the AAAI conference on artificial intelligence , volume 34, pages 833–840, 2020. Naganand Yadati, Madhav Nimishakavi, Prateek Yadav, Vikram Nitin, Anand Louis, and Partha Talukdar. Hypergcn: A new method for training graph convolutional networks on hypergraphs. Advances in neural information processing systems , 32, 2019. Yifan Feng, Haoxuan You, Zizhao Zhang, Rongrong Ji, and Yue Gao. Hypergraph neural networks. In 
+
+Proceedings of the AAAI conference on artificial intelligence , volume 33, pages 3558–3565, 2019. Albert Gu and Tri Dao. Mamba: Linear-time sequence modeling with selective state spaces. In First conference on language modeling , 2024. Jintang Li, Ruofan Wu, Xinzhou Jin, Boqun Ma, Liang Chen, and Zibin Zheng. State space models on temporal graphs: A first-principles study. Advances in Neural Information Processing Systems , 37: 127030–127058, 2024. Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. Bert: Pre-training of deep bidirectional transformers for language understanding, 2019. URL https://arxiv.org/abs/1810.04805 .Song Bai, Feihu Zhang, and Philip HS Torr. Hypergraph convolution and hypergraph attention. Pattern Recognition , 110:107637, 2021. Kaize Ding, Jianling Wang, Jundong Li, Dingcheng Li, and Huan Liu. Be more with less: Hypergraph attention networks for inductive text classification. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP) , pages 4927–4936, 2020. Albert Gu, Tri Dao, Stefano Ermon, Atri Rudra, and Christopher Ré. Hippo: Recurrent memory with optimal polynomial projections. Advances in neural information processing systems , 33:1474–1487, 2020. Avanti Shrikumar, Peyton Greenside, and Anshul Kundaje. Learning important features through propa-gating activation differences. In International conference on machine learning , pages 3145–3153. PMlR, 2017. Alistair EW Johnson, Tom J Pollard, Lu Shen, Li-wei H Lehman, Mengling Feng, Mohammad Ghassemi, Benjamin Moody, Peter Szolovits, Leo Anthony Celi, and Roger G Mark. Mimic-iii, a freely accessible critical care database. Scientific data , 3(1):1–9, 2016. Alistair Johnson, Lucas Bulgarelli, Tom Pollard, Leo Anthony Celi, Roger Mark, and S Horng IV. Mimic-iv-ed. PhysioNet , 2021. Jenna Wong, Mara Murray Horwitz, Li Zhou, and Sengwee Toh. Using machine learning to identify health outcomes from electronic health record data. Current epidemiology reports , 5(4):331–342, 2018. 
+
+10 Christopher J McWilliams, Daniel J Lawson, Raul Santos-Rodriguez, Iain D Gilchrist, Alan Champneys, Timothy H Gould, Mathew JC Thomas, and Christopher P Bourdeaux. Towards a decision support tool for intensive care discharge: machine learning algorithm development using electronic healthcare data from mimic-iii and bristol, uk. BMJ open , 9(3):e025925, 2019. Junyi Gao, Cao Xiao, Yasha Wang, Wen Tang, Lucas M Glass, and Jimeng Sun. Stagenet: Stage-aware neural networks for health risk prediction. In Proceedings of the web conference 2020 , pages 530–540, 2020. Negin Ashrafi, Armin Abdollahi, Jiahong Zhang, and Maryam Pishgar. Optimizing mortality prediction for icu heart failure patients: Leveraging xgboost and advanced machine learning with the mimic-iii database. arXiv preprint arXiv:2409.01685 , 2024. Junyoung Chung, Caglar Gulcehre, KyungHyun Cho, and Yoshua Bengio. Empirical evaluation of gated recurrent neural networks on sequence modeling. arXiv preprint arXiv:1412.3555 , 2014. Edward Choi, Zhen Xu, Yujia Li, Michael Dusenberry, Gerardo Flores, Emily Xue, and Andrew Dai. Learning the graphical structure of electronic health records with graph convolutional transformer. In 
+
+Proceedings of the AAAI conference on artificial intelligence , volume 34, pages 606–613, 2020. Chenhao Su, Sheng Gao, and Si Li. Gate: graph-attention augmented temporal neural network for medication recommendation. IEEE Access , 8:125447–125458, 2020. Yang Li, Buyue Qian, Xianli Zhang, and Hui Liu. Graph neural network-based diagnosis prediction. Big data , 8(5):379–390, 2020. Weicheng Zhu and Narges Razavian. Variationally regularized graph-based representation learning for electronic health records. In Proceedings of the conference on health, inference, and learning , pages 1–13, 2021. Nianzu Yang, Kaipeng Zeng, Qitian Wu, and Junchi Yan. Molerec: Combinatorial drug recommendation with substructure-aware molecular representation learning. In Proceedings of the ACM web conference 2023 , pages 4075–4085, 2023. Xiancheng Xie, Yun Xiong, Philip S Yu, and Yangyong Zhu. Ehr coding with multi-scale feature attention and structured knowledge graph propagation. In Proceedings of the 28th ACM international conference on information and knowledge management , pages 649–658, 2019. Ran Xu, Mohammed K Ali, Joyce C Ho, and Carl Yang. Hypergraph transformers for ehr-based clinical predictions. AMIA Summits on Translational Science Proceedings , 2023:582, 2023. Yuzhang Xie, Xu Han, Ran Xu, Xiao Hu, Jiaying Lu, and Carl Yang. Hypkg: Hypergraph-based knowledge graph contextualization for precision healthcare. In International Semantic Web Conference , pages 328–348. Springer, 2025. Peipei Ping, Karol Watson, Jiawei Han, and Alex Bui. Individualized knowledge graph: a viable informatics path to precision medicine. Circulation research , 120(7):1078–1080, 2017. Amelie Gyrard, Manas Gaur, Saeedeh Shekarpour, Krishnaprasad Thirunarayan, and Amit Sheth. Personalized health knowledge graph. In CEUR workshop proceedings , volume 2317, page 5, 2018. Elena Ceci and Sergio Barbarossa. Graph signal processing in the presence of topology uncertainties. 
+
+IEEE Transactions on signal processing , 68:1558–1573, 2020. Mengting Wan, Tara Safavi, Sujay Kumar Jauhar, Yujin Kim, Scott Counts, Jennifer Neville, Siddharth Suri, Chirag Shah, Ryen W White, Longqi Yang, et al. Tnt-llm: Text mining at scale with large language models. In Proceedings of the 30th ACM SIGKDD conference on knowledge discovery and data mining , pages 5836–5847, 2024. Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. Attention is all you need. Advances in neural information processing systems , 30, 2017. Phuoc Nguyen, Truyen Tran, Nilmini Wickramasinghe, and Svetha Venkatesh. Deepr : A convolutional net for medical records. IEEE Journal of Biomedical and Health Informatics , 21(1):22–30, 2017. doi: 10.1109/JBHI.2016.2633963. 
+
+11 APPENDIX 
+
+(1) Prior Works . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 (2) Proof of Theorems . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .12 (3) Implementation Details . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15 (4) Dataset and Training Details . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19 (5) Additional Experiments . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21 (6) Reasoning Path Examples . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22 (7) Future Directions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 
+
+# A Prior Works 
+
+Prior research on electronic health record (EHR) data for downstream clinical prediction and recommenda-tion tasks can be broadly categorized into representation learning-based approaches and methods centered on KGs and LLMs. 
+
+Representation Learning–Based Approaches. Early work in this category applied classical machine learning models and deep learning architectures to learn low-dimensional representations of patient data, which were subsequently used for downstream clinical tasks [Wong et al., 2018, McWilliams et al., 2019, Choi et al., 2016b,a, Zhang et al., 2021, Gao et al., 2020, Ashrafi et al., 2024, Chung et al., 2014]. While effective, these methods largely overlook the relational graph structure underlying the data. To explicitly model such relationships, graph neural network (GNN)-based approaches have been proposed, where clinical entities are represented as nodes and their interactions as edges [Choi et al., 2020, Su et al., 2020, Li et al., 2020, Zhu and Razavian, 2021, Yang et al., 2023, Xie et al., 2019]. These models construct patient-specific or visit-level graphs from EHR data and leverage message passing to learn relational representations. However, most representation learning-based approaches operate on local graphs derived solely from EHR records and do not incorporate external medical knowledge sources, such as PubMed or UMLS, which contain rich and complementary relational information. Recent works leverage hypergraphs [Xu et al., 2023, Xie et al., 2025] to model EHR data. However they model each visit as a single hyperedge and multiple visits through static hypergraph, thereby failing to explicitly capture intra-visit structure (whose importance is discussed in the Introduction and Section 3.1) as well as inter-visit temporal dynamics. This limitation restricts their ability to effectively model disease progression. More importantly, these approaches lack an explicit mechanism to capture long-range patient information over time. 
+
+Approaches centered on Knowledge Graphs and LLMs Personalized medical knowledge graphs (MKGs) provide a structured representation of EHR data by explicitly modeling semantic relationships among clinical entities. Early approaches in this direction constructed MKGs using predefined hierarchical or rule-based schemas and demonstrated notable performance improvements on downstream clinical tasks [Ping et al., 2017, Gyrard et al., 2018, Shirai et al., 2021]. Despite their effectiveness, these methods are limited in their ability to capture complex and higher-order clinical interactions. With recent advances in large language models (LLMs) pretrained on extensive medical corpora, more recent work has explored the construction of personalized knowledge graphs using LLMs, often augmented with external biomedical resources such as UMLS and PubMed [Jiang et al., 2024, 2025, Gao et al., 2025]. While these approaches enrich the semantic coverage of MKGs, they typically restrict interactions to pairwise relations. As a result, they fail to capture co-occurring clinical concepts within a single visit and lack explicit mechanisms for modeling temporal evolution or preserving long-range clinical dependencies across a patient ’s history. 
+
+# B Proof for Theorems 
+
+We present the proofs for robustness to pertubations and permutation invariance. 
+
+B.1 Proof of Theorem 4.1 
+
+Proof. Let the normalized hypergraph adjacency operator be defined as 
+
+Ei,t = Dv −1/2 
+
+> i,t
+
+Ii,t WDe −1 
+
+> i,t
+
+I⊤
+
+> i,t
+
+,
+
+where Ii,t denotes the incidence matrix, and Dv i,t and De i,t are the node and hyperedge degree matrices, respectively. The spatial representations using Hconv can be represented interms of normalized hypergraph Laplacian as 
+
+Zl+1  
+
+> i,t
+
+= σ
+
+
+
+(I − L)Zli,t Θ(l+1) 
+
+, (4) 
+
+12 where L is a normalized hypergraph Laplacian. Under the perturbation of hypergraph Laplacian, the error in the representations are bounded as 
+
+∥ˆZl+1  
+
+> i,t
+
+− Zl+1  
+
+> i,t
+
+∥2=∥σ
+
+
+
+(I − ˆL)Z(l) 
+
+> i,t
+
+Θ(l+1) 
+
+− σ
+
+
+
+(I − L)Z(l) 
+
+> i,t
+
+Θ(l+1) 
+
+∥2(a)
+
+≤ C|| ∆LZ (l) 
+
+> i,t
+
+Θ(l+1) ∥2(b)
+
+≤ KC ∥∆L∥2∥Z(l) 
+
+> i,t
+
+∥2(c)
+
+≤ ϵKC ∥Z(l) 
+
+> i,t
+
+∥2,
+
+> (d)
+
+≤ ϵLKC ∥Xi,t ∥2,
+
+(5) where (5) (a) follows since σ(.) being Lipschitz continous and (5) (b) follows from the bound on the learnable parameters Θ. Whereas (5) (c) follows from the bound on the energy of the pertubation matrix and (5) (d) follows by recursively applying the above bound across L HConv layers and noting that Z(0)  
+
+> i,t
+
+= Xi,t .Recall ˜x is obtained using visit node embedding and the error can be bounded interms of representations of Hconv layer as 
+
+∥˜xi,t,per − ˜xi,t ∥2(a)
+
+= ∥eTv ˆZi,t BT − eTv Zi,t BT ∥2(b)
+
+≤ ϵLKC ∥Xi,t ∥2γ, 
+
+(6) where (6) (a) follows by extracting the visit node embedding using canonical vector and (6) (b) follows from (5)(d) with ∥B∥2 ≤ γ.Finally the error between the ssm representations are bounded as 
+
+∥ˆsi,k − si,k ∥2(a)
+
+= ∥˜xi,t,per exp(∆ kA − I)A−1 − ˜xi,texp(∆ kA − I)A−1∥2(b)
+
+≤ const · ϵ∥Xi,t∥2,
+
+(7) where const = LKC γδ in (7) (b), follows from (6) (a). We emphasize that from (7) (b), error in temporal representations from HoT-SSM scales only linearly with the energy in the perturbation matrix demonstrating the model robustness to graph perturbations. □
+
+B.2 Proof of Corollary 1 
+
+We extend the analysis by explicitly unrolling the SSM dynamics. Recall that the difference between perturbed and unperturbed states satisfies: 
+
+∥ˆsi, 1 − si, 1∥2(a)
+
+= ∥(ˆ si, 0 − si, 0)exp(∆ 1A)∥2 + ∥(˜ xi,1,per − ˜xi,1)exp(∆ 1A − I)A−1∥2(b)
+
+≤ ηϵLKCδγ ∥Xi, 1∥2,
+
+(8) where (b) is realized by leveraging eqn 7 and by observing that initializations remain the same. At the second step, the error consists of (i) propagated error from the previous step and (ii) newly injected perturbation: 
+
+∥ˆsi, 2 − si, 2∥2(a)
+
+= ∥(ˆ si, 1 − si, 1)exp(∆ 2A)∥2 + ∥(˜ xi,2,per − ˜xi,2)exp(∆ 2A − I)) A−1∥2(b)
+
+≤ ηϵLKCδγ ∥Xi, 1∥2 + ϵLKCδγ ∥Xi, 2∥2
+
+(9) where (b) is realized through ∥ exp(∆ kA)∥2 ≤ η.Similarly, for k = 3 we have 
+
+∥ˆsi, 3 − si, 3∥2 ≤ η2ϵLKCδγ ∥Xi, 1∥2 + ηϵLKCδγ ∥Xi, 2∥2 + ϵLKCδγ ∥Xi, 3∥2
+
+Generalizing this for any k = K, we have 
+
+∥ˆsi,K − si,K ∥2 ≤ ϵLKCδγ 
+
+> K
+
+X 
+
+> τ=1
+
+ηK−τ ∥Xi,τ ∥2(b)
+
+≤ const 1.ϵ 
+
+(10) 
+
+13 Here const 1 = LKC δγ PK  
+
+> τ=1
+
+ηK−τ ∥Xi,τ ∥2. This expression explicitly captures the temporal residual propagation, where perturbations introduced at earlier time steps are attenuated (or propagated) through the factor ηK−τ .Importantly, the above result shows that the error remains linear in the perturbation magnitude ϵ, and the proportionality constant now explicitly captures both layerwise and temporal cascading effects. 
+
+B.3 Perturbation Analysis Interms of the Spectrum 
+
+To establish the inequality in terms of spectrum of hypergraph, we follow the similar lines as done earlier. In particular, recall perturbed hypergraph Laplacian is given by ˆL = L + ∆ L with L and ˆL
+
+being normalized. Therefore, their respective eigenvalues λi and ˆλi satisfy λi ∈ [0 , 2] , ˆλi ∈ [0 , 2] . Then the corresponding spectral decompositions be given by L = UΛU ⊤, ˆL = ˆU ˆΛ ˆU⊤, where U and ˆU are orthonormal matrices. Note that in general the eigenvectors are not preserved under perturbations. The error between the representations are now expressed as 
+
+∥ˆZl+1  
+
+> i,t
+
+− Zl+1  
+
+> i,t
+
+∥2=∥σ
+
+
+
+(I − ˆL)Z(l) 
+
+> i,t
+
+Θ(l+1) 
+
+−
+
+σ
+
+
+
+(I − L)Z(l) 
+
+> i,t
+
+Θ(l+1) 
+
+∥2(a)
+
+≤ C|| (L − ˆL)Z(l) 
+
+> i,t
+
+Θ(l+1) ∥2(b)
+
+≤ KC (∥L∥2 + ∥ˆL∥2∥)∥Θ(l+1) ∥2∥Z(l) 
+
+> i,t
+
+∥2(c)
+
+≤ LKC (λmax + ˆλmax )∥Xi,t ∥2,
+
+(11) where (a) follows from Lipschitz continuity, (b) follows from the triangle inequality and (c) follows since Laplacian is symmetric and their spectral norms equal their largest eigenvalues: ∥L∥2 = λmax , ∥ˆL∥2 =ˆλmax .
+
+Therefore, the errors in the representations are bounded by the maximum eigenvalues of true and perturbed graph hypergraph Laplacians that has maximum eigenvalue as 2. Further, if we impose structure on the perturbation-specifically modeling it as arising from hyperedge addition or deletion-the perturbed hypergraph Laplacian can be written in the form ˆL = L + ρ P 
+
+> j
+
+bj b⊤ 
+
+> j
+
+,
+
+where ρ ∈ { +1 , −1} corresponds to edge addition or deletion, respectively, and bj ∈ RN ×1 is an incidence vector with entries as +1 at one end point node and −1 at other end point node, and zero elsewhere. denotes the canonical basis vectors. Under such structured perturbations, existing results from graph signal processing [Ceci and Barbarossa, 2020] show that the spectrum of the perturbed Laplacian can be related to that of the original graph Laplacian. In particular, the largest eigenvalue ˆλmax can be characterized in terms of λmax .Therefore, while the proposed theorem is formulated in terms of the perturbation energy (∥∆L∥2), the imposed structure on the perturbation enables an equivalent interpretation in terms of the spectra of the normal and perturbed Laplacians. This provides additional insight into how structural changes in the hypergraph affect the learned representations. 
+
+B.4 Proof of Theorem 4.3 
+
+Proof. Recall the normalized hypergraph adjacency operator is defined as 
+
+Ei,t = Dv −1/2 
+
+> i,t
+
+Ii,t WDe −1 
+
+> i,t
+
+I⊤
+
+> i,t
+
+,
+
+where Ii,t denotes the incidence matrix, and Dv i,t and De i,t are the node and hyperedge degree matrices, respectively. Under a permutation of node labels induced by P, the adjacency matrix modifies as 
+
+Eperm  
+
+> i,t
+
+= PE i,t P⊤.
+
+Similarly, the node feature matrix is permuted as Xperm  
+
+> i,t
+
+= PX i,t .The hypergraph convolution layer computes node representations as 
+
+Z(l+1)  
+
+> i,t
+
+= σ
+
+
+
+Ei,t Z(l) 
+
+> i,t
+
+Θ(l+1) 
+
+.
+
+14 Figure 5. Our pipeline to construct hyperknowledge Graphs 
+
+Under the permuted node labels and inputs, representations modifies as 
+
+Z(l+1) 
+
+> i,t, perm (a)
+
+= σ
+
+
+
+Eperm  
+
+> i,t
+
+Z(l)
+
+> i,t, perm
+
+Θ(l+1) 
+
+> (b)
+
+= σ
+
+
+
+PE i,t P⊤PZ (l) 
+
+> i,t
+
+Θ(l+1) 
+
+> (c)
+
+= Pσ
+
+
+
+Ei,t Z(l) 
+
+> i,t
+
+Θ(l+1) 
+
+> (d)
+
+= PZ (l+1)  
+
+> i,t
+
+, (12) where the (12) (c) follows from the orthogonality of permutation matrices and the fact that σ(·) is applied row-wise. (12)(d) establishes that representations from HConv are permutation equivariant. Recall, the input to the dynamic state-space model is the embedding of the visit node, extracted as 
+
+zvi,t = e⊤ 
+
+> v
+
+Zi,t ,
+
+where ev ∈ R|V i,t | is the canonical basis vector corresponding to the visit node. Under permutation, the node representations are reordered as in (12), yielding 
+
+zvi,t, perm = e⊤ 
+
+> v
+
+PT PZ i,t .
+
+> (a)
+
+= e⊤ 
+
+> v
+
+Zi,t ,
+
+= zvi,t (13) where (a) follows from the property of permutation matrix. Since the proposed model operates solely on the visit-level representations although Hconv introduces the permutation equivariance at the node level, visit node selection induces invariance hence the output from Hot-SSM are invariant to permutations. □
+
+# C Implementation Details 
+
+C.1 Hyperknowledge Graph Construction 
+
+The construction of the hyperknowledge graph is performed in two sequential stages, as illustrated in Figure 5. 
+
+Global HyperKnowledge Graph Construction : To ensure semantic consistency across the EHR dataset, we create global hyperknowledge graph in two phases inspired by TnT-LLM architecture [Wan et al., 2024]. 
+
+• Taxonomy (Phase 1): We first induce a global medical taxonomy by processing a representative subset of the corpus. This stage corresponds to the taxonomy generation phase in TnT-LLM, where a global clinical taxonomy is constructed. Using a diverse sample, we prompt the LLM to identify high-level clinical concepts that serve as global hyperedges or buckets (e.g., Heart Failure). These hyperedges constitute the foundation of the global hyperknowledge graph. The prompt used for clinical bucket generation is shown in Figure 6, and example hyperedges are presented in Table 6. 
+
+• Guided Batch (Phase 2): In this phase, we scale taxonomy assignment across full dataset while maintaining semantic consistency. Medical entities are processed in batches, where LLM is conditioned on cumulative set of existing hyperedges discovered in Phase 1. The LLM is instructed to reuse existing hyperedges whenever a semantic match exists and is allowed to introduce new hyperedges only when an entitiy represents fundamentally distinct clinical concept. Furthermore, recognizing the nature of clinical concepts, our prompting supports multi-label assignment (polysemy), this allows a single entity to map to multiple relevant hyperedges (e.g., an entity "Topical products for joint and muscular pain" is mapped to both "Bone and Joint Disease" and "Pain Management"). The prompt for this phase is shown in Figure 7 and examples are shown in Table 7. 
+
+15 Table 6. Examples of global hyperedges constructed during the taxonomy discovery phase. 
+
+Example Global Hyperedges Gastrointestinal Disease Heart Failure 
+
+Example entities: Example entities: 
+
+• Agents for treatment of hemorhoids and anal fissures (topical) 
+
+• Antacids 
+
+• Antidiarrheal microorganisms 
+
+• Gastritis and duodenitis 
+
+• Nausea and vomiting 
+
+• Gastrointestinal hemorrhage 
+
+• Congestive heart failure; nonhypertensive 
+
+• Diagnostic ultrasound of heart (echocardiogram) 
+
+• Swan-ganz catheterization for monitoring 
+
+• Beta blocking agents 
+
+• Cardiac glycosides 
+
+• Potassium-sparing diuretics 
+
+Role: You are a Senior Medical Ontologist and Knowledge Graph Architect working with ICU data. You have a dataset of [Total Entities] ICU medical entities (Conditions, Procedures, Drugs). 
+
+Your Task: Analyze the diverse random sample below and define a comprehensive set of Medical Fact Buckets that: (1) Cover these sample items (2) Would likely cover other similar ICU medical concepts in the full dataset (3) Are broad enough to group many entities but distinct enough to be meaningful 
+
+Core Principle: 
+
+• A bucket = a medical fact 
+
+• Everything clinically related to that fact belongs in it, whether it is a condition, a procedure, or a drug 
+
+Instructions: 
+
+(1) The bucket name must be the medical fact itself (2) Create a reasonable number based on the clinical diversity you observe in the sample: 
+
+• Not so few that unrelated concepts get merged together 
+
+• Not so many that you recreate a flat list of individual entities (3) One entity can belong to multiple buckets if clinically relevant 
+
+• Example: “metoprolol” in [“Hypertension”, “Heart Failure”, “Atrial Fibrillation”] (4) Use exact entity names (5) A bucket should focus on clinical relationships (what treats what, what manages what) 
+
+Sample Entities ( [Batch Size] items): 
+
+• Conditions: [Comma-separated list of conditions...] 
+
+• Procedures: [Comma-separated list of procedures...] 
+
+• Drugs: [Comma-separated list of drugs...] 
+
+Output STRICT JSON format:  
+
+> 1
+
+{ 
+
+> 2
+
+" suggested_buckets ": [ 
+
+> 3
+
+" Heart Failure "  
+
+> 4
+
+] 
+
+> 5
+
+}
+
+CRITICAL: Return ONLY the JSON object. Bucket names must be concise medical facts/con-cepts.  
+
+> Figure 6. The prompt used for Taxonomy Discovery (Phase I), where the LLM induces clinically grounded medical fact buckets from a representative scout batch of ICU entities.
+
+C.1.1 Knowledge Infused Temporal Hypergraph Construction 
+
+Given a patient visit, we construct knowledge infused temporal hypergraphs by grounding the global hyperknowledge graph to the medical concepts observed in that visit. We first identify all medical concepts present in the visit and select only those hyperedges from the global hyperknowledge graph that contain 
+
+16 Role: You are a medical knowledge graph expert. 
+
+Task: Map the following [Batch Size] entities to one or more Medical Concept Buckets .
+
+Core Principle: 
+
+• A bucket = a medical fact/concept 
+
+• Conditions, procedures, and drugs all belong in the same bucket if they are clinically associated with that fact 
+
+Consistency Constraint: 
+
+[Insert consistency instruction / existing buckets here] 
+
+Rules: 
+
+(1) REUSE: If an entity fits into one of the EXISTING buckets above, you MUST use that exact name. (2) CREATE: Only create a NEW bucket name if the entity represents a distinctly new clinical concept not covered above. (3) Polysemy: An entity can belong to MULTIPLE buckets if it has distinct clinical uses. 
+
+• Example: “beta blocking agents” → [“Management of Hypertension”, “Management of Heart Failure”] (4) Bucket names must be concise medical concept nouns. (5) Exhaustiveness: You MUST output a key-value pair for EVERY SINGLE entity in the input list below. 
+
+Input Entities:  
+
+> 1
+
+[ 
+
+> 2
+
+" Aspirin " ,  
+
+> 3
+
+" Metoprolol " ,  
+
+> 4
+
+" Chest X - Ray " ,  
+
+> 5
+
+... ( list of entities in current batch )  
+
+> 6
+
+]
+
+Output STRICT JSON format:  
+
+> 1
+
+{ 
+
+> 2
+
+" entity_mappings ": { 
+
+> 3
+
+" exact_entity_name_from_input ": [" Bucket Name 1" , " Bucket Name 2"],  
+
+> 4
+
+" another_entity_name ": [" Bucket Name 3"]  
+
+> 5
+
+} 
+
+> 6
+
+}
+
+Important: 
+
+• The keys of the JSON object MUST be the exact strings from the input list - no typo fixes, no case changes. 
+
+• You MUST output a key-value pair for EVERY single entity in the input list. 
+
+• Count the input entities ( [Batch Size] ) and ensure the output JSON has the same number of keys. 
+
+• Values must be arrays/lists of bucket names, even if only one bucket. 
+
+• A bucket should focus on clinical relationships (what treats what, what manages what) 
+
+CRITICAL: Return ONLY the JSON object.  
+
+> Figure 7. The updated prompt used for Phase II (Guided Batch Mapping), enforcing reuse of existing buckets and clinically grounded concept mapping.
+
+at least one of these concepts. For each selected hyperedge, we retain only the concepts that actually appear in the visit. In addition, we introduce a visit node and connect it to all selected hyperedges to explicitly model visit-level context. The resulting visit-level hypergraph is defined as 
+
+Hi,t = ( Vi,t , Ei,t ), (14) 
+
+17 where Vi,t denotes the set of unique clinical entities appearing in the visit Ci,t , together with the visit node, and 
+
+Ei,t = {e(1)  
+
+> i,t
+
+, e (2)  
+
+> i,t
+
+, . . . , e (Ki,t ) 
+
+> i,t
+
+} (15) represents the set of hyperedges associated with the visit. A single visit may be connected to one or multiple hyperedges, depending on the number of clinically related concept groups. Table 8 represents statistics for temporal hyperknowledge graphs. 
+
+C.2 Attention based Hyperknowledge Graph Convolution 
+
+The attention based approach assigns learnable importance weights to clinical concepts and hyperedges, enabling explicit identification of the factors that contribute to the model ’s prediction. By learning these weights, the model can emphasize clinically relevant concepts and relations, thereby improving interpretability. Let vr ∈ V i,t denote a clinical concept node r associated with patient i at visit t. The attention based convolution is applied at each network layer and operates in two stages: (1) aggregation from nodes to hyperedges, followed by (2) aggregation from hyperedges to nodes. 
+
+Node to hyperedge aggregation. For a hyperedge ej ∈ E i,t , its representation at layer l + 1 is computed by attending over the nodes incident to it: 
+
+ˆe(l+1)  
+
+> j
+
+= σ
+
+ X 
+
+> vr∈ej
+
+αj,r W(1) z(l)
+
+> r
+
+ , (16) where z(l) 
+
+> r
+
+∈ Rd×1 denotes the representation of node vr at layer l, W(1) ∈ Rd×d is a learnable projection matrix, and σ(·) denotes a non linear activation function. The node to hyperedge attention coefficient αj,r reflects the importance of node vr within hyperedge ej
+
+and is defined as 
+
+αj,r = exp  m⊤˜zr
+
+P  
+
+> vq∈ej
+
+exp ( m⊤˜zq ) , (17) where m ∈ Rd is a learnable attention vector and 
+
+˜zr = LeakyReLU 
+
+
+
+W(1) z(l)
+
+> r
+
+
+
+. (18)  
+
+> Table 7. Examples of multi-label entity-to-hyperedge mappings from the guided batch assignment phase.
+
+Medical Entity Mapped Global Hyperedges 
+
+Topical products for joint and muscular pain • Bone and Joint Disease 
+
+• Pain Management Selective calcium channel blockers with direct cardiac effects 
+
+• Hypertension 
+
+• Cardiac Arrhythmias 
+
+• Coronary Artery Disease  
+
+> Table 8. Statistics for MIMIC-III and MIMIC-IV Hypergraph Representations
+
+Dataset Task Patients Visits Total Hyperedges per Visit Hyperedges Mean (SD) Min Max MIMIC-III 
+
+Mortality Prediction 6,186 9,717 263736 27.14 (6.53) 4 33 Readmission Prediction 6,186 9,717 263736 27.14 (6.53) 4 33 Length of Stay Prediction 35,707 44,399 1,383,419 31.16 (11.07) 3 69 Drug Recommendation 35,707 44,399 1,204,642 27.13 (9.17) 3 57 
+
+MIMIC-IV 
+
+Mortality Prediction 59,262 132,275 3,277,198 24.78 (8.21) 3 54 Readmission Prediction 59,262 132,275 2,698,999 20.40 (6.67) 2 55 Length of Stay Prediction 123,478 232,247 6,711,737 28.90 (12.03) 2 93 Drug Recommendation 46,184 154,953 3,281,934 21.18 (6.37) 2 44 
+
+18 Table 9. Statistics of EHR datasets. “#”: “the number of”, “/patient”: “per patient”.                   
+
+> Dataset #patients #visits #visits/patient #conditions/patient #procedures/patient #drugs/patient MIMIC-III 35,707 44,399 1.24 12.89 4.54 33.71 MIMIC-IV 123,488 232,263 1.88 21.74 4.70 43.89
+
+Hyperedge to node aggregation. The updated hyperedge representations are then propagated back to nodes through an attention mechanism. The representation of node vr at layer l + 1 is computed as 
+
+z(l+1)  
+
+> r
+
+= σ
+
+ X  
+
+> ej∈E i,t (vr)
+
+βr,j W(2) ˆe(l+1) 
+
+> j
+
+ ,
+
+where Ei,t (vr ) denotes the set of hyperedges incident to node vr , ej denotes jth hyperedge and W(2) ∈ Rd×d
+
+is a learnable transformation. ˆe(l+1)  
+
+> j
+
+is the updated representation of hyperedge ej .The hyperedge to node attention coefficient βr,j quantifies the influence of hyperedge ej on node vr
+
+and is defined as 
+
+βr,j =exp 
+
+
+
+n⊤ ˜hi,j 
+
+P   
+
+> eq∈E i,t (vr)
+
+exp 
+
+
+
+n⊤ ˜hq,j 
+
+ , (19) where n ∈ Rd is a learnable attention vector and 
+
+˜hi,j = LeakyReLU 
+
+
+
+W(2) ˆe(l+1)  
+
+> j
+
+∥ W(1) z(l)
+
+> i
+
+
+
+. (20) These learned attention weights βr,j are used in generating reasoning chains. 
+
+C.3 Learnable Parameters 
+
+Complementing the parameter efficiency analysis in Figure 1, here we present the learnable parameters in 
+
+HoT-SSM framework. These only includes input projection matrices for dimensionality alignment and the weight matrices inherent to HConv layers. Then in the SSM module the only learnable parameters are the continuous input matrix B and the output matrix C. Since the state transition matrix A is HiPPO initialized (not learnable). Finally decoder involves learnable projection layer. 
+
+C.4 Computation Overhead of Generating Hyperedges 
+
+Recall, the proposed method avoids naive per-patient hypergraph construction by employing a two-phase design optimized for scalability and reduced cost. Specifically, a global hyperknowledge graph is constructed once as an offline preprocessing step. In particular, global hyperknowledge graph construction for MIMIC-III, incurs a runtime as 178 sec and token cost as 100k (total tokens) × per token cost, while the per-patient hypergraph construction incurs runtime as 0.2 milliseconds. Importantly, this global construction is not repeated during training or inference, making it efficient in practice. Furthermore, when deploying in a new setting with expanded vocabulary, the system only processes the newly observed terms against the existing taxonomy, ensuring that additional token and computational costs remain controlled. 
+
+# D Dataset and Training Details 
+
+D.1 Dataset Description 
+
+We use publicly available MIMIC-III [Johnson et al., 2016] and MIMIC-IV [Johnson et al., 2021] datasets. Table 9 summarizes the key statistics of datasets used in our experiments. 
+
+D.2 Task Description 
+
+We evaluate our model on four tasks using the electronic health record (EHR) data. Each task is formulated based on a patient ’s visit sequence. 
+
+• Mortality Prediction. This binary classification task predicts patient survival status during the next visit. The model uses a patient ’s previous visit records to output a binary prediction indicating survival status. During dataset preparation the final visit of each patient is excluded from training since it does not have a future outcome. 
+
+• Readmission Prediction. This binary classification task determines whether a patient will be readmitted to the hospital within 15 days after discharge. The model predicts a binary label based on the time interval between consecutive hospital visits 
+
+19 • Length of Stay Prediction. This task estimates the duration of a patient ’s intensive care unit (ICU) stay for a given hospital visit. It is formulated as a multi-class classification problem with 10 discrete categories. The target label is represented as a one-hot vector indicating the corresponding class among 10 categories, which represent ICU stays of less than one day (class 0), within one week (classes 1-7), between one and two weeks (class 8), and longer than two weeks (class 9). 
+
+• Drug Recommendation. This task predicts the set of medications prescribed to a patient during a hospital visit. The model outputs a set of drugs selected from a predefined medication vocabulary. Since multiple drugs may be prescribed simultaneously, this task is treated as a multi-label classification problem. 
+
+Dataset Preprocessing : Both MIMIC-III and MIMIC-IV datasets are split into train, validation and test splits with 80%/10%/10% ratio. For dataset preprocessing we followed the similar setup as in [Jiang et al., 2024, 2025]. 
+
+Baselines : We compare the proposed model against representation learning approaches. In particular we compare against GRU [Chung et al., 2014], Transformer [Vaswani et al., 2017], RETAIN [Choi et al., 2016a], GRAM [Choi et al., 2017], Deepr [Nguyen et al., 2017], StageNet [Gao et al., 2020], AdaCare [Ma et al., 2020], GRASP [Zhang et al., 2021] and GraphCare [Jiang et al., 2024]. 
+
+Evaluation Metrics: Model performance is evaluated using a comprehensive set of metrics designed to capture distinct aspects of predictive reliability. AUROC (Area Under the Receiver Operating Characteristic Curve), AUPRC (Area Under the Precision-Recall Curve), F1 Score , Accuracy , Jaccard ,and Cohen’s Kappa .We use binary cross-entropy loss for mortality, readmission. Cross-entropy loss for drug recommendation and length of stay prediction. 
+
+D.3 Training Details 
+
+We preprocess the EHR datasets following the same methodology as in GraphCare [Jiang et al., 2024]. The dataset is partitioned into 80%/10%/10% for training/validation/testing data and we use Adam as the optimizer, patience as 85, runs as 10 on MIMIC-III and 5 on MIMIC IV. The hyperparameters used for training are summarized in Table 10, Table 11.     
+
+> Table 10. Hyperparameter configuration for HoT-SSM (v1) across tasks on MIMIC-III and MIMIC-IV. Mort: Mortality. Red: Readmission. Drug: Drug Recommendation
+
+Hyperparameter MIMIC-III MIMIC-IV Drug LOS Mort. Read. Drug LOS Mort. Read. 
+
+Step size ∆ 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 Learning rate ( lr ) 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 Hidden dimension 384 256 128 128 384 128 128 128 Convolution layers 3 3 2 2 2 2 2 2SSM state dimension 384 128 128 128 64 128 128 128 Batch size 128 128 128 128 64 128 128 128 Dropout 0.1 0.0 0.2 0.1 0.2 0.1 0.3 0.3    
+
+> Table 11. Hyperparameter configuration for HoT-SSM (v2) across tasks on MIMIC-III and MIMIC-IV.
+
+Hyperparameter MIMIC-III MIMIC-IV Drug LOS Mort. Read. Drug LOS Mort. Read. 
+
+Stepsize ( ∆) 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 Learning rate ( lr ) 0.001 0.001 0.001 0.001 0.001 0.001 0.001 0.001 Hidden dimension 384 256 128 128 256 128 256 128 Convolution layers 2 2 2 2 2 2 2 2SSM state dimension 384 128 128 128 128 128 128 128 Batch size 64 128 128 128 64 128 128 128 Attention heads 2 2 2 1 2 2 2 1Dropout 0.1 0.1 0.1 0.1 0.2 0.3 0.3 0.1 
+
+20 Table 12. Comparison of hyperedge construction strategies on MIMIC-III for mortality and readmission prediction task. 
+
+Category Method Mortality Readmission AUPRC AUROC AUPRC AUROC 
+
+Without LLM Unsupervised clustering 31 .33 ± 0.5 71 .71 ± 0.8 65 .00 ± 0.4 62 .51 ± 0.3
+
+Medical ontologies 31 .98 ± 1.6 71 .84 ± 0.7 64 .45 ± 0.5 62 .25 ± 0.6
+
+With LLM HoT-SSM 34 .40 ± 1.0 74 .27 ± 0.6 67 .45 ± 0.9 64 .59 ± 0.6 
+
+> Table 13. Comparison of hyperedge construction strategies on MIMIC-III for LOS and Drug Recommendation task.
+
+Category Method LOS Drug Kappa F1 Jaccard F1 
+
+Without LLM Unsupervised clustering 27 .54 ± 0.3 35 .20 ± 0.4 40 .71 ± 1.3 55 .17 ± 1.5
+
+Medical ontologies 27 .12 ± 0.1 35 .52 ± 0.2 47 .12 ± 0.7 61 .34 ± 0.2
+
+With LLM HoT-SSM 30 .20 ± 0.8 37 .44 ± 0.8 52 .67 ± 0.5 66 .98 ± 0.5
+
+D.4 System Configuration 
+
+All experiments were conducted on a server equipped with two 64-core Intel Xeon Platinum 8562Y+ CPUs with 512GB memory. The platform runs on Ubuntu 22.04.5 LTS with GCC version 10.5.0. We used CUDA 11.8, Pytorch version 2.1.2 and Pytorch-geometric 2.7.0 for all the experiments. All experiments were performed on a single NVIDIA A40 GPU with 44GB of VRAM. 
+
+# E Additional Experiments 
+
+E.1 Ablation based on source of hyperknowledge creation 
+
+To evaluate the robustness of our framework to the source of domain knowledge, we include additional experiments where hyperedges are constructed without any LLM involvement. Specifically, we consider (i) ontology-based grouping using standard medical ontologies. The individual medical entities are mapped to broad, standardized category labels (e.g., "Circulatory System Diseases") using the CCS and ATC ontologies to build global hyperedges. Then, for each patient visit, a specific hypergraph is constructed by activating only the predefined hyperedges corresponding to the entities present in that patient’s visits, formally linking the concepts and a central visit node to these hyperedges via an incidence matrix and (ii) co-occurrence-based grouping, where concept co-occurrence frequencies are first computed across all patient visits and normalized using Positive Pointwise Mutual Information (PPMI). The resulting concept relationships are then clustered into 50 groups for drug recommendation task and 100 groups for all other task, each forming a hyperedge, creating global hyperknowledge graph. For each patient visit, a specific hypergraph is subsequently instantiated by activating only the hyperedges corresponding to concepts present in that record. As shown in Table 12, Table 13, HoT-SSM with these non-LLM constructions achieves performance that is comparable to HoT-SSM where hyperedges are built using LLMs. Further, we emphasize that performance of this approach is still significantly better than, prior state-of-the-art methods. While LLM-based hyperedges provide additional semantic refinement, the core gains persist even with static or data-driven constructions, indicating that the improvements primarily stem from modeling higher-order relations via hypergraphs and long-range temporal dependencies via SSM .Overall, these results demonstrate that HoT-SSM is robust to the choice of hyperedge construction and remains effective even in resource-constrained settings without LLMs. 
+
+E.1.1 Calibration metrics on mortality prediction 
+
+To evaluate the robustness of performance gains, we report calibration metrics for mortality prediction task on MIMIC-III in Table 14. It can be observed that HoT-SSM achieves lower ECE and Brier score, along with higher specificity and sensitivity, indicating more reliable and well-calibrated predictions. We emphasize compared to prior state-of-the-art methods, HoT-SSM demonstrates improved robustness, further supporting our claims .
+
+E.2 Comparison with KARE 
+
+As shown in Table 15, HoT-SSM consistently outperforms KARE in both zero-shot and few-shot settings for mortality and readmission prediction on MIMIC-III. While the fine-tuned variant of KARE achieves the highest Macro-F1, it depends on task-specific LLM fine-tuning and careful hyperparameter optimization. 
+
+21 Table 14. Calibration metrics 
+
+Method ECE Brier Score Sensitivity Specificity 
+
+GraphCare – – 0.17 0.97 
+
+KARE – – 0.14 0.94 
+
+HoT-SSM 0.03 0.10 0.18 0.98 
+
+More importantly, fine tuned variant incurs significant computational and token costs. In contrast, HoT-SSM attains strong performance without any LLM fine-tuning, highlighting its effectiveness on EHR prediction tasks. 
+
+Table 15. Macro F1 (%) comparison of HoT-SSM and KARE on MIMIC-III for mortality and readmission prediction. 
+
+Model Mortality Readmission 
+
+KARE (Zero-shot) 54.6 56.3 
+
+KARE (Few-shot) 53.5 57.1 
+
+KARE (Fine-tuned) 64.6 73.7 
+
+HoT-SSM (ours) 59.1 60.4 
+
+E.3 Results on Readmission task 
+
+Table 16 shows the performance comparison between Hot-SSM and other baselines on readmission task. It can be observed that proposed model achieves competitive performance against state-of-the-art baselines. We also emphasize that HoT-SSM attains competitive performance on this particular task with a minimal parameter complexity as shown Fig. 1. 
+
+Table 16. Performance comparison on readmission prediction task 
+
+Task: Readmission Prediction Model MIMIC-III MIMIC-IV 
+
+AUPRC AUROC AUPRC AUROC GRU 68.2 (0 .4) 65.4 (0 .8) 66.1 (0 .7) 66.2 (0 .1) 
+
+Transformer 67.3 (0 .7) 63.9 (1 .1) 65.7 (0 .3) 65.3 (0 .4) 
+
+RETAIN 65.1 (1 .0) 64.1 (0 .7) 66.2 (0 .3) 65.3 (0 .2) 
+
+GRAM 67.2 (0 .8) 64.3 (0 .4) 66.1 (0 .2) 66.3 (0 .3) 
+
+Deepr 68.8 (0 .9) 66.5 (0 .4) 65.6 (0 .1) 65.4 (0 .2) 
+
+AdaCare 68.6 (0 .6) 65.7 (0 .3) 65.9 (0 .0) 66.1 (0 .0) 
+
+GRASP 69.2 (0 .4) 66.3 (0 .6) 66.3 (0 .3) 66.1 (0 .2) 
+
+StageNet 69.3 (0 .6) 66.7 (0 .4) 66.1 (0 .1) 66.2 (0 .1) 
+
+GraphCARE 73.4 (0 .4) 69.7 (0 .5) 69.6 (0 .3) 68.5 (0 .4) 
+
+HoT-SSM (v1) 67.4 (0 .9) 64.5 (0 .6) 66.3 (0 .2) 66.2 (0 .4) 
+
+HoT-SSM (v2) 66.1 (1 .9) 63.2 (1 .8) 66.1 (1 .9) 63.2 (1 .8) 
+
+E.4 Results on Phenotyping task 
+
+In Table 17, we report the results on the phenotyping task to enable a fair comparison with prior methods, namely HypEHR [Xu et al., 2023] and HypKG [Xie et al., 2025], which are commonly evaluated on this benchmark. The results show that the proposed model consistently outperforms existing approaches, highlighting the importance of jointly modeling higher-order relationships. More importantly, it underscores the effectiveness of proposed method for generating hyperknowledge graphs and capturing long-range dependencies for improved performance. 
+
+# F Reasoning Path Examples 
+
+In this section, we present additional examples of reasoning paths obtained using both attention-based and gradient-based approaches. The attention-based method extracts reasoning paths from the learned attention coefficients β and α where higher values of β indicate more influential hyperedges, higher α
+
+22 Table 17. Performance comparison on phenotyping task. 
+
+Method AUROC F1 Score 
+
+HypEHR 82 .19 ± 0.13 41 .51 ± 0.52 
+
+HypKG 84 .26 ± 0.17 45 .30 ± 0.49 
+
+HoT-SSM 85 .95 ± 0.01 47 .87 ± 0.01    
+
+> Based on the following reasoning paths generated for patient mortality prediction, provide a detailed textual explanation of what happened:
+> Reasoning Paths Data:
+> {formatted_output}
+> Please provide a clear, structured explanation of the reasoning paths, including: (1) What the paths represent (2) Key entities and relationships identified (3) How they relate to mortality prediction (4) Any notable patterns or insights (5) Give concise text explanation
+> Figure 8. The prompt template used to generate textual explanations from the reasoning paths. The {formatted_-output} placeholder is replaced by the specific paths extracted from the TKG.
+
+indicate influential entities and relevant to the model ’s prediction. As illustrated in Fig. 9, attention-based explanations capture richer clinical context by reflecting the model ’s message-passing decisions and preserving temporal and structural coherence as each hyperedge directly encodes cooccuring concepts (condition, procedures, drugs) thereby giving more context to LLM. In contrast, while gradient-based approaches are parameter-efficient, they primarily measure sensitivity rather than causal contribution, often resulting in less coherent reasoning paths. The prompt used for generating the explanation is given in figure 8. 
+
+# G Limitations 
+
+The proposed framework depends on large language models (LLMs) for constructing hyperknowledge graphs, which can be susceptible to hallucinations and inconsistencies. Although the model demonstrates strong performance even with static hypergraph construction methods, leveraging LLMs provides addi-tional accuracy gains. However, this benefit comes at the cost of increased token usage and associated computational overhead. 
+
+# H Future Directions 
+
+While this work focuses on healthcare applications, the proposed framework is general and can be extended to domains that requires long-context reasoning over structured data, such as question answering and retrieval-augmented generation, where exploiting higher-order relational structure with SSMs is a promising direction. 
+
+23 [I] 
+
+Mortality label=1, Predicted label=1 
+
+Visit 1: 
+
+,→ Gastrointestinal Disease : Biliary Tract Disease, Drugs for Peptic Ulcer and GORD 
+
+,→ Genitourinary Disease : Urinary Tract Infections, Other Diseases of Bladder and Urethra 
+
+Visit 2: 
+
+,→ Gastrointestinal Disease : Drugs for Peptic Ulcer and GORD, Drugs for Constipation 
+
+,→ Cancer : Cancer of Uterus, Other Non-Epithelial Cancer of Skin 
+
+Visit 3: 
+
+,→ Cancer : Cancer of Uterus 
+
+,→ Other and Ill-Defined Heart Disease : Peri-, Endo-, and Myocarditis Cardiomyopathy 
+
+Visit 4: 
+
+,→ Infectious Disease : Immunostimulants, Mycoses 
+
+,→ Cancer : Immunostimulants, Cancer of Uterus 
+
+LLM explanation : The patient ’s trajectory demonstrates a highly complex clinical course dominated by uterine cancer, compounded by recurrent gastrointestinal and genitourinary issues. The subsequent development of multiple infections and progressive vascular/hypertensive disor-ders, requiring continuous antibacterial and cardiovascular interventions, indicates a chronic and compounding decline in systemic health, leading to a high mortality risk. 
+
+[II] 
+
+Mortality label=1, Predicted label=1 
+
+Visit 1: 
+
+,→ Entities: Anxiolytics and Biliary Tract Disease 
+
+↓
+
+Visit 2: 
+
+,→ Entities: Cancer Of Uterus and Other Antibacterials, 
+
+↓
+
+Visit 3: 
+
+,→ Entities: Cancer Of Uterus and Peri-, Endo-, And Myocarditis Cardiomyopathy 
+
+↓
+
+Visit 4: 
+
+,→ Entities: Immunostimulants and Complication Of Device Implant Or Graft 
+
+LLM explanation : The patient ’s trajectory begins with biliary tract disease and the use of anxiolytics, rapidly escalating with a major diagnosis of uterine cancer. The clinical course is further complicated by infections requiring antibacterials and the development of severe cardio-vascular issues, specifically peri-, endo-, and myocarditis cardiomyopathy. By the final visit, the administration of immunostimulants and the emergence of complications from a device implant or graft highlight a highly complex, progressive systemic decline driven by both the primary malignancy and compounding therapeutic burdens.  
+
+> Figure 9. For a mortality prediction of patient in MIMIC-III, [I] important hyperedges(blue) and corresponding top entities identified using attention based reasoning method, [II] important entities and reasoning path identified by gradient based method
+
+24
