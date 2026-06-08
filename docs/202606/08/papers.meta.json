@@ -1,0 +1,69 @@
+{
+  "label": "2026-06-08",
+  "date": "2026-06-08",
+  "generated_at": "2026-06-08T21:35:18",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202606/08/biorxiv-10-64898-2026-04-19-719462-v2-an-agentic-platform-for-drug-repurposing-unified-across-molecular-phenotypic-and-clinical-scales",
+      "section": "deep",
+      "title_en": "An Agentic Platform for Drug Repurposing Unified across Molecular, Phenotypic, and Clinical Scales",
+      "authors": "Wang, C., El Moussaoui, M., Zhang, D., Prabhakaraalva, P., Merzliakov, S., Lu, R. J.-H., Zaman, N., Chakraborty, G., Huang, K.-l.",
+      "date": "2026-06-07",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.04.19.719462v2.full.pdf",
+      "score": "9.0",
+      "evidence": "冷启动药物-靶点亲和力预测，使用扩散模型",
+      "tldr": "现有药物重定位方法依赖单一证据且缺乏跨尺度验证。我们提出LinkD平台，统一分子、表型和临床尺度：扩散模型预测亲和力，选择性评分与分子对接恢复95.3%已知靶点，表型分析在960种癌细胞系中发现34个新药物-基因对。在1150万人群中，β受体阻滞剂普萘洛尔和卡维地洛可降低前列腺癌风险。该平台通过自然语言查询提供重定位机会。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Drug repurposing offers an effective path to new therapies, yet existing computational approaches rely on a single line of evidence and are rarely validated across biological scales. We present LinkD, an integrated framework that unifies diffusion-based affinity prediction, proteome-wide selectivity scoring, phenotypic validation, and population-scale clinical evidence. LinkD-Bind predicts binding across 14,981 drugs and 20,385 human targets, ranking first in 8 of 9 BindingDB, Davis, and KIBA evaluations, with the largest gains under cold-start conditions. LinkD-Select recovers 95.3% of known drug-target pairs by combining selectivity scoring and molecular docking. LinkD-Pheno integrates drug-sensitivity and CRISPR dependency data across 960 cancer cell lines, identifying 34 novel drug-gene pairs and recovering ~85% of known targets among the top 50 candidates. Across 11.5 million individuals from Mount Sinai and UK Biobank, LinkD-prioritized {beta}-blockers propranolol (HR 0.82) and carvedilol (HR 0.92) reduced 5-year prostate cancer incidence relative to metoprolol, corroborated by ADRB2 docking and LNCaP growth inhibition. LinkD-Agent, which can effectively orchestrate all evidence layers, is served on a publicly available web platform (https://linkd-agent.onrender.com/), enabling a wide range of users to derive new drug repurposing opportunities through natural language queries.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/08/biorxiv-10-64898-2026-06-01-729118-v1-learning-residue-level-context-for-modeling-protein-protein-interactions",
+      "section": "quick",
+      "title_en": "Learning residue-level context for modeling protein-protein interactions",
+      "authors": "Zhang, Z., Yang, Z., Liu, A., Yu, K.-H., Zhao, J., Yang, Y., Neale, B., Chen, S.",
+      "date": "2026-06-04",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.06.01.729118v1.full.pdf",
+      "score": "7.0",
+      "evidence": "使用基于transformer的蛋白质语言模型进行成对相互作用预测，方法上与LLM用于DDI类似",
+      "tldr": "现有蛋白质语言模型处理相互作用时聚合全蛋白信息，分辨率与可解释性有限。本文提出ReCLIP，一个基于Transformer的框架，通过结合蛋白质内残基邻域和交互伙伴的残基条件表示，学习残基级别的交互特异性表征。在突变预测（AUROC=0.973）、翻译后修饰（AUROC=0.822）和零样本肽-MHC结合（AUROC=0.972）任务中表现优异，分析显示残基邻域具有结构功能一致性。该方法为蛋白质相互作用建模提供了通用可解释框架，并揭示了残基上下文对交互特异性的影响。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Protein language models (PLMs) enable prediction of protein properties by learning residue-level features from sequence, yet most PLM-based approaches to protein-protein interactions aggregate information across entire proteins, limiting resolution and interpretability. Here we present ReCLIP, a transformer-based framework that learns interaction-specific representations at the level of individual residues by combining intra-protein residue neighborhoods with residue-conditioned representations of interaction partners. We show that residue-centered context provides a general framework for modeling protein interactions across diverse biological settings. ReCLIP accurately predicts mutation-induced perturbations (AUROC = 0.973), generalizes to post-translational modifications that do not alter sequence (AUROC = 0.822), and enables zero-shot prediction of peptide-MHC binding across unseen alleles (AUROC up to 0.972). Analysis of learned residue neighborhoods reveals structurally and functionally coherent patterns aligned with known determinants of binding. Applied to clinically annotated genetic variants, ReCLIP identifies disease-associated interaction perturbations that link pathogenic variants to specific molecular interaction contexts. Our results establish a generalizable and interpretable framework for modeling protein interactions and provide insights into how residue-level context shapes interaction specificity and its perturbation.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/08/biorxiv-10-64898-2026-06-04-730229-v1-bactereason-a-reasoning-model-for-antimicrobial-resistance-prediction",
+      "section": "quick",
+      "title_en": "BacteReason: A Reasoning Model for Antimicrobial Resistance Prediction",
+      "authors": "Oikawa, Y., Kawashima, S., Kinjo, A. R., Demizu, Y., Tamura, R., Tsuda, K.",
+      "date": "2026-06-07",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.06.04.730229v1.full.pdf",
+      "score": "7.0",
+      "evidence": "使用大语言模型和知识图谱进行抗菌药物耐药性预测，类似药物相互作用",
+      "tldr": "抗菌素耐药性（AMR）快速蔓延，现有机器学习预测缺乏机制解释而可信度低。本文提出BacteReason，一个基于大型语言模型的推理模型，不仅预测细菌对抗生素的敏感性，还提供分子机制理由。该模型通过微调开源LLM，利用临床数据及由教师模型生成的理由进行训练，教师模型借助TogoMCP访问知识图谱。在泛化测试中，BacteReason准确率相对未调基线提升43%，表明推理监督显著提升预测性能，增强了模型的可信度与实用性。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "The rapid global spread of antimicrobial resistance (AMR) has placed unprecedented pressure on clinical decision-making. Machine learning predictors of antibiotic susceptibility exist, but their lack of mechanistic grounding limits credibility. We present BacteReason, a reasoning large language model (LLM) that predicts bacterial susceptibility to a target antibiotic, together with a mechanistic rationale. BacteReason is obtained by fine-tuning an open-weight LLM on clinical susceptibility data augmented with rationales that explain the molecular mechanisms. These rationales are produced by a proprietary teacher LLM prompted to explain known susceptibility outcomes. The teacher is interfaced via TogoMCP with a collection of biomedical knowledge-graph databases, grounding each reasoning step in retrieved evidence. On an extrapolation benchmark, BacteReason achieves a relative improvement of 43% over the untuned baseline and 38% over the same base LLM fine-tuned without rationales, demonstrating that reasoning supervision improves prediction accuracy.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/08/biorxiv-10-64898-2026-06-02-729682-v1-ignet-20-and-vignet-an-ontology-driven-web-platform-for-biomedical-gene-interaction-discovery-and-visualization",
+      "section": "quick",
+      "title_en": "Ignet 2.0 and Vignet: An Ontology-Driven Web Platform for Biomedical Gene Interaction Discovery and Visualization",
+      "authors": "Asaduzzaman, S., Bansal, B., Combs, P., Zhang, J., Rehana, H., McGregor, B., He, Y., Hur, J.",
+      "date": "2026-06-06",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.06.02.729682v1.full.pdf",
+      "score": "6.0",
+      "evidence": "基于本体的基因相互作用和药物关联平台，使用BioBERT，可视化知识图谱",
+      "tldr": "生物医学文献激增，亟需系统性、本体驱动的基因交互与疫苗机制发现工具。Ignet 2.0和Vignet双平台通过PubMed文本挖掘、BioBERT评分、集成INO/VO/HDO本体和DrugBank，实现基因-基因交互证据检索、基因集富集、AI摘要生成及疫苗专有探索。关键结果包括VacPair评分、VacNet疫苗-基因-药物-疾病网络构建，并提供REST API与MCP接口。该平台免费开放，支持实时数据集成，但用户需注意验证滞后性。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Background: The expansion of biomedical literature demands systematic ontology-guided discovery of gene interactions, vaccine mechanisms, drug associations, and adverse events. Existing platforms such as STRING, DisGeNET, and PubTator fall short of providing a unified, freely accessible system that integrates ontology-based semantic interaction classification, vaccine-focused heterogeneous network construction, and Artificial Intelligence-assisted evidence retrieval. Results: Ignet 2.0 and Vignet are freely accessible dual-platform systems that combine PubMed literature mining, BioBERT-based interaction scoring for millions of gene-gene co-occurrence pairs and integrate three biomedical ontologies and one curated drug resource, Interaction Network Ontology (INO), Vaccine Ontology (VO), Human Disease Ontology (HDO), and DrugBank. Ignet 2.0 supports gene interaction discovery, gene set enrichment retrieval of BioBERT-scored GenePair evidence, and AI-assisted summarization through BioSummarAI. Vignet extends these features with VO-guided Vaccine Exploration, VacPair interaction scoring, and the creation of vaccine, gene, drug, and disease networks in VacNet. A public Representational State Transfer Application Programming Interface (REST API) and Model Context Protocol (MCP) endpoint enable real-time integration, fostering trust in biomedical knowledge discovery. Conclusion: Ignet 2.0 and Vignet are scalable, ontology-guided biomedical knowledge platforms that facilitate evidence-based gene interaction analysis, vaccine-focused semantic exploration, and AI-assisted knowledge discovery. Their real-time PubMed data integration ensures up-to-date insights; however, users should consider validation processes and potential lags in incorporating the latest experimental data, which may affect the reliability of immediate data. Availability: Ignet 2.0: https://ignet.org/ignet; Vignet: https://ignet.org/vignet/",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
