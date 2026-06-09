@@ -1,0 +1,128 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-09T21:57:26.464216+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "2606.07698v1",
+      "source": "arxiv",
+      "title": "Pharmacogenomic Knowledge Graph Augmentation for Graph Neural Network-Based Drug-Drug Interaction Prediction",
+      "abstract": "Graph neural networks (GNNs) applied to drug-drug interaction (DDI) prediction rely exclusively on molecular structure encoded as SMILES-derived graphs. Prior work in this series demonstrated that model performance is bounded by the structural information content of training labels -- an Information Ceiling -- that architectural refinements alone cannot overcome. The present study investigates whether pharmacogenomic prior knowledge from the PharmGKB database partially closes this ceiling by providing metabolic pathway context that is independent of, and complementary to, molecular structure. Cytochrome P450 (CYP) enzyme substrate, inhibitor, and inducer annotations for four clinically relevant isoforms (CYP2D6, CYP3A4, CYP2C19, CYP2C9) are extracted and incorporated as a 12-dimensional feature vector concatenated to the molecular embedding prior to interaction prediction. Experiments are conducted under both pair-level and drug-level data splits to quantify generalization to unseen drugs. Results indicate that knowledge graph (KG) augmentation substantially improves DDI type classification under pair-level split conditions (F1-macro: 0.532 vs. 0.241 baseline), while binary interaction detection and drug-level generalization remain bounded by the Information Ceiling (AUC inflation: 0.224 vs. 0.250 baseline). Mechanistic validation on strictly held-out compounds confirms that augmentation preferentially improves CYP2C9-mediated interaction prediction, with probabilities increasing from 0.033-0.117 (baseline) to 0.560-0.586 (KG-augmented). An extension to single-molecule toxicity prediction on the Tox21 benchmark confirms that the effect is contingent on pharmacogenomic annotation coverage. These findings motivate the multimodal framework proposed for the subsequent study in this series.",
+      "authors": [
+        "Juergen Dietrich"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-05T07:47:32+00:00",
+      "link": "https://arxiv.org/pdf/2606.07698v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "knowledge graph augmentation for DDI prediction",
+      "llm_evidence_cn": "知识图谱增强用于药物相互作用预测",
+      "llm_evidence": "知识图谱增强用于药物相互作用预测",
+      "canonical_evidence": "知识图谱增强用于药物相互作用预测",
+      "llm_tldr_en": "Augments GNN-based DDI prediction with pharmacogenomic knowledge graph from PharmGKB, improving performance beyond molecular structure alone.",
+      "llm_tldr_cn": "针对图神经网络在药物相互作用预测中仅依赖分子结构导致性能受限的问题，该论文提出利用PharmGKB药理学知识图谱补充代谢通路上下文。通过整合CYP酶底物、抑制剂和诱导剂注释，实验证明知识图谱增强能部分突破信息天花板，提升预测性能。该工作展示了知识图谱在DDI预测中的关键作用。",
+      "llm_tldr": "针对图神经网络在药物相互作用预测中仅依赖分子结构导致性能受限的问题，该论文提出利用PharmGKB药理学知识图谱补充代谢通路上下文。通过整合CYP酶底物、抑制剂和诱导剂注释，实验证明知识图谱增强能部分突破信息天花板，提升预测性能。该工作展示了知识图谱在DDI预测中的关键作用。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2606.08921v1",
+      "source": "arxiv",
+      "title": "Generalized Rank-based Evaluation for Knowledge Graph Completion: Perspectives, Framework, and Analyses",
+      "abstract": "Knowledge graph completion (KGC) aims to predict missing facts from an observed knowledge graph (KG), playing a crucial role in a wide range of real-world applications such as drug discovery, recommender systems, and retrieval-augmented generation (RAG). Although numerous KGC models have been proposed, the evaluation of KGC remains underexplored, despite its critical role in reliably assessing model performance and selecting appropriate models for real-world applications. In this paper, we introduce two important perspectives for KGC evaluation that are overlooked by existing evaluation metrics, (P1) predictive sharpness and (P2) popularity-bias robustness. To address both perspectives, we propose a generalized evaluation framework, PROBE, which consists of a rank transformer (RT) that estimates the score of each prediction based on a desired level of predictive sharpness and a rank aggregator (RA) that determines the final evaluation score by aggregating all prediction scores according to a desired level of popularity-bias robustness. We theoretically analyze PROBE by defining six key properties for reliable KGC evaluation and prove that PROBE satisfies all the properties, while existing metrics fail to satisfy some. In particular, due to the open-world nature of KGs, an evaluation metric should preserve the relative performance of KGC models even when only incomplete facts are observed. We show that PROBE better maintains such consistency, providing a more reliable estimate of intrinsic model performance than existing metrics. Extensive experiments with six KGC models on six real-world KGs reveal that existing metrics may over- or under-estimate model performance depending on different evaluation perspectives, whereas PROBE enables a more comprehensive, flexible, and consistent evaluation of KGC models.",
+      "authors": [
+        "Sooho Moon",
+        "Jian Kang",
+        "Yunyong Ko"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-08T02:00:38+00:00",
+      "link": "https://arxiv.org/pdf/2606.08921v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Generalized KGC evaluation framework with drug discovery application",
+      "llm_evidence_cn": "用于知识图谱补全的通用评估框架，在药物发现中有重要应用",
+      "llm_evidence": "用于知识图谱补全的通用评估框架，在药物发现中有重要应用",
+      "canonical_evidence": "用于知识图谱补全的通用评估框架，在药物发现中有重要应用",
+      "llm_tldr_en": "Proposes a generalized rank-based evaluation for KGC addressing predictive sharpness and popularity-bias robustness, with applications including drug discovery.",
+      "llm_tldr_cn": "现有知识图谱补全（KGC）评估指标忽略了预测锐度和流行度偏差鲁棒性。本文提出广义排序评估框架，引入这两个新视角，通过合成排名与现有指标对比，在多个KGC基准上验证，表明新框架能更好区分模型能力，为药物发现等应用中的模型选择提供更可靠依据。",
+      "llm_tldr": "现有知识图谱补全（KGC）评估指标忽略了预测锐度和流行度偏差鲁棒性。本文提出广义排序评估框架，引入这两个新视角，通过合成排名与现有指标对比，在多个KGC基准上验证，表明新框架能更好区分模型能力，为药物发现等应用中的模型选择提供更可靠依据。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "knowledge graph completion for drug discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.08816v1",
+      "source": "arxiv",
+      "title": "Knowledge Graphs and Reasoning LLMs for Finding Simple Yet Effective Transcriptomic Perturbation Predictors",
+      "abstract": "Predicting the effect of an unseen gene knockout perturbation on transcriptomic gene expression remains a highly challenging problem for virtual cell models. Recent progress has been made by leveraging biological knowledge graphs to provide a notion of similar perturbation, allowing for improved extrapolation beyond the set of training perturbations. In this work, we demonstrate that the simplest model to leverage these assumptions - a K-nearest neighbour from the knowledge graph - achieves highly competitive performance on this task, and that this can be improved further using LLMs optimised via reinforcement learning (RL) for predictive performance. Specifically, we find that the K-nearest neighbour approach beats almost all methods on out-of-distribution perturbation prediction, and when a reasoning LLM is trained via RL to make changes to the neighbourhood, it obtains equivalent performance to current state of the art methods on the cell lines from Replogle et al. (2022). We also demonstrate that the RL training improves the LLM's performance on the downstream task of differential expression prediction, despite not being trained on this directly. Overall, these findings demonstrate the efficacy of knowledge graphs as model priors, and show early signs that RL can refine LLMs into generalizable tools for predicting complex biological responses.",
+      "authors": [
+        "Jake Fawkes",
+        "Liam Hodgson",
+        "Jason Hartford"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-06-07T20:09:30+00:00",
+      "link": "https://arxiv.org/pdf/2606.08816v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "KG and LLM combined for cold-start-like perturbation prediction",
+      "llm_evidence_cn": "知识图谱与大语言模型结合用于类冷启动扰动预测",
+      "llm_evidence": "知识图谱与大语言模型结合用于类冷启动扰动预测",
+      "canonical_evidence": "知识图谱与大语言模型结合用于类冷启动扰动预测",
+      "llm_tldr_en": "Demonstrates that a simple KNN from a biological knowledge graph, combined with RL-optimized LLMs, outperforms complex models for predicting unseen gene knockout effects, highlighting the value of KG and LLM integration for cold-start prediction scenarios.",
+      "llm_tldr_cn": "预测未见基因敲除的转录组效应是虚拟细胞模型的难题。该文利用生物知识图谱的K近邻方法达到强基线性能，进一步用强化学习优化的大语言模型（LLM）提升预测。结果证明简单模型与知识图谱结合效果优异。该范式可迁移至药物相互作用中的冷启动预测：利用知识图谱相似性和LLM推理来预测新药组合效应。",
+      "llm_tldr": "预测未见基因敲除的转录组效应是虚拟细胞模型的难题。该文利用生物知识图谱的K近邻方法达到强基线性能，进一步用强化学习优化的大语言模型（LLM）提升预测。结果证明简单模型与知识图谱结合效果优异。该范式可迁移至药物相互作用中的冷启动预测：利用知识图谱相似性和LLM推理来预测新药组合效应。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "Leveraging knowledge graphs for cold start drug interaction with large language models",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

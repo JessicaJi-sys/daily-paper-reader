@@ -6,34 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-08
-- 运行时间：2026-06-08 21:35:11 UTC
+- 最新运行日期：2026-06-09
+- 运行时间：2026-06-09 22:00:40 UTC
 - 运行状态：成功
-- 本次总论文数：4
+- 本次总论文数：3
 - 精读区：1
-- 速读区：3
+- 速读区：2
 
 ### 今日简报（AI）
-今日精选4篇论文，精读药物重定位平台获9.0高分，速读涵盖蛋白质互作、抗菌耐药预测及基因互作发现。
-最值得关注《An Agentic Platform for Drug Repurposing》跨尺度统一建模，以及《BacteReason》抗菌耐药推理模型。
-建议优先精读药物重定位平台，把握跨尺度整合方法；关注耐药问题可速读BacteReason。
-- 详情：[/202606/08/README](/202606/08/README)
+今日精读药物知识图谱增强的GNN药物相互作用预测，速读知识图谱补全评估与LLM推理的转录扰动预测。最值得关注的是知识图谱增强技术显著提升药物相互作用预测精度（9.0分），以及知识图谱补全的广义排名评估新框架。建议后续深入研究图神经网络与知识图谱融合的生物医学预测方法。
+- 详情：[/202606/09/README](/202606/09/README)
 
 ### 精读区论文标签
-1. [An Agentic Platform for Drug Repurposing Unified across Molecular, Phenotypic, and Clinical Scales](/202606/08/biorxiv-10-64898-2026-04-19-719462-v2-an-agentic-platform-for-drug-repurposing-unified-across-molecular-phenotypic-and-clinical-scales)  
+1. [Pharmacogenomic Knowledge Graph Augmentation for Graph Neural Network-Based Drug-Drug Interaction Prediction](/202606/09/2606.07698v1-pharmacogenomic-knowledge-graph-augmentation-for-graph-neural-network-based-drug-drug-interaction-prediction)  
    标签：评分：9.0/10、query:cold-ddi
-   evidence：冷启动药物-靶点亲和力预测，使用扩散模型
+   evidence：知识图谱增强用于药物相互作用预测
 
 ### 速读区论文标签
-1. [Learning residue-level context for modeling protein-protein interactions](/202606/08/biorxiv-10-64898-2026-06-01-729118-v1-learning-residue-level-context-for-modeling-protein-protein-interactions)  
+1. [Generalized Rank-based Evaluation for Knowledge Graph Completion: Perspectives, Framework, and Analyses](/202606/09/2606.08921v1-generalized-rank-based-evaluation-for-knowledge-graph-completion-perspectives-framework-and-analyses)  
    标签：评分：7.0/10、query:cold-ddi
-   evidence：使用基于transformer的蛋白质语言模型进行成对相互作用预测，方法上与LLM用于DDI类似
-2. [BacteReason: A Reasoning Model for Antimicrobial Resistance Prediction](/202606/08/biorxiv-10-64898-2026-06-04-730229-v1-bactereason-a-reasoning-model-for-antimicrobial-resistance-prediction)  
-   标签：评分：7.0/10、query:cold-ddi
-   evidence：使用大语言模型和知识图谱进行抗菌药物耐药性预测，类似药物相互作用
-3. [Ignet 2.0 and Vignet: An Ontology-Driven Web Platform for Biomedical Gene Interaction Discovery and Visualization](/202606/08/biorxiv-10-64898-2026-06-02-729682-v1-ignet-20-and-vignet-an-ontology-driven-web-platform-for-biomedical-gene-interaction-discovery-and-visualization)  
+   evidence：用于知识图谱补全的通用评估框架，在药物发现中有重要应用
+2. [Knowledge Graphs and Reasoning LLMs for Finding Simple Yet Effective Transcriptomic Perturbation Predictors](/202606/09/2606.08816v1-knowledge-graphs-and-reasoning-llms-for-finding-simple-yet-effective-transcriptomic-perturbation-predictors)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：基于本体的基因相互作用和药物关联平台，使用BioBERT，可视化知识图谱
+   evidence：知识图谱与大语言模型结合用于类冷启动扰动预测
 
 
 <div class="dpr-home-promo-card">
