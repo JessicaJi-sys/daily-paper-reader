@@ -6,26 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-11
-- 运行时间：2026-06-11 22:04:38 UTC
+- 最新运行日期：2026-06-12
+- 运行时间：2026-06-12 21:47:22 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：0
+- 本次总论文数：2
+- 精读区：1
 - 速读区：1
 
 ### 今日简报（AI）
-今日聚焦一篇药物组合预测论文，利用完整剂量-反应曲线提升预测可操作性。  
-该研究提出的DeepSynBa模型能输出可指导临床的剂量-响应联用方案，值得关注。  
-普通读者可了解其实际应用潜力，但需注意模型依赖高质量数据，暂未公开验证。
-- 详情：[/202606/11/README](/202606/11/README)
+今日精读LLM与图原生AI协同综述，速读超图学习预测抗菌组合研究；值得关注图原生AI系统与LLM融合方向，以及超图学习在生物医学中的应用潜力；建议探索图神经网络与深度学习协同的新范式，并尝试超图方法解决多关系预测问题。
+- 详情：[/202606/12/README](/202606/12/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [LLMs+Graphs: Toward Graph-Native, Synergistic AI Systems](/202606/12/2606.11560v1-llmsgraphs-toward-graph-native-synergistic-ai-systems)  
+   标签：评分：8.0/10、query:cold-ddi
+   evidence：大型语言模型与知识图谱协同应用于生物医学领域
 
 ### 速读区论文标签
-1. [DeepSynBa: Actionable Drug Combination Prediction with Complete Dose-Response Profiles](/202606/11/biorxiv-10-1101-2025-01-28-634673-v2-deepsynba-actionable-drug-combination-prediction-with-complete-dose-response-profiles)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：药物组合预测，属于药物相互作用的一种形式
+1. [A Deep Hypergraph Learning Model for Predicting Antimicrobial Combination Effects Across Bacterial Targets](/202606/12/biorxiv-10-64898-2026-06-09-731104-v1-a-deep-hypergraph-learning-model-for-predicting-antimicrobial-combination-effects-across-bacterial-targets)  
+   标签：评分：7.0/10、query:cold-ddi
+   evidence：深度超图学习用于药物组合效应预测
 
 
 <div class="dpr-home-promo-card">
