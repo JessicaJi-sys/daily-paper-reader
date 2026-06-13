@@ -6,26 +6,30 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-12
-- 运行时间：2026-06-12 21:47:22 UTC
+- 最新运行日期：2026-06-13
+- 运行时间：2026-06-13 21:16:26 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：1
-- 速读区：1
+- 本次总论文数：3
+- 精读区：0
+- 速读区：3
 
 ### 今日简报（AI）
-今日精读LLM与图原生AI协同综述，速读超图学习预测抗菌组合研究；值得关注图原生AI系统与LLM融合方向，以及超图学习在生物医学中的应用潜力；建议探索图神经网络与深度学习协同的新范式，并尝试超图方法解决多关系预测问题。
-- 详情：[/202606/12/README](/202606/12/README)
+今日精选了三篇药物重定位、组合预测与多肽工程的前沿论文。最值得关注的是《CAREPath》提出的语义上下文感知推理路径用于药物重定位，以及《DeepSynBa》利用完整剂量-反应曲线预测药物组合。建议读者优先阅读这两篇，把握生成式AI在精准用药与多肽设计中的最新进展。
+- 详情：[/202606/13/README](/202606/13/README)
 
 ### 精读区论文标签
-1. [LLMs+Graphs: Toward Graph-Native, Synergistic AI Systems](/202606/12/2606.11560v1-llmsgraphs-toward-graph-native-synergistic-ai-systems)  
-   标签：评分：8.0/10、query:cold-ddi
-   evidence：大型语言模型与知识图谱协同应用于生物医学领域
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [A Deep Hypergraph Learning Model for Predicting Antimicrobial Combination Effects Across Bacterial Targets](/202606/12/biorxiv-10-64898-2026-06-09-731104-v1-a-deep-hypergraph-learning-model-for-predicting-antimicrobial-combination-effects-across-bacterial-targets)  
+1. [CAREPath: Semantic Context-Aware Reasoning Paths with Mechanism-Augmented Embeddings for Drug Repurposing](/202606/13/biorxiv-10-64898-2026-06-09-731247-v1-carepath-semantic-context-aware-reasoning-paths-with-mechanism-augmented-embeddings-for-drug-repurposing)  
    标签：评分：7.0/10、query:cold-ddi
-   evidence：深度超图学习用于药物组合效应预测
+   evidence：使用KG-LLM推理路径进行药物重定位，方法可迁移到冷启动药物相互作用预测
+2. [DeepSynBa: Actionable Drug Combination Prediction with Complete Dose-Response Profiles](/202606/13/biorxiv-10-1101-2025-01-28-634673-v2-deepsynba-actionable-drug-combination-prediction-with-complete-dose-response-profiles)  
+   标签：评分：6.0/10、query:cold-ddi
+   evidence：预测药物组合剂量反应曲线
+3. [Scaling SMILES-Based Chemical Language Models for Therapeutic Peptide Engineering](/202606/13/biorxiv-10-64898-2026-01-06-697994-v4-scaling-smiles-based-chemical-language-models-for-therapeutic-peptide-engineering)  
+   标签：评分：6.0/10、query:cold-ddi
+   evidence：化学语言模型用于治疗性肽工程，可直接应用于涉及肽的药物相互作用预测
 
 
 <div class="dpr-home-promo-card">

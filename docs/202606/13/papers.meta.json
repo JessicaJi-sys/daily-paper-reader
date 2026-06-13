@@ -1,0 +1,54 @@
+{
+  "label": "2026-06-13",
+  "date": "2026-06-13",
+  "generated_at": "2026-06-13T21:16:33",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202606/13/biorxiv-10-64898-2026-06-09-731247-v1-carepath-semantic-context-aware-reasoning-paths-with-mechanism-augmented-embeddings-for-drug-repurposing",
+      "section": "quick",
+      "title_en": "CAREPath: Semantic Context-Aware Reasoning Paths with Mechanism-Augmented Embeddings for Drug Repurposing",
+      "authors": "song, h., bang, d., koo, b., Kim, S., lee, s.",
+      "date": "2026-06-12",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.06.09.731247v1.full.pdf",
+      "score": "7.0",
+      "evidence": "使用KG-LLM推理路径进行药物重定位，方法可迁移到冷启动药物相互作用预测",
+      "tldr": "生物医学知识图谱在药物重定位中面临深层路径组合爆炸和hub基因噪声问题。CAREPath结合深度优先和广度优先推理，通过语义路径嵌入和机制上下文增强嵌入平衡特异性与可扩展性。在五个知识图谱上最佳AUPRC提升3.8%，尤其稀疏证据下鲁棒性增强。该框架为可解释的机制感知药物重定位提供了新方案。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Biomedical knowledge graphs (BKGs) that include drugs, genes, and diseases support drug repurposing by connecting drugs to diseases through gene-mediated multi-hop paths, thereby enabling mechanism-of-action reasoning. However, deeper traversal does not necessarily improve mechanistic reasoning: long paths grow combinatorially and frequently pass through hub genes, producing irrelevant gene regulatory signals, whereas overly constrained or sparse paths may miss broader biological context. We propose CAREPath, a KG-LLM framework inspired by depth-first search (DFS)-like and breadth-first search (BFS)-like reasoning to balance mechanistic specificity, scalability, and context recovery. The DFS-like module constrains traversal to short disease-gene-drug paths, converts each path into a structured prompt, and encodes it with a biomedical language model to generate semantic path embeddings. Complementarily, the BFS-like module constructs entity-level mechanism-context embeddings from one-hop gene neighborhoods and enriches them through similarity-guided augmentation using pharmacologically related drugs and gene-signature-similar diseases. Across five biomedical KGs, CAREPath achieves the best overall AUPRC among 18 baselines, improving performance by up to 3.8%. Additional analyses show that semantic short-path encoding contributes most to performance, while mechanism-context augmentation improves robustness under sparse evidence and strengthens Gene Ontology functional agreement. Case studies and recently FDAapproved indications further demonstrate its practical relevance, positioning CAREPath as an interpretable framework for scalable and mechanism-aware drug repurposing. Source code is available at https://github.com/hamppy-song/CAREPath.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/13/biorxiv-10-1101-2025-01-28-634673-v2-deepsynba-actionable-drug-combination-prediction-with-complete-dose-response-profiles",
+      "section": "quick",
+      "title_en": "DeepSynBa: Actionable Drug Combination Prediction with Complete Dose-Response Profiles",
+      "authors": "Kuru, H. I., Zhang, H., Rattray, M., Ek, C. H., Cicek, A. E., Tastan, O., Milo, M.",
+      "date": "2026-06-11",
+      "pdf": "https://www.biorxiv.org/content/10.1101/2025.01.28.634673v2.full.pdf",
+      "score": "6.0",
+      "evidence": "预测药物组合剂量反应曲线",
+      "tldr": "现有癌症组合疗法预测模型通常只能输出单一聚合协同分数，无法区分效能与 potency，导致高不确定性和有限可操作性。DeepSynBa通过预测完整剂量反应矩阵并引入中间参数层，能够分离效能与 potency。在NCI-ALMANAC和O'Neil数据集上，DeepSynBa在预测新组合、细胞系和药物时表现优于现有方法。该模型不仅可靠预测协同分数，还能指导剂量选择以优化疗效并降低毒性，为药物组合研究提供了强大工具。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Many cancer monotherapies demonstrate limited clinical efficacy, making combination therapies a relevant treatment strategy. The extensive number of potential drug combinations and context-specific response profiles complicates the prediction of drug combination responses. Existing computational models are typically trained to predict a single aggregated synergy score, which summarises drug responses across different dosage combinations, such as Bliss or Loewe scores. This oversimplification of the drug-response surface leads to high prediction uncertainty and limited actionability, as these models fail to distinguish between potency and efficacy. We introduce DeepSynBa, an actionable model that predicts the complete dose-response matrix of drug pairs instead of relying on an aggregated synergy score. This is achieved by predicting parameters describing the response surface as an intermediate layer in the model. Evaluated on the NCI-ALMANAC and the O'Neil datasets, DeepSynBa outperforms the state-of-the-art methods in the dose-response matrix prediction task across most evaluation scenarios, including testing on novel drug combinations, cell lines, and drugs, across nine different tissue types. We also show that DeepSynBa yields reliable synergy score predictions. More importantly, DeepSynBa can predict drug combination responses across different dosages for untested combinations. The intermediate dose-response parameter layer enables the separation of efficacy from potency, informing the selection of dosage ranges that optimise efficacy while limiting off-target toxicity in experimental screens. The predictive capability and the downstream actionability make DeepSynBa a powerful tool for advancing drug combination research beyond the limitations of the current approaches.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/13/biorxiv-10-64898-2026-01-06-697994-v4-scaling-smiles-based-chemical-language-models-for-therapeutic-peptide-engineering",
+      "section": "quick",
+      "title_en": "Scaling SMILES-Based Chemical Language Models for Therapeutic Peptide Engineering",
+      "authors": "Feller, A. L., Secor, M., Swanson, S., Wilke, C. O., Deibler, K.",
+      "date": "2026-06-05",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.01.06.697994v4.full.pdf",
+      "score": "6.0",
+      "evidence": "化学语言模型用于治疗性肽工程，可直接应用于涉及肽的药物相互作用预测",
+      "tldr": "治疗性肽兼具蛋白高特异性和小分子化学多样性，但现有蛋白模型限于天然氨基酸，化学模型难以处理聚合物序列。为此开发了基于SMILES的化学语言模型PeptideCLM-2，在超1亿分子上训练，原生表示复杂肽化学。基准测试表明，预测膜扩散、生物学功能和半衰期等开发终点性能优于以往方法。该工作填补了治疗性肽的计算盲区，扩展了机器学习模型工具包。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Therapeutic peptides occupy a unique middle ground in drug discovery, offering the high specificity of protein interactions with the chemical diversity of small molecules, yet they currently fall in a computational blind spot. Existing foundation models cannot handle them effectively: protein models are restricted to natural amino acids, while chemical models struggle to process large, polymer-like sequences. This disconnect has forced the field to rely on static chemical descriptors that fail to capture subtle chemical details or on complex multi-embedding pipelines that are custom tailored to specific datasets. To bridge this gap, we present PeptideCLM-2, a suite of chemical language models trained on over 100 million molecules to natively represent complex peptide chemistry. This modeling approach expands the available toolkit of machine learning models for therapeutic peptides. Benchmarking results show strong performance versus prior methods for predicting development endpoints including membrane diffusion, biological function, and half life.\n\nTOC Graphic\n\nO_FIG O_LINKSMALLFIG WIDTH=200 HEIGHT=111 SRC=\"FIGDIR/small/697994v4_ufig1.gif\" ALT=\"Figure 1\">\nView larger version (51K):\norg.highwire.dtl.DTLVardef@d8c6cborg.highwire.dtl.DTLVardef@1e34211org.highwire.dtl.DTLVardef@1066e22org.highwire.dtl.DTLVardef@128a7d7_HPS_FORMAT_FIGEXP  M_FIG C_FIG",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
