@@ -1,0 +1,39 @@
+{
+  "label": "2026-06-14",
+  "date": "2026-06-14",
+  "generated_at": "2026-06-14T21:29:02",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202606/14/2606.12578v1-mard-mirror-augmented-reasoning-distillation-for-mechanism-level-drug-drug-interaction-prediction",
+      "section": "deep",
+      "title_en": "MARD: Mirror-Augmented Reasoning Distillation for Mechanism-Level Drug-Drug Interaction Prediction",
+      "authors": "Mohammadreza Riyazat, Vian Lelo, Rameen Jafri, Yumna Khan, Abeer Badawi",
+      "date": "2026-06-10",
+      "pdf": "https://arxiv.org/pdf/2606.12578v1",
+      "score": "10.0",
+      "evidence": "利用大型语言模型推理进行冷启动药物相互作用预测",
+      "tldr": "机制级药物-药物相互作用预测需识别酶或药效学轴及其方向与证据，而非仅二元分类。提出MARD管道，结合单token方向KL散度、PRM加权DPO和防泄露检索通道，并引入自动可验证过程奖励标签。在DrugBank 2026年4月版本上，MARD-7B在32系统比较中唯一保持药物对新颖性下准确率，比最佳基线高13.9pp，比GPT-4o高6.7pp，成本约1%。增益源于结构化推理而非记忆，并发布全套资源。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Mechanism-level drug-drug interaction (DDI) prediction requires identifying which enzyme or pharmacodynamic axis is implicated, in which direction, and with which evidence -- not merely whether two drugs interact. We introduce a reproducible mechanism-level DDI labelling and evaluation protocol with a structured 7-family/147-subtype taxonomy, leakage-safe cold-split protocols, and auditable reasoning metrics for evaluating pharmacological prediction beyond flat interaction classification. We propose a pipeline that produces a 7B reasoning MARD (Mirror-Augmented Reasoning Distillation), combining three training innovations: a single-token KL divergence on direction tag that ties the model's prediction, per-loss PRM-weighted DPO with programmatic hard negatives, and a leakage-safe mechanism-aware retrieval channel. Process-reward step labels are automatically verifiable against DrugBank-structured fields, requiring no human or LLM judges. On the April-2026 DrugBank release, our MARD-7B is the only system in a 32-system comparison whose accuracy survives drug-pair novelty, beating the best baseline by +13.9 pp and GPT-4o by +6.7 pp at ~1% of frontier API cost. Further analysis reveals an anti-memorisation signature where accuracy improves on rarely seen drugs, suggesting that gain comes from structured pharmacological reasoning rather than drug-frequency memorisation. We release corpus, DDI-PRM, retrieval index, and training code.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/14/2606.11898v2-graspllm-towards-zero-shot-generalization-on-text-attributed-graphs-with-llms",
+      "section": "quick",
+      "title_en": "GraspLLM: Towards Zero-Shot Generalization on Text-Attributed Graphs with LLMs",
+      "authors": "Hengyi Feng, Zeang Sheng, Meiyi Qiang, Li Yang, Wentao Zhang",
+      "date": "2026-06-10",
+      "pdf": "https://arxiv.org/pdf/2606.11898v2",
+      "score": "6.0",
+      "evidence": "结合图结构理解与大语言模型，实现文本属性图零样本泛化，可迁移至药物相互作用预测",
+      "tldr": "文本属性图（TAG）在各类应用中广泛存在，但现有方法跨数据集和任务泛化能力弱，难以捕捉可迁移的结构模式。为此提出GraspLLM框架，通过冻结的通用嵌入模型统一节点文本语义空间，并利用基序感知对比学习提取与数据集无关的结构信息，再以最优上下文子图对齐到LLM。在多个TAG基准上的零样本实验持续超越现有方法，证明了其强泛化性。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Research on Text-Attributed Graphs (TAGs) has gained significant attention recently due to its broad applications across various real-world data scenarios, such as citation networks, e-commerce platforms, social media, and web pages. Inspired by the remarkable semantic understanding ability of Large Language Models (LLMs), there have been numerous attempts to integrate LLMs into TAGs. However, existing methods still struggle to generalize across diverse graphs and tasks, and their ability to capture transferable graph structural patterns remains limited. To address this, we introduce the GraspLLM, a framework that combines Graph structural comprehension with semantic understanding prowess of LLMs to enhance the cross-dataset and cross-task generalizability. Specifically, we represent node texts from different graphs in a unified semantic space with a frozen general embedding model, on top of which we perform motif-aware contrastive learning across multiple motif-induced adjacency matrices to extract dataset-agnostic structural information. Then, with our proposed optimal contextual subgraph, we extract the most contextually relevant subgraph for each target node and align these subgraphs to the token space of LLM via an alignment projector. Extensive experiments on TAG benchmark datasets spanning diverse domains reveal that GraspLLM consistently outperforms previous LLM-based methods for TAGs, especially in zero-shot scenarios, highlighting its strong generalizability across different datasets and tasks. Our code is available at https://github.com/Heinz217/GraspLLM.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

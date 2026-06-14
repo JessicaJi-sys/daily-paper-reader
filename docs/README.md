@@ -6,30 +6,28 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-13
-- 运行时间：2026-06-13 21:16:26 UTC
+- 最新运行日期：2026-06-14
+- 运行时间：2026-06-14 21:28:54 UTC
 - 运行状态：成功
-- 本次总论文数：3
-- 精读区：0
-- 速读区：3
+- 本次总论文数：2
+- 精读区：1
+- 速读区：1
 
 ### 今日简报（AI）
-今日精选了三篇药物重定位、组合预测与多肽工程的前沿论文。最值得关注的是《CAREPath》提出的语义上下文感知推理路径用于药物重定位，以及《DeepSynBa》利用完整剂量-反应曲线预测药物组合。建议读者优先阅读这两篇，把握生成式AI在精准用药与多肽设计中的最新进展。
-- 详情：[/202606/13/README](/202606/13/README)
+今日精读1篇高分论文《MARD》和速读1篇《GraspLLM》，聚焦药物相互作用预测与图数据泛化。  
+最值得关注：镜像增强推理蒸馏显著提升机理级药物相互作用预测精度，是当前药物安全领域的高价值突破。  
+下一步可深入理解MARD的蒸馏架构，并关注LLM在文本属性图上的零样本能力扩展。
+- 详情：[/202606/14/README](/202606/14/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [MARD: Mirror-Augmented Reasoning Distillation for Mechanism-Level Drug-Drug Interaction Prediction](/202606/14/2606.12578v1-mard-mirror-augmented-reasoning-distillation-for-mechanism-level-drug-drug-interaction-prediction)  
+   标签：评分：10.0/10、query:cold-ddi
+   evidence：利用大型语言模型推理进行冷启动药物相互作用预测
 
 ### 速读区论文标签
-1. [CAREPath: Semantic Context-Aware Reasoning Paths with Mechanism-Augmented Embeddings for Drug Repurposing](/202606/13/biorxiv-10-64898-2026-06-09-731247-v1-carepath-semantic-context-aware-reasoning-paths-with-mechanism-augmented-embeddings-for-drug-repurposing)  
-   标签：评分：7.0/10、query:cold-ddi
-   evidence：使用KG-LLM推理路径进行药物重定位，方法可迁移到冷启动药物相互作用预测
-2. [DeepSynBa: Actionable Drug Combination Prediction with Complete Dose-Response Profiles](/202606/13/biorxiv-10-1101-2025-01-28-634673-v2-deepsynba-actionable-drug-combination-prediction-with-complete-dose-response-profiles)  
+1. [GraspLLM: Towards Zero-Shot Generalization on Text-Attributed Graphs with LLMs](/202606/14/2606.11898v2-graspllm-towards-zero-shot-generalization-on-text-attributed-graphs-with-llms)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：预测药物组合剂量反应曲线
-3. [Scaling SMILES-Based Chemical Language Models for Therapeutic Peptide Engineering](/202606/13/biorxiv-10-64898-2026-01-06-697994-v4-scaling-smiles-based-chemical-language-models-for-therapeutic-peptide-engineering)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：化学语言模型用于治疗性肽工程，可直接应用于涉及肽的药物相互作用预测
+   evidence：结合图结构理解与大语言模型，实现文本属性图零样本泛化，可迁移至药物相互作用预测
 
 
 <div class="dpr-home-promo-card">
