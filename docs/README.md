@@ -6,28 +6,24 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-14
-- 运行时间：2026-06-14 21:28:54 UTC
+- 最新运行日期：2026-06-15
+- 运行时间：2026-06-15 22:00:41 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：1
+- 本次总论文数：1
+- 精读区：0
 - 速读区：1
 
 ### 今日简报（AI）
-今日精读1篇高分论文《MARD》和速读1篇《GraspLLM》，聚焦药物相互作用预测与图数据泛化。  
-最值得关注：镜像增强推理蒸馏显著提升机理级药物相互作用预测精度，是当前药物安全领域的高价值突破。  
-下一步可深入理解MARD的蒸馏架构，并关注LLM在文本属性图上的零样本能力扩展。
-- 详情：[/202606/14/README](/202606/14/README)
+今天速读了一篇将知识图谱与大语言模型结合用于肺部诊断推理的论文。该研究通过知识图谱引导LLM，显著提升了诊断准确性和推理可解释性，值得关注。建议后续留意知识增强型LLM在临床诊断中的实际验证与部署。
+- 详情：[/202606/15/README](/202606/15/README)
 
 ### 精读区论文标签
-1. [MARD: Mirror-Augmented Reasoning Distillation for Mechanism-Level Drug-Drug Interaction Prediction](/202606/14/2606.12578v1-mard-mirror-augmented-reasoning-distillation-for-mechanism-level-drug-drug-interaction-prediction)  
-   标签：评分：10.0/10、query:cold-ddi
-   evidence：利用大型语言模型推理进行冷启动药物相互作用预测
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [GraspLLM: Towards Zero-Shot Generalization on Text-Attributed Graphs with LLMs](/202606/14/2606.11898v2-graspllm-towards-zero-shot-generalization-on-text-attributed-graphs-with-llms)  
+1. [Lung-R1: A Knowledge Graph-Guided LLM for Pulmonary Diagnostic Reasoning](/202606/15/2606.11675v1-lung-r1-a-knowledge-graph-guided-llm-for-pulmonary-diagnostic-reasoning)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：结合图结构理解与大语言模型，实现文本属性图零样本泛化，可迁移至药物相互作用预测
+   evidence：知识图谱引导的大语言模型用于医学推理
 
 
 <div class="dpr-home-promo-card">

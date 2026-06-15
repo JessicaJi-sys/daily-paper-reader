@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-06-15 <!--dpr-date:20260615-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/15/2606.11675v1-lung-r1-a-knowledge-graph-guided-llm-for-pulmonary-diagnostic-reasoning" data-sidebar-item="{&quot;title&quot;: &quot;Lung-R1: A Knowledge Graph-Guided LLM for Pulmonary Diagnostic Reasoning&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2606.11675v1-lung-r1-a-knowledge-graph-guided-llm-for-pulmonary-diagnostic-reasoning&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;知识图谱引导的大语言模型用于医学推理&quot;}">Lung-R1: A Knowledge Graph-Guided LLM for Pulmonary Diagnostic Reasoning</a>
   * 2026-06-14 <!--dpr-date:20260614-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/14/2606.12578v1-mard-mirror-augmented-reasoning-distillation-for-mechanism-level-drug-drug-interaction-prediction" data-sidebar-item="{&quot;title&quot;: &quot;MARD: Mirror-Augmented Reasoning Distillation for Mechanism-Level Drug-Drug Interaction Prediction&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2606.12578v1-mard-mirror-augmented-reasoning-distillation-for-mechanism-level-drug-drug-interaction-prediction&quot;, &quot;score&quot;: &quot;10.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;利用大型语言模型推理进行冷启动药物相互作用预测&quot;}">MARD: Mirror-Augmented Reasoning Distillation for Mechanism-Level Drug-Drug Interaction Prediction</a>
