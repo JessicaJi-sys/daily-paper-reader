@@ -1,0 +1,69 @@
+{
+  "label": "2026-06-16",
+  "date": "2026-06-16",
+  "generated_at": "2026-06-16T23:09:42",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202606/16/2606.11560v1-llmsgraphs-toward-graph-native-synergistic-ai-systems",
+      "section": "quick",
+      "title_en": "LLMs+Graphs: Toward Graph-Native, Synergistic AI Systems",
+      "authors": "Arijit Khan, Longxu Sun, Xin Huang",
+      "date": "2026-06-10",
+      "pdf": "https://arxiv.org/pdf/2606.11560v1",
+      "score": "7.0",
+      "evidence": "讨论LLM与知识图谱的集成用于推理，与组合主题相关",
+      "tldr": "大语言模型在结构化多跳推理上存在局限，而图数据支撑众多领域。本文提出三种协同：LLM与图计算融合增强检索推理；LLM与知识图谱双向集成，支持构建与约束；图算法强化AI agent规划决策。同时，LLM为图管理和图学习带来自然语言接口与混合模型。本教程综合这些方向，为数据科学研究者提供构建图原生AI系统的统一视角。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Large Language Models (LLMs) have advanced rapidly, but their limitations in structured and multi-hop reasoning underscore the need for graph-native, synergistic artificial intelligence (AI) systems. Graph-structured data underpins critical applications across social, biological, financial, transportation, web, and knowledge domains, making it essential to understand how LLMs can leverage graph computation for grounded, context-rich inference. Three complementary synergies are emerging: LLMs augmented with graph computation for retrieval and reasoning; bidirectional integration between LLMs and knowledge graphs (KGs), where LLMs support KG construction and curation while KGs enforce semantic constraints and factual consistency; and AI agents strengthened by graph algorithms for planning, decision making, and multi-step reasoning. In parallel, LLMs introduce new capabilities for graph data management and graph machine learning (ML) through natural language interfaces and hybrid LLM-graph neural network (GNN) pipelines. This tutorial synthesizes the algorithms, systems, and design principles driving these converging directions, offering data science and data mining researchers a unified perspective on integrating LLMs, graph data management, graph mining, graph ML, and agentic computation into next-generation graph-native AI systems.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/16/2606.16509v1-model-graph-inductive-learning-for-knowledge-graph-completion",
+      "section": "quick",
+      "title_en": "Model Graph Inductive Learning for Knowledge Graph Completion",
+      "authors": "Mohommad Esmaei Khani, Mahdieh Hasheminejad, Ali Taherkhani, Hossein Hajiabolhassan",
+      "date": "2026-06-15",
+      "pdf": "https://arxiv.org/pdf/2606.16509v1",
+      "score": "7.0",
+      "evidence": "用于知识图谱完成的归纳图学习，适用于药物发现中的生物医学知识图谱",
+      "tldr": "知识图谱链接预测依赖实体与关系的嵌入质量，但现有方法仅聚合局部邻域，忽略全局结构。为此，提出MGIL框架，先基于关系结构或实体类型相似性聚类构建模型图，再应用GNN学习全局嵌入作为原始图的初始化特征。在归纳链接预测基准上，MGIL达到最先进或高度竞争的性能，验证了其捕捉全局模式的有效性。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Link prediction in knowledge graphs fundamentally depends on the quality of learned embeddings for entities and relations. However, most existing methods derive these embeddings by aggregating only the local neighborhood of each entity, neglecting the global structure of the knowledge graph. This limited view prevents models from capturing higher-level structural patterns that are essential for accurate and generalizable link prediction.   To address these limitations, we introduce Model Graph Inductive Learning (\\textbf{MGIL}), a framework that constructs a model graph by clustering entities based on the similarity of their incoming and outgoing relational structures or their entity types. A GNN is then applied to this model graph to produce embeddings that capture the global view of the knowledge graph. These embeddings subsequently serve as high-quality initial features %embeddings for the original knowledge graph, replacing random initialization and leading to more stable and expressive representations.   Extensive experiments on standard and recently proposed inductive benchmarks demonstrate that MGIL achieves state-of-the-art or highly competitive performance in inductive link prediction, highlighting its effectiveness across diverse graph settings.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/16/2606.11898v1-graspllm-towards-zero-shot-generalization-on-text-attributed-graphs-with-llms",
+      "section": "quick",
+      "title_en": "GraspLLM: Towards Zero-Shot Generalization on Text-Attributed Graphs with LLMs",
+      "authors": "Hengyi Feng, Zeang Sheng, Meiyi Qiang, Meiyi Qiang, Wentao Zhang",
+      "date": "2026-06-10",
+      "pdf": "https://arxiv.org/pdf/2606.11898v1",
+      "score": "6.0",
+      "evidence": "大型语言模型与图结构结合实现零样本泛化",
+      "tldr": "文本属性图（TAG）研究面临跨数据集和任务泛化难题。本文提出GraspLLM框架，融合图结构理解与LLM语义能力，通过统一语义空间、模体感知对比学习提取数据集无关结构信息，并利用最优上下文子图对齐图与语言空间。在多个基准测试中，尤其零样本场景，GraspLLM显著超越现有方法，展现出强泛化性。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Research on Text-Attributed Graphs (TAGs) has gained significant attention recently due to its broad applications across various real-world data scenarios, such as citation networks, e-commerce platforms, social media, and web pages. Inspired by the remarkable semantic understanding ability of Large Language Models (LLMs), there have been numerous attempts to integrate LLMs into TAGs. However, existing methods still struggle to generalize across diverse graphs and tasks, and their ability to capture transferable graph structural patterns remains limited. To address this, we introduce the GraspLLM, a framework that combines Graph structural comprehension with semantic understanding prowess of LLMs to enhance the cross-dataset and cross-task generalizability. Specifically, we represent node texts from different graphs in a unified semantic space with a frozen general embedding model, on top of which we perform motif-aware contrastive learning across multiple motif-induced adjacency matrices to extract dataset-agnostic structural information. Then, with our proposed optimal contextual subgraph, we extract the most contextually relevant subgraph for each target node and align these subgraphs to the token space of LLM via an alignment projector. Extensive experiments on TAG benchmark datasets spanning diverse domains reveal that GraspLLM consistently outperforms previous LLM-based methods for TAGs, especially in zero-shot scenarios, highlighting its strong generalizability across different datasets and tasks. Our code is available at https://github.com/Heinz217/GraspLLM.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/16/2606.15155v1-semantic-reasoning-in-medicine-the-role-of-knowledge-graphs-across-five-key-domains",
+      "section": "quick",
+      "title_en": "Semantic Reasoning in Medicine: The Role of Knowledge Graphs Across Five Key Domains",
+      "authors": "Haniye Sherafatmandjoo, Mohammad Akbari, Zahed Rahmati",
+      "date": "2026-06-13",
+      "pdf": "https://arxiv.org/pdf/2606.15155v1",
+      "score": "6.0",
+      "evidence": "知识图谱用于生物医学预测",
+      "tldr": "医疗数据复杂异构，知识图谱（KG）提供语义整合与推理基础。本文综述KG在临床决策支持、疾病预测、健康推荐、精准医疗和医疗问答五类应用中的进展，涵盖从电子病历、文献等数据源构建KG的方法。关键结果包括提升解释性与个性化推理，但面临知识覆盖有限、数据对齐困难、推理脆弱及隐私偏差等挑战。系统分析趋势与问题，为医疗KG驱动的AI系统发展指明方向。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Knowledge graphs (KGs) have emerged as a promising solution for integrating and reasoning over complex biomedical and clinical data in healthcare. By representing structured relationships among entities such as diseases, drugs, symptoms, and patient records, KGs provide a semantic backbone for decision-making, prediction, recommendation, and personalized care. Recent advances have demonstrated their utility across diverse medical applications--including clinical decision support systems, disease and treatment outcome prediction, health recommender systems, precision medicine, and medical question answering--where KGs often enhance interpretability, semantic coherence, and patient-specific reasoning. In parallel, a growing body of work focuses on medical KG generation itself, proposing frameworks that construct graphs from EHRs, clinical narratives, biomedical literature, and web resources using ontologies, semantic web technologies, deep-learning-based information extraction, and hybrid neuro-symbolic pipelines. Despite this progress, significant challenges remain, including limited and fragmented knowledge coverage, difficulties in aligning heterogeneous data sources, the fragility of current reasoning and representation-learning methods on dense multi-relational graphs, and unresolved issues related to privacy, bias, and accountability. This survey reviews and categorizes current research on KGs in medicine along both application-oriented and methodology-oriented dimensions, discusses their benefits and technical foundations, and outlines key limitations and open research directions. By analyzing trends, architectures, and evaluation practices, this work aims to guide future developments in KG-driven medical AI systems and support their safe and effective integration into healthcare environments.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
