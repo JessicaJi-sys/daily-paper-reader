@@ -1,0 +1,39 @@
+{
+  "label": "2026-06-17",
+  "date": "2026-06-17",
+  "generated_at": "2026-06-17T21:32:55",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202606/17/2606.15412v1-few-shot-biomedical-relation-extraction-with-large-language-models-a-viable-alternative-to-supervised-learning",
+      "section": "quick",
+      "title_en": "Few-Shot Biomedical Relation Extraction with Large Language Models: A Viable Alternative to Supervised Learning?",
+      "authors": "Jakob Mraz, Tomaž Curk, Blaž Zupan",
+      "date": "2026-06-13",
+      "pdf": "https://arxiv.org/pdf/2606.15412v1",
+      "score": "6.0",
+      "evidence": "利用LLM进行小样本生物医学关系抽取，直接适用于冷启动药物相互作用预测",
+      "tldr": "生物医学关系抽取(BioRE)依赖昂贵标注数据。本文探索基于大语言模型的少样本提示学习，对比两种任务范式：逐对分类与联合生成。在BioREDirect数据集上，最佳模型micro-F1达0.44，超越此前少样本结果(0.34)，但低于监督基线(0.56)。然而，macro-F1上提示方法优于监督基线(0.45 vs 0.38)，尤其在稀有关系类型上表现突出。研究表明LLM在低资源设定下具有潜力，并强调了关系模式定义的重要性。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Biomedical relation extraction (BioRE) is a key step in transforming biomedical literature into structured knowledge. However, most existing approaches rely on supervised models trained on costly annotated datasets, limiting their scalability and adaptability across relation types and domains. We investigate few-shot BioRE using prompt-based learning with large language models (LLMs) and compare two task formulations: pairwise classification, which predicts relations for individual entity pairs, and joint generation, which extracts multiple relations in a single model call. Experiments on the BioREDirect dataset reveal a clear precision-recall trade-off. Pairwise classification achieves higher recall, whereas joint generation is more precise and computationally efficient. The best-performing model achieves a micro-F1 score of 0.44, substantially outperforming previous few-shot results (0.34) while remaining below the supervised baseline (0.56). Much of this gap is attributable to a single ambiguously defined relation type. When evaluated using macro-F1, which better captures performance across relation types in an imbalanced setting, prompt-based approaches outperform the supervised baseline (0.45 vs. 0.38), particularly on rare relation types. These findings highlight the potential of LLMs for BioRE in low-resource settings and underscore the importance of well-defined relation schemas.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/17/2606.15778v1-dyna--dynamic-episodic-memory-networks-for-augmenting-large-language-models-with-temporal-knowledge-graphs-in-continuous-learning",
+      "section": "quick",
+      "title_en": "DYNA : Dynamic Episodic Memory Networks for Augmenting Large Language Models with Temporal Knowledge Graphs in Continuous Learning",
+      "authors": "Ali Sarabadani, Mahtab Tajvidiyan",
+      "date": "2026-06-14",
+      "pdf": "https://arxiv.org/pdf/2606.15778v1",
+      "score": "6.0",
+      "evidence": "使用LLM和时间知识图谱进行持续学习，类似于冷启动DDI结合KG",
+      "tldr": "大型语言模型难以在不遗忘或昂贵重训练的情况下融入新知识。DYNA框架将时序知识图谱作为外部可更新记忆，其中事件为节点、时间关系为带时间戳有向边，查询时通过随机游走和中心性度量检索相关节点来增强冻结LLM。在三个时序回忆任务上，DYNA相比微调减少约7%灾难性遗忘，比标准RAG提升约5%时序排序，且图聚类系数越高检索越好。贡献包括时序KG作为情景记忆、免重训练LLM增强以及图属性作为检索性能预测器。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Large Language Models (LLMs) struggle to incorporate new knowledge without forgetting or costly retraining. We propose DYNA, a lightweight framework that augments a frozen LLM with a temporal knowledge graph where events are nodes and temporal relations are directed, timestamped edges. The graph serves as an external, updatable memory. At query time, DYNA retrieves relevant nodes via random walks and centrality measures, then augments the LLM's response. Evaluated on three temporal recall tasks, DYNA reduces catastrophic forgetting by ~7% compared to fine-tuning and improves temporal ordering by ~5% over standard RAG. Higher graph clustering coefficients correlate with better retrieval, showing that graph structure matters. Contributions: (1) episodic memory as temporal KG, (2) retraining-free LLM augmentation, (3) graph properties as predictors of retrieval performance.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

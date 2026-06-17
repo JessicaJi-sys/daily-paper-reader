@@ -1,0 +1,94 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-17T21:31:38.028006+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.15412v1",
+      "source": "arxiv",
+      "title": "Few-Shot Biomedical Relation Extraction with Large Language Models: A Viable Alternative to Supervised Learning?",
+      "abstract": "Biomedical relation extraction (BioRE) is a key step in transforming biomedical literature into structured knowledge. However, most existing approaches rely on supervised models trained on costly annotated datasets, limiting their scalability and adaptability across relation types and domains. We investigate few-shot BioRE using prompt-based learning with large language models (LLMs) and compare two task formulations: pairwise classification, which predicts relations for individual entity pairs, and joint generation, which extracts multiple relations in a single model call. Experiments on the BioREDirect dataset reveal a clear precision-recall trade-off. Pairwise classification achieves higher recall, whereas joint generation is more precise and computationally efficient. The best-performing model achieves a micro-F1 score of 0.44, substantially outperforming previous few-shot results (0.34) while remaining below the supervised baseline (0.56). Much of this gap is attributable to a single ambiguously defined relation type. When evaluated using macro-F1, which better captures performance across relation types in an imbalanced setting, prompt-based approaches outperform the supervised baseline (0.45 vs. 0.38), particularly on rare relation types. These findings highlight the potential of LLMs for BioRE in low-resource settings and underscore the importance of well-defined relation schemas.",
+      "authors": [
+        "Jakob Mraz",
+        "Tomaž Curk",
+        "Blaž Zupan"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-06-13T17:37:50+00:00",
+      "link": "https://arxiv.org/pdf/2606.15412v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "few-shot biomedical relation extraction with LLMs, directly applicable to cold-start DDI prediction",
+      "llm_evidence_cn": "利用LLM进行小样本生物医学关系抽取，直接适用于冷启动药物相互作用预测",
+      "llm_evidence": "利用LLM进行小样本生物医学关系抽取，直接适用于冷启动药物相互作用预测",
+      "canonical_evidence": "利用LLM进行小样本生物医学关系抽取，直接适用于冷启动药物相互作用预测",
+      "llm_tldr_en": "Investigates few-shot BioRE with LLMs, showing pairwise classification achieves higher recall; method directly applicable to cold-start DDI where labeled data is scarce.",
+      "llm_tldr_cn": "生物医学关系抽取依赖昂贵的人工标注，限制了可扩展性。本文探索使用LLM进行小样本关系抽取，比较了成对分类和联合生成两种任务形式。在BioREDirect数据集上，成对分类取得了更高的召回率，而联合生成则更高效。该工作为冷启动场景下的药物相互作用预测提供了可行的技术路线。",
+      "llm_tldr": "生物医学关系抽取依赖昂贵的人工标注，限制了可扩展性。本文探索使用LLM进行小样本关系抽取，比较了成对分类和联合生成两种任务形式。在BioREDirect数据集上，成对分类取得了更高的召回率，而联合生成则更高效。该工作为冷启动场景下的药物相互作用预测提供了可行的技术路线。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "cold-start drug-drug interaction prediction",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.15778v1",
+      "source": "arxiv",
+      "title": "DYNA : Dynamic Episodic Memory Networks for Augmenting Large Language Models with Temporal Knowledge Graphs in Continuous Learning",
+      "abstract": "Large Language Models (LLMs) struggle to incorporate new knowledge without forgetting or costly retraining. We propose DYNA, a lightweight framework that augments a frozen LLM with a temporal knowledge graph where events are nodes and temporal relations are directed, timestamped edges. The graph serves as an external, updatable memory. At query time, DYNA retrieves relevant nodes via random walks and centrality measures, then augments the LLM's response. Evaluated on three temporal recall tasks, DYNA reduces catastrophic forgetting by ~7% compared to fine-tuning and improves temporal ordering by ~5% over standard RAG. Higher graph clustering coefficients correlate with better retrieval, showing that graph structure matters. Contributions: (1) episodic memory as temporal KG, (2) retraining-free LLM augmentation, (3) graph properties as predictors of retrieval performance.",
+      "authors": [
+        "Ali Sarabadani",
+        "Mahtab Tajvidiyan"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG",
+        "cs.SI"
+      ],
+      "published": "2026-06-14T12:27:26+00:00",
+      "link": "https://arxiv.org/pdf/2606.15778v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "uses LLM with temporal KG for continuous learning, analogous to cold-start DDI with KG",
+      "llm_evidence_cn": "使用LLM和时间知识图谱进行持续学习，类似于冷启动DDI结合KG",
+      "llm_evidence": "使用LLM和时间知识图谱进行持续学习，类似于冷启动DDI结合KG",
+      "canonical_evidence": "使用LLM和时间知识图谱进行持续学习，类似于冷启动DDI结合KG",
+      "llm_tldr_en": "DYNA augments frozen LLM with temporal knowledge graph as external memory, achieving ~7% less forgetting and ~5% better temporal ordering, broadly transferable to cold-start DDI prediction.",
+      "llm_tldr_cn": "该论文针对大语言模型难以在不遗忘旧知识的情况下整合新知识的问题，提出DYNA框架，利用时间知识图谱作为外部可更新记忆，结合随机游走和中心性检索来增强冻结LLM的回答。在三个时序回忆任务上，DYNA相比微调减少约7%的灾难性遗忘，相比标准RAG提升约5%的时序排序。其方法本质上是一种利用知识图谱增强LLM的通用范式，可直接迁移至冷启动药物相互作用预测场景。",
+      "llm_tldr": "该论文针对大语言模型难以在不遗忘旧知识的情况下整合新知识的问题，提出DYNA框架，利用时间知识图谱作为外部可更新记忆，结合随机游走和中心性检索来增强冻结LLM的回答。在三个时序回忆任务上，DYNA相比微调减少约7%的灾难性遗忘，相比标准RAG提升约5%的时序排序。其方法本质上是一种利用知识图谱增强LLM的通用范式，可直接迁移至冷启动药物相互作用预测场景。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 请帮我查找ColdDDI：利用大型语言模型和生物医学知识图谱进行冷启动药物相互作用预测该方向有关的论文, especially work that connects or combines: Large Language Model + Drug-Drug Interaction Prediction; cold-start drug-drug interaction prediction; large language model for drug interaction; drug interaction prediction with knowledge graph; knowledge graph completion for drug discovery; cold start prediction in drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; Leveraging knowledge graphs for cold start drug interaction with large language models; Biomedical knowledge graph enhanced drug interaction prediction for new drugs.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

@@ -6,37 +6,27 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-16
-- 运行时间：2026-06-16 23:09:27 UTC
+- 最新运行日期：2026-06-17
+- 运行时间：2026-06-17 21:32:49 UTC
 - 运行状态：成功
-- 本次总论文数：4
+- 本次总论文数：2
 - 精读区：0
-- 速读区：4
+- 速读区：2
 
 ### 今日简报（AI）
-今日聚焦4篇图与LLM交叉研究，重点探索图原生AI系统及知识图谱补全的归纳学习。
-
-最值得关注《LLMs+Graphs》与《Model Graph Inductive Learning》两篇7分工作，前者构建图与LLM协同框架，后者提出模型图归纳学习完成知识图谱。
-
-普通读者可优先从《LLMs+Graphs》入手理解基础范式，再结合《GraspLLM》探索零样本泛化应用。
-- 详情：[/202606/16/README](/202606/16/README)
+今日浏览2篇速读论文，均聚焦大模型前沿应用。最值得关注的方向：少样本生物医学关系抽取中大模型的潜力，以及动态记忆网络结合时间知识图谱的持续学习框架。建议普通读者留意少样本方法在专业领域的可行性，以及模型持续学习新知识的技术进展。
+- 详情：[/202606/17/README](/202606/17/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [LLMs+Graphs: Toward Graph-Native, Synergistic AI Systems](/202606/16/2606.11560v1-llmsgraphs-toward-graph-native-synergistic-ai-systems)  
-   标签：评分：7.0/10、query:cold-ddi
-   evidence：讨论LLM与知识图谱的集成用于推理，与组合主题相关
-2. [Model Graph Inductive Learning for Knowledge Graph Completion](/202606/16/2606.16509v1-model-graph-inductive-learning-for-knowledge-graph-completion)  
-   标签：评分：7.0/10、query:cold-ddi
-   evidence：用于知识图谱完成的归纳图学习，适用于药物发现中的生物医学知识图谱
-3. [GraspLLM: Towards Zero-Shot Generalization on Text-Attributed Graphs with LLMs](/202606/16/2606.11898v1-graspllm-towards-zero-shot-generalization-on-text-attributed-graphs-with-llms)  
+1. [Few-Shot Biomedical Relation Extraction with Large Language Models: A Viable Alternative to Supervised Learning?](/202606/17/2606.15412v1-few-shot-biomedical-relation-extraction-with-large-language-models-a-viable-alternative-to-supervised-learning)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：大型语言模型与图结构结合实现零样本泛化
-4. [Semantic Reasoning in Medicine: The Role of Knowledge Graphs Across Five Key Domains](/202606/16/2606.15155v1-semantic-reasoning-in-medicine-the-role-of-knowledge-graphs-across-five-key-domains)  
+   evidence：利用LLM进行小样本生物医学关系抽取，直接适用于冷启动药物相互作用预测
+2. [DYNA : Dynamic Episodic Memory Networks for Augmenting Large Language Models with Temporal Knowledge Graphs in Continuous Learning](/202606/17/2606.15778v1-dyna--dynamic-episodic-memory-networks-for-augmenting-large-language-models-with-temporal-knowledge-graphs-in-continuous-learning)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：知识图谱用于生物医学预测
+   evidence：使用LLM和时间知识图谱进行持续学习，类似于冷启动DDI结合KG
 
 
 <div class="dpr-home-promo-card">
