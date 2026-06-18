@@ -6,27 +6,28 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-17
-- 运行时间：2026-06-17 21:32:49 UTC
+- 最新运行日期：2026-06-18
+- 运行时间：2026-06-18 22:22:25 UTC
 - 运行状态：成功
 - 本次总论文数：2
-- 精读区：0
-- 速读区：2
+- 精读区：1
+- 速读区：1
 
 ### 今日简报（AI）
-今日浏览2篇速读论文，均聚焦大模型前沿应用。最值得关注的方向：少样本生物医学关系抽取中大模型的潜力，以及动态记忆网络结合时间知识图谱的持续学习框架。建议普通读者留意少样本方法在专业领域的可行性，以及模型持续学习新知识的技术进展。
-- 详情：[/202606/17/README](/202606/17/README)
+1) 今日精读一篇基于知识图谱协同多智能体的历史医学治疗推理系统，速读一篇LLM与图融合综述。  
+2) 最值得关注：高分的《DeepRoot》揭示了KG+多智能体在复杂医疗推理中的潜力，是当前AI+医疗的热门方向。  
+3) 建议：对AI应用感兴趣的读者可优先了解KG协同多智能体如何提升历史文本中的治疗逻辑可信度。
+- 详情：[/202606/18/README](/202606/18/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [DeepRoot: A KG-Coordinated Multi-Agent System for Therapeutic Reasoning over Historical Medical Texts](/202606/18/2606.15931v1-deeproot-a-kg-coordinated-multi-agent-system-for-therapeutic-reasoning-over-historical-medical-texts)  
+   标签：评分：8.0/10、query:cold-ddi
+   evidence：使用LLM多智能体系统结合知识图谱进行治疗推理和药物发现
 
 ### 速读区论文标签
-1. [Few-Shot Biomedical Relation Extraction with Large Language Models: A Viable Alternative to Supervised Learning?](/202606/17/2606.15412v1-few-shot-biomedical-relation-extraction-with-large-language-models-a-viable-alternative-to-supervised-learning)  
+1. [LLMs+Graphs: Toward Graph-Native, Synergistic AI Systems](/202606/18/2606.11560v1-llmsgraphs-toward-graph-native-synergistic-ai-systems)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：利用LLM进行小样本生物医学关系抽取，直接适用于冷启动药物相互作用预测
-2. [DYNA : Dynamic Episodic Memory Networks for Augmenting Large Language Models with Temporal Knowledge Graphs in Continuous Learning](/202606/17/2606.15778v1-dyna--dynamic-episodic-memory-networks-for-augmenting-large-language-models-with-temporal-knowledge-graphs-in-continuous-learning)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：使用LLM和时间知识图谱进行持续学习，类似于冷启动DDI结合KG
+   evidence：关于LLM与图协同的系统性综述，可应用于药物相互作用预测
 
 
 <div class="dpr-home-promo-card">
