@@ -1,0 +1,69 @@
+{
+  "label": "2026-06-19",
+  "date": "2026-06-19",
+  "generated_at": "2026-06-19T21:56:15",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202606/19/2606.13669v1-agents-k1-towards-agent-native-knowledge-orchestration",
+      "section": "quick",
+      "title_en": "Agents-K1: Towards Agent-native Knowledge Orchestration",
+      "authors": "Zongsheng Cao, Bihao Zhan, Jinxin Shi, Jiong Wang, Fangchen Yu, Zhijie Zhong, Zijie Guo, Tianshuo Peng, Zhuo Liu, Yi Xie, Xiang Zhuang, Yue Fan, Runmin Ma, Shiyang Feng, Xiangchao Yan, Anran Liu, Peng Ye, Wenlong Zhang, Shufei Zhang, Chunfeng Song, Fenghua Ling, Jie Zhou, Liang He, Bo Zhang, Lei Bai",
+      "date": "2026-06-11",
+      "pdf": "https://arxiv.org/pdf/2606.13669v1",
+      "score": "7.0",
+      "evidence": "利用LLM智能体从文献构建科学知识图谱",
+      "tldr": "现有研究智能体侧重任务编排，忽略科学知识本身的编排。Agents-K1提出端到端知识编排管道，将原始文档转化为智能体原生科学知识图谱，包含多模态解析器、4B参数信息提取骨干和三源智能体接口。基于该管道处理246万篇论文生成Scholar-KG，释放100万子集。实验证明在科学信息提取、知识图谱构建和多跳推理上性能优异。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Current LLM-based research agents have advanced through agent orchestration, yet largely overlook scientific knowledge orchestration. Existing works often reduce papers to abstracts, surface mentions, and flat \\texttt{cites} edges, omitting key entities, claims, evidence, mechanisms, and method lineages essential for scientific reasoning. To this end, we introduce \\textbf{Agents-K1}, an end-to-end knowledge orchestration pipeline that converts raw documents into agent-native scientific knowledge graphs. Agents-K1 integrates three components under a unifying theoretical foundation: a multimodal parser whose five-module schema captures entities, multimodal evidence, citations, and typed inter-entity relations across the full paper rather than abstracts alone; a 4B information-extraction backbone trained with GRPO under a rule-based reward; and a graphanything CLI, a tri-source agent interface that unifies web search, multimodal graph retrieval, and cross-document traversal. On top of this, we process 2.46 million scientific papers across six subjects to produce \\textbf{Scholar-KG}, of which we release a one-million-paper subset, and the full Scholar-KG is accessible via the SCP link below. The same pipeline can be extended to general-domain corpora and to schema-conformant data synthesis. Extensive experiments demonstrate that Agents-K1 achieves superior performance in scientific information extraction, knowledge graph construction, and multi-hop scientific reasoning.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/19/biorxiv-10-1101-2025-11-27-690985-v3-vaxjognn-a-graph-neural-network-for-ontology-grounded-vaccine-adjuvant-recommendation",
+      "section": "quick",
+      "title_en": "VaxjoGNN: A Graph Neural Network for Ontology-Grounded Vaccine Adjuvant Recommendation",
+      "authors": "He, Y., Zheng, Y.",
+      "date": "2026-06-18",
+      "pdf": "https://www.biorxiv.org/content/10.1101/2025.11.27.690985v3.full.pdf",
+      "score": "7.0",
+      "evidence": "基于知识图谱的未见过疾病（冷启动）佐剂推荐",
+      "tldr": "疫苗佐剂选择是开发瓶颈，现有工具多聚焦抗原发现。本文提出VaxjoGNN，基于生物医学本体构建异构知识图谱，将疾病-佐剂匹配视为top-k推荐任务，采用listwise排序训练图神经网络。在公共基准上，对已知疾病NDCG@10达0.59，对未知疾病达0.27（较随机基线提升5.4倍）。该框架为佐剂优先排序提供本体锚定方法，补充抗原发现工具。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Selecting an effective adjuvant remains a bottleneck in vaccine development, but most computational efforts have targeted antigen discovery rather than adjuvant prioritization. We frame disease-adjuvant matching as a top-k recommendation task on a heterogeneous knowledge graph grounded in biomedical ontologies, integrating curated facts, mechanistic pathways, and textual evidence. We introduce VaxjoGNN, a graph neural network trained with a listwise ranking objective. On a public benchmark, VaxjoGNN achieves NDCG@10 of 0.59 on seen diseases and 0.27 on previously unseen diseases (a 5.4 times improvement over a random baseline). The framework provides an ontology-anchored approach to adjuvant prioritization that complements existing antigen-focused tools.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/19/2606.14243v1-decoupled-mixture-of-experts-for-parametric-knowledge-injection",
+      "section": "quick",
+      "title_en": "Decoupled Mixture-of-Experts for Parametric Knowledge Injection",
+      "authors": "Baoqing Yue, Weihang Su, Qingyao Ai, Yichen Tang, Changyue Wang, Jiacheng Kang, Jingtao Zhan, Yiqun Liu",
+      "date": "2026-06-12",
+      "pdf": "https://arxiv.org/pdf/2606.14243v1",
+      "score": "6.0",
+      "evidence": "模块化LLM知识注入方法可适用于DDI领域知识",
+      "tldr": "现有知识注入方法在灵活性和集成度间存在权衡：检索增强仅提供提示级增强，后训练可能引发遗忘和冲突。本文提出解耦混合专家(DMoE)，将外部知识转化为独立专家模块，通过不确定性感知路由器按需激活，仅附加到最后一层FFN。实验表明，DMoE在知识密集型基准上持续优于检索和适配器基线。该模块化设计支持独立更新，避免灾难性遗忘，同时保留高效自回归推理。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Knowledge injection aims to equip large language models (LLMs) with external, domain-specific, or time-sensitive knowledge. Existing approaches typically face a trade-off between flexibility and integration: retrieval-augmented generation keeps knowledge outside the model but only provides prompt-level augmentation, whereas post-training based methods encode new knowledge into shared parameters but may introduce catastrophic forgetting, knowledge conflict, and costly updates. In this paper, we propose Decoupled Mixture-of-Experts (DMoE), a modular architecture for parametric knowledge injection that decouples both experts and the router from the base model. DMoE converts external knowledge corpora into independently updatable expert modules and uses a lightweight uncertainty-aware router to activate relevant experts only when the base model lacks sufficient knowledge during generation. To support efficient auto-regressive inference, DMoE attaches experts only to the final-layer feed-forward network, preserving KV-cache reuse while enabling parameter-level knowledge augmentation. Experiments on knowledge-intensive benchmarks show that DMoE consistently improves answer quality over retrieval and adapter-based baselines.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/19/2606.15778v1-dyna--dynamic-episodic-memory-networks-for-augmenting-large-language-models-with-temporal-knowledge-graphs-in-continuous-learning",
+      "section": "quick",
+      "title_en": "DYNA : Dynamic Episodic Memory Networks for Augmenting Large Language Models with Temporal Knowledge Graphs in Continuous Learning",
+      "authors": "Ali Sarabadani, Mahtab Tajvidiyan",
+      "date": "2026-06-14",
+      "pdf": "https://arxiv.org/pdf/2606.15778v1",
+      "score": "6.0",
+      "evidence": "用时序知识图谱增强LLM进行持续学习，可应用于DDI",
+      "tldr": "大型语言模型难以持续学习新知识，常需代价高昂的重新训练。DYNA提出轻量化框架，用时间知识图（事件节点、带时间戳边）作为外部可更新记忆，冻结LLM并注入图检索信息。在三个时间召回任务上，相比微调减少了约7%的灾难性遗忘，相比标准RAG提高了约5%的时间顺序推理。核心贡献在于将情景记忆建模为时间知识图、无需重训练增强LLM、以及发现图聚类系数可预测检索性能。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Large Language Models (LLMs) struggle to incorporate new knowledge without forgetting or costly retraining. We propose DYNA, a lightweight framework that augments a frozen LLM with a temporal knowledge graph where events are nodes and temporal relations are directed, timestamped edges. The graph serves as an external, updatable memory. At query time, DYNA retrieves relevant nodes via random walks and centrality measures, then augments the LLM's response. Evaluated on three temporal recall tasks, DYNA reduces catastrophic forgetting by ~7% compared to fine-tuning and improves temporal ordering by ~5% over standard RAG. Higher graph clustering coefficients correlate with better retrieval, showing that graph structure matters. Contributions: (1) episodic memory as temporal KG, (2) retraining-free LLM augmentation, (3) graph properties as predictors of retrieval performance.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

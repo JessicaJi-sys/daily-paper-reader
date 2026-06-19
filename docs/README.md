@@ -6,28 +6,37 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-18
-- 运行时间：2026-06-18 22:22:25 UTC
+- 最新运行日期：2026-06-19
+- 运行时间：2026-06-19 21:56:09 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：1
-- 速读区：1
+- 本次总论文数：4
+- 精读区：0
+- 速读区：4
 
 ### 今日简报（AI）
-1) 今日精读一篇基于知识图谱协同多智能体的历史医学治疗推理系统，速读一篇LLM与图融合综述。  
-2) 最值得关注：高分的《DeepRoot》揭示了KG+多智能体在复杂医疗推理中的潜力，是当前AI+医疗的热门方向。  
-3) 建议：对AI应用感兴趣的读者可优先了解KG协同多智能体如何提升历史文本中的治疗逻辑可信度。
-- 详情：[/202606/18/README](/202606/18/README)
+今日速读4篇论文，重点关注知识编排与图神经网络的交叉应用，以及专家混合模型的知识注入方法。
+
+最值得关注的是《Agents-K1》提出的智能体原生知识编排框架，以及《VaxjoGNN》在疫苗佐剂推荐中的本体驱动图神经网络，两者均获7分评价。
+
+建议优先精读这两篇高分论文，理解其方法核心，再对比《Decoupled Mixture-of-Experts》中参数级知识注入的差异。
+- 详情：[/202606/19/README](/202606/19/README)
 
 ### 精读区论文标签
-1. [DeepRoot: A KG-Coordinated Multi-Agent System for Therapeutic Reasoning over Historical Medical Texts](/202606/18/2606.15931v1-deeproot-a-kg-coordinated-multi-agent-system-for-therapeutic-reasoning-over-historical-medical-texts)  
-   标签：评分：8.0/10、query:cold-ddi
-   evidence：使用LLM多智能体系统结合知识图谱进行治疗推理和药物发现
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [LLMs+Graphs: Toward Graph-Native, Synergistic AI Systems](/202606/18/2606.11560v1-llmsgraphs-toward-graph-native-synergistic-ai-systems)  
+1. [Agents-K1: Towards Agent-native Knowledge Orchestration](/202606/19/2606.13669v1-agents-k1-towards-agent-native-knowledge-orchestration)  
+   标签：评分：7.0/10、query:cold-ddi
+   evidence：利用LLM智能体从文献构建科学知识图谱
+2. [VaxjoGNN: A Graph Neural Network for Ontology-Grounded Vaccine Adjuvant Recommendation](/202606/19/biorxiv-10-1101-2025-11-27-690985-v3-vaxjognn-a-graph-neural-network-for-ontology-grounded-vaccine-adjuvant-recommendation)  
+   标签：评分：7.0/10、query:cold-ddi
+   evidence：基于知识图谱的未见过疾病（冷启动）佐剂推荐
+3. [Decoupled Mixture-of-Experts for Parametric Knowledge Injection](/202606/19/2606.14243v1-decoupled-mixture-of-experts-for-parametric-knowledge-injection)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：关于LLM与图协同的系统性综述，可应用于药物相互作用预测
+   evidence：模块化LLM知识注入方法可适用于DDI领域知识
+4. [DYNA : Dynamic Episodic Memory Networks for Augmenting Large Language Models with Temporal Knowledge Graphs in Continuous Learning](/202606/19/2606.15778v1-dyna--dynamic-episodic-memory-networks-for-augmenting-large-language-models-with-temporal-knowledge-graphs-in-continuous-learning)  
+   标签：评分：6.0/10、query:cold-ddi
+   evidence：用时序知识图谱增强LLM进行持续学习，可应用于DDI
 
 
 <div class="dpr-home-promo-card">
