@@ -6,37 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-19
-- 运行时间：2026-06-19 21:56:09 UTC
+- 最新运行日期：2026-06-20
+- 运行时间：2026-06-20 20:51:17 UTC
 - 运行状态：成功
-- 本次总论文数：4
+- 本次总论文数：1
 - 精读区：0
-- 速读区：4
+- 速读区：1
 
 ### 今日简报（AI）
-今日速读4篇论文，重点关注知识编排与图神经网络的交叉应用，以及专家混合模型的知识注入方法。
-
-最值得关注的是《Agents-K1》提出的智能体原生知识编排框架，以及《VaxjoGNN》在疫苗佐剂推荐中的本体驱动图神经网络，两者均获7分评价。
-
-建议优先精读这两篇高分论文，理解其方法核心，再对比《Decoupled Mixture-of-Experts》中参数级知识注入的差异。
-- 详情：[/202606/19/README](/202606/19/README)
+今日速读1篇论文，聚焦基于知识图谱协调的多智能体系统在历史医学文本中的治疗推理。
+该论文提出DeepRoot系统，但评分仅6.0/10，创新性或实验效果可能有限。
+若对医学AI或知识图谱应用感兴趣可浅尝，否则建议优先关注其他高评分工作。
+- 详情：[/202606/20/README](/202606/20/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Agents-K1: Towards Agent-native Knowledge Orchestration](/202606/19/2606.13669v1-agents-k1-towards-agent-native-knowledge-orchestration)  
-   标签：评分：7.0/10、query:cold-ddi
-   evidence：利用LLM智能体从文献构建科学知识图谱
-2. [VaxjoGNN: A Graph Neural Network for Ontology-Grounded Vaccine Adjuvant Recommendation](/202606/19/biorxiv-10-1101-2025-11-27-690985-v3-vaxjognn-a-graph-neural-network-for-ontology-grounded-vaccine-adjuvant-recommendation)  
-   标签：评分：7.0/10、query:cold-ddi
-   evidence：基于知识图谱的未见过疾病（冷启动）佐剂推荐
-3. [Decoupled Mixture-of-Experts for Parametric Knowledge Injection](/202606/19/2606.14243v1-decoupled-mixture-of-experts-for-parametric-knowledge-injection)  
+1. [DeepRoot: A KG-Coordinated Multi-Agent System for Therapeutic Reasoning over Historical Medical Texts](/202606/20/2606.15931v1-deeproot-a-kg-coordinated-multi-agent-system-for-therapeutic-reasoning-over-historical-medical-texts)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：模块化LLM知识注入方法可适用于DDI领域知识
-4. [DYNA : Dynamic Episodic Memory Networks for Augmenting Large Language Models with Temporal Knowledge Graphs in Continuous Learning](/202606/19/2606.15778v1-dyna--dynamic-episodic-memory-networks-for-augmenting-large-language-models-with-temporal-knowledge-graphs-in-continuous-learning)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：用时序知识图谱增强LLM进行持续学习，可应用于DDI
+   evidence：使用LLM智能体和知识图谱从历史文本进行药物发现
 
 
 <div class="dpr-home-promo-card">

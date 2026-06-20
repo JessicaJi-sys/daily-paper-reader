@@ -1,0 +1,24 @@
+{
+  "label": "2026-06-20",
+  "date": "2026-06-20",
+  "generated_at": "2026-06-20T20:51:24",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202606/20/2606.15931v1-deeproot-a-kg-coordinated-multi-agent-system-for-therapeutic-reasoning-over-historical-medical-texts",
+      "section": "quick",
+      "title_en": "DeepRoot: A KG-Coordinated Multi-Agent System for Therapeutic Reasoning over Historical Medical Texts",
+      "authors": "Zijian Carl Ma, Sean J. Wang, Sijbren Kramer, Li Erran Li",
+      "date": "2026-06-14",
+      "pdf": "https://arxiv.org/pdf/2606.15931v1",
+      "score": "6.0",
+      "evidence": "使用LLM智能体和知识图谱从历史文本进行药物发现",
+      "tldr": "历史医学文本因非标准化分类难以被现代药物发现利用。DeepRoot提出多智能体系统，协同构建知识图谱并分离基础推理与推理，实现高效药材推理。在《神农本草经》上，DeepRoot以47.6%的R@20恢复率远超基线（4.8%），且幻觉率仅7-10%，远低于工具LLM的87%。该工作证明了知识图谱与LLM的协同可系统挖掘历史医学知识，为药物重定位提供新范式。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Historical medical archives and traditional medicines hold immense potential for drug discovery and remain a primary source for current drug development. However, pre-ontological prose and idiosyncratic taxonomies prevent the standardization and medical modernization of the data for use in current biomedical pipelines. Furthermore, no existing LLM agent system, whether tool-calling, retrieval-augmented, or agentic deep-research, can convert such text into verifiable drug-discovery leads at scale. We close this gap with DeepRoot, a multi-agent LLM system that jointly builds and utilizes a verified knowledge graph, showing that grounding and reasoning -- often conflated -- are separable axes the system can compose for therapeutic reasoning. Applied to the Shen Nong Ben Cao Jing, DeepRoot recovers $10$ of $21$ held-out compound-disease treatment pairs at R@$20$ ($47.6\\%$ vs $4.8\\%$ for a raw corpus LLM and $\\sim\\!2.4\\%$ random) and dominates an LLM-as-judge audit for reasoning quality over baseline LLMs and LLMs with direct tool-call access to the same APIs DeepRoot itself queries. Tool-using LLMs hallucinate evidence on $87\\%$ of claims, versus 7-10% for DeepRoot. Graph-only inference hallucinates $0\\%$ but ranks lowest on reasoning coherence; DeepRoot KG+LLM is the only condition to win on both axes, pointing toward a route for systematic mining and repurposing of historical medical knowledge.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

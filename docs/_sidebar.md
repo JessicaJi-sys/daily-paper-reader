@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-06-20 <!--dpr-date:20260620-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/20/2606.15931v1-deeproot-a-kg-coordinated-multi-agent-system-for-therapeutic-reasoning-over-historical-medical-texts" data-sidebar-item="{&quot;title&quot;: &quot;DeepRoot: A KG-Coordinated Multi-Agent System for Therapeutic Reasoning over Historical Medical Texts&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2606.15931v1-deeproot-a-kg-coordinated-multi-agent-system-for-therapeutic-reasoning-over-historical-medical-texts&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;使用LLM智能体和知识图谱从历史文本进行药物发现&quot;}">DeepRoot: A KG-Coordinated Multi-Agent System for Therapeutic Reasoning over Historical Medical Texts</a>
   * 2026-06-19 <!--dpr-date:20260619-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/19/2606.13669v1-agents-k1-towards-agent-native-knowledge-orchestration" data-sidebar-item="{&quot;title&quot;: &quot;Agents-K1: Towards Agent-native Knowledge Orchestration&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2606.13669v1-agents-k1-towards-agent-native-knowledge-orchestration&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;利用LLM智能体从文献构建科学知识图谱&quot;}">Agents-K1: Towards Agent-native Knowledge Orchestration</a>
