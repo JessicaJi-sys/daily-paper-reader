@@ -1,0 +1,69 @@
+{
+  "label": "2026-06-21",
+  "date": "2026-06-21",
+  "generated_at": "2026-06-21T21:23:58",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202606/21/2606.15971v1-sag-sql-retrieval-augmented-generation-with-query-time-dynamic-hyperedges",
+      "section": "quick",
+      "title_en": "SAG: SQL-Retrieval Augmented Generation with Query-Time Dynamic Hyperedges",
+      "authors": "Yuchao Wu, Junqin Li, XingCheng Liang, Yongjie Chen, Yinghao Liang, Linyuan Mo, Guanxian Li",
+      "date": "2026-06-14",
+      "pdf": "https://arxiv.org/pdf/2606.15971v1",
+      "score": "7.0",
+      "evidence": "大语言模型结合知识图谱检索，可适用于药物相互作用",
+      "tldr": "现有RAG方法处理结构化约束和多跳推理时存在局限，知识图谱引入又导致语义碎片化和维护成本高。SAG将每个文本块转为完整事件和索引实体，查询时通过SQL连接动态构建局部超图，无需全局图维护。在HotpotQA等三个多跳基准上，SAG在9个Recall@K指标中取得8项最优，MuSiQue上Recall@5达80%。该方法支持亿级数据生产部署，在线检索延迟在秒级，实现了高效、可扩展的结构化检索增强。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Retrieval-Augmented Generation (RAG) offers an effective approach for large language models to access external knowledge. However, existing methods rely on dense similarity retrieval and face inherent limitations in handling structured constraints and multi-hop reasoning. Incorporating knowledge graphs partially alleviates these issues, but at the cost of semantic fragmentation, high maintenance overhead, and difficult incremental updates. This paper introduces SAG (SQLRetrieval Augmented Generation), a structured architecture for retrieval and agent systems. Instead of pre-building a global static graph, SAG converts each chunk into one semantically complete event and a set of indexing entities, then uses SQL join queries to dynamically link events that share entities into local hyperedges,constructing, at query time, a dynamically instantiated local index structure. This design avoids the need for global graph rebuilding and ongoing maintenance; the system naturally supports incremental writes, concurrent processing, and continuous scaling through its reliance on standard database infrastructure. Across HotpotQA, 2WikiMultiHop, and MuSiQue, three standard multi-hop benchmarks,SAG achieves the best results on 8 out of 9 Recall@K metrics, reaching 80.0% Recall@5 on MuSiQue, the benchmark with the highest multi-hop reasoning demands.SAG has also been deployed at a production scale of hundreds of millions of data items, with online retrieval latency kept within seconds. Project site and code are available at https://github.com/Zleap-AI/SAG-Benchmark.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/21/2606.16409v1-pathrouter-aligning-rewards-with-retrieval-quality-in-agentic-graph-retrieval-augmented-generation",
+      "section": "quick",
+      "title_en": "PathRouter: Aligning Rewards with Retrieval Quality in Agentic Graph Retrieval-Augmented Generation",
+      "authors": "Bo Wang, Heyan Huang, Yaolin Li, Wei Tang, Yuan Zhang, Wenbo Li, Mingze Gao, Ge Shi, Chong Feng",
+      "date": "2026-06-15",
+      "pdf": "https://arxiv.org/pdf/2606.16409v1",
+      "score": "6.0",
+      "evidence": "面向自主图RAG的路径感知训练，与基于知识图谱的DDI相关",
+      "tldr": "Agentic GraphRAG中，强化学习存在答案路径奖励别名和搜索更新模糊问题。PathRouter提出路径感知训练框架，按答案正确性和证据路径重叠分类轨迹，差异化调整GRPO优势缩放，抑制捷径并保留证据搜索。实验在6个QA基准上，3B和7B模型分别提升F1平均3.1和4.9。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Agentic GraphRAG trains language-model agents to iteratively retrieve and reason over graph-structured evidence, enabling more accurate and context-aware decision-making by efficiently navigating complex information networks. However, outcome-only reinforcement learning suffers from \\textit{\\textbf{answer-path reward aliasing}}, where correct answers may come from shortcuts rather than useful evidence paths. It also exhibits \\textit{\\textbf{search-update ambiguity}}, as scalar trajectory-level feedback does not indicate which retrieval actions to adjust. To mitigate these shortcomings, we present PathRouter, a path-aware training framework for agentic GraphRAG. PathRouter jointly evaluates each trajectory along answer correctness and evidence-path overlap, yielding four trajectory categories with differentiated GRPO advantage scaling that suppresses shortcut reinforcement while preserving evidence-seeking behavior. For evidence-poor trajectories, a frozen gold-evidence teacher provides token-level KL guidance on reasoning and search-query tokens, excluding answer tokens to avoid direct response imitation. Experiments on six QA benchmarks across three model sizes show that PathRouter consistently improves answer F1 and evidence-path overlap, achieving average F1 gains of 3.1 on 3B and 4.9 on 7B models compared to a strong baseline.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/21/2606.16979v1-scalable-pairwise-kernel-learning-with-stochastic-vec-trick",
+      "section": "quick",
+      "title_en": "Scalable Pairwise Kernel Learning with Stochastic Vec Trick",
+      "authors": "Napsu Karmitsa, Tapio Pahikkala, Antti Airola",
+      "date": "2026-06-15",
+      "pdf": "https://arxiv.org/pdf/2606.16979v1",
+      "score": "6.0",
+      "evidence": "成对学习方法适用于药物相互作用预测",
+      "tldr": "配对学习预测对象间的相互作用，但核方法计算成本高。本文提出SPaiK，利用随机广义向量化技巧（sGVT）高效实现稀疏Kronecker积乘法。在七组药物-靶标亲和力数据集上，SPaiK显著降低了计算和内存需求，且性能优于现有方法。该方法使得基于核的配对学习可扩展至更大规模数据集。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Pairwise learning is a specialized form of supervised learning that focuses on predicting outcomes for pairs of objects. In this work, we introduce SPaiK, a new scalable kernel learning method tailored for pairwise settings. Our approach preserves the expressive power of kernel methods while substantially reducing computational and memory requirements. The key innovation is the stochastic generalized vec trick (sGVT), a stochastic extension of the sparse Kronecker product multiplication algorithm, which enables efficient large-scale training with pairwise kernels. By incorporating sGVT, SPaiK makes it possible to apply kernel-based pairwise learning to datasets of a size previously out of reach. We evaluate the performance of SPaiK on seven real-world drug-target affinity datasets and compare the results with state-of-the-art methods in pairwise learning.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/21/2606.18075v1-a-unified-framework-for-context-aware-and-relation-aware-graph-retrieval-augmented-generation",
+      "section": "quick",
+      "title_en": "A Unified Framework for Context-Aware and Relation-Aware Graph Retrieval-Augmented Generation",
+      "authors": "Haoyang Zhong, Yifei Sun, Antong Zhang, Chunping Wang, Lei Chen, Yang Yang",
+      "date": "2026-06-16",
+      "pdf": "https://arxiv.org/pdf/2606.18075v1",
+      "score": "6.0",
+      "evidence": "图RAG框架适用于知识图谱增强任务；潜在可用于药物相互作用预测",
+      "tldr": "现有图RAG方法分为实体中心和块中心两种，但两者表示锚定于原文，缺乏真正的知识融合，检索时分离，无法利用综合理解。本文提出HyGRAG框架，构建混合图层次索引，通过迭代聚类生成LLM摘要，实现上下文和关系感知的检索，并支持动态更新。实验表明，HyGRAG在多跳推理任务上平均准确率提升9.7%，同时保持高效。该工作为知识合成与高效检索提供了新方案。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Retrieval-Augmented Generation (RAG) has emerged as a paradigm for enhancing large language models (LLMs) with external knowledge, yet existing graph-based methods face a fundamental limitation: entity-centric and chunk-centric approaches operate on representations anchored to original text without true knowledge fusion. While entity-centric methods connect logically related content and chunk-centric methods preserve context, both retrieve information separately through similarity search, missing emergent understanding from their synthesis. In this paper, we propose HyGRAG, a hierarchical graph RAG framework that transcends source documents by addressing three core challenges: constructing summaries that genuinely integrate contextual and relational information, leveraging these synthesized representations to access emergent knowledge during retrieval, and efficiently updating hierarchical structures for dynamic corpora. Specifically, we design hierarchical index structures over hybrid graphs with both chunk and entity nodes, then iteratively cluster them and generate LLM-based summaries. Then, we design context and relation-aware retrieval that searches across all abstraction levels while expanding through community membership. Moreover, we enable dynamic knowledge update through attachment-based algorithms with only local re-summarization. Experimental results show that HyGRAG improves the average accuracy of multi-hop reasoning tasks by 9.7%, while maintaining reasonable efficiency.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,178 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-21T21:21:33.247851+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 4,
+    "quick_skim_target": 11,
+    "quick_selected": 4
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.15971v1",
+      "source": "arxiv",
+      "title": "SAG: SQL-Retrieval Augmented Generation with Query-Time Dynamic Hyperedges",
+      "abstract": "Retrieval-Augmented Generation (RAG) offers an effective approach for large language models to access external knowledge. However, existing methods rely on dense similarity retrieval and face inherent limitations in handling structured constraints and multi-hop reasoning. Incorporating knowledge graphs partially alleviates these issues, but at the cost of semantic fragmentation, high maintenance overhead, and difficult incremental updates. This paper introduces SAG (SQLRetrieval Augmented Generation), a structured architecture for retrieval and agent systems. Instead of pre-building a global static graph, SAG converts each chunk into one semantically complete event and a set of indexing entities, then uses SQL join queries to dynamically link events that share entities into local hyperedges,constructing, at query time, a dynamically instantiated local index structure. This design avoids the need for global graph rebuilding and ongoing maintenance; the system naturally supports incremental writes, concurrent processing, and continuous scaling through its reliance on standard database infrastructure. Across HotpotQA, 2WikiMultiHop, and MuSiQue, three standard multi-hop benchmarks,SAG achieves the best results on 8 out of 9 Recall@K metrics, reaching 80.0% Recall@5 on MuSiQue, the benchmark with the highest multi-hop reasoning demands.SAG has also been deployed at a production scale of hundreds of millions of data items, with online retrieval latency kept within seconds. Project site and code are available at https://github.com/Zleap-AI/SAG-Benchmark.",
+      "authors": [
+        "Yuchao Wu",
+        "Junqin Li",
+        "XingCheng Liang",
+        "Yongjie Chen",
+        "Yinghao Liang",
+        "Linyuan Mo",
+        "Guanxian Li"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-06-14T18:52:26+00:00",
+      "link": "https://arxiv.org/pdf/2606.15971v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "LLM + knowledge graph retrieval for structured knowledge, applicable to DDI",
+      "llm_evidence_cn": "大语言模型结合知识图谱检索，可适用于药物相互作用",
+      "llm_evidence": "大语言模型结合知识图谱检索，可适用于药物相互作用",
+      "canonical_evidence": "大语言模型结合知识图谱检索，可适用于药物相互作用",
+      "llm_tldr_en": "SAG uses SQL-based retrieval augmented generation with dynamic hyperedges linking LLM and knowledge graphs, enabling structured multi-hop reasoning relevant to DDI.",
+      "llm_tldr_cn": "现有检索增强生成方法难以处理结构化约束和多跳推理。本文提出SAG框架，将文本块转为语义完整事件，通过SQL连接查询动态构建超边，结合大语言模型实现结构化知识检索。该框架能高效融合知识图谱与LLM，为冷启动药物相互作用预测提供了可迁移的检索推理架构，支持从生物医学知识图谱中提取DDI证据。",
+      "llm_tldr": "现有检索增强生成方法难以处理结构化约束和多跳推理。本文提出SAG框架，将文本块转为语义完整事件，通过SQL连接查询动态构建超边，结合大语言模型实现结构化知识检索。该框架能高效融合知识图谱与LLM，为冷启动药物相互作用预测提供了可迁移的检索推理架构，支持从生物医学知识图谱中提取DDI证据。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.16409v1",
+      "source": "arxiv",
+      "title": "PathRouter: Aligning Rewards with Retrieval Quality in Agentic Graph Retrieval-Augmented Generation",
+      "abstract": "Agentic GraphRAG trains language-model agents to iteratively retrieve and reason over graph-structured evidence, enabling more accurate and context-aware decision-making by efficiently navigating complex information networks. However, outcome-only reinforcement learning suffers from \\textit{\\textbf{answer-path reward aliasing}}, where correct answers may come from shortcuts rather than useful evidence paths. It also exhibits \\textit{\\textbf{search-update ambiguity}}, as scalar trajectory-level feedback does not indicate which retrieval actions to adjust. To mitigate these shortcomings, we present PathRouter, a path-aware training framework for agentic GraphRAG. PathRouter jointly evaluates each trajectory along answer correctness and evidence-path overlap, yielding four trajectory categories with differentiated GRPO advantage scaling that suppresses shortcut reinforcement while preserving evidence-seeking behavior. For evidence-poor trajectories, a frozen gold-evidence teacher provides token-level KL guidance on reasoning and search-query tokens, excluding answer tokens to avoid direct response imitation. Experiments on six QA benchmarks across three model sizes show that PathRouter consistently improves answer F1 and evidence-path overlap, achieving average F1 gains of 3.1 on 3B and 4.9 on 7B models compared to a strong baseline.",
+      "authors": [
+        "Bo Wang",
+        "Heyan Huang",
+        "Yaolin Li",
+        "Wei Tang",
+        "Yuan Zhang",
+        "Wenbo Li",
+        "Mingze Gao",
+        "Ge Shi",
+        "Chong Feng"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-06-15T08:48:04+00:00",
+      "link": "https://arxiv.org/pdf/2606.16409v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "path-aware training for agentic GraphRAG, relevant to knowledge graph-based DDI",
+      "llm_evidence_cn": "面向自主图RAG的路径感知训练，与基于知识图谱的DDI相关",
+      "llm_evidence": "面向自主图RAG的路径感知训练，与基于知识图谱的DDI相关",
+      "canonical_evidence": "面向自主图RAG的路径感知训练，与基于知识图谱的DDI相关",
+      "llm_tldr_en": "PathRouter introduces path-aware training for agentic GraphRAG to mitigate answer-path reward aliasing and search-update ambiguity in graph-structured evidence retrieval.",
+      "llm_tldr_cn": "PathRouter针对自主图检索增强生成（GraphRAG）中的答案路径奖励混淆和搜索更新歧义问题，提出路径感知训练框架。该方法联合评估轨迹的答案正确性与路径质量，可有效提升基于知识图谱的推理性能。该技术可直接应用于药物相互作用预测中的知识图谱检索与推理，尤其适合冷启动场景下利用知识图谱辅助预测。",
+      "llm_tldr": "PathRouter针对自主图检索增强生成（GraphRAG）中的答案路径奖励混淆和搜索更新歧义问题，提出路径感知训练框架。该方法联合评估轨迹的答案正确性与路径质量，可有效提升基于知识图谱的推理性能。该技术可直接应用于药物相互作用预测中的知识图谱检索与推理，尤其适合冷启动场景下利用知识图谱辅助预测。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.16979v1",
+      "source": "arxiv",
+      "title": "Scalable Pairwise Kernel Learning with Stochastic Vec Trick",
+      "abstract": "Pairwise learning is a specialized form of supervised learning that focuses on predicting outcomes for pairs of objects. In this work, we introduce SPaiK, a new scalable kernel learning method tailored for pairwise settings. Our approach preserves the expressive power of kernel methods while substantially reducing computational and memory requirements. The key innovation is the stochastic generalized vec trick (sGVT), a stochastic extension of the sparse Kronecker product multiplication algorithm, which enables efficient large-scale training with pairwise kernels. By incorporating sGVT, SPaiK makes it possible to apply kernel-based pairwise learning to datasets of a size previously out of reach. We evaluate the performance of SPaiK on seven real-world drug-target affinity datasets and compare the results with state-of-the-art methods in pairwise learning.",
+      "authors": [
+        "Napsu Karmitsa",
+        "Tapio Pahikkala",
+        "Antti Airola"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-06-15T17:15:56+00:00",
+      "link": "https://arxiv.org/pdf/2606.16979v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "pairwise learning for drug-target interaction, method applicable to DDI",
+      "llm_evidence_cn": "成对学习方法适用于药物相互作用预测",
+      "llm_evidence": "成对学习方法适用于药物相互作用预测",
+      "canonical_evidence": "成对学习方法适用于药物相互作用预测",
+      "llm_tldr_en": "SPaiK introduces scalable pairwise kernel learning using stochastic vec trick, evaluated on drug-target datasets, method transferable to DDI.",
+      "llm_tldr_cn": "现存药物相互作用预测方法面临计算和内存瓶颈。本文提出SPaiK，一种可扩展的成对核学习方法，通过随机广义vec技巧实现高效训练。在药物-靶标真实数据集上验证了其有效性，表明该方法可推广至药物-药物相互作用预测等成对学习任务，为大规模DDI建模提供了新工具。",
+      "llm_tldr": "现存药物相互作用预测方法面临计算和内存瓶颈。本文提出SPaiK，一种可扩展的成对核学习方法，通过随机广义vec技巧实现高效训练。在药物-靶标真实数据集上验证了其有效性，表明该方法可推广至药物-药物相互作用预测等成对学习任务，为大规模DDI建模提供了新工具。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.18075v1",
+      "source": "arxiv",
+      "title": "A Unified Framework for Context-Aware and Relation-Aware Graph Retrieval-Augmented Generation",
+      "abstract": "Retrieval-Augmented Generation (RAG) has emerged as a paradigm for enhancing large language models (LLMs) with external knowledge, yet existing graph-based methods face a fundamental limitation: entity-centric and chunk-centric approaches operate on representations anchored to original text without true knowledge fusion. While entity-centric methods connect logically related content and chunk-centric methods preserve context, both retrieve information separately through similarity search, missing emergent understanding from their synthesis. In this paper, we propose HyGRAG, a hierarchical graph RAG framework that transcends source documents by addressing three core challenges: constructing summaries that genuinely integrate contextual and relational information, leveraging these synthesized representations to access emergent knowledge during retrieval, and efficiently updating hierarchical structures for dynamic corpora. Specifically, we design hierarchical index structures over hybrid graphs with both chunk and entity nodes, then iteratively cluster them and generate LLM-based summaries. Then, we design context and relation-aware retrieval that searches across all abstraction levels while expanding through community membership. Moreover, we enable dynamic knowledge update through attachment-based algorithms with only local re-summarization. Experimental results show that HyGRAG improves the average accuracy of multi-hop reasoning tasks by 9.7%, while maintaining reasonable efficiency.",
+      "authors": [
+        "Haoyang Zhong",
+        "Yifei Sun",
+        "Antong Zhang",
+        "Chunping Wang",
+        "Lei Chen",
+        "Yang Yang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-16T15:44:10+00:00",
+      "link": "https://arxiv.org/pdf/2606.18075v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Graph RAG framework applicable to knowledge graph enhanced tasks; potential for drug interaction prediction",
+      "llm_evidence_cn": "图RAG框架适用于知识图谱增强任务；潜在可用于药物相互作用预测",
+      "llm_evidence": "图RAG框架适用于知识图谱增强任务；潜在可用于药物相互作用预测",
+      "canonical_evidence": "图RAG框架适用于知识图谱增强任务；潜在可用于药物相互作用预测",
+      "llm_tldr_en": "HyGRAG proposes a hierarchical graph RAG framework that integrates entity-centric and chunk-centric approaches for better knowledge fusion. While not specific to drug interaction, its method of using knowledge graphs for retrieval is directly transferable to biomedical knowledge graph enhanced DDI prediction.",
+      "llm_tldr_cn": "该论文提出了HyGRAG，一种层次化图检索增强生成框架，通过构建整合实体与块的双层摘要图，解决传统图RAG中知识融合不足的问题。其核心思想是利用知识图谱增强信息检索，这与利用生物医学知识图谱进行药物相互作用预测的方法高度契合。虽然论文没有直接涉及药物，但其图增强检索技术可直接迁移到冷启动DDI预测任务中。",
+      "llm_tldr": "该论文提出了HyGRAG，一种层次化图检索增强生成框架，通过构建整合实体与块的双层摘要图，解决传统图RAG中知识融合不足的问题。其核心思想是利用知识图谱增强信息检索，这与利用生物医学知识图谱进行药物相互作用预测的方法高度契合。虽然论文没有直接涉及药物，但其图增强检索技术可直接迁移到冷启动DDI预测任务中。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
