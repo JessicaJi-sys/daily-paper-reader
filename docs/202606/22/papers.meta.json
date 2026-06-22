@@ -1,0 +1,24 @@
+{
+  "label": "2026-06-22",
+  "date": "2026-06-22",
+  "generated_at": "2026-06-22T22:26:38",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202606/22/2606.18703v1-contextualizing-biological-language-models-across-modalities-via-logit-space-contrastive-alignment",
+      "section": "quick",
+      "title_en": "Contextualizing Biological Language Models across Modalities via Logit-Space Contrastive Alignment",
+      "authors": "Yanjun Shao, Yundi Chen, Yashvi Patel, Aurelien Pelissier, María Rodríguez Martínez",
+      "date": "2026-06-17",
+      "pdf": "https://arxiv.org/pdf/2606.18703v1",
+      "score": "6.0",
+      "evidence": "生物语言模型用于交互背景，与基于LLM的药物相互作用预测相关",
+      "tldr": "预训练生物学语言模型通过掩码预测提供序列似然接口，但未针对生物语境（如配体结合、细胞环境）条件化，现有方法通过池化嵌入或对比潜在空间扭曲该接口。本文提出LOGICA框架，在输出logit空间进行对比对齐，通过门控跨模态适配器保持原生似然界面，将上下文标记对数似然转换为匹配分数。在蛋白质-配体、TCR-肽活性和药物耐药性预测中，LOGICA优于匹配的潜在空间基线，在留出基因突变耐药性任务上将AUC从~0.55提升至~0.65。该方法保留标记级解释能力，支持跨词汇表模型对齐，适用于序列设计、变异评分和机制解析。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Pretrained biological language models expose per-token probability distributions through masked-token prediction, providing the likelihood interface central to sequence design, variant scoring, and mechanistic interpretation. Yet these distributions are learned from broad unlabeled corpora and are not naturally conditioned on task-specific biological contexts such as interaction partners, cellular environments, or therapeutic interventions. Existing contextual matching methods often distort this interface through pooled embeddings, contrastive latent spaces, or task-specific prediction heads. We introduce LOGICA (Logit-space Contrastive Alignment), a framework for context-conditioned prediction that performs contrastive learning directly in output-logit space. Using gated cross-modal adapters compatible with each model's native token head, LOGICA preserves the pretrained likelihood interface and converts contextualized token log-likelihoods into matching scores. Alignment is defined through context-sensitive token probabilities rather than proximity in a shared embedding space, enabling learning from sparse paired data across models with distinct vocabularies, without a shared tokenizer or decoder. LOGICA is particularly effective for mutation-local variant ranking, where comparisons reduce to context-conditioned likelihoods of mutant tokens at perturbed sites. Across protein--ligand binding, TCR--peptide activity, and drug-conditioned resistance prediction, LOGICA improves over prior state-of-the-art methods, including matched latent-contrastive and conditional MLM baselines, while retaining a token-level interface for interpretation and generation. On held-out-gene single-mutation drug-resistance prediction, LOGICA improves AUC from near-random latent-space baselines of $\\sim$0.55 to $\\sim$0.65.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

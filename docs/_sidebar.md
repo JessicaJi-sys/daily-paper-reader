@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-06-22 <!--dpr-date:20260622-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/22/2606.18703v1-contextualizing-biological-language-models-across-modalities-via-logit-space-contrastive-alignment" data-sidebar-item="{&quot;title&quot;: &quot;Contextualizing Biological Language Models across Modalities via Logit-Space Contrastive Alignment&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2606.18703v1-contextualizing-biological-language-models-across-modalities-via-logit-space-contrastive-alignment&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;生物语言模型用于交互背景，与基于LLM的药物相互作用预测相关&quot;}">Contextualizing Biological Language Models across Modalities via Logit-Space Contrastive Alignment</a>
   * 2026-06-21 <!--dpr-date:20260621-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/21/2606.15971v1-sag-sql-retrieval-augmented-generation-with-query-time-dynamic-hyperedges" data-sidebar-item="{&quot;title&quot;: &quot;SAG: SQL-Retrieval Augmented Generation with Query-Time Dynamic Hyperedges&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2606.15971v1-sag-sql-retrieval-augmented-generation-with-query-time-dynamic-hyperedges&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;大语言模型结合知识图谱检索，可适用于药物相互作用&quot;}">SAG: SQL-Retrieval Augmented Generation with Query-Time Dynamic Hyperedges</a>
