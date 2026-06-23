@@ -1,0 +1,54 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-23T21:39:17.500204+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.22419v1",
+      "source": "arxiv",
+      "title": "Knowledge-Graph Grounding Helps LLMs Only for Out-of-Training Knowledge: A Controlled Study on Clinical Question Answering",
+      "abstract": "A recent Nature Medicine study reports that general-purpose frontier LLMs outperform specialized retrieval-augmented clinical tools on medical benchmarks, and that retrieval can hurt strong models. We ask the natural follow-up: does structured knowledge-graph (KG) grounding change this, and when does grounding help at all? We contribute two results. First, a reproduction: the study's headline HealthBench score (~88) is the Consensus variant, not full HealthBench, where frontier models and ideal completions both score ~46-47 under a physician-calibrated grader (agreement 82.5%); we reproduce GPT-5.2 Consensus =90.9 and flag a score-deflating grader bug. Second, a knowledge-boundary result. Using a graph+vector engine (samyama-graph) over the public biomedical KG PrimeKG, neither naive triple retrieval nor an agentic natural-language-to-Cypher loop (82% successful queries) improves MedQA across a weak-to-strong model ladder (all |Delta| <= 3.4). On a synthetic counterfactual KG, and on a hybrid benchmark mixing known and novel facts, the identical pipeline lifts out-of-training accuracy from chance to ~100% (+68 to +79) while adding nothing on known facts (a no-LLM arm answers both). Across three regimes (no-knowledge, graph-aided, hybrid), grounding helps only insofar as the decisive fact lies outside the model's training -- public-KG facts are redundant, private and novel data are where it pays -- matching the study's institutional-data caveat.",
+      "authors": [
+        "Madhulatha Mandarapu",
+        "Sandeep Kunkunuru"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.DB"
+      ],
+      "published": "2026-06-21T10:12:17+00:00",
+      "link": "https://arxiv.org/pdf/2606.22419v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "LLM + knowledge graph grounding study",
+      "llm_evidence_cn": "大语言模型与知识图谱结合研究",
+      "llm_evidence": "大语言模型与知识图谱结合研究",
+      "canonical_evidence": "大语言模型与知识图谱结合研究",
+      "llm_tldr_en": "Studies when knowledge-graph grounding helps LLMs, finding it only aids out-of-training knowledge, with implications for cold-start DDI.",
+      "llm_tldr_cn": "近期研究表明通用大语言模型在医学基准上超越专用检索增强工具，但知识图谱（KG）增强对其是否有帮助尚不明确。本文通过受控实验发现，KG增强仅在处理训练外知识时提升LLM性能，在训练内知识上则无帮助。这一发现对冷启动药物相互作用预测（需KG与新药知识结合）具有重要方法论意义，表明KG增强可提升LLM对新药交互的泛化能力。",
+      "llm_tldr": "近期研究表明通用大语言模型在医学基准上超越专用检索增强工具，但知识图谱（KG）增强对其是否有帮助尚不明确。本文通过受控实验发现，KG增强仅在处理训练外知识时提升LLM性能，在训练内知识上则无帮助。这一发现对冷启动药物相互作用预测（需KG与新药知识结合）具有重要方法论意义，表明KG增强可提升LLM对新药交互的泛化能力。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "Leveraging knowledge graphs for cold start drug interaction with large language models",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
