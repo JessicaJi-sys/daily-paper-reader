@@ -1,0 +1,690 @@
+Title: Retrieval-Augmented Multimodal Learning for Enzyme-Substrate Interaction Prediction Under Low-Homology Shift
+
+URL Source: https://arxiv.org/pdf/2606.22823v1
+
+Published Time: Tue, 23 Jun 2026 02:38:24 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+> SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 1
+
+# Retrieval-Augmented Multimodal Learning for Enzyme–Substrate Interaction Prediction Under Low-Homology Shift 
+
+Chen Liu, Bingxin Zhou , Xinyuan Wang, Ming Li , Guisheng Fan , Liang Hong 
+
+Abstract —Enzyme–substrate interaction (ESI) prediction is a fundamental computational task for biocatalyst discovery and reaction screening in large biochemical spaces. In practical settings, ESI prediction is challenged by sparse positive supervi-sion and low-homology distribution shift, where test enzymes share limited sequence identity with those observed during training. To address these challenges, we propose RAMMESI, a retrieval-augmented multimodal framework for robust ESI prediction. RAMMESI learns explicit pairwise enzyme–substrate representations through directional cross-modal interaction mod-eling and adaptive fusion. To enhance robustness, RAMMESI retrieves neighboring enzymes at inference time, recombines them with the query substrate, and aggregates the resulting pairwise predictions as contextual evidence. To improve learning under sparse positive supervision, we further adopt an imbalance-aware weighted-BCE objective. Experiments on two ESI bench-marks under sequence-identity-aware splits demonstrate that RAMMESI achieves consistently strong performance, with par-ticular advantages in more challenging low-identity regimes. In addition, the retrieval module improves multiple ESI backbones in a plug-and-play manner, suggesting that retrieval provides a general mechanism for improving robustness under homology shift. The source code is publicly available at the following link https://github.com/code4luck/RAMMESI.git 
+
+Index Terms —Enzyme–substrate interaction prediction, mul-timodal learning, retrieval-augmented inference, low-homology generalization, class imbalance. 
+
+I. I NTRODUCTION 
+
+# ENZYME-substrate interaction (ESI) prediction is aheterogeneous pairwise prediction task that evaluates whether a given enzyme and substrate are likely to form a reactive pair. It is a fundamental computational task for biocatalyst discovery [1] and industrial bioprocessing [2], as it enables large-scale prioritization of reactive enzyme-substrate candidates before costly experimental validation. Unlike enzyme-oriented functional annotation, which predicts enzyme function without specifying a candidate substrate [3], 
+
+This work was supported in part by the National Natural Science Foun-dation of China under Grant No.62302291. Chen Liu and Bingxin Zhou contributed equally to this work. Corresponding author: Bingxin Zhou 
+
+(bingxin.zhou@sjtu.edu.cn) .Chen Liu and Guisheng Fan are with School of Information Science and Engineering, East China University of Science and Technology, Shanghai 200237, China. Bingxin Zhou and Liang Hong are with Institute of Natural Sciences and Zhangjiang Institute for Advanced Study, Shanghai Jiao Tong University, Shanghai 200240, China. Xinyuan Wang is with School of Life Sciences and Biotechnology, Shanghai Jiao Tong University. Shanghai 200240, China. Ming Li is with Zhejiang Key Laboratory of Intelligent Education Tech-nology and Application, Zhejiang Normal University, Jinhua, China. 
+
+Fig. 1: Schematic illustration of substrate binding, complex formation, and product release (left to right). ESI prediction evaluates whether a given enzyme-substrate pair is likely to be reactive. Since experimentally verified enzyme-substrate pairs remain limited relative to the large can-didate space, accurate ESI prediction is essential for scalable reaction screening [4], [5]. Early studies on ESI prediction mainly relied on conven-tional machine learning models and expert-designed features, such as physicochemical properties, sequence-derived descrip-tors, and homology-based signals [6]–[9]. These approaches enabled more scalable screening than wet-lab experiments, but their reliance on expert knowledge limited their ability to capture complex compatibility patterns and generalize beyond specific enzyme families or functional categories [10], [11]. More recently, advances in deep learning have improved biomolecular interaction modeling across molecular prediction tasks [12]–[16], while pretrained biomolecular models have enabled general-purpose representation learning from protein and molecular inputs [17]–[19]. Recent ESI predictors there-fore increasingly employ pretrained encoders with learnable fusion or prediction modules, reducing dependence on hand-crafted features and achieving stronger predictive performance [11], [20]. Despite these advances, current methods still insufficiently model the pairwise compatibility underlying substrate-specific enzyme reactivity. A key modeling challenge is to effectively fuse enzyme and substrate representations for substrate-conditioned reactivity prediction . This challenge arises be-cause enzyme-centric functional characterization alone is in-sufficient to determine the reactivity of a specific enzyme-substrate pair [21]. Enzyme reactivity can vary substantially across substrates, and some enzymes exhibit broad substrate specificity [22], [23]. Although pairwise ESI predictors ad-dress substrate-conditioned prediction more directly, they often rely on simple concatenation or shallow fusion of protein and substrate embeddings, which may fail to capture directional  
+
+> arXiv:2606.22823v1 [cs.LG] 22 Jun 2026 SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 2MKFVKSAG...
+> C(O)CC@H...
+> Enzyme
+> Sequence
+> Substrate
+> SMILES
+> Pretrained
+> Protein
+> Encoder
+> Pretrained
+> Molecule
+> Encoder
+> Enzyme
+> Embedding
+> (��)
+> Substrate
+> Embedding
+> (��)
+> Temperature
+> Factor
+> Joint Modeling
+> Transformer
+> Layer
+
+## Frozen Trainable  
+
+> Encoder Module Fusion Module
+> Concatenated
+> Embedding
+> (��)
+> Concatenated
+> features (��)
+> ∗
+> attention
+> weights
+> Conv Pooling
+> Conv1d
+> Enzyme
+> features (��)
+> ∗
+> attention
+> weights
+> Conv Pooling
+> Conv1d
+> Substrate
+> features (��)
+> Mean Pooling
+> Decoder Module
+> MLP
+> Softmax
+> attention
+> weights
+
+∙ ∑
+
+> Gate
+> MLP
+> ReLU
+> Fusion
+> features
+> (��)
+
+��    
+
+> Label
+> �
+> 10
+> ��
+> ��
+> Q
+> K
+> V
+> ��
+> ��
+> ��
+> ��
+> FAISS Database
+> ��
+> Retrieved seq1
+> Retrieved seq2
+> ......
+> Retrieved seqk
+
+��     
+
+> ��
+> (1−�) ∙ ��
+> +
+> �∙��
+> MKFVKSAG...
+> Enzyme
+> Sequence
+> C(O)CC@H...
+> Substrate
+> SMILES
+> Multimodal
+> Model
+> Multimodal
+> Model
+
+(a) 
+
+(b) 
+
+Fig. 2: Overview of the proposed RAMMESI framework. (a) RAMMESI encodes enzyme and substrate inputs, models their cross-modal interactions, adaptively fuses complementary representations, and outputs the interaction probability. (b) During inference, RAMMESI retrieves neighboring enzymes in the embedding space, pairs them with the query substrate to get retrieval predictions, and aggregates them with the query prediction to produce the final interaction probability ( PI ). and context-dependent compatibility patterns [20], [24]. As Fig. 1 illustrates, substrate binding and complex formation involve coordinated enzyme-substrate recognition, further mo-tivating cross-modal interaction modeling beyond independent encoding and late-stage fusion. Beyond modeling limitations, ESI prediction also faces two training and evaluation challenges. First, reliable generaliza-tion to low-homology enzymes remains difficult . Predictions for close homologs can often exploit sequence similarity, whereas low-homology enzymes provide weaker evidence for annotation transfer and better reflect the need to predict reac-tivity beyond well-characterized enzyme families. In practice, this challenge is evaluated through homology-aware sequence-identity splits, where test enzymes share limited identity with training enzymes and may differ in structure, active-site context, or substrate preference [25]–[27]. Existing methods may degrade substantially under such distribution shifts [11]. Second, learning to recover rare reactive pairs under severe class imbalance remains challenging . Verified reactive pairs are much fewer than non-reactive candidates, causing standard cross-entropy training to be dominated by negative examples. This imbalance can bias prediction toward the majority class and reduce recall for true interacting pairs [5], [28]. Effective ESI prediction requires stronger pairwise interac-tion modeling, robustness under homology-induced distribu-tion shift, and reliable learning from imbalanced supervision. To this end, we propose RAMMESI, a retrieval-augmented multimodal framework for ESI prediction. RAMMESI treats ESI as a fine-grained pairwise prediction problem over protein and small-molecule inputs, and addresses the above challenges through directional cross-modal interaction modeling, adap-tive fusion of complementary interaction views, imbalance-aware optimization, and inference-time retrieval augmentation (Fig. 2). Our main contributions are summarized as follows. 1) Substrate-conditioned pairwise multimodal modeling. 
+
+We propose RAMMESI to model ESI as substrate-SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 3
+
+conditioned pairwise reactivity prediction. It captures bidi-rectional enzyme-to-substrate and substrate-to-enzyme in-teraction views and adaptively fuses them with joint pair-level context for fine-grained prediction. 2) Support-pair retrieval for low-homology generalization. 
+
+We introduce an inference-time retrieval augmentation that transforms contextual evidence from neighboring enzymes into substrate-specific support pairs and improves reliability for low-sequence-identity test enzymes. 3) Imbalance-aware optimization for rare reactive pairs. 
+
+We formulate ESI training under a weighted-BCE frame-work and introduce threshold-aware smooth weighting to reduce the dominance of easy negatives under sparse positive supervision. The rest of this paper is organized as follows. Section II reviews related studies on enzyme–substrate interaction pre-diction and retrieval augmentation. Section III presents the formulation and the details of the RAMMESI framework. Section IV reports the experimental settings and various ex-periments to validate the effectiveness of RAMMESI. Finally, Section V concludes this paper. II. R ELATED WORK 
+
+In this section, we review closely related literature to our work, including enzyme–substrate interaction prediction and retrieval augmentation. 
+
+Enzyme-Substrate Interaction Prediction : Existing computa-tional studies on ESI can be broadly categorized into enzyme-centric functional prediction and pairwise enzyme-substrate prediction. Enzyme-centric methods ( e.g., EC-number assign-ment) provide useful coarse functional labels but do not directly determine whether a specific enzyme-substrate pair is likely to be reactive [29]–[31]. More recent ESI studies have increasingly moved toward pairwise prediction by leveraging protein and molecular representations learned from pretrained encoders [20], [32], [33]. Within this direction, existing meth-ods can be further grouped into two-stage pipelines and end-to-end models. Two-stage methods first obtain enzyme and molecular representations and then train a separate classifier. For example, ESP [11] fine-tunes pretrained representations before training a separate classifier for ESI prediction. End-to-end approaches jointly learn representations and predictions within a unified architecture, using attention-based feature fusion [24], [33] or representation alignment [20] to model cross-modal enzyme-substrate interactions more explicitly. In addition to sequence-based modeling, enzyme structural in-formation can further benefit ESI prediction when reliable structures are available, as exemplified by EZSpecificity [34]; however, obtaining experimentally resolved structures re-mains costly and labor-intensive, which can limit the broader use of structure-dependent methods. Overall, existing ESI methods have increasingly moved toward pairwise substrate-conditioned prediction with learnable multimodal representa-tions. RAMMESI follows this end-to-end pairwise prediction paradigm and focuses on explicit ESI modeling for fine-grained reactivity prediction. 
+
+Retrieval Augmentation : Retrieval augmentation couples a parametric model with external exemplar evidence and has emerged as a general strategy for improving prediction beyond purely parametric inference [35], [36]. Although originally developed in retrieval-augmented generation, many retrieval-based frameworks incorporate retrieved examples during train-ing, for example, by augmenting model inputs, constructing retrieval-conditioned objectives, or improving representation learning with neighbor-derived context [37], [38]. Inference-time retrieval has also been explored in general prediction settings through exemplar-supported aggregation, where pre-dictions are adjusted using retrieved neighbors without retrain-ing the model [39], [40]. In biomolecular modeling, however, retrieval-based strategies are still primarily used to provide training-time context or single-modality protein evidence, of-ten through homology search or embedding-space lookup [41]–[43]. For example, VenusREM [44] constructs position-specific evolutionary logits and linearly interpolates them with protein language model outputs to inject evolutionary priors at test time. Overall, inference-time retrieval remains less explored in biomolecular prediction, especially for pair-wise multimodal ESI frameworks. In particular, inference-time single-side neighborhood retrieval with neighbor-supported aggregation remains underexplored for improving robustness under low-homology ESI evaluation. III. M ETHODOLOGY 
+
+This section presents RAMMESI. We first provide a frame-work overview, followed by its main components for represen-tation learning, interaction modeling, prediction, imbalance-aware optimization, and retrieval-augmented inference. 
+
+A. Overview 
+
+We formulate ESI prediction as a pairwise binary classi-fication task. Let e denote an enzyme sequence, s denote a substrate SMILES string, and y ∈ { 0, 1} denote the binary interaction label, where y = 1 indicates an interacting pair. Given a pair (e, s ), RAMMESI learns a predictor ψΘ(·) and outputs the probability Pm = ψΘ(e, s ) ∈ (0 , 1) that the pair is reactive. During training (Fig. 2(a)), the multimodal model is optimized end-to-end with an imbalance-aware objective 
+
+L to learn pairwise interaction patterns. During inference (Fig. 2(b)), the trained model uses a retrieval module to incorporate neighborhood evidence from similar enzymes and improve robustness under low-homology evaluation. 
+
+B. The RAMMESI Model Architecture 
+
+As shown in Fig. 2(a), RAMMESI consists of three mod-ules: an encoder, a fusion module, and a decoder. The encoder extracts representations from enzyme sequences and substrate molecules. The fusion module models cross-modal interactions and integrates complementary interaction views. The decoder maps the fused representation to the final interaction proba-bility. We describe these modules below. 
+
+1) Encoder Module: The encoder module obtains represen-tations for enzyme sequences and substrate molecules. Enzyme sequences are encoded by a pretrained protein language model into He ∈ RLe×d, and substrate SMILES strings are encoded SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 4
+
+by a pretrained molecular encoder into Hs ∈ RLs×d, where 
+
+Le and Ls denote the embedding lengths of the enzyme and substrate, respectively, and d is the encoder embedding dimen-sion. The resulting enzyme and substrate embeddings are then passed to the fusion module for interaction modeling. During training, both encoders are kept frozen to reduce optimization cost and preserve stable pretrained representations. 
+
+2) Fusion Module: The fusion module (Fig. 2(a) Fu-sion Module) aims to explicitly model cross-modal en-zyme–substrate interactions and transform variable-length en-zyme and substrate embeddings into discriminative pairwise features for downstream prediction. To this end, we design the fusion module around three complementary views: direc-tional cross-modal interaction modeling, joint complex-level modeling, and adaptive multi-view fusion. 
+
+a) Directional Cross-modal Interaction Modeling: En-zymes and substrates play asymmetric roles in the reaction process. To preserve this asymmetry, we use cross-attention to construct directional interaction views. Given Q ∈ RLQ×da
+
+and K, V ∈ RLK ×da , where LQ denotes the length of the query representation, LK denotes the length of the key and value representations, and da is the attention hidden dimension, cross-attention is computed as 
+
+R = QK ⊤
+
+√da
+
+∈ RLQ×LK , (1) 
+
+A = softmax( R) ∈ RLQ×LK , (2) 
+
+Z = AV ∈ RLQ×da , (3) where R denotes the attention logits and A denotes the normalized attention weights. Since each output vector zi in 
+
+Z ∈ RLQ×da corresponds to a query token, cross-attention is directional with respect to the query choice. Accordingly, RAMMESI uses two complementary branches: an enzyme-to-substrate branch with He as queries and Hs as keys and val-ues, and a substrate-to-enzyme branch with the roles reversed. The outputs of both branches are retained as complementary cross-modal interaction views. 
+
+b) Joint Complex-level Modeling: To capture global con-text at the enzyme-substrate complex level, we further intro-duce a joint transformer branch. Using the encoder outputs 
+
+He and Hs, we concatenate them as 
+
+Hc = [ He; Hs] ∈ RLc×d, Lc = Le + Ls, (4) where Lc denotes the length of concatenated enzyme and substrate embeddings, and compute self-attention over the joint sequence: 
+
+Qc = HcWQ, Kc = HcWK , Vc = HcWV , (5) 
+
+Rc = QcK⊤
+
+> c
+
+√da
+
+∈ RLc×Lc . (6) Enzyme and substrate embeddings often differ in length, and joint attention may dilute cross-modal signals over the longer modality. To mitigate this, we decompose the attention logits into intra-modal and cross-modal blocks: 
+
+Rc =
+
+Ree Res 
+
+Rse Rss 
+
+
+
+, (7) where Ree and Rss denote intra-modal logits, and Res and 
+
+Rse denote cross-modal logits. We then apply a temperature factor τ to the cross-modal blocks: 
+
+˜Rc =
+
+ Ree τ Res 
+
+τ Rse Rss 
+
+
+
+, (8) followed by standard attention normalization: 
+
+Ac = softmax( ˜Rc), (9) 
+
+Zc = AcVc. (10) Here, τ calibrates the contribution of cross-modal alignment before softmax normalization. 
+
+c) Adaptive Multi-view Fusion: The transformed rep-resentations of the three interaction branches are mapped into three view-specific feature vectors {fe, fc, fs} ∈ Rda
+
+using convolutional and mean pooling, corresponding to the enzyme-to-substrate, complex-level, and substrate-to-enzyme views, respectively. To adaptively balance the contributions of different interaction views, we apply a channel-wise gating mechanism. Each view feature is first transformed by a view-specific linear projection: 
+
+˜fe = feWe, ˜fc = fcWc, ˜fs = fsWs, (11) where {˜fe, ˜fc, ˜fs} are the transformed features of the three interaction views. We then compute the gating logits and split them into three view-specific vectors: 
+
+g = Wg [˜fe; ˜fc; ˜fs] = [ ge; gc; gs], ge, gc, gs ∈ Rda . (12) For each feature channel j, the softmax is applied across the three interaction views: 
+
+[αe,j , α c,j , α s,j ] = softmax ([g e,j, gc,j, gs,j]) , j = 1 , . . . , da.
+
+(13) Finally, the fused feature fF ∈ Rda is computed as 
+
+fF = αe ⊙ ˜fe + αc ⊙ ˜fc + αs ⊙ ˜fs, (14) where αv = [ αv, 1, . . . , α v,d a ] for v ∈ { e, c, s } denote the channel-wise gating weights for the three interaction views and ⊙ denotes the element-wise product. 
+
+3) Decoder Module: After obtaining the fused representa-tion fF , we use a two-layer feed-forward decoder followed by a sigmoid function to predict enzyme-substrate reactivity: 
+
+Pm = σ(W2ϕ(W1fF )) , (15) where ϕ(·) denotes ReLU and σ(·) denotes the sigmoid function. The output Pm ∈ (0 , 1) is the predicted probability that the given enzyme–substrate pair is reactive. 
+
+C. The Retrieval Augmentation Inference Strategy 
+
+To improve robustness under low-sequence-identity eval-uation, we introduce an inference-time retrieval augmenta-tion strategy that uses neighborhood evidence from similar enzymes in representation space. As shown in Fig. 2(b), the retrieval component is decoupled from model training and can be applied in a plug-and-play manner, avoiding the additional cost of retrieval-in-training pipelines. The strategy consists of three steps: embedding-based retrieval, retrieval signal aggregation, and prediction augmentation. SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 5
+
+1) Embedding-Based Retrieval: The first step retrieves representation-space neighbors for the query enzyme. 
+
+a) Offline Index Construction: Let Etrain be the set of unique training enzymes. Each unique training enzyme 
+
+ei ∈ E train is encoded by a pretrained enzyme representation model into a retrieval representation hi ∈ Rdr , where dr is the retrieval hidden dimension. We construct a FAISS [45] indexed retrieval memory bank B, which stores the enzyme sequences and representations for efficient retrieval search. 
+
+B = {⟨ ei, hi⟩} ei∈E train . (16) 
+
+b) Online Neighbor Retrieval: During inference, for a query enzyme eq , FAISS compares its retrieval representation with the indexed enzyme representations in B under a selected retrieval metric ( i.e., cosine similarity), and returns the K
+
+highest-ranked relevant enzymes, which form the retrieved neighbor set NK (eq ):
+
+NK (eq ) = {e1, e 2, ..., e i, ..., e K }, e i ∈ E train . (17) 
+
+2) Retrieval Signal Aggregation: Directly aggregating neighbor labels is insufficient for ESI prediction, because enzyme reactivity also depends on the query substrate. We therefore use model-based consensus aggregation. For each retrieved enzyme en ∈ NK (eq ), we construct a sup-port pair (en, s q ) with the query substrate sq and use the trained RAMMESI model to obtain its interaction probability 
+
+ψΘ(en, s q ). The retrieval signal is computed as a weighted consensus over the support predictions: 
+
+Pr = X  
+
+> en∈N K(eq)
+
+βnψΘ(en, s q ), (18) where βn denotes the normalized similarity-based weight. 
+
+βn = exp (sim( hq , hn)) 
+
+P    
+
+> ej∈N K(eq)
+
+exp (sim( hq , hj )) , (19) where hq , hn, and hj are enzyme retrieval representations, and sim( ·) denotes cosine similarity. The weights favor highly similar enzymes and down-weight distant neighbors. 
+
+3) Prediction Augmentation: Finally, we combine the base prediction Pm of the query pair (eq , s q ) with the retrieval signal Pr through linear interpolation. The final augmented probability PI is computed as: 
+
+PI = (1 − λ) · Pm + λ · Pr , (20) where λ ∈ [0 , 1] controls the contribution of the retrieval sig-nal. This interpolation injects neighborhood evidence into the final prediction and improves robustness under low-sequence-identity distribution shifts. Algorithm 1 summarizes the proposed inference proce-dure. During inference, the additional computational over-head mainly comes from nearest-neighbor retrieval and extra model forward passes for the retrieved support pairs. FAISS indexing enables efficient similarity search over the memory bank, whose practical cost depends on the index type and memory-bank size. The retrieval-augmented signal requires K
+
+additional forward passes, so the model-side inference cost scales linearly with the number of retrieved neighbors. As shown in Section IV-D, a small value such as K = 5 provides sufficient performance gains with limited latency overhead. 
+
+Algorithm 1 Retrieval-Augmented Inference for RAMMESI 
+
+Require: Query pair (eq , s q ); Trained RAMMESI model ψΘ;Enzyme Memory Bank B = {⟨ ei, hi⟩} ei∈E train ; Hyperpa-rameters: retrieval count K, weight λ.
+
+Ensure: Interaction Probability PI . 
+
+> 1:
+
+// Phase 1: Base Prediction  
+
+> 2:
+
+Compute base probability: Pm ← ψΘ(eq , s q ) 
+
+> 3:
+
+// Phase 2: Embedding-Based Retrieval  
+
+> 4:
+
+Encode query enzyme to retrieval representation hq 
+
+> 5:
+
+Retrieve neighbor set NK (eq ) from B 
+
+> 6:
+
+// Phase 3: Retrieval Signal Aggregation  
+
+> 7:
+
+if NK (eq )̸ = ∅ then  
+
+> 8:
+
+Initialize support evidence sum S ← 0 
+
+> 9:
+
+Compute normalization denominator D ←P    
+
+> ej∈N K(eq)
+
+exp( sim (hq , hj ))  
+
+> 10:
+
+for all retrieved enzyme en ∈ N K (eq ) do  
+
+> 11:
+
+Calculate importance weight: βn ← exp( sim (hq ,hn))  
+
+> D
+> 12:
+
+Predict support pair interaction: Psupport ←
+
+ψΘ(en, s q ) 
+
+> 13:
+
+Accumulate weighted evidence: S ← S + βn ·
+
+Psupport  
+
+> 14:
+
+end for  
+
+> 15:
+
+Set retrieval signal: Pr ← S 
+
+> 16:
+
+else  
+
+> 17:
+
+Pr ← Pm // Fallback if no neighbors found  
+
+> 18:
+
+end if  
+
+> 19:
+
+// Phase 4: Prediction Augmentation  
+
+> 20:
+
+Fuse probabilities: PI ← (1 − λ) · Pm + λ · Pr 
+
+> 21:
+
+return PI
+
+D. Optimization Objective 
+
+For an enzyme-substrate pair with label y ∈ { 0, 1}, let ˆp ∈
+
+(0 , 1) denote the predicted probability for the reactive class. During training, ˆp corresponds to the base prediction Pm. The binary cross-entropy (BCE) is frequently used as the default loss, which is 
+
+LBCE (y, ˆp) = −y log ˆ p − (1 − y) log(1 − ˆp). (21) 
+
+1) Weighted BCE Framework for Severe Class Imbalance: 
+
+Although widely used for binary classification, BCE loss can be suboptimal under severe class imbalance. In ESI prediction, non-reactive pairs often outnumber reactive pairs [34]. This imbalance can make the training objective disproportionately influenced by easy negatives, which are non-reactive pairs (y = 0) with low predicted probability ˆp. Consequently, the relative contribution of scarce positive examples may be weakened. We express imbalance-aware optimization under a weighted BCE formulation. 
+
+L(pt) = −w(pt) log( pt), (22) where 
+
+pt = y ˆp + (1 − y)(1 − ˆp) (23) denotes the predicted probability assigned to the ground-truth class, with pt = ˆ p for reactive pairs and pt = 1 − ˆp for non-reactive pairs. pt also serves as the target-class confidence, SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 60.0 0.2 0.4 0.6 0.8 1.0 
+
+²
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> w(²)
+
+(a) BCE & Focal Loss weights      
+
+> BCE ( w(²) = 1 )
+> FL ( γ=1)
+> FL ( γ=2)
+> FL ( γ=3)
+> 0.0 0.2 0.4 0.6 0.8 1.0
+
+²
+
+(b) TAS weight, fix θ=0.4, vary k     
+
+> k=2
+> k=3
+> k=5
+> 0.0 0.2 0.4 0.6 0.8 1.0
+
+²
+
+(c) TAS weight, fix k=3, vary θ
+
+> θ=0.2
+> θ=0.3
+> θ=0.4
+
+Fig. 3: Comparison of weighting functions under the weighted-BCE framework. Here, w(ϵ) denotes the sample weight, ϵ =1 − pt denotes the prediction error. (a) BCE uses a constant weight, while focal loss uses power-law modulation in which γ
+
+jointly changes the focusing region and curve shape. (b) In TAS, varying k mainly adjusts transition sharpness. (c) In TAS, varying θ mainly shifts the transition location. where a larger value indicates higher confidence in the ground-truth class [46]. Under this framework, different objectives correspond to different choices of the weighting function 
+
+w(pt). In particular: 1) Standard BCE loss assigns a uniform weight to all samples: 
+
+wBCE (pt) = 1 . (24) 2) Focal loss introduces confidence-dependent power-law weights: 
+
+wFL (pt) = (1 − pt)γ , (25) where γ controls the focusing strength. Larger γ values down-weight high-confidence samples more strongly and place greater emphasis on samples with lower target class confidence. However, the focal loss weighting behavior is governed by a single parameter γ, which motivates a more flexible weighting variant. 3) Threshold-aware smooth (TAS) serves as a more flexible weighting variant: 
+
+wTAS (pt) = ρ
+
+
+
+tanh  k((1 − pt) − θ) − ξ
+
+
+
+. (26) Here, θ ∈ (0 , 1) primarily controls the transition location along the error axis ϵ = 1 − pt, while k > 0 controls the transition sharpness around θ. The constants ρ and ξ
+
+are deterministic functions of k and θ used to normalize 
+
+wTAS to [0 , 1] .Under this unified formulation, BCE, focal loss, and TAS can be interpreted as different choices of the sample-weighting function. This view provides a clearer basis for loss design when prior knowledge about label imbalance or sample dif-ficulty is available. Compared with the uniform weighting in BCE, focal loss and TAS assign confidence-dependent weights to training samples, thereby reducing the dominance of easy negative examples under severe ESI class imbalance. The key difference between focal loss and TAS lies in how the weighting behavior is parameterized. In focal loss, the single parameter γ jointly controls the focusing region and the curve steepness. In contrast, TAS separates these two effects through θ and k. As illustrated in Fig. 3, θ primarily shifts the transition location, whereas k primarily adjusts the transition sharpness. This design enables more flexible sample reweighting when the desired focusing region varies across datasets or evaluation settings. IV. E XPERIMENTS 
+
+We evaluate RAMMESI with respect to the three main challenges identified above: substrate-conditioned pairwise modeling, low-homology generalization, and learning under class imbalance. Specifically, we compare RAMMESI with existing ESI predictors on two public datasets under sequence-identity-aware evaluation, analyze its behavior across different imbalance settings, and conduct ablations to quantify the contribution of key components. We further examine the effect of inference-time retrieval augmentation and present a case study on enzyme-substrate candidate prioritization. 
+
+A. Experimental Protocols a) Benchmarks: All experiments are conducted on two public ESI benchmarks: ESP-DB [11] and Reactzyme-DB [28]. ESP-DB is released as enzyme-substrate pairs with binary interaction labels. In ESP-DB, negative pairs are con-structed by sampling structurally similar molecules that are not annotated as substrates of the corresponding enzyme, followed by an enzyme-sequence-identity-aware split between the train-ing and test sets. Reactzyme-DB is originally curated at the reaction level, where each enzyme is associated with a cat-alyzed reaction equation rather than explicit enzyme-substrate pairs. To adapt Reactzyme-DB to pairwise ESI prediction and ensure consistency with ESP-DB, we convert each reaction into enzyme-substrate positive pairs using molecular reactants as candidate substrates. After converting Reactzyme-DB into pair-level positive pairs, we generate negative pairs using the similarity-based sampling strategy adopted in ESP-DB and follow the same splitting protocol to construct training, vali-dation, and test sets. For preprocessing, we remove ESP-DB pairs whose substrates cannot be embedded by the molecular encoder and exclude non-standard Reactzyme-DB participants SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 7
+
+TABLE I: Dataset statistics.             
+
+> Dataset # Enzymes # Substrates # Total Pairs Pos.:Neg.
+> ESP-DB 146,613 1,336 782,273 1:2.7 Reactzyme-DB 125,092 5,529 657,495 1:2.6
+
+such as water, gases, and metal ions. Table I summarizes the processed datasets. Furthermore, to evaluate generalization beyond close homologs, we compute the maximum sequence identity between each test enzyme and the training enzymes using MMseqs2 [47]. Results are reported in three low-identity intervals of < 20% , [20% , 30%) , and [30% , 40%) , where lower identity indicates a more challenging evaluation setting. Detailed statistics of the three test sets across different identity intervals are reported in Table S3 in the Appendix. 
+
+b) Implementation: RAMMESI is trained with AdamW [48] using a learning rate of 3 × 10 −5, a batch size of 256 ,and early stopping based on validation AUROC for up to 
+
+50 epochs. The attention hidden dimension da is set to 768 ,and the joint modeling transformer contains 3 layers. For Threshold-Aware Smooth weighting, we set k = 3 , θ = 0 .4
+
+on ESP-DB and k = 2 , θ = 0 .4 on Reactzyme-DB. 
+
+c) Baselines: We compare RAMMESI with traditional machine learning baselines, a simple neural baseline, and existing ESI prediction deep learning methods. RandomFor-est [49], LightGBM [50], and DNN are implemented us-ing concatenated mean-pooled representations from ESM2-650M [51] for enzymes and UniMol2-570M [52] for sub-strates. We further compare with ProSmith [53], VIPER [24], ESP [11], OmniESI [33], and FusionESP [20], which represent existing deep learning approaches for ESI prediction. For published baselines, we use official implementations with default hyperparameter settings; implementation sources are summarized in Table S4 in the Appendix. 
+
+d) Evaluation: We formulate ESI prediction as a binary classification task, where each enzyme-substrate pair is labeled as reactive (positive) or non-reactive (negative). To account for label imbalance, we evaluate model performance using Recall, AUROC, AUPRC, and F1 score. In particular, AUROC and AUPRC measure ranking quality, while F1 score and Recall assess positive-class performance. 
+
+B. Baseline Comparison 
+
+Table II compares RAMMESI with baseline methods on ESP-DB and Reactzyme-DB under low-sequence-identity evaluation. Results are reported for three identity regimes, i.e., 
+
+< 20% , [20% , 30%) , and [30% , 40%) , to assess performance under low-homology shift. As sequence identity between test enzymes and training enzymes decreases, most methods show clear performance degradation, confirming the difficulty of low-identity ESI prediction. Nevertheless, RAMMESI remains robust across identity regimes and achieves leading perfor-mance in most settings on both datasets. In particular, it obtains strong AUROC and Recall on ESP-DB and consis-tently strong performance on Reactzyme-DB, indicating better retention and ranking of reactive pairs when test enzymes have limited homology to the training set. FusionESP and OmniESI 1:5 1:10 1:20 1:30 1:50                 
+
+> Positive:Negative Ratio
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8 Recall (ESP-DB)
+> 1:5 1:10 1:20 1:30 1:50
+> Positive:Negative Ratio
+> 0.15
+> 0.30
+> 0.45
+> 0.60
+> AUPRC (ESP-DB)
+> 1:5 1:10 1:20 1:30 1:50
+> Positive:Negative Ratio
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> Recall (Reactzyme-DB)
+> 1:5 1:10 1:20 1:30 1:50
+> Positive:Negative Ratio
+> 0.15
+> 0.30
+> 0.45
+> 0.60
+> AUPRC (Reactzyme-DB)
+> ESP OmniESI FusionESP RAMMESI
+
+Fig. 4: Recall and AUPRC performance on ESP-DB and Reactzyme-DB with different positive-to-negative ratios. also perform competitively, further supporting the value of explicit cross-modal interaction modeling for ESI prediction. We further assess robustness under class imbalance by com-paring RAMMESI with top-performing baselines at positive-to-negative ratios from 1 : 5 to 1 : 50 . Here we focus on AUPRC and Recall (reported in Fig. 4 AUROC and F1 results are provided in Fig. S1 in the Appendix. AUPRC reflects ranking quality under imbalance, whereas Recall mea-sures how many reactive pairs are retained for downstream screening. For Recall, RAMMESI consistently achieves the best performance across imbalance ratios on both datasets, indicating stronger retention of reactive enzyme-substrate pairs for downstream screening. For AUPRC, all methods degrade as the proportion of negative samples increases, suggesting that ranking positives above a larger pool of negatives becomes increasingly difficult. Nevertheless, RAMMESI maintains the highest AUPRC in most settings, indicating stronger ranking quality under severe imbalance. Together, its stable Recall and AUPRC show that RAMMESI better preserves positive candidates while maintaining their ranking, whereas baseline methods tend to lose either positive-class coverage or ranking precision under heavier imbalance. 
+
+C. Ablation Study 
+
+To validate key RAMMESI components, we conduct a set of ablation studies under the most challenging < 20% sequence-identity setting. This subsection examines three aspects of our approach. (1) Model component ablations: we remove the key architectural modules to assess their contribution to pairwise enzyme–substrate interaction modeling. (2) Loss function comparison: we compare alternative loss functions (e.g., BCE loss and focal loss) to quantify the impact of imbalance-aware optimization under skewed ESI supervision. SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 8
+
+TABLE II: Performance Comparison on ESP-DB and Reactzyme-DB. 
+
+Identity Model ESP-DB Reactzyme-DB 
+
+Recall AUROC AUPRC F1 Recall AUROC AUPRC F1 
+
+<20% RandomForest 0.091 ±0.014 0.717 ±0.015 0.522 ±0.023 0.165 ±0.023 0.178 ±0.018 0.733 ±0.015 0.611 ±0.022 0.301 ±0.025 
+
+LightGBM 0.033 ±0.009 0.665 ±0.016 0.463 ±0.023 0.064 ±0.018 0.037 ±0.008 0.613 ±0.016 0.443 ±0.023 0.073 ±0.017 
+
+DNN 0.512 ±0.023 0.824 ±0.011 0.695 ±0.018 0.595 ±0.019 0.440 ±0.024 0.767 ±0.013 0.616 ±0.022 0.515 ±0.021 
+
+ProSmith 0.336 ±0.021 0.588 ±0.013 0.338 ±0.017 0.360 ±0.019 0.187 ±0.022 0.620 ±0.017 0.417 ±0.026 0.282 ±0.028 
+
+VIPER 0.015 ±0.007 0.523 ±0.017 0.272 ±0.017 0.028 ±0.012 0.042 ±0.010 0.486 ±0.016 0.285 ±0.016 0.075 ±0.016 
+
+ESP 0.485 ±0.023 0.807 ±0.011 0.659 ±0.018 0.545 ±0.021 0.391 ±0.033 0.758 ±0.021 0.590 ±0.036 0.487 ±0.033 
+
+OmniESI 0.503 ±0.024 0.828 ±0.013 0.709 ±0.020 0.600 ±0.022 0.481 ±0.026 0.795 ±0.012 0.685 ±0.020 0.545 ±0.023 
+
+FusionESP 0.467 ±0.004 0.844 ±0.007 0.758 ±0.003 0.608 ±0.001 0.376 ±0.010 0.752 ±0.004 0.670 ±0.001 0.517 ±0.011 
+
+RAMMESI 0.553 ±0.024 0.848 ±0.002 0.736 ±0.019 0.616 ±0.021 0.487 ±0.023 0.833 ±0.011 0.728 ±0.018 0.578 ±0.021 
+
+[20%, 30%) RandomForest 0.190 ±0.037 0.818 ±0.023 0.693 ±0.041 0.315 ±0.052 0.187 ±0.025 0.778 ±0.017 0.641 ±0.026 0.310 ±0.037 
+
+LightGBM 0.061 ±0.021 0.621 ±0.031 0.420 ±0.045 0.112 ±0.037 0.015 ±0.006 0.606 ±0.021 0.449 ±0.030 0.011 ±0.011 
+
+DNN 0.612 ±0.046 0.872 ±0.018 0.774 ±0.033 0.663 ±0.038 0.488 ±0.036 0.779 ±0.019 0.659 ±0.031 0.545 ±0.032 
+
+ProSmith 0.358 ±0.041 0.601 ±0.033 0.362 ±0.035 0.377 ±0.038 0.211 ±0.030 0.593 ±0.027 0.425 ±0.033 0.320 ±0.038 
+
+VIPER 0.037 ±0.018 0.503 ±0.030 0.284 ±0.032 0.066 ±0.032 0.063 ±0.019 0.497 ±0.024 0.288 ±0.025 0.106 ±0.030 
+
+ESP 0.625 ±0.048 0.886 ±0.019 0.801 ±0.031 0.691 ±0.038 0.343 ±0.048 0.682 ±0.030 0.483 ±0.048 0.414 ±0.050 
+
+OmniESI 0.682 ±0.045 0.915 ±0.015 0.854 ±0.023 0.743 ±0.031 0.566 ±0.036 0.834 ±0.016 0.728 ±0.027 0.604 ±0.030 
+
+FusionESP 0.626 ±0.012 0.891 ±0.018 0.842 ±0.016 0.724 ±0.014 0.457 ±0.003 0.817 ±0.014 0.735 ±0.004 0.578 ±0.005 
+
+RAMMESI 0.728 ±0.036 0.942 ±0.011 0.883 ±0.020 0.783 ±0.028 0.583 ±0.030 0.842 ±0.017 0.745 ±0.024 0.628 ±0.026 
+
+[30%, 40%) RandomForest 0.250 ±0.027 0.835 ±0.015 0.708 ±0.024 0.399 ±0.034 0.282 ±0.014 0.847 ±0.009 0.738 ±0.013 0.433 ±0.017 
+
+LightGBM 0.122 ±0.018 0.739 ±0.015 0.574 ±0.027 0.216 ±0.028 0.029 ±0.006 0.674 ±0.010 0.477 ±0.016 0.056 ±0.010 
+
+DNN 0.696 ±0.027 0.906 ±0.010 0.815 ±0.019 0.718 ±0.020 0.526 ±0.015 0.874 ±0.006 0.754 ±0.012 0.603 ±0.013 
+
+ProSmith 0.361 ±0.026 0.593 ±0.021 0.360 ±0.024 0.382 ±0.025 0.218 ±0.016 0.633 ±0.012 0.458 ±0.018 0.321 ±0.019 
+
+VIPER 0.025 ±0.010 0.486 ±0.020 0.262 ±0.021 0.047 ±0.017 0.032 ±0.006 0.474 ±0.012 0.277 ±0.012 0.057 ±0.010 
+
+ESP 0.708 ±0.030 0.909 ±0.012 0.831 ±0.018 0.738 ±0.021 0.547 ±0.019 0.823 ±0.010 0.732 ±0.015 0.622 ±0.015 
+
+OmniESI 0.766 ±0.028 0.942 ±0.009 0.896 ±0.015 0.803 ±0.019 0.616 ±0.015 0.873 ±0.006 0.790 ±0.011 0.681 ±0.012 
+
+FusionESP 0.730 ±0.002 0.924 ±0.002 0.873 ±0.003 0.797 ±0.006 0.566 ±0.013 0.867 ±0.005 0.804 ±0.007 0.680 ±0.009 
+
+RAMMESI 0.846 ±0.023 0.951 ±0.011 0.908 ±0.014 0.854 ±0.016 0.614 ±0.016 0.876 ±0.006 0.803 ±0.010 0.686 ±0.013 
+
+Optimal results are in bold ; second-best results are underlined. 
+
+TABLE III: Model component ablation results under < 20% 
+
+identity.                                          
+
+> Dataset Setting Recall AUROC AUPRC F1
+> ESP-DB RAMMESI 0.555 0.848 0.737 0.618 w/o Gate 0.550 0.832 0.722 0.609 w/o Joint 0.555 0.824 0.731 0.639
+> w/o Joint &Gate 0.547 0.822 0.710 0.611 Reactzyme-DB RAMMESI 0.485 0.832 0.726 0.578
+> w/o Gate 0.498 0.777 0.671 0.572 w/o Joint 0.452 0.775 0.651 0.525 w/o Joint &Gate 0.485 0.787 0.674 0.572
+
+(3) Effect of the temperature factor: We report and discuss the performance impact of enabling the temperature factor. 
+
+1) Model component ablations: We first compare the full model with three variants: removing the adaptive gating mech-anism (w/o Gate), removing the joint modeling branch (w/o Joint), and removing both components (w/o Joint & Gate). As shown in Table III, the full model achieves the best AU-ROC and AUPRC on both datasets, indicating that joint inter-action modeling and adaptive gating fusion improve discrim-inative performance under low-sequence-identity evaluation. Removing either component generally degrades performance, while removing both leads to a further decline, suggesting that the two modules provide complementary benefits. The joint branch contributes complex-level interaction context, whereas the gating mechanism adaptively integrates multiple interaction views for prediction. TABLE IV: Performance comparison of different loss func-tions under the < 20% identity setting, with and without retrieval augmentation.                                                   
+
+> Dataset Loss Retrieval Recall AUROC AUPRC F1
+> ESP-DB BCE
+> ✗
+> 0.498 0.822 0.699 0.584 Focal 0.578 0.843 0.740 0.641
+> TAS 0.568 0.829 0.715 0.614 BCE
+> ✓
+> 0.495 0.850 0.734 0.588 Focal 0.573 0.855 0.755 0.658
+> TAS 0.555 0.848 0.737 0.618 Reactzyme-DB BCE
+> ✗
+> 0.478 0.764 0.659 0.568 Focal 0.473 0.767 0.653 0.550 TAS 0.491 0.781 0.678 0.576
+> BCE
+> ✓
+> 0.478 0.820 0.731 0.571 Focal 0.464 0.802 0.695 0.559 TAS 0.485 0.832 0.726 0.578
+
+The two datasets show different sensitivity patterns. On ESP-DB, RAMMESI obtains the best AUROC ( 0.848 ) and AUPRC ( 0.737 ), while the w/o Joint variant achieves a slightly higher F1, suggesting that the cross-attention branches alone already capture strong pairwise features on this dataset. On Reactzyme-DB, removing the joint branch causes the largest drops in AUROC, AUPRC, and F1, indicating a stronger need for complex-level context. The w/o Gate variant obtains slightly higher Recall, but with clear AUROC and AUPRC degradation, suggesting reduced ranking quality despite higher positive-class coverage. Overall, the ablation results show that the proposed component design improves RAMMESI for low-SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 9
+
+identity ESI prediction. Results for the other identity intervals are reported in Table S5 in the Appendix. 
+
+2) Loss function comparison: We compare BCE, focal loss, and TAS to examine how different weighted-BCE objectives perform across two datasets. Each loss is evaluated with and without retrieval augmentation. As shown in Table IV, both focal loss and TAS generally improve over BCE, indicating that confidence-aware sample weighting is beneficial under skewed ESI supervision. The relative advantage of focal loss and TAS, however, differs across datasets. On ESP-DB, focal loss achieves the strongest overall performance, suggesting that its power-law modulation is well matched to this dataset. On Reactzyme-DB, TAS shows more stable behavior across standard and retrieval-augmented settings: while focal loss does not consistently improve over BCE and underperforms on several metrics, TAS maintains gains in AUROC and F1 in both settings. These results indicate that TAS should not be viewed as a universal replacement for focal loss; rather, it provides a more flexible weighting variant when the optimal focusing profile differs across datasets. Results on other identity intervals are reported in Table S6 in the Appendix. TABLE V: Performance comparison of temperature factor impact under the < 20% identity setting, with and without retrieval augmentation.                                           
+
+> Dataset Setting Retrieval Recall AUROC AUPRC F1
+> ESP-DB Temp. Off ✗0.565 0.819 0.715 0.626
+> Temp. On 0.568 0.829 0.715 0.614 Temp. Off ✓0.550 0.843 0.742 0.625
+> Temp. On 0.555 0.848 0.737 0.618 Reactzyme-DB Temp. Off ✗0.466 0.775 0.659 0.550 Temp. On 0.491 0.781 0.678 0.576
+> Temp. Off ✓0.468 0.817 0.710 0.563 Temp. On 0.485 0.832 0.726 0.578
+
+3) Effect of the temperature factor: Table V evaluates the temperature factor τ used to calibrate cross-modal attention scores in the joint interaction branch. Across both datasets, enabling temperature scaling improves AUROC and Recall in both standard and retrieval-augmented settings, suggesting that calibrated cross-modal attention is beneficial for low-identity ESI prediction. The effect is more pronounced on Reactzyme-DB, where temperature scaling im-proves all four metrics, including Recall from 0.466 to 0.491 
+
+and AUPRC from 0.659 to 0.678 . On ESP-DB, temperature scaling improves AUROC and Recall, but slightly decreases AUPRC and F1, indicating a trade-off between positive-class retention and ranking precision. Overall, these results suggest that the temperature factor improves robustness-oriented met-rics, especially Recall, although its effect varies across datasets and evaluation metrics. Results for the remaining identity intervals are reported in Table S7. 
+
+D. Retrieval Augmentation Analysis 
+
+In our framework, retrieval augmentation is introduced to inject neighborhood context at inference time and improve robustness under low-sequence-identity evaluation. In this sub-section, we analyze how performance changes with the number of retrieved neighbors K, together with the associated time and memory overhead. We also examine whether the same retrieval-then-aggregation strategy can serve as a general plug-and-play module for existing ESI predictors. 
+
+1) Effect of the Number of Retrieved Neighbors: Fig. 5 shows the effect of inference-time enzyme-side retrieval with different numbers of retrieved neighbors K. Compared with the base model without retrieval, retrieval augmentation im-proves AUROC, AUPRC, and F1 in most settings. The main gains are obtained with a small number of neighbors, such as 
+
+K = 5 , while larger K values bring diminishing returns. This trend suggests that nearby enzymes provide useful contextual evidence, whereas more distant neighbors may introduce less relevant signals and dilute the retrieval benefit. The gains are generally more evident in low-identity regimes (e.g., 
+
+< 20% ), indicating that neighborhood evidence is particularly useful when the query enzyme is weakly represented by the training distribution. Recall decreases in some settings despite improvements in F1, suggesting that retrieval augmentation can make predictions more selective by reducing spurious positive assignments. Additional molecule-side retrieval results are provided in Fig. S2 in the Appendix. We also analyze the computational and storage overhead of retrieval augmentation. The per-query inference overhead mainly consists of FAISS search, additional forward passes for retrieved support pairs, and score aggregation. In practice, the dominant cost comes from the K support-pair forward passes. The measured per-query latency is reported in Fig. S3 in the Appendix. The storage overhead comes from the enzyme memory bank constructed from CLEAN-encoded features [3]. The index size scales linearly with the number of indexed en-zymes. Because the retrieval database is decoupled from model training, it can be expanded independently when external en-zyme collections are available. Overall, using K = 5 provides a practical trade-off between performance and inference cost. 
+
+2) Generalizability as a Plug-and-Play Module: We next evaluate whether inference-time retrieval augmentation can improve existing ESI predictors without changing their ar-chitectures or retraining. We select OmniESI and FusionESP as representative competitive baselines and apply the same neighbor-retrieval and aggregation procedure to them at in-ference time. For both baselines, we use K = 5 retrieved neighbors at inference time. Table VI reports the results across identity splits on both datasets. Retrieval augmentation consistently improves AU-ROC and AUPRC for both baselines across identity splits, indicating that the benefit of inference-time retrieval is not specific to RAMMESI. F1 scores remain stable or improve in most settings, suggesting that retrieved neighborhood ev-idence mainly refines ranking quality without substantially disrupting classification performance. The improvements are most evident in the < 20% identity regime, where test enzymes have the weakest homology to training enzymes. As sequence identity increases, the marginal benefit becomes smaller, consistent with stronger base-model performance in easier regimes. Overall, these results support retrieval augmen-tation as a plug-and-play inference mechanism for improving performance under low-identity ESI evaluation. SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 10 
+
+Fig. 5: Inference-time retrieval performance on two datasets with different numbers of neighbors. Base is the model without retrieval augmentation, K is the number of retrieved neighbors. (a) The inference-time retrieval-augmentation performance on ESP-DB. (b) The inference-time retrieval-augmentation performance on Reactzyme-DB. TABLE VI: Performance comparison with Plug-and-play retrieval augmentation on two ESI baselines ( K=5 ).                                                                                                                   
+
+> Identity Retrieval ESP-DB Reactzyme-DB
+> Recall AUROC AUPRC F1 Recall AUROC AUPRC F1
+> OmniESI
+> <20% ✗0.505 0.829 0.709 0.600 0.480 0.794 0.682 0.544
+> ✓0.498 0.850 0.739 0.601 0.487 0.829 0.717 0.553
+> [20%, 30%) ✗0.678 0.913 0.852 0.743 0.560 0.833 0.723 0.600
+> ✓0.678 0.935 0.872 0.746 0.555 0.850 0.741 0.607
+> [30%, 40%) ✗0.766 0.942 0.895 0.801 0.616 0.873 0.790 0.680
+> ✓0.766 0.947 0.902 0.803 0.614 0.878 0.806 0.686 FusionESP
+> <20% ✗0.470 0.839 0.756 0.608 0.369 0.750 0.670 0.510
+> ✓0.460 0.852 0.774 0.608 0.406 0.778 0.708 0.552
+> [20%, 30%) ✗0.617 0.878 0.830 0.713 0.455 0.807 0.731 0.575
+> ✓0.626 0.891 0.846 0.723 0.481 0.829 0.758 0.610
+> [30%, 40%) ✗0.728 0.923 0.871 0.793 0.566 0.871 0.810 0.686
+> ✓0.717 0.925 0.874 0.788 0.574 0.873 0.817 0.695
+
+E. Case Study 
+
+We next evaluate RAMMESI in a constrained-budget screening setting, where only a small fraction of candidate enzyme-substrate pairs can be experimentally assayed. We for-mulate this task as candidate prioritization: pairs are ranked by predicted interaction probability, and performance is measured by the recovery of verified interactions among top-ranked candidates. To construct the case dataset, we collect E. coli enzyme-substrate interaction pairs from KEGG [54] and ex-clude enzymes appearing in either ESP-DB or Ryeactzyme-DB, ensuring an unseen-enzyme evaluation setting. The final dataset contains 90 enzymes, 228 substrates, and 20 , 520 can-didate pairs. Pairs without KEGG-curated evidence are treated as unlabeled candidates rather than confirmed non-reactive pairs. We report Hits@ K to count true positives among the top-K candidates, and EF@1% to measure enrichment over random selection within the top 1% of the ranked list. Table VII reports the screening results. RAMMESI achieves the best performance across all budgets, recovering 6 true positives within the top 10 candidates and 16 within the top 
+
+100 , with the highest enrichment score (EF@1% = 7.12 ). At the stringent top-10 budget, only ESP and OmniESI retrieve true positives among baselines, whereas RAMMESI recovers twice as many as the strongest baseline. These results indicate that RAMMESI ranks reactive candidates more reliably for unseen enzymes under limited validation capacity. SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 11 
+
+Fig. 6: Docking visualization for two case-study pairs: (a) verified positive pair P08390-C00009; (b) high-scoring unlabeled candidate B1XDY6-C00441, supported by EC consistency and substrate similarity. TABLE VII: Case study performance.                               
+
+> Method Hits@10 Hits@100 EF@1.0%
+> RandomForest 251.78 LightGBM 021.42 DNN 022.49 ProSmith 043.20 VIPER 011.07 ESP 354.27 OmniESI 394.62 FusionESP 031.91 RAMMESI 616 7.12
+
+To provide qualitative structural context for the screen-ing results, we visualize two representative enzyme–substrate pairs and generate docking poses using AutoDock Vina [55] (Fig. 6). Here, docking is used only as supportive evidence for structural compatibility, rather than as proof of catalytic turnover. Fig. 6(a) shows an experimentally verified positive pair, in which the docked substrate forms plausible pocket interactions with nearby residues, serving as a sanity check for the structural reasonableness of the ranking result. Fig. 6(b) shows a high-scoring unlabeled candidate pair involving com-pound C00441 (L-aspartate-4-semialdehyde), which is not currently curated as a verified interaction. The corresponding enzyme is annotated as EC 1.2.1.41, whose native substrate ChEBI:58066 (L-glutamate-5-semialdehyde) is a close struc-tural analog of C00441 (The 2D structures of C00441 and CHEBI:58066 are provided in Fig. S4 in the Appendix). This functional consistency and chemical similarity suggest that the predicted pair is not arbitrary. In addition, the docking pose shows that C00441 can be accommodated in the pocket through multiple short polar contacts with residues such as ARG-210, THR-338, and THR-388, providing qualitative structural support for pocket compatibility. Overall, these ex-amples suggest that RAMMESI can prioritize not only known reactive pairs but also structurally and functionally plausible unlabeled candidates beyond current annotations, which may be useful for downstream experimental screening. V. C ONCLUSION AND DISCUSSION 
+
+This study presents RAMMESI, a retrieval-augmented mul-timodal learning framework for enzyme–substrate interac-tion prediction under low-homology shift. RAMMESI treats ESI prediction as a heterogeneous pairwise prediction prob-lem, where reliable inference requires cross-modal compat-ibility modeling, learning from sparse positive supervision, and robustness beyond close-homolog transfer. The frame-work combines directional enzyme–substrate interaction mod-eling, pair-level joint representation learning, adaptive fusion, and imbalance-aware weighted-BCE optimization to capture substrate-specific reactivity from imbalanced supervision. To further improve robustness, RAMMESI introduces inference-time enzyme-side retrieval: neighboring enzymes are retrieved in representation space, recombined with the query substrate as support pairs, and scored by the trained pairwise predictor. The resulting predictions avoid directly transferring neighbor labels or retraining the base model. Experimental results suggest that RAMMESI is effec-tive particularly when ESI prediction cannot rely on close-homolog transfer. On the two open benchmarks ESP-DB and Reactzyme-DB, RAMMESI achieves consistently strong performance under sequence-identity-aware evaluation, espe-cially in low-identity regimes. The retrieval analysis further indicates that inference-time neighborhood evidence improves ranking quality with limited overhead, and the plug-and-play experiments show that this benefit is not tied to a specific ESI backbone. In the constrained-budget screening case study, RAMMESI demonstrates its practical value for reaction prior-itization by recovering more verified reactive pairs among top-ranked candidates and identifying structurally and functionally plausible unlabeled candidates. From a knowledge and data engineering perspective, RAMMESI highlights a practical route for robust scien-tific pairwise prediction under sparse supervision and low-similarity distribution shift. In such settings, purely parametric models may be limited by incomplete positive observations and weak coverage of test entities, while direct nearest-neighbor transfer may ignore the pair-specific dependency that determines the target label. RAMMESI addresses this gap by combining learned multimodal compatibility with retrieval-based support evidence at inference time. Although this study focuses on ESI prediction, the same principle may be relevant to other heterogeneous interaction prediction tasks where can-didate spaces are large, labels are incomplete, and predictions must generalize beyond closely related training examples. Several directions remain open. First, the current retrieval memory is built mainly from single-side molecular represen-tations. Future exploration may incorporate richer retrieval keys that encode interaction-level context, so that retrieved evidence is also selected by compatibility patterns between the two entities. Second, the role of retrieval and fusion under low similarity and high imbalance deserves further investigation beyond ESI prediction. Low similarity, high imbalance, and incomplete positive observations constitute a common data-engineering challenge in real-world hetero-geneous pairwise prediction. In these settings, retrieval can provide non-parametric support from related examples, while fusion mechanisms determine how retrieved evidence should be integrated with parametric model predictions. Studying this interaction may extend the present framework from a specific ESI predictor to a more general strategy for robust pairwise prediction in scientific knowledge discovery. SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 12 
+
+REFERENCES [1] J. Chapman, A. E. Ismail, and C. Z. Dinu, “Industrial applications of enzymes: Recent advances, techniques, and outlooks,” Catalysts , vol. 8, no. 6, p. 238, 2018. [2] R. Buller, S. Lutz, R. Kazlauskas, R. Snajdrova, J. Moore, and U. Born-scheuer, “From nature to industry: Harnessing enzymes for biocatalysis,” 
+
+Science , vol. 382, no. 6673, p. eadh8615, 2023. [3] T. Yu, H. Cui, J. C. Li, Y. Luo, G. Jiang, and H. Zhao, “Enzyme function prediction using contrastive learning,” Science , vol. 379, no. 6639, pp. 1358–1363, 2023. [4] E. U. Bozkurt, E. C. Ørsted, D. C. Volke, and P. I. Nikel, “Accelerating enzyme discovery and engineering with high-throughput screening,” 
+
+Natural Product Reports , 2026. [5] “Uniprot: the universal protein knowledgebase in 2025,” Nucleic Acids Research , vol. 53, no. D1, pp. D609–D617, 2025. [6] M. R¨ ottig, C. Rausch, and O. Kohlbacher, “Combining structure and sequence information allows automated prediction of substrate speci-ficities within enzyme families,” PLoS Computational Biology , vol. 6, no. 1, p. e1000636, 2010. [7] D. A. Pertusi, M. E. Moura, J. G. Jeffryes, S. Prabhu, B. W. Biggs, and K. E. Tyo, “Predicting novel substrates for enzymes with minimal ex-perimental effort with active learning,” Metabolic Engineering , vol. 44, pp. 171–181, 2017. [8] M. Yang, C. Fehl, K. V. Lees, E.-K. Lim, W. A. Offen, G. J. Davies, D. J. Bowles, M. G. Davidson, S. J. Roberts, and B. G. Davis, “Functional and informatics analysis enables glycosyltransferase activity prediction,” 
+
+Nature Chemical Biology , vol. 14, no. 12, pp. 1109–1117, 2018. [9] Z. Mou, J. Eakes, C. J. Cooper, C. M. Foster, R. F. Standaert, M. Podar, M. J. Doktycz, and J. M. Parks, “Machine learning-based prediction of enzyme substrate scope: application to bacterial nitrilases,” Proteins: Structure, Function, and Bioinformatics , vol. 89, no. 3, pp. 336–347, 2021. [10] D. Banerjee, M. A. Jindra, A. J. Linot, B. F. Pfleger, and C. D. Maranas, “Enzymclass: Substrate specificity prediction tool of plant acyl-acp thioesterases based on ensemble learning,” Current Research in Biotechnology , vol. 4, pp. 1–9, 2022. [11] A. Kroll, S. Ranjan, M. K. Engqvist, and M. J. Lercher, “A general model to predict small molecule substrates of enzymes based on machine and deep learning,” Nature Communications , vol. 14, no. 1, p. 2787, 2023. [12] S. Li, J. Zhou, T. Xu, L. Huang, F. Wang, H. Xiong, W. Huang, D. Dou, and H. Xiong, “GIaNt: Protein-ligand binding affinity prediction via geometry-aware interactive graph neural network,” IEEE Transactions on Knowledge and Data Engineering , vol. 36, no. 5, pp. 1991–2008, 2023. [13] T. Ma, X. Lin, B. Song, P. S. Yu, and X. Zeng, “KG-MTL: knowledge graph enhanced multi-task learning for molecular interaction,” IEEE Transactions on Knowledge and Data Engineering , vol. 35, no. 7, pp. 7068–7081, 2022. [14] T. Ma, Y. Chen, W. Tao, D. Zheng, X. Lin, P. C.-I. Pang, Y. Liu, Y. Wang, L. Wang, B. Song et al. , “Learning to denoise biomedical knowledge graph for robust molecular interaction prediction,” IEEE Transactions on Knowledge and Data Engineering , vol. 36, no. 12, pp. 8682–8694, 2024. [15] S. Chen, H. Yi, Z. You, X. Shang, Y.-A. Huang, L. Wang, and Z. Wang, “Local–global structure-aware geometric equivariant graph representation learning for predicting protein–ligand binding affinity,” 
+
+IEEE Transactions on Neural Networks and Learning Systems , 2025. [16] X. Bi, W. Ma, H. Jiang, W. Lu, Z. Wei, and S. Zhang, “SSPPI: Cross-modality enhanced protein–protein interaction prediction from sequence and structure perspectives,” IEEE Transactions on Neural Networks and Learning Systems , 2025. [17] X. Ji, Z. Wang, Z. Gao, H. Zheng, L. Zhang, G. Ke, and W. E, “Exploring molecular pretraining model at scale,” in The Thirty-eighth Annual Conference on Neural Information Processing Systems , 2024. [18] S. Chen, K. Yan, X. Li, and B. Liu, “Protein language pragmatic analysis and progressive transfer learning for profiling peptide–protein interactions,” IEEE Transactions on Neural Networks and Learning Systems , 2025. [19] S. Chen, Z. Tang, L. You, and C. Y.-C. Chen, “Accurate protein– protein interaction prediction: Based on multiview heterogeneous graph autoencoders and random masking,” IEEE Transactions on Neural Networks and Learning Systems , 2025. [20] Z. Du, W. Fu, X. Guo, D. Caragea, and Y. Li, “FusionESP: Improved enzyme–substrate pair prediction by fusing protein and chemical knowl-edge,” Journal of Chemical Information and Modeling , vol. 65, no. 6, pp. 2806–2817, 2025. [21] Z. Zhang, G. Yu, Z. Deng, C. Luo, C. Cai, W. Zhang, F. Hu, K.-S. Choi, Z. Wei, L. Wang et al. , “SEFP: Structure-based enzyme function prediction,” IEEE Transactions on Computational Biology and Bioinformatics , 2025. [22] K. Hult and P. Berglund, “Enzyme promiscuity: mechanism and appli-cations,” Trends in Biotechnology , vol. 25, no. 5, pp. 231–238, 2007. [23] X. Wang, X. Yin, D. Jiang, H. Zhao, Z. Wu, O. Zhang, J. Wang, Y. Li, Y. Deng, H. Liu et al. , “Multi-modal deep learning enables efficient and accurate annotation of enzymatic active sites,” Nature Communications ,vol. 15, no. 1, p. 7348, 2024. [24] M. J. Campbell, “VIPER: A general model for prediction of enzyme substrates,” bioRxiv , pp. 2024–06, 2024. [25] M. L. Bileschi, D. Belanger, D. H. Bryant, T. Sanderson, B. Carter, D. Sculley, A. Bateman, M. A. DePristo, and L. J. Colwell, “Using deep learning to annotate the protein universe,” Nature Biotechnology ,vol. 40, no. 6, pp. 932–937, 2022. [26] A. E. Paton, D. A. Boiko, J. C. Perkins, N. I. Cemalovic, T. Resch¨ utzegger, G. Gomes, and A. R. Narayan, “Connecting chemical and protein sequence space to predict biocatalytic reactions,” Nature ,vol. 646, no. 8083, pp. 108–116, 2025. [27] Y. Tan, W. Gou, B. Zhong, H. Yu, L. Hong, and B. Zhou, “VenusX: Unlocking fine-grained functional understanding of proteins,” in The Fourteenth International Conference on Learning Representations , 2026. [Online]. Available: https://openreview.net/forum?id=zcmL592XRG [28] C. Hua, B. Zhong, S. Luan, L. Hong, G. Wolf, D. Precup, and S. Zheng, “Reactzyme: A benchmark for enzyme-reaction prediction,” Advances in Neural Information Processing Systems , vol. 37, pp. 26 415–26 442, 2024. [29] R. Dhanuka, J. P. Singh, and A. Tripathi, “A comprehensive survey of deep learning techniques in protein function prediction,” IEEE/ACM Transactions on Computational Biology and Bioinformatics , vol. 20, no. 3, pp. 2291–2301, 2023. [30] M. Kulmanov, F. J. Guzm´ an-Vega, P. Duek Roggli, L. Lane, S. T. Arold, and R. Hoehndorf, “Protein function prediction as approximate semantic entailment,” Nature Machine Intelligence , vol. 6, no. 2, pp. 220–228, 2024. [31] Y. Tan, C. Liu, J. Gao, W. Banghao, M. Li, R. Wang, L. Zhang, H. Yu, G. Fan, L. Hong et al. , “VenusFactory: An integrated system for protein engineering with data retrieval and language model fine-tuning,” in Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics , 2025, pp. 230–241. [32] W. Qian, X. Wang, Y. Huang, Y. Kang, P. Pan, C.-Y. Hsieh, and T. Hou, “Deep learning-driven insights into enzyme–substrate interaction discovery,” Journal of Chemical Information and Modeling , vol. 65, no. 1, pp. 187–200, 2024. [33] Z. Nie, H. Zhang, H. Jiang, Y. Liu, X. Huang, F. Xu, J. Fu, Z. Ren, Y. Tian, W.-B. Zhang et al. , “OmniESI: A unified framework for enzyme-substrate interaction prediction with progressive conditional deep learning,” arXiv:2506.17963 , 2025. [34] H. Cui, Y. Su, T. J. Dean, T. Yu, Z. Zhang, J. Peng, D. Shukla, and H. Zhao, “Enzyme specificity prediction using cross attention graph neural networks,” Nature , pp. 1–3, 2025. [35] P. Lewis, E. Perez, A. Piktus, F. Petroni, V. Karpukhin, N. Goyal, H. K¨ uttler, M. Lewis, W.-t. Yih, T. Rockt¨ aschel et al. , “Retrieval-augmented generation for knowledge-intensive NLP tasks,” Advances in Neural Information Processing Systems , vol. 33, pp. 9459–9474, 2020. [36] W. Fan, Y. Ding, L. Ning, S. Wang, H. Li, D. Yin, T.-S. Chua, and Q. Li, “A survey on RAG meeting LLMs: Towards retrieval-augmented large language models,” in Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , 2024, pp. 6491–6501. [37] R. Weitzman, P. M. Groth, L. V. Niekerk, A. Otani, Y. Gal, D. S. Marks, and P. Notin, “Protriever: End-to-end differentiable protein homology search for fitness prediction,” in Forty-second International Conference on Machine Learning , 2025. [38] J. Li, W. Liu, Z. Ding, W. Fan, Y. Li, and Q. Li, “Large language models are in-context molecule learners,” IEEE Transactions on Knowledge and Data Engineering , 2025. [39] Y. Gao, Y. Xiong, X. Gao, K. Jia, J. Pan, Y. Bi, Y. Dai, J. Sun, H. Wang, H. Wang et al. , “Retrieval-augmented generation for large language models: A survey,” arXiv:2312.10997 , vol. 2, no. 1, p. 32, 2023. [40] B. Peng, Y. Zhu, Y. Liu, X. Bo, H. Shi, C. Hong, Y. Zhang, and S. Tang, “Graph retrieval-augmented generation: A survey,” ACM Transactions on Information Systems , vol. 44, no. 2, pp. 1–52, 2025. [41] L. Zhang, K. Luo, Z. Zhou, Y. Yu, F. Jiang, B. Wu, M. Li, and L. Hong, “A deep retrieval-enhanced meta-learning framework for enzyme opti-mum ph prediction,” Journal of Chemical Information and Modeling ,vol. 65, no. 7, pp. 3761–3770, 2025. SUBMITTED TO IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 13 
+
+[42] P. Notin, M. Dias, J. Frazer, J. Marchena-Hurtado, A. N. Gomez, D. Marks, and Y. Gal, “Tranception: protein fitness prediction with au-toregressive transformers and inference-time retrieval,” in International Conference on Machine Learning . PMLR, 2022, pp. 16 990–17 017. [43] N. Datta, S. Shatabda, and M. S. Rahman, “Embedding is (almost) all you need: Retrieval-augmented inference for generalizable genomic prediction tasks,” arXiv:2508.04757 , 2025. [44] Y. Tan, R. Wang, B. Wu, L. Hong, and B. Zhou, “From high-throughput evaluation to wet-lab studies: advancing mutation effect prediction with a retrieval-enhanced model,” Bioinformatics , vol. 41, 07 2025. [Online]. Available: https://doi.org/10.1093/bioinformatics/btaf189 [45] J. Johnson, M. Douze, and H. J´ egou, “Billion-scale similarity search with GPUs,” IEEE Transactions on Big Data , vol. 7, no. 3, pp. 535– 547, 2019. [46] T.-Y. Lin, P. Goyal, R. Girshick, K. He, and P. Doll´ ar, “Focal loss for dense object detection,” in Proceedings of the IEEE International Conference on Computer Vision , 2017, pp. 2980–2988. [47] M. Steinegger and J. S¨ oding, “MMseqs2 enables sensitive protein sequence searching for the analysis of massive data sets,” Nature Biotechnology , vol. 35, no. 11, pp. 1026–1028, 2017. [48] I. Loshchilov and F. Hutter, “Decoupled weight decay regularization,” in 
+
+International Conference on Learning Representations , 2019. [Online]. Available: https://openreview.net/forum?id=Bkg6RiCqY7 [49] L. Breiman, “Random forests,” Machine Learning , vol. 45, no. 1, pp. 5–32, 2001. [50] G. Ke, Q. Meng, T. Finley, T. Wang, W. Chen, W. Ma, Q. Ye, and T.-Y. Liu, “LightGBM: A highly efficient gradient boosting decision tree,” 
+
+Advances in Neural Information Processing Systems , vol. 30, 2017. [51] Z. Lin, H. Akin, R. Rao, B. Hie, Z. Zhu, W. Lu, N. Smetanin, R. Verkuil, O. Kabeli, Y. Shmueli et al. , “Evolutionary-scale prediction of atomic-level protein structure with a language model,” Science , vol. 379, no. 6637, pp. 1123–1130, 2023. [52] X. Ji, Z. Wang, Z. Gao, H. Zheng, L. Zhang, G. Ke et al. , “Uni-mol2: Exploring molecular pretraining model at scale,” arXiv:2406.14969 ,2024. [53] A. Kroll, S. Ranjan, and M. J. Lercher, “A multimodal transformer network for protein-small molecule interactions enhances predictions of kinase inhibition and enzyme-substrate relationships,” PLOS Computa-tional Biology , vol. 20, no. 5, p. e1012100, 2024. [54] M. Kanehisa and S. Goto, “KEGG: kyoto encyclopedia of genes and genomes,” Nucleic Acids Research , vol. 28, no. 1, pp. 27–30, 2000. [55] O. Trott and A. J. Olson, “Autodock vina: improving the speed and accuracy of docking with a new scoring function, efficient optimization, and multithreading,” Journal of Computational Chemistry , vol. 31, no. 2, pp. 455–461, 2010.

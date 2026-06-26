@@ -1,0 +1,556 @@
+Title: Drug-Prot: A query system for statistical inference of drug effects and interactions in dynamic proteomic networks
+
+URL Source: https://www.biorxiv.org/content/10.64898/2026.06.17.732914v1.full.pdf
+
+Number of Pages: 29
+
+Markdown Content:
+# Drug-Prot: A query system for statistical inference of drug effects and interactions in dynamic proteomic networks 
+
+Markus Ulmer 1∗
+
+, Rui Sun 2, Liujia Qian 2, Ruedi Aebersold 3, Tiannan Guo 2, and Peter B¨ uhlmann 1∗∗ 
+
+> 1
+
+Seminar for Statistics, ETH Z¨ urich, Switzerland 
+
+> 2
+
+Affiliated Hangzhou First People’s Hospital, State Key Laboratory of Medical Proteomics, School of Medicine, Westlake University, Hangzhou, Zhejiang Province, China. 
+
+> 3
+
+Institute of Molecular Systems Biology, ETH Z¨ urich, Switzerland June 17, 2026 
+
+Abstract 
+
+Understanding drug effects and drug–drug interactions is essential for developing combina-tion therapies. We present Drug-Prot , a computational framework that leverages large-scale perturbation proteomics to quantify causal drug effects, drug–drug interactions, and dynamic protein relationships. Using data from 63 single drugs and 59 drug combinations applied to 18 breast cancer cell lines at 6, 24, and 48 hours, Drug-Prot estimates drug effects on protein expression and reconstructs directed temporal protein dependency networks. The publicly available software enables targeted analyses of user-defined protein sets, sub-stantially reducing the multiple-testing burden. Through an interactive web application, users obtain corrected p-values for single-drug and combination effects, directed temporal depen-dency networks, and downloadable results without requiring access to the underlying proteomic dataset. As a use case, we apply invariance-regularized Random Forests to triple-negative breast cancer cell lines to identify proteins associated with drug response. Querying these proteins in 
+
+Drug-Prot reveals drug-specific and interaction effects at the protein-network level, illustrating how the framework links candidate causal protein features to actionable drug combinations. 
+
+> ∗
+
+markus.ulmer@stat.math.ethz.ch 
+
+> ∗∗
+
+peter.buehlmann@stat.math.ethz.ch 
+
+1
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+# 1 Introduction 
+
+Drug discovery is an intricate endeavor, largely due to the complexity of biological systems and the multifaceted interactions among drugs, their targets, and downstream molecular networks. Current drug discovery methodologies primarily focus on identifying interactions between drugs and their direct protein targets (Swinney & Anthony, 2011). However, clinical experience has repeatedly shown that complex and systemic diseases, such as cancer, are rarely controlled through single-target interventions alone. Drug perturbations propagate through protein networks, eliciting adap-tive responses that are functionally relevant for therapeutic outcome. Consequently, the strategic use of drug combinations, rather than monotherapy, represents a central approach for addressing the multifactorial nature of complex diseases. While drug combinations are often motivated by the pursuit of synergistic effects, their clinical relevance remains debatable. Most FDA-approved cancer combination therapies operate predominantly through independent action rather than ex-plicit synergy (Palmer & Sorger, 2017; Plana, Palmer, & Sorger, 2022). Under such an assumption, drugs contribute additively to treatment efficacy without interacting with each other’s mechanisms. Our analysis and open-access software enable statistical testing of the additivity and interaction of drug effects on protein expression (as described in more detail below) and thus provide a powerful resource for future studies and validation. We propose that explicitly modeling the causal interplay among drugs, drug–drug interactions, and protein network dynamics using perturbed proteomic profiles can provide valuable insights into drug discovery and protein-level regulation. Characterizing causal effects is essential, as only causal relationships correspond to the interventional changes induced by a novel drug (Dawid, 2000). Although causal effects are generally not identifiable from purely observational data without strong assumptions (Pearl, 2009), the perturbational and temporal structure of the dataset analyzed here enables causal inference under substantially more realistic conditions. Further details are provided in Section 4 (Causal modeling) and Appendix D. This framework has the potential to improve the prediction of drug interventions and to identify compatible, non-interfering drug combinations directly from proteomics data by capturing the broader systemic impact of drug perturbations. The implementation of such frameworks necessitates comprehensive perturbation data that cap-ture functional molecular responses to systematic interventions such as drug treatments or genetic knockouts (Molinelli et al., 2013). However, currently omics datasets available for drug discovery are primarily derived from unperturbed cell models (Barretina et al., 2012; Garnett et al., 2012; Gholami et al., 2013; Gon¸ calves et al., 2022; Guo et al., 2019; Iorio et al., 2016; Nusinow et al., 2020; Weinstein et al., 1997). The Connectivity Map (CMap) project represented a major advance in filling this gap by pioneering the systematic profiling of transcriptional responses to drug pertur-bations (Lamb et al., 2006), subsequently developing the L1000 platform to measure approximately 1’000 landmark transcripts at reduced cost, (Subramanian et al., 2017). The Library of Integrated Network-based Cellular Signatures (LINCS) (Keenan et al., 2018) program expects to establish an integrated network-based cellular response database by analyzing changes in gene expression levels and other cellular response levels under a series of perturbations, including transcriptomics (Lamb et al., 2006; Subramanian et al., 2017), proteomics (Litichevskiy et al., 2018; W. Zhao et al., 2020), imaging (C.-H. Lin, Lee, & LaBarge, 2012; J.-R. Lin, Fallahi-Sichani, & Sorger, 2015), cell viability, and epigenomics data. While these transcriptome-centric resources have proven valuable, proteins are the primary executors of cellular functions and the direct targets of most therapeutic agents, and early pertur-bation proteomics efforts have demonstrated their critical role in elucidating drug MOAs. However, 2
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+proteomic measurements within these resources have been limited to only a few hundred proteins (Litichevskiy et al., 2018; W. Zhao et al., 2020), leaving essential insights into perturbed protein networks largely unexplored. Ruprecht et al. analyzed the proteomes of 50 drug perturbagens in five lung cancer cell lines after 24 hours, revealing protein variability as a key factor in under-standing drug MOAs, particularly with respect to protein homeostasis (Ruprecht et al., 2020). Mitchell et al. investigated the perturbed proteomes of 875 molecules in the HCT116 cell line to uncover drug MOAs (Mitchell et al., 2023). Additionally, Zecha et al. provided an approach called decryptM to assay time- and dose-dependent response of protein and posttranslational modifica-tion (PTM) levels after treatment with 31 drugs (Zecha et al., 2023). Recently, the same group also characterized the dose-resolved perturbation proteomes of 144 drugs in T cells (Eckert et al., 2025). However, these studies were limited to either single cell lines, single post-treatment time points, or single drug treatments without drug combinations. Recent technological advancements in high-throughput mass spectrometry-based proteomics (Guo, Steen, & Mann, 2025; Xiao et al., 2021) have enabled profiling of perturbation proteomes across a wider range of paired conditions, including multiple cell lines, various single- and combination-drug treatments, multiple time points, and biological replicates. Leveraging these capabilities, Sun et al. (2025) generated a large-scale perturbation proteomics dataset in breast cancer (BCa), encompassing 18 BCa cell lines, 122 treat-ments (63 single drugs and 59 drug combinations), measured at 6, 24, and 48 hours after drug treatment, with three biological replicates for each condition. A small but growing set of platforms exposes drug-perturbed molecular response data through interactive query interfaces (Table 1). The Connectivity Map and its L1000 platform (Lamb et al., 2006; Subramanian et al., 2017) pioneered signature-based querying but operate at the transcrip-tomic level. On the proteomic side, the Cancer Perturbed Proteomics Atlas (W. Zhao et al., 2020) couples broad cell-line coverage with the reduced protein coverage of approximately 200 RPPA markers. The LINCS phosphoproteomic and chromatin libraries queryable through Touchstone-P (Dele-Oni et al., 2021; Litichevskiy et al., 2018) cover only a few hundred analytes. Mass spectrom-etry signature libraries such as ProTargetMiner (Saei et al., 2019) achieve near-complete proteome coverage but are restricted to a limited number of cell lines and single time points. The dose-and time-resolved decryptM resource (Eckert et al., 2025; Zecha et al., 2023) extends the temporal axis but does not include drug combinations. Drug-combination synergy databases such as Drug-Comb (Zagidullin et al., 2019) and DrugCombDB (Liu et al., 2020) address combination evidence at the viability-readout level and are complementary to, rather than directly comparable with, the proteomic platforms summarized in Table 1. 
+
+Drug-Prot differs from these resources in two respects. It provides calibrated p-values for drug–drug interaction effects on user-defined protein sets and exposes directed temporal protein-dependency networks inferred from drug perturbations across multiple cell lines. Connectivity-based metrics, such as the τ -score used in the CMap rank query, reference signature similarity against an empirical background of observed signatures. Drug-Prot , by contrast, reports cali-brated p-values for the null hypothesis of no effect, with explicit multiple-testing correction applied at the level of the user-defined protein set. To our knowledge, none of the existing platforms sup-port protein-set-level queries with corrected statistical inference, a feature particularly valuable for pathway-focused and hypothesis-driven analyses. 3
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+Table 1: Comparison of Drug-Prot with related platforms that expose drug-perturbed molecular response data through interactive interfaces. “Yes” indicates the platform supports the feature as a first-class capability, “partial” indicates limited support (e.g. reduced sub-proteome, narrow scope, or evidence not statistically calibrated), “limited” indicates the underlying data contain the feature, but the platform exposes it only indirectly, and “no” indicates that the feature is absent. 
+
+Feature Drug-Prot 
+
+(this work) 
+
+CPPA 
+
+(W. Zhao et al., 2020) 
+
+TouchstoneP 
+
+(Litichevskiy et al., 2018) (Dele-Oni et al., 2021) 
+
+ProTarget Miner 
+
+(Saei et al., 2019) 
+
+decryptM 
+
+(Zecha et al., 2023) (Eckert et al., 2025) 
+
+CMap / L1000 
+
+(Lamb et al., 2006) (Subramanian et al., 2017) Proteomic readout yes partial partial yes yes no Near-complete proteome coverage yes no no yes yes no Multiple cell lines yes yes yes limited yes yes Multiple post-treatment times yes limited limited no yes limited Drug combinations in data yes limited no no limited no Statistical inference exposed yes yes no no partial no Drug–drug interaction testing yes no no no no no Directed protein-dependency network yes no no no no no Interactive query on user-defined protein set yes partial partial partial no partial 
+
+4
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+1.1 Drug-Prot 
+
+Leveraging the systematically designed perturbation proteomics dataset from Sun et al. (2025), 
+
+Drug-Prot is a computational framework that statistically quantifies the causal effects of single-drug perturbations and drug pairs on protein expression, and complements them with a directed temporal dependency network between proteins, inferred from the dynamics of the perturbation experiments across multiple time points. While drug effects can be interpreted causally under the experimental intervention design, the inferred protein dependencies are directional and temporally ordered associations that may still reflect unmeasured biological confounding. Consequently, these networks should be viewed as hypothesis-generating rather than mechanistic. The diversity of interventional perturbations, coupled with the temporal nature of the proteomics measurements in this dataset, enables causal-type modeling of various effects. A key novelty of our method lies in its ability to incorporate user-defined protein sets as the focus of the analysis. That is, one can query the effects of drugs for some proteins of interest, and 
+
+Drug-Prot outputs the desired significance results found. By allowing the researcher to specify proteins of interest, Drug-Prot produces tailored outputs that highlight significant drug effects on the selected proteins, both from individual drugs and from drug combinations. Furthermore, the framework captures dynamic aspects of protein behavior by identifying directed temporal depen-dencies between proteins that evolve from one time point to the next. This dual perspective, linking drug perturbations to changes in temporal interactions, provides a powerful tool for studying the molecular mechanisms of drug action in a targeted yet comprehensive manner.  
+
+> (a) (b)
+
+Figure 1: Schematic visualization of Drug-Prot. Figure 1(a) shows the software interface to query proteins of interest. Given a set of proteins, Drug-Prot lets you choose a significance level and the desired p-value correction. It then indicates, first, which drugs show a significant effect on the selected set of proteins and which drugs interact with respect to these proteins. Second, it presents the directed temporal dependency network for the selected proteins and their connected proteins, in both temporal and summary graphs. In Figure 1(b), a schematic of the available data and assumed models is shown. The assumed model for the drug perturbation effects on the protein expression follows equation (1) and the protein-to-protein temporal dependencies follow equation (2). 5
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+# 2 Results 
+
+Overview of Drug-Prot . This section provides an overview of Drug-Prot while the Methods section describes the underlying model and methodology in detail. In particular, when we use the term ‘causal effects’, whether direct or indirect via mediation through other quantities (total effect), this necessarily must be with respect to certain models. 
+
+Drug-Prot is a computational framework equipped with an interactive Shiny application. Its output consists of two primary components. First, it estimates the direct and total causal effects of single drugs and drug interactions on proteins of interest. Specifically, the framework reports statistical p-values for differential protein expression (relative to untreated controls) at 6, 24, and 48 hours following drug administration. Second, Drug-Prot quantifies temporally ordered, directed dependencies between proteins, providing p-values for differential expression attributable to protein activity at earlier time points. When the user supplies a protein set, the dependency analysis is not restricted to relationships within that set. For every queried protein, Drug-Prot considers every protein in the proteome (including the other queried proteins themselves) both as a potential parent at the preceding time point and as a potential child at the subsequent time point. The returned subgraph and p-values therefore describe how each queried protein relates, in either temporal direction, to any other protein measured in the dataset. A schematic description of the framework is given in Figure 1(a). While the initial training of 
+
+Drug-Prot is based on the proteomic dataset, any use of Drug-Prot is based on the information of approximately 60 million p-values for drug and protein effects for all 5’392 proteins which are included in the dataset, without the need to access the initial data. A key feature of Drug-Prot is that users can predefine a set of proteins of interest, provided they are present in the dataset. This functionality not only enhances the interpretability of the results but also substantially mitigates the multiple-hypothesis testing problem, thereby reducing the need for overly conservative p-value corrections. Accessibility of Drug-Prot is described in Section 5. Our analysis focuses on the following key quantities: 1. Causal drug effects on protein expression . We evaluate protein differential expression relative to baseline at 6, 24, and 48 hours post-treatment and report statistical evidence for causal effects. Statistical evidence is reported separately for single-drug interventions and two-drug interactions. Figure 2(a) illustrates the corresponding p-values over all time points for a selected set of proteins. In this visualization, the diagonal entries represent the statistical significance of single-drug treatments, whereas the off-diagonal entries correspond to two-drug interactions. For the two-drug interactions for which we lack data, we report a p-value of 2, corresponding to the black, unexplored region of the figure. Figure 2(b) shows a zoom-in of Figure 2(a) on the combinations for which we have experimental data. These p-values quantify the significance of causal effects for proteins within a pre-specified set, with appropriate adjustments for multiple testing across proteins and time points. When the set contains only a single protein, the reported p-value pertains directly to that specific protein. 2. Directed temporal dependencies in the protein network . We assess, for every pair of proteins, whether differential expression of one protein at t = 6 or t = 24 hours is significantly associated with differential expression of the other at the subsequent time point ( t = 24 or 
+
+t = 48 hours, respectively), after adjusting for the residual drug effects in model (2). A6
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+significant association is reported as a directed edge from the earlier to the later (protein, time) node in the dependency graph (Figure 3(c)). We emphasize that the direction of an edge reflects the temporal ordering of the measurements rather than a verified causal mechanism. Hidden confounders acting between time points may still influence both endpoints. 
+
+Statistical evidence in the full dataset We present a comprehensive analysis of all 5’392 proteins in the dataset. For the key quantity described in item 1 above, we obtained the following results. Across the 122 drug treatments and 5’392 proteins (yielding 1’973’472 potential effects), we identified 8’115 significant (at familywise error rate - 0.05) drug effects at 6 hours, 4’354 at 24 hours, and 3’759 at 48 hours. These findings indicate that drug treatments exert the most substantial direct influence on protein differential expression at the 6-hour time point. Nevertheless, a non-negligible number of significant effects persist at later time points, reflecting direct causal effects of drug treatments that are accounted for and adjusted for changes arising through propagation from earlier protein expression responses. Among all the interaction effects, over all proteins from pairs of drugs (318’128 effects per timepoint), 1.85% at 6 hours, 0.36% at 24 hours, and 0.38% at 48 hours exhibit a significant interaction term. For the quantity described in item 2 above, we construct a temporal graph representing directed temporal dependencies between proteins, specifically from 6 to 24 hours or from 24 to 48 hours. The total number of possible directed dependencies is 58’147’328. Among these, we identify 113’210 significant dependencies (at false discovery rate = 0.05). We summarize these connections in a summary graph, drawing an edge between two proteins if they are significantly linked at any time point. In the summary graph, there are 29’068’272 possible directed connections, of which 102’161 are significant, corresponding to an average network degree of 38. These are summary statistics of the output of Drug-Prot overall. Examining a smaller set of proteins is often more meaningful, as discussed next. 
+
+A use case with 26 pre-selected proteins. We illustrate our method in a setting in which a predefined subset of proteins is available. Specifically, we consider 26 proteins that demonstrated the strongest performance (in terms of predictive invariance, see below) for IC50 response. The selected proteins are VDAC1, CALM1/CALM2/CALM3, IQGAP1, RPS25, PCBP2, DDX39B, GMPS, MAP2K1, KIF5B, RPLP0, CYCS, SNRNP70, PTMA, LMNA, SFPQ, ACLY, RALY, RPSA, RPL7, SF3B3, RAB7A, SUPT16H, MYL6, RAP1B, AKAP13, and HSP90B1. The task was performed on drug-perturbed samples using invariance-regularized Random Forests. The reg-ularization component enforces invariance across treatments, thereby facilitating the identification of causal (direct) effects and improving predictive performance in the presence of heterogeneity induced by drug perturbations. Further methodological details are provided in Section 4.1. When selecting proteins based on their invariance predictive ability (as indicated above) for IC50 response, a causal interpretation naturally emerges, as illustrated in Figure 1(b). To predict the IC50 response to a given drug treatment, we first identify proteins that are both highly predictive and likely to be causal to IC50. In this application, these correspond to the 26 selected proteins. Subsequently, we use our Drug-Prot framework to infer the effects of drug treatments on these ”most causal” proteins, thereby providing insight into the treatments most likely to effectively modulate IC50 responses. When examining key quantity 1, causal drug effects on protein expression , we obtain the corresponding p-values for both single and paired-drug treatments (Figure 2(a)). Applying a 5% 7 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint (a) (b)
+
+Figure 2: Visualization of the p-values for the drug effects on the selected set of 26 proteins by the Anchor Forest in section 4.1. The diagonal elements contain the minimal corrected p-value for the corresponding single drug across the three time points and the 26 different proteins, testing whether at least one protein at at least one time point is affected by the drug. The off-diagonal elements correspond to the overall p-value for a drug interaction. For many drug combinations, we lack experimental data and present evidence of interaction at a p-value of 2 (shown in black), while p-values ranging from 0 to 1 are colored white to grey. Figure 2(b) zooms into the drug combinations that we have data on and reveals the interaction pattern for this set of proteins. The significant single drugs (diagonal elements) on a 5% level are: Lurbinectedin, Entrectinib, Alpelisib, Abemaciclib, Neratinib Maleate, Niraparib Tosylate, Cobimetinib Fumarate, Olaparib, Afatinib Dimaleate, Phenylephrine Hydrochloride, Eribulin Mesylate, Ixabepilone, Lapatinib Dito-sylate Hydrate, Vorinostat, Sorafenib Tosylate, Verteporfin, Temozolomide, Docetaxel, Doxorubicin Hydrochloride, Gemcitabine Hydrochloride, Paclitaxel, Epirubicin Hydrochloride, Cisplatin, Vin-cristine Sulfate, Fluorouracil, Hydrocortisone, and Oxaliplatin. 8
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+(a) (b) 
+
+(c) (d) 
+
+Figure 3: Visualization of the p-values for the directed temporal protein dependencies derived from the model (2). Figure 3(a) and 3(c) show the graphs for the 26 selected proteins by the Anchor Forest in section 4.1, while Figures 3(b) and 3(d) show the graphs for only the top three proteins in the Anchor Forest. Figures 3(c) and 3(d) show the temporal graphs, where protein expression at time point 6 (blue) is linked to time point 24 (orange) and time point 24 to time point 48 (green). An edge is drawn whenever the p-value of the corresponding γ parameter is significant. Edge direction reflects the temporal ordering of the measurements and is not protected against unmeasured confounding between time points. In the summary graphs in Figures 3(a) and 3(b), we summarize the temporal graphs and draw an edge between two proteins if there is a corresponding edge in the temporal graph. The selected proteins are shown in orange, and the directly connected proteins to the selected are shown in blue. 9
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+family-wise error rate threshold, 67 out of 122 possible drug effects are found to be significant at one or more time points (6, 24, or 48 hours post-treatment). Of these, 27 effects are attributable to single drugs, while 40 arise from combinations of two drugs. Consequently, among the 59 evaluated drug pairs, 19 show no evidence of interaction for this particular set of 26 proteins. Paclitaxel and Vorinostat emerge as particularly interesting candidates, as they influence the set of these proteins while exhibiting relatively few statistically significant interactions with other tested drugs. Vorino-stat shows interactions only with Cisplatin, Lapatinib Ditosylate Hydrate, and Alpelisib, whereas Paclitaxel interacts only with Fluorouracil. The limited interactions with other treatments indicate the potential of Paclitaxel and Vorinostat as components of a combination therapy. This is further supported by their mechanistic orthogonality, as defined by Palmer and Sorger (2017). Vorinos-tat primarily modulates chromatin state and protein acetylation, including effects on cytoskeletal dynamics such as α-tubulin acetylation, whereas Paclitaxel stabilizes microtubules through direct binding. Importantly, these mechanisms act through distinct molecular pathways, reducing the likelihood of metabolic or target-level interference. Consistent with this interpretation, prior clin-ical studies have explored Paclitaxel–Vorinostat combinations and reported enhanced therapeutic responses in specific solid tumor contexts (Owonikoko et al., 2010; Ramalingam et al., 2010), sup-porting the biological plausibility of this pairing. For key quantity 2, directed temporal dependencies in the protein network , results are presented in Figure 3(c). At a false discovery rate of 5%, the summary graph in Figure 3(a) across all time points for the 26 pre-selected proteins reveals 1’839 significant connections out of 279’682 possible, corresponding to an average degree of 71, while the temporal graph in Figure 3(c) identifies 1’902 significant connections out of 559’416. Focusing on the two proteins most causally associated with IC50, LMNA and RAB7A, we observed an interesting connection pattern (Figure 3(b)). These proteins are linked through five intermediaries: NASP, HSPE1, and UBA1 appear as shared antecedents of both LMNA and RAB7A in the temporal graph. ACAT1 appears as a shared downstream node, and RPLP2 lies on a directed path from LMNA to RAB7A. While these results are of a statistical nature, biological literature supports these findings, as described in Appendix B. 
+
+# 3 Discussion 
+
+Based on the large-scale perturbation proteomics dataset generated by Sun et al. (2025), Drug-Prot 
+
+provides statistical evidence for drug effects and drug–drug interactions on protein expression (in-terpretable as causal under externally controlled drug administration) together with a directed temporal dependency network between proteins, interpretable as directional but potentially con-founded. While the present manuscript presents only a limited number of findings, all statisti-cally inferred drug–protein and protein–protein relationships covered by the data are accessible via 
+
+Drug-Prot . This enables users to explore, validate, and reinterpret results beyond those explicitly discussed in the text. We have shown a use case with 26 selected proteins that are predictive and invariant (and hence ”closer to being causal”) for the IC50 phenotype. We also provided some statistical validation of the findings, which supports the potential of Drug-Prot to lead to reasonable biological insights. Any other mechanism or prior knowledge can be used to select a set of proteins of interest. In this sense, Drug-Prot serves as a mechanism for disseminating a substantially richer body of statistical evidence than can be reasonably presented in a single publication. Users can interrogate 10 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+specific proteins, drugs, or drug combinations of interest, examine associated interaction structures, and assess the significance of hypotheses regarding causal effects, provided they are covered by the underlying rich dataset from Sun et al. (2025). 
+
+Use cases. While we present a single use case in detail (the IC50 phenotype; Section 4), Drug-Prot 
+
+is intended as a general resource for investigating biologically motivated protein sets. The examples below illustrate a range of queries that can be addressed directly through the platform, highlighting its utility beyond the specific application considered here. 
+
+• DNA damage response. A user studying genotoxic agents can query a curated DNA-damage-response set and ask which single drugs and which drug pairs significantly perturb it, and how its members are linked across time. 
+
+• TNBC drug-sensitivity markers. Proteins associated with sensitivity in triple-negative breast cancer, such as the IC50-predictive set studied here, can be interrogated for the treatments most likely to modulate response. 
+
+• EGFR-targeted combinations. Starting from a receptor of interest, a user can recover its directed temporal neighborhood and the drug pairs that act on it. The EGFR case study in Appendix C follows exactly this workflow and recovers a known regulator (ANXA2) alongside hypothesis-generating links. 
+
+• Autophagy and endolysosomal pathways. A pathway-level set (for example, RAB7A-associated endolysosomal trafficking) can be uploaded as a plain-text list to obtain corrected evidence at the pathway scale, where genome-wide corrections would be prohibitively conservative. Any pathway, protein complex, or curated gene set (e.g. from KEGG, Reactome, or MSigDB) can be queried in the same way. Because the multiple-testing correction is applied only over the queried set, such focused analyses gain substantial power relative to proteome-wide searches. Beyond specific queries, the directed temporal dependency network derived from Drug-Prot 
+
+enables systematic exploration of indirect relationships and potential mediating pathways. This network structure supports downstream analyses using graph-based methods, including community detection, pathway-level aggregation, and flow-based approaches, allowing users to contextualize statistical findings within broader molecular architectures. 
+
+# 4 Methods and Statistical Validation 
+
+Underneath Drug-Prot are p-values for parameters associated with drug effects and protein ex-pressions at the most recent time points. These p-values are obtained from high-dimensional linear models. In each case, the response variable corresponds to a single differential protein expression, and this procedure is repeated for all 5’392 measured proteins. 
+
+Structure of the dataset and notation. We measure expressions of 5’392 proteins at different time points t ∈ { 0, 6, 24 , 48 } (in hours). The Protein expressions for time point t are denoted by 
+
+P t ∈ Rnt×5392 . We distinguish between t = 0, which denotes the baseline case where no drug perturbation has been applied, and t > 0, which corresponds to data where drug perturbations 11 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+were administered, and protein expressions are measured after t hours. The samples are from 
+
+k ∈ { 1, . . . , 18 } cell lines, and when t̸ = 0, to which drug perturbations were applied with certain drug concentrations D ∈ Rnt×63 . We have 4’674 samples at t = 6, 4’701 at t = 24, and 4’586 at 
+
+t = 48. We denote by i ∈ { 1, . . . , n t} a sample point, and we sometimes call it an experiment: it corresponds to a cell line, a drug perturbation, and a certain replicate for such a perturbation and cell line. A sample is observed only at a single time point due to the destructive nature of protein measurement, and we thus have unpaired data across different time points t. Therefore, we consider a sample point or experiment i only for a single and fixed time point t, and we denote by 
+
+Di ∈ R63 the drug concentration vector for the sample i and by Ci ∈ { 1, . . . , 18 } the index of the cell line. If a single drug was administered for sample i, there is only one non-zero element in the ith row of D and it always has the concentration being equal to 10 micromole: that is, for a single element 
+
+j ∈ J, where J = {1, . . . , 63 }, we have that Di,j = 10 and all other entries are zero with Di,j ′ = 0 for all j′̸ = j. The other perturbation samples or experiments were administered with two drugs, that is, a drug combination, whose concentrations are chosen between 0.000025 and 300 micromole, and thus, for such a sample i, exactly two entries of the ith row of D are non-zero. As mentioned above, the data is unpaired over different time points. Thus, whenever a protein expression is modeled using protein expressions at other (previous) time points, we must use an aggregated version of the latter. Consider a protein r ∈ { 1, . . . , 5392 }. We denote the aggregated version of a log-protein expression given an experimental condition Ci, D i in sample i by Ptr:i := 
+
+“E[ log( P tr )|Ci, D i], where bE stands for the sample median within the corresponding experimental condition. We use the median to be robust to various unwanted sources of variation, such as batch effects or measurement errors. A differential protein expression ytr:i := log( P tr;i)− bE[log( P 0 
+
+> r
+
+)|Ci] at any time point t > 0 is always defined relative to its baseline expression level prior to treatment. We denote the aggregated version of the differential log-protein expression by Ytr:i := Ptr:i − bE[log( P 0 
+
+> r
+
+)|Ci]. 
+
+Drug effects on differential protein expression (6 hours post-treatment). Here, we model differential expression levels at 6 hours as a function of drug administration 
+
+y6 
+
+> r:i
+
+= X
+
+> j∈J
+
+(α60 
+
+> j
+
++ α6 
+
+> j
+
+Di,j ) + X 
+
+> j̸=k∈J
+
+(β60 
+
+> jk
+
++ β6
+
+> jk
+
+Di,j Di,k ) + ϵ6 
+
+> i
+
+. (1) Here, the α coefficients measure single drug effects and the β coefficients measure drug inter-action effects. α0 and β0 are treatment intercepts while α and β are linear coefficients of the drug concentrations. ϵ are i.i.d. error terms with E[ϵi] = 0. All these quantities depend on r,but we suppress this in the notation. The parameters capture the main effects of single drugs as well as their interactions. The parameters are estimated using de-sparsified Lasso (van de Geer, B¨ uhlmann, Ritov, & Dezeure, 2014; Zhang & Zhang, 2014) implemented in the R package hdi 
+
+(Dezeure, B¨ uhlmann, Meier, & Meinshausen, 2015). Group p-values (B¨ uhlmann, 2013) are com-puted for both single and interaction effects, thereby taking groups of two values with an intercept and drug concentration parameter. 
+
+Protein expression dynamics across time points (6 to 24 hours, 24 to 48 hours). Here, we model differential expression levels 24 and 48 hours after treatment as a function of the protein differential expressions at the previous time point and the residual drug effects: 12 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+y24  
+
+> r:i
+
+= X
+
+> j∈J
+
+(α24 0 
+
+> j
+
++ α24  
+
+> j
+
+Di,j ) + X 
+
+> j̸=k∈J
+
+(β24 0 
+
+> jk
+
++ β24  
+
+> jk
+
+Di,j Di,k ) + Y6 
+
+> iT
+
+γ24 + ϵ24 
+
+> i
+
+y48  
+
+> r:i
+
+= X
+
+> j∈J
+
+(α48 0 
+
+> j
+
++ α48  
+
+> j
+
+Di,j ) + X 
+
+> j̸=k∈J
+
+(β48 0 
+
+> jk
+
++ β48  
+
+> jk
+
+Di,j Di,k ) + Y24  
+
+> iT
+
+γ48 + ϵ48  
+
+> i
+
+.
+
+(2) For the definition of Y, see the end of the subsection Structure of the dataset and notation. In addition to the drug effects, we now also have the parameters γ24 and γ48 , which capture the temporal effects of proteins. Meanwhile, α and β now only capture residual drug effects that are not mediated through proteins at previous times. Group p-values are again computed for both single and interactive drug effects, as well as single p-values for protein expression dynamics, using the same high-dimensional inference framework. 
+
+Set of proteins of interest and multiple testing Given a set of proteins of interest R of size 
+
+M , we have 122 × 3 × M p-values for drug effects (122 single and pairs of drug effects at 3 time points) and M × 5392 × 2 + M × (5392 − M ) × 2 p-values for protein on protein effects (the first summand are the p-values for parents of R and the second summand are children of R). In the case of drug effects, we control for family-wise error rate (FWER) by applying a Bonferroni-Holm correction (Holm, 1979). In the other case of protein-to-protein temporal dependencies, we control for the false discovery rate (FDR) by applying the method of Benjamini and Hochberg (1995). Optionally, in Drug-Prot , other correction methods can also be selected. 
+
+Causal modeling. The drug-effect parameters in these models are of causal type, whereas the protein-to-protein parameters capture directional, temporally ordered dependencies. A graphical representation is provided in Figure 1(b). Because we consider differential protein expression, we implicitly adjust for cell-line effects to avoid confounding. The parameters in model (1) are the direct causal effects (interventional effects of drug per-turbations) of single and pairs of drugs on the differential protein expression at t = 6 hours: the group p-values, when grouping over the intercept and drug perturbation parameter, give significant statements for direct causal effects of a single or pair of perturbations on the differential protein expression at t = 6. The parameters in (2) are to be interpreted as follows: the α parameters and their group p-values are quantifying the direct causal effects of a single drug perturbation on the differential protein expression at a later time point t = 24 or t = 48 hours which is not (linearly) explained by protein expressions at the previous time point t = 6 or t = 24, respectively. The β
+
+parameters and their group p-values quantify the direct causal effects of a single drug perturbation on the differential protein expression at a later time point t = 24 or t = 48 hours, which is not (linearly) explained by single drug effects nor protein expressions at the previous time point t = 6 or t = 24, respectively. Both the α and β parameters correspond to the edge from the drug to the protein expressions in Figure 1(b). The γ parameters and their p-values quantify the directed temporal dependency of the differen-tial protein expression at time point t = 24 or t = 48 hours on an earlier protein expression at time point t = 6 or t = 24 hours, respectively. Unlike the drug-effect parameters, these are directional by temporal ordering but may be subject to unmeasured confounding. The drug effects are direct, that is, residual effects not mediated through the modeled protein expressions at previous time points. In Figure 1(b), the γ parameters correspond to the edges in 13 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+the protein networks. More details about interpretation and assumptions are given in Appendix D. From a biological perspective, the causal effects estimated by our models correspond to the expected change in protein expression that would occur if a specific drug (or drug pair) were administered, compared to if it were not, under otherwise identical experimental conditions. Be-cause drug administration is externally controlled, these effects can be interpreted as interventional rather than associative. In contrast, relationships between protein expression levels across time points reflect temporally ordered dependencies that may still be influenced by unmeasured biolog-ical processes. Accordingly, we interpret drug-to-protein effects as causal, while protein-to-protein temporal dependencies should be viewed as directional but potentially confounded relationships. 
+
+Nonlinear effects and linear approximation. The linear models described above in equations (1)-(2) can be interpreted as best linear approximations to potentially nonlinear true relationships. While such approximations may not capture all nonlinear effects, the resulting p-values remain valid, under some assumptions, for testing the null hypothesis of no direct causal effect. Specifically, these assumptions concern the distribution of covariates: for example, for multivariate Gaussian distributions, if there is no relation (linear or nonlinear), the linear approximation will not produce false associations or causal statements. Conversely, the method is conservative, as certain nonlinear relationships may remain undetected. For details, see B¨ uhlmann and van de Geer (2015). Thus, the linear model equations in (1)-(2) typically yield correct causal inference statements: a significant effect is also significant in a nonlinear model, but we may not detect some nonlinear effects. Making the model equations in (1)-(2) more nonlinear leads to unfavourable ratios of parameters (to be estimated) and sample size. While equation (1) has 244 parameters, the equations in (2) have 5’636 parameters, and modeling nonlinearities in such a high-dimensional setting is challenging and much more unstable. 
+
+4.1 Statistical validation for the IC50 phenotype 
+
+We consider here the modeling and estimation of the response of IC50 values. We model the IC50 response as a potentially nonlinear function of protein expression levels, ideally invoking only the causal (but unknown) proteins. For this task, we proceed as follows. 
+
+Random Forests with invariance regularization. For most combinations of cell lines and drug perturbations (122 treatments, consisting of single drugs and drug combinations), IC50 values were determined. In total, we obtain N = 1606 values, and we stack them in a response vector 
+
+∈ R1606 . We model IC 50 i with the aggregated differential log-protein expression Yti at all three time points for the corresponding experimental condition Ci and Di, as described in the subsection on ”Structure of the dataset and notation”. Note that the samples, i.e., every sample unit i, are unpaired due to different experiments for measuring IC50 or protein expressions. This results in the model 
+
+IC 50 i = f (Y6 
+
+> i
+
+, Y24  
+
+> i
+
+, Y48  
+
+> i
+
+) + ϵi. (3) We estimate the potentially nonlinear function f (., ., . ) by Random Forests (Breiman, 2001) but with an added causality-inspired invariance regularization, see (4) below. By treating different drug perturbations as different experimental settings in the data, invariance regularization aims 14 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+to make the residual distributions similar across environments. This leads to provable robust-ness guarantees in so-called anchor regression settings (Rothenh¨ ausler, Meinshausen, B¨ uhlmann, & Peters, 2021), and, under idealized assumptions, such as those from instrumental variables re-gression (Angrist, Imbens, & Rubin, 1996; Bowden & Turkington, 1990; Stock & Trebbi, 2003), it infers causal relations. Invariance regularization can be used with almost any machine learning algorithm (B¨ uhlmann, 2020; Londschien, Burger, R¨ atsch, & B¨ uhlmann, 2026) by minimizing the anchor objective ˆfanchor := arg min f ′∈F 
+
+∥W (Y − f ′(X)) ∥22
+
+n , (4) where W = Wγ = IN − (1 − √γ)Π A with Π A being the linear projection operator onto A and γ
+
+controlling the strength of invariance regularization. In our case A = D (the values for the different drug concentrations which are used for treatment), 
+
+Y = IC 50 (the vector of the observed IC50 values), and X = ( Y6 
+
+> i
+
+, Y24  
+
+> i
+
+, Y48  
+
+> i
+
+)i=1 ,...,N , where we concatenate the aggregated differential log-protein expression column-wise. We choose Random Forests for its power relative to its simplicity and its lower sample-size requirements compared to more complex models, such as deep learning. Ulmer, Scheidegger, and B¨ uhlmann (2026) minimize a transformed version of the residuals in the context of spectral deconfounding. We use their software to minimize Equation (4), resulting in Anchor Forests, see also Ulmer and Scheidegger (2025). To choose the right amount of invariance regularization γ, we employ an out-of-environment cross-validation scheme. For this, we define eight environments, each corresponding to drug com-binations with the same first-administered drug (but different second drugs). We argue that there is a greater distribution shift in these environments, in which entirely new drug combinations are administered rather than just the second drug being changed. We repeatedly estimate Anchor Forests for training with all single-drug perturbations and seven of the eight environments, using the drug concentrations as Anchor variables and different γ values, and evaluate the estimated models on the left-out environment. Figure 4 shows the out-of-environment mean squared error for IC 50 for the eight environments and varying γ. The thick black line corresponds to γ = 1, resulting in standard Random Forests. The different lines show the LOESS-smoothed (Cleveland, 1979) performance across the various environments. The minimum of the smoothed performance in environment one occurs at γ = 8 .49. For the worst-case environment (environment one), Anchor Forests improves the out-of-environment performance by 13%. The choice γ = 8 .49 is reasonable for the other environments as well, and we expect to achieve nearly optimal predictive performance in new, unseen drug perturbation environments. In a second step, we re-estimate an Anchor Forest on all data (single drug perturbations and all eight environments) with γ = 8 .49. We then analyze the estimated invariant model and the key proteins it identifies. Figure 5 shows the regularization path of the estimated Anchor Forest. It shows variable importance (i.e., how much a protein reduces loss) as the forest is pruned. Two proteins emerge as dominant contributors in the invariant model, namely LMNA and RAB7A, both measured 6 hours after drug treatment. Partial dependence analysis of the estimated Anchor Forest (Figure 6) indicates that increased abundance of either protein is associated with reduced IC50, corresponding to enhanced drug sensitivity. For LMNA, this relationship is biologically plausible given its central role in maintaining nuclear structural integrity, chromatin organization, and cellular stress responses. Reduced LMNA expres-sion has been linked to a range of human pathologies, including cancer, where nuclear fragility and impaired genome organization contribute to altered cellular responses to stress and DNA damage 15 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+Figure 4: Out-of-distribution cross validation for invariance regularization γ. Shown are the Out-of-Distribution mean-squared errors (OOD MSE) for different left-out environments where we fit the Anchor Forest with all the data except the one environment we predict for. The lines are the LOESS-smoothed OOD MSE over the eight environments. The black vertical line is at γ = 1 and represents the standard Random Forests without invariance regularization. (Bell et al., 2022; J. Zhao et al., 2024). Cells with higher LMNA levels may therefore exhibit increased susceptibility to cytotoxic perturbations due to preserved nuclear architecture and more effective execution of drug-induced damage programs. RAB7A plays a critical role in late endosomal trafficking, lysosomal maturation, and autophagic flux, processes that are essential for cellular responses to drug-induced stress. Dysregulation of RAB7A-dependent trafficking has been implicated in cancer progression and altered sensitivity to therapeutic agents, including through pathways involving TPC2-mediated endolysosomal signaling (Abrahamian et al., 2024). Higher RAB7A abundance may enhance the efficiency of drug-induced degradation, stress signaling, or cell death pathways, providing a mechanistic basis for the observed association between RAB7A expression and IC50. Together, these findings suggest that early post-treatment levels of LMNA and RAB7A cap-ture complementary aspects of nuclear and endolysosomal competence that influence cellular drug sensitivity, consistent with their prominent role in the invariant predictive model. We further identify a set of 26 proteins that remain highly predictive of IC50 response values even at larger complexity-penalization ( cp ) values, corresponding to highly pruned models. While most of these proteins are predictive at 6 hours post-treatment, a subset contributes additional predictive information at later time points. This stable protein set was therefore selected for downstream interrogation using Drug-Prot (Section 2). From a translational perspective, these findings suggest a potential framework for leveraging early proteomic responses to drug perturbations. For example, in an ex vivo or experimental precision-medicine setting, baseline protein expression could be assessed prior to treatment, followed by measurement of the expression of these predictive proteins at early post-treatment time points. The resulting profiles could then be used to estimate drug sensitivity using the proposed Anchor Forest model. 16 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+Figure 5: Regularization path of refitted Anchor Forest with γ = 8 .49. Shown is the variable importance of the different predictors (proteins at different time points) against increasing pruning (cost complexity cp ) of the trees in the Forest ( cp = 0 stands for no pruning). Variable importance is calculated as the decrease in loss resulting from splits using a specific predictor. The vertical line shows the cp value with minimal out-of-bag error, which is found to be close to 0 (no pruning). 
+
+Figure 6: Partial dependence plots for the top three proteins in the Anchor Forest refitted with 
+
+γ = 8 .49. For all observations, the predictor of interest is varied, yielding N predictive functions. The bold line results from averaging over the N functions. 17 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+Notably, the prominence of LMNA and RAB7A raises the possibility that a substantially re-duced marker panel may capture a large fraction of the predictive signal. Monitoring changes in the abundance of these proteins following drug exposure may therefore provide a coarse but informa-tive readout of cellular drug responsiveness. While such applications remain speculative and would require substantial validation, they highlight how early proteomic dynamics may inform treatment stratification strategies. 
+
+# 5 The Drug-Prot platform 
+
+Drug-Prot is implemented as an R Shiny dashboard and is publicly hosted at https://ulme .shinyapps.io/DrugProt/ . The source code is available at https://github.com/markusul/ DrugProt . All statistical evidence (approximately 60 million p-values across 5’392 proteins, 122 treatments, and three post-treatment time points) is precomputed and bundled with the applica-tion, so the user never needs to access or download the underlying proteomic dataset. 
+
+Query inputs. Users specify a set of proteins of interest in one of three ways: (i) typing or selecting from a searchable picker of all 5’392 measured proteins, (ii) clicking one of two example buttons to load either the two most IC50-predictive proteins (LMNA and RAB7A) or the full 26-protein set identified in Section 4, or (iii) uploading a plain-text file with one protein identifier per line. Proteins are referred to throughout by their HGNC gene symbol, with co-quantified protein groups joined by a slash (e.g. CALM1/CALM2/CALM3) Two additional settings control the inference: the family-wise or false-discovery significance level α (default 0 .05), and separate multiple-testing corrections for drug effects (Holm by default) and for protein-to-protein temporal dependencies (Benjamini–Hochberg by default). The tests are always two-sided for no effect versus non-zero effect. All standard correction methods from R (R Core Team, 2026) are available. The set of analyzed time points can be restricted to any subset of 
+
+{6, 24 , 48 } hours. 
+
+Drug-effect outputs. For the chosen protein set, Drug-Prot returns the minimum corrected p-value over the set and the chosen time points for each of the 63 single drugs and each of the 59 experimentally available drug pairs. These p-values are shown as an interactive 122 × 122 heatmap where diagonal encodes single-drug evidence and off-diagonal encodes pairwise interaction evidence. Unmeasured drug pairs are coded with a sentinel value of 2 and rendered in black. Two companion tables list, in the order of increasing p-values, the significant single drugs and the significant drug pairs. We additionally report the average treatment effects and their significance on all proteins in the set. 
+
+Network outputs. For the queried protein set, Drug-Prot returns the directed temporal depen-dency subgraph, based on significant findings, linking the queried proteins to other proteins in the dataset. Two visualizations are provided. A temporal graph in which each node is a (protein, time point) pair and edges go from t = 6 to t = 24 and from t = 24 to t = 48 whenever the corresponding 
+
+γ parameter in model (2) is significant at the user-chosen level, and a summary graph that collapses the temporal graph across time. Both graphs are rendered as zoomable, draggable, force-directed networks with arrows. In the temporal graph , the edges are colored positive or negative effects. A 18 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+companion table reports, for each queried protein, the numbers of parents and children outside the query set, along with their identities. 
+
+Downloads. Users can download (i) the corrected drug-effect p-values for the queried protein set as a CSV, (ii) the corrected p-values for every protein–protein edge involving the queried set, by time-point transition, as a CSV, and (iii) the summary and temporal graphs as standalone, inter-active HTML files that can be embedded in supplementary materials or shared with collaborators. 
+
+Scope of analyses. Because all p-values are precomputed, the query response is near-instantaneous regardless of the size of the protein set. The multiple-testing correction is applied only to the queried set and the selected time points, and thus, analyses focused on a small, biologically motivated set of proteins yield substantially greater power than genome-wide queries. 
+
+Drug-Prot is currently a point-and-click web application. Programmatic or batch access is not yet available via a dedicated API, but the complete precomputed evidence used by the application can be downloaded from the platform for users who wish to run large-scale or scripted queries offline. 
+
+# 6 Data availability 
+
+The proteomics data required for our analysis will be made publicly available upon publication of Sun et al. (2025). A high-level description of the dataset, including its design, scale, and the conventions under which it enters our models, is given in Appendix A. The full uncorrected resulting statistical evidence ( P-values ) can be downloaded from the software Drug-Prot .
+
+# 7 Code availability 
+
+All the code used for this study is available at https://github.com/markusul/DrugProt-Paper .
+
+# 8 Acknowledgements 
+
+M. Ulmer gratefully acknowledges financial support from the Swiss National Science Foundation, grant no. 214865. This work is supported by grants from Joint Funds of the National Natural Science Foundation of China (No. U24A20476), National Natural Science Foundation of China (Young Scientist Fund, No. 32401239), the Zhejiang Provincial Natural Science Foundation of China (LQ24C050002), Pioneer and Leading Goose R&D Program of Zhejiang (2024SSYS0035), National Key R&D Program of China (No. 2022YFF0608403, 2021YFA1301600), and National Natural Science Foundation of China (81972492). 
+
+# 9 Author Contributions 
+
+R.A., T.G., and P.B. designed and supervised the project. M.U. and P.B. developed the statistical model and methodology. M.U. performed the analysis, wrote the software code, and wrote major parts of the manuscript. R.S. and P.B. wrote parts of the manuscript and discussed the progress of the project. All authors read and commented on the manuscript. 19 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+# 10 Competing interests 
+
+T.G. is a shareholder of Westlake Omics Inc. 
+
+# A The perturbation proteomics dataset 
+
+All statistical evidence presented in Drug-Prot is derived from the large-scale perturbation pro-teomics dataset of Sun et al. (2025), to which we refer for the full experimental, mass spectrometry, and data-processing details. Here we summarize the dataset features relevant to the models in (1) and (2) and establish the correspondence to our notation in Section 4. 
+
+Design: The dataset profiles the proteomic response of breast cancer cell lines to clinically rele-vant drug perturbations, resolved over time. It is organized along four axes: cell line, perturbation (single drug or drug pair), post-treatment time point, and biological replicate. Concretely, Sun et al. (2025) treated 18 breast cancer cell lines (sixteen triple-negative and two non-triple-negative) with a panel of 63 FDA-approved small-molecule drugs spanning chemotherapeutic, targeted, and hormonal classes, and additionally administered selected two-drug combinations. Protein expres-sion was measured at 6, 24, and 48 hours after treatment, in three biological replicates per con-dition, with untreated controls providing a pre-treatment baseline. We index the 63 drugs by 
+
+J = {1, . . . , 63 } and the cell lines by {1, . . . , 18 }, consistent with the drug-concentration matrix D
+
+and the cell-line index Ci introduced in Section 4. The individual drugs are cataloged in Sun et al. (2025). 
+
+Perturbation conventions: Single-drug experiments were administered at a fixed concentration of 10 micromole, so that exactly one entry of the corresponding row of D is non-zero. Combination experiments pair two drugs at concentrations between 0 .000025 and 300 micromole, so that exactly two entries are non-zero. Our analysis covers the 63 single drugs together with the 59 experimentally measured drug pairs, for a total of 122 treatments referred to throughout. 
+
+Scale and acquisition: The acquisition campaign of Sun et al. (2025) produced on the order of 1.6 × 10 4 DIA mass-spectrometry runs and in excess of 3 .8 × 10 7 individual protein measurements, quantifying several thousand protein groups per condition. To our knowledge, this makes it the largest perturbation proteomics resource of its kind to date. After the quality control and filtering described by Sun et al. (2025) and summarized below, the data entering our analysis comprise 5’392 proteins, measured across 4’674 samples at t = 6, 4’701 at t = 24, and 4’586 at t = 48 hours. These per-time-point counts refer to the perturbed samples used in models (1) and (2). The larger total run count also includes baseline ( t = 0), control, and quality-control acquisitions. 
+
+From measurements to model inputs. As protein quantification is destructive, each sample is observed at a single time point. The data is therefore unpaired across t ∈ { 6, 24 , 48 }. Whenever a protein expression at one time point is modeled in terms of expressions at an earlier time point (as in (2)), the earlier values must therefore be replaced by the within-condition aggregate Ptr:i
+
+defined in Section 4, the median log-expression over all samples sharing the experimental condition (Ci, D i). Second, all expression levels enter as differential quantities Ytr:i relative to the matched untreated baseline of the same cell line, which implicitly adjusts for cell-line effects. The drug 20 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+structure used in Sun et al. (2025) (molecular fingerprints and physicochemical descriptors) is not used by Drug-Prot , which depends on the dataset only through the perturbation matrix D, the cell-line index, and the differential protein expressions. 
+
+# B Biological plausibility of the found connections between LMNA and RAB7A 
+
+The following interpretations aim to assess biological plausibility rather than to establish direct molecular mechanisms. 
+
+• Shared antecedents 
+
+UBA1 is statistically identified as a shared antecedent of LMNA and RAB7A, a finding that is biologically well supported. As the primary E1 activating enzyme of the ubiquitin–proteasome system, UBA1 functions as a global regulator of protein stability across nuclear and cyto-plasmic compartments (Schulman & Harper, 2009), making it well positioned to influence both nuclear structural proteins such as LMNA and endosomal trafficking regulators such as RAB7A. NASP’s statistical role as a shared antecedent is biologically interpretable through its function as a histone chaperone regulating histone supply and nucleosome assembly (Osakabe et al., 2010). Because LMNA provides a structural scaffold for peripheral chromatin organization, and histone availability is a prerequisite for lamina–chromatin interactions, NASP is well-positioned to affect LMNA-dependent nuclear architecture. While NASP has no direct known interaction with RAB7A, its influence may reflect broader cellular stress responses linking nuclear and cytoplasmic proteostasis. The identification of HSPE1 as a shared antecedent is consistent with its role in the mi-tochondrial unfolded protein response (UPR mt ). Mitochondrial proteotoxic stress triggers retrograde signaling pathways that influence nuclear gene regulation and structural responses (Fiorese et al., 2016), and engages RAB7A-dependent endolysosomal pathways at mitochon-dria–lysosome contact sites for organelle quality control (Wong, Ysselstein, & Krainc, 2018), positioning HSPE1 as a biologically plausible shared upstream factor of both nuclear integrity and endosomal trafficking. 
+
+• Shared descendant 
+
+The statistical identification of ACAT1 as a shared downstream node of LMNA and RAB7A suggests convergence on mitochondrial lipid metabolism. LMNA influences metabolic gene programs through its role in chromatin organization and transcription factor compartmen-talization (Dechat et al., 2008), while RAB7A regulates late endosomal trafficking pathways required for cholesterol and lipid transport to mitochondria (Schroeder et al., 2015). The convergence of these nuclear and trafficking pathways on ACAT1 is therefore biologically in-terpretable as a shared downstream metabolic consequence rather than a direct regulatory interaction. 
+
+• Mediation 
+
+21 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+Our statistical analysis implicates RPLP2 as a potential intermediary linking LMNA per-turbation to RAB7A-associated pathways. Although this finding does not establish a di-rect biochemical mechanism, it is biologically interpretable within existing models of nu-clear–cytoplasmic coupling. Defects in the nuclear lamina are known to impair nucleolar organization and ribosome biogenesis, leading to translational stress rather than uniform tran-scriptional repression (Buchwalter & Hetzer, 2017). As a ribosomal stalk protein, RPLP2 con-tributes to elongation factor recruitment and has been implicated in preferential translation of membrane-associated proteins (Campos, Wijeratne, Shah, Garcia-Blanco, & Bradrick, 2020). Under the ”ribosomal filter” hypothesis, altered RPLP2 function may selectively constrain the synthesis of components of the endosomal trafficking machinery, to which RAB7A-dependent processes are particularly sensitive. Thus, the observed statistical mediation is consistent with nuclear lamina dysfunction altering protein synthesis, providing a mechanistically plausible route by which nuclear structural defects propagate into cytoplasmic trafficking deficits. 
+
+# C Case study on the epidermal growth factor receptor 
+
+The epidermal growth factor receptor (EGFR) is a transmembrane receptor tyrosine kinase in the ErbB family that regulates cell proliferation, survival, migration, and downstream signal pathways, including RAS/MAPK and PI3K/AKT (Salomon, Brandt, Ciardiello, & Normanno, 1995). In breast cancer, EGFR is overexpressed in aggressive subtypes such as basal-like and triple-negative breast cancers, and higher EGFR levels correlate with poorer clinical outcomes (Sainsbury, Farndon, Needham, Malcolm, & Harris, 1987). Targeting EGFR has emerged as a therapeutic strategy, with several EGFR inhibitors showing efficacy in preclinical and clinical studies (Mendelsohn & Baselga, 2003). Although EGFR-targeted therapies have shown limited efficacy as monotherapies in breast cancer, the receptor remains important for exploring combination strategies, highlighting the relevance of perturbation-proteomics analysis tools such as Drug-Prot .
+
+Drug-Target Inference: We queried EGFR in Drug-Prot using Holm correction for both drug and protein effects to ensure rigorous statistical control ( α = 0 .05). Among the single-agent pertur-bations, only Lurbinectedin showed a significant causal effect on EGFR. Interestingly, the analysis also recovered a low but insignificant p-value for known pathway interactors. Afatinib Dimaleate, a direct covalent EGFR inhibitor (Solca et al., 2012), displayed a borderline p-value ( p = 0 .0728), while Sorafenib Tosylate, targeting the downstream RAF/MEK pathway (Wilhelm et al., 2004), showed a weaker trend ( p = 0 .1815). Although neither reached strict statistical significance, the hierarchy of these p-values aligns with biological proximity: the direct inhibitor (Afatinib) yielded a stronger signal than the downstream effector (Sorafenib), suggesting that the model captures at-tenuation of causal effects as they propagate through the signaling cascade. All other tested drugs showed no effect ( p ≈ 1). The combination of Paclitaxel and Fluorouracil showed significant effects on EGFR, a result not observed with either drug alone. This suggests a non-additive interaction in which the com-bined cellular stress from taxane-induced mitotic arrest and antimetabolite toxicity converges to destabilize EGFR regulation. All the other combinations show no effects on this protein (p-values close to 1) except the combination of Vorinostat and Temozolomide and Afatinib Dimaleate and Lapatinib Ditosylate Hydrate show insignificant p-values smaller than one (0.2534 and 0.5415). 22 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+Mechanistic Interpretation: While Lurbinectedin is not a direct EGFR ligand, its mechanism involves stalling RNA Polymerase II and inducing its degradation (Santamar´ ıa Nu˜ nez et al., 2016). This provides a plausible indirect mechanism: the global transcriptional suppression caused by Lurbinectedin likely depletes high-turnover transcripts like EGFR. 
+
+Figure 7: Directed temporal dependency neighborhood of EGFR inferred by Drug-Prot . EGFR (orange) is shown with the proteins linked to it in the summary graph. ANXA2, RPL26, and ADSS2 appear upstream of EGFR, and PCSK6 appears downstream. Edges represent directed temporal dependencies whose corresponding γ parameter is significant under Holm correction at 
+
+α = 0 .05; edge direction reflects the temporal ordering of the measurements and is not protected against unmeasured confounding. 
+
+Network Reconstruction and Clinical Value: Figure 7 displays the protein network inferred around EGFR. ANXA2, RPL26, and ADSS2 appear upstream of EGFR, and PCSK6 appears downstream of EGFR. 
+
+• Validation: The link between ANXA2 and EGFR serves as a positive control. ANXA2 is well-documented in regulating EGFR trafficking and lipid raft association (Shetty, Thamake, Biswas, Johansson, & Vishwanatha, 2012). 
+
+• Novel Hypotheses: The identification of ADSS2 (adenylosuccinate synthetase isozyme 2) as a protein linked to EGFR in the directed temporal neighborhood is biologically interest-ing from a metabolic standpoint. ADSS2 catalyzes the first committed step in the synthesis of AMP from IMP in de novo purine nucleotide biosynthesis (Yin et al., 2018). Because EGFR signaling drives proliferation, which imposes a heavy demand on nucleotide supply, a statistical link between ADSS2 and EGFR is consistent with the coupling of growth-factor signaling to purine-biosynthetic capacity. This points to a metabolic, rather than transcrip-23 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+tional, route of association and suggests purine-biosynthesis dependency as a hypothesis for further investigation in EGFR-driven breast cancers. 
+
+• Clinical Relevance: Finally, Drug-Prot places PCSK6 (PACE4) downstream of EGFR. PCSK6 is a proprotein convertase that activates metalloproteinases to drive tumor invasion (Bassi, Fu, Lopez de Cicco, & Klein-Szanto, 2005). The inferred directed edge from EGFR to PCSK6 is consistent with the clinical observation that EGFR overexpression is associated with metastasis, suggesting PCSK6 as a candidate for further investigation. 
+
+# D More on Causal modeling, assumptions, and interpretation. 
+
+The models in (1) and (2) are linear, and this limitation is discussed in the subsection on ”Non-linear effects and linear approximation”. Furthermore, the explanations in the subsection ”Causal modeling” can be made more precise by presenting them in the graph in Figure 8 and using some mathematical notation. 
+
+DP 6 P 24 P 48 
+
+Figure 8: Directed acyclic graph (DAG) representing the assumed causal structure underlying the proteomic perturbation models. The node D denotes the administered drug perturbation (single drug or drug combination). The nodes P 6, P 24 , and P 48 represent vectors of differential pro-tein expression measured at 6, 24, and 48 hours after treatment, respectively. Directed edges from D to each P t indicate direct interventional effects of drug administration on protein expres-sion at the corresponding time point. Directed edges between successive protein expression nodes (P 6 → P 24 → P 48 ) represent temporally ordered dependencies of protein expression over time. The absence of incoming edges to D reflects the assumption that drug treatment is externally controlled and unconfounded. While drug-to-protein effects are interpreted as causal, protein-to-protein de-pendencies capture directional associations consistent with temporal ordering and may be subject to unmeasured biological confounding. A major but plausible assumption in our context is the following: 
+
+Assumption 1. There are no hidden confounders with directed arrows pointing to drug treatment 
+
+D.Then, the parameters ( αt, β t) (in the models (1) and (2)) for time t ∈ { 6, 24 , 48 } and the corre-sponding group p-values correspond to the causal effects of D to P t, which are linearly adjusted for mediating protein expressions at previous time points. For ease of notation, without going into the detail of unpaired measurements, P t denotes the vector of all measured protein differential expressions (relative to the untreated proteins at time point zero). In terms of do-interventions on the drugs D (meaning we do decide on a treatment with some drugs D and intervene on the system), see Pearl (2009), the group p-values correspond to the significance of the quantities 24 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+E[P 6|do( D = d)] given by ( α6, β 6)
+
+E[P t|do( D = d), P prev .t ] given by ( αt, β t) for time point t ∈ { 24 , 48 }
+
+This interpretation only assumes no hidden confounding variable affecting the drugs (Assump-tion 1), which again seems quite plausible, as the drugs are administered in an experimental setting. There may be hidden, unmeasured confounding after the drug-treatment stage, but between the measured protein expressions. For example, other unmeasured proteins and other biological pro-cesses would not interfere with this assumption. This means that the group p-values for drug effects can be viewed as ”trustworthy”, whereas the group p-values for the γ parameters between protein expressions should be interpreted as regression coefficients for the correct causal ordering (through time) but may be flawed by hidden confounding. This reflects the biological reality that many unmeasured molecular processes may influence protein dynamics downstream of treatment. 
+
+# References 
+
+Abrahamian, C., Tang, R., Deutsch, R., Ouologuem, L., Weiden, E.-M., Kudrina, V., . . . Grimm, C. (2024). Rab7a is an enhancer of TPC2 activity regulating melanoma progression through modulation of the GSK3 β/β-Catenin/MITF-axis. Nature Communications , 15 (1). Angrist, J. D., Imbens, G. W., & Rubin, D. B. (1996). Identification of causal effects using instrumental variables. Journal of the American Statistical Association , 91 (434), 444–455. Barretina, J., Caponigro, G., Stransky, N., Venkatesan, K., Margolin, A. A., Kim, S., . . . Garraway, L. A. (2012). The cancer cell line encyclopedia enables predictive modelling of anticancer drug sensitivity. Nature , 483 (7391), 603–607. Bassi, D. E., Fu, J., Lopez de Cicco, R., & Klein-Szanto, A. J. (2005). Proprotein convertases: “master switches” in the regulation of tumor growth and progression. Molecular Carcinogen-esis , 44 (3), 151–161. Bell, E. S., Shah, P., Zuela-Sopilniak, N., Kim, D., Varlet, A.-A., Morival, J. L. P., . . . Lammerding, J. (2022). Low lamin A levels enhance confined cell migration and metastatic capacity in breast cancer. Oncogene , 41 (36), 4211–4230. Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery rate: a practical and powerful approach to multiple testing. Journal of the Royal Statistical Society Series B: Statistical Methodology , 57 (1), 289–300. Bowden, R. J., & Turkington, D. A. (1990). Instrumental variables . Cambridge University Press. Breiman, L. (2001). Random forests. Machine Learning , 45 (1), 5–32. Buchwalter, A., & Hetzer, M. W. (2017). Nucleolar expansion and elevated protein translation in premature aging. Nature Communications , 8 (1), 328. B¨ uhlmann, P. (2013). Statistical significance in high-dimensional linear models. Bernoulli , 19 (4), 1212–1242. B¨ uhlmann, P. (2020). Invariance, causality and robustness. Statistical Science , 35 (3), 404–426. B¨ uhlmann, P., & van de Geer, S. (2015). High-dimensional inference in misspecified linear models. 
+
+Electronic Journal of Statistics , 9 (1), 1449–1473. Campos, R. K., Wijeratne, H. R. S., Shah, P., Garcia-Blanco, M. A., & Bradrick, S. S. (2020). Ribosomal stalk proteins RPLP1 and RPLP2 promote biogenesis of flaviviral and cellular multi-pass transmembrane proteins. Nucleic Acids Research , 48 (17), 9872–9885. 25 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+Cleveland, W. S. (1979). Robust locally weighted regression and smoothing scatterplots. Journal of the American Statistical Association , 74 (368), 829–836. Dawid, A. P. (2000). Causal inference without counterfactuals. Journal of the American Statistical Association , 95 (450), 407–424. Dechat, T., Pfleghaar, K., Sengupta, K., Shimi, T., Shumaker, D. K., Solimando, L., & Goldman, R. D. (2008). Nuclear lamins: major factors in the structural organization and function of the nucleus and chromatin. Genes & Development , 22 (7), 832–853. Dele-Oni, D. O., Christianson, K. E., Egri, S. B., Vaca Jacome, A. S., DeRuff, K. C., Mullahoo, J., . . . Jaffe, J. D. (2021). Proteomic profiling dataset of chemical perturbations in multiple biological backgrounds. Scientific Data , 8 (1), 226. Dezeure, R., B¨ uhlmann, P., Meier, L., & Meinshausen, N. (2015). High-dimensional inference: confidence intervals, p-values and R-software hdi. Statistical Science , 30 (4), 533–558. Eckert, S., Berner, N., Kramer, K., Schneider, A., M¨ uller, J., Lechner, S., . . . Kuster, B. (2025). Decrypting the molecular basis of cellular drug phenotypes by dose-resolved expression pro-teomics. Nature Biotechnology , 43 (3), 406–415. Fiorese, C. J., Schulz, A. M., Lin, Y.-F., Rosin, N., Pellegrino, M. W., & Haynes, C. M. (2016). The transcription factor ATF5 mediates a mammalian mitochondrial UPR. Current Biology ,
+
+26 (15), 2037–2043. Garnett, M. J., Edelman, E. J., Heidorn, S. J., Greenman, C. D., Dastur, A., Lau, K. W., . . . Benes, C. H. (2012). Systematic identification of genomic markers of drug sensitivity in cancer cells. Nature , 483 (7391), 570–575. Gholami, A. M., Hahne, H., Wu, Z., Auer, F. J., Meng, C., Wilhelm, M., & Kuster, B. (2013). Global proteome analysis of the NCI-60 cell line panel. Cell Reports , 4 (3), 609–620. Gon¸ calves, E., Poulos, R. C., Cai, Z., Barthorpe, S., Manda, S. S., Lucas, N., . . . Reddel, R. R. (2022). Pan-cancer proteomic map of 949 human cell lines. Cancer Cell , 40 (8), 835–849. Guo, T., Luna, A., Rajapakse, V. N., Koh, C. C., Wu, Z., Liu, W., . . . Aebersold, R. (2019). Quantitative proteome landscape of the NCI-60 cancer cell lines. iScience , 21 , 664–680. Guo, T., Steen, J. A., & Mann, M. (2025). Mass-spectrometry-based proteomics: from single cells to clinical applications. Nature , 638 (8052), 901–911. Holm, S. (1979). A simple sequentially rejective multiple test procedure. Scandinavian Journal of Statistics , 6 (2), 65–70. Iorio, F., Knijnenburg, T. A., Vis, D. J., Bignell, G. R., Menden, M. P., Schubert, M., . . . Garnett, M. J. (2016). A landscape of pharmacogenomic interactions in cancer. Cell , 166 (3), 740– 754. Keenan, A. B., Jenkins, S. L., Jagodnik, K. M., Koplev, S., He, E., Torre, D., . . . Pillai, A. (2018). The library of integrated network-based cellular signatures NIH program: system-level cataloging of human cells response to perturbations. Cell Systems , 6 (1), 13–24. Lamb, J., Crawford, E. D., Peck, D., Modell, J. W., Blat, I. C., Wrobel, M. J., . . . Golub, T. R. (2006). The connectivity map: using gene-expression signatures to connect small molecules, genes, and disease. Science , 313 (5795), 1929–1935. Lin, C.-H., Lee, J. K., & LaBarge, M. A. (2012). Fabrication and use of MicroEnvironment microArrays (MEArrays). Journal of Visualized Experiments (68). Lin, J.-R., Fallahi-Sichani, M., & Sorger, P. K. (2015). Highly multiplexed imaging of single cells using a high-throughput cyclic immunofluorescence method. Nature Communications ,
+
+6 (1). 26 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+Litichevskiy, L., Peckner, R., Abelin, J. G., Asiedu, J. K., Creech, A. L., Davis, J. F., . . . Jaffe, J. D. (2018). A library of phosphoproteomic and chromatin signatures for characterizing cellular responses to drug perturbations. Cell Systems , 6 (4), 424–443. Liu, H., Zhang, W., Zou, B., Wang, J., Deng, Y., & Deng, L. (2020). DrugCombDB: a comprehen-sive database of drug combinations toward the discovery of combinatorial therapy. Nucleic Acids Research , 48 (D1), D871–D881. Londschien, M., Burger, M., R¨ atsch, G., & B¨ uhlmann, P. (2026). Domain generalization and adap-tation in intensive care with anchor regression. RSS: Data Science and Artificial Intelligence ,
+
+2 (1), udag001. Mendelsohn, J., & Baselga, J. (2003). Status of epidermal growth factor receptor antagonists in the biology and treatment of cancer. Journal of Clinical Oncology , 21 (14), 2787–2799. Mitchell, D. C., Kuljanin, M., Li, J., Van Vranken, J. G., Bulloch, N., Schweppe, D. K., . . . Gygi, S. P. (2023). A proteome-wide atlas of drug mechanism of action. Nature Biotechnology ,
+
+41 (6), 845–857. Molinelli, E. J., Korkut, A., Wang, W., Miller, M. L., Gauthier, N. P., Jing, X., . . . Sander, C. (2013). Perturbation biology: inferring signaling networks in cellular systems. PLoS Computational Biology , 9 (12), e1003290. Nusinow, D. P., Szpyt, J., Ghandi, M., Rose, C. M., McDonald, E. R., Kalocsay, M., . . . Gygi, S. P. (2020). Quantitative proteomics of the cancer cell line encyclopedia. Cell , 180 (2), 387–402. Osakabe, A., Tachiwana, H., Matsunaga, T., Shiga, T., Nozawa, R.-S., Obuse, C., & Kurumizaka, H. (2010). Nucleosome formation activity of human somatic nuclear autoantigenic sperm protein (sNASP). The Journal of Biological Chemistry , 285 (16), 11913–11921. Owonikoko, T. K., Ramalingam, S. S., Kanterewicz, B., Balius, T. E., Belani, C. P., & Hershberger, P. A. (2010). Vorinostat increases carboplatin and paclitaxel activity in non-small cell lung cancer cells. International Journal of Cancer , 126 (3), 743–755. Palmer, A. C., & Sorger, P. K. (2017). Combination cancer therapy can confer benefit via patient-to-patient variability without drug additivity or synergy. Cell , 171 (7), 1678–1691. Pearl, J. (2009). Causality . Cambridge, United Kingdom: Cambridge University Press. Plana, D., Palmer, A. C., & Sorger, P. K. (2022). Independent drug action in combination therapy: implications for precision oncology. Cancer Discovery , 12 (3), 606–624. R Core Team. (2026). R: A language and environment for statistical computing. Vienna, Austria. Ramalingam, S. S., Maitland, M. L., Frankel, P., Argiris, A. E., Koczywas, M., Gitlitz, B., . . . Belani, C. P. (2010). Carboplatin and paclitaxel in combination with either vorinostat or placebo for first-line therapy of advanced non–small-cell lung cancer. Journal of Clinical Oncology , 28 (1), 56–62. Rothenh¨ ausler, D., Meinshausen, N., B¨ uhlmann, P., & Peters, J. (2021). Anchor regression: heterogeneous data meet causality. Journal of the Royal Statistical Society Series B: Statistical Methodology , 83 (2), 215–246. Ruprecht, B., Di Bernardo, J., Wang, Z., Mo, X., Ursu, O., Christopher, M., . . . Chi, A. (2020). A mass spectrometry-based proteome map of drug action in lung cancer cell lines. Nature Chemical Biology , 16 (10), 1111–1119. Saei, A. A., Beusch, C. M., Chernobrovkin, A., Sabatier, P., Zhang, B., Tokat, ¨U. G., . . . Zubarev, R. A. (2019). ProTargetMiner as a proteome signature library of anticancer molecules for functional discovery. Nature Communications , 10 (1), 5715. 27 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+Sainsbury, J. R., Farndon, J. R., Needham, G. K., Malcolm, A. J., & Harris, A. L. (1987). Epidermal-growth-factor receptor status as predictor of early recurrence of and death from breast cancer. Lancet (London, England) , 1 (8547), 1398–1402. Salomon, D. S., Brandt, R., Ciardiello, F., & Normanno, N. (1995). Epidermal growth factor-related peptides and their receptors in human malignancies. Critical Reviews in Oncol-ogy/Hematology , 19 (3), 183–232. Santamar´ ıa Nu˜ nez, G., Genes Robles, C. M., Giraudon, C., Mart´ ınez-Leal, J. F., Compe, E., Coin, F., . . . Egly, J.-M. (2016). Lurbinectedin specifically triggers the degradation of phosphory-lated RNA polymerase II and the formation of DNA breaks in cancer cells. Molecular Cancer Therapeutics , 15 (10), 2399–2412. Schroeder, B., Schulze, R. J., Weller, S. G., Sletten, A. C., Casey, C. A., & McNiven, M. A. (2015). The small GTPase Rab7 as a central regulator of hepatocellular lipophagy. Hepatology , 61 (6), 1896–1907. Schulman, B. A., & Harper, J. W. (2009). Ubiquitin-like protein activation by E1 enzymes: the apex for downstream signalling pathways. Nature Reviews Molecular Cell Biology , 10 (5), 319–331. Shetty, P. K., Thamake, S. I., Biswas, S., Johansson, S. L., & Vishwanatha, J. K. (2012). Reciprocal regulation of annexin A2 and EGFR with Her-2 in Her-2 negative and herceptin-resistant breast cancer. PLoS ONE , 7 (9), e44299. Solca, F., Dahl, G., Zoephel, A., Bader, G., Sanderson, M., Klein, C., . . . Adolf, G. R. (2012). Target binding properties and cellular activity of afatinib (BIBW 2992), an irreversible ErbB family blocker. The Journal of Pharmacology and Experimental Therapeutics , 343 (2), 342– 350. Stock, J. H., & Trebbi, F. (2003). Retrospectives: who invented instrumental variable regression? 
+
+Journal of Economic Perspectives , 17 (3), 177–194. Subramanian, A., Narayan, R., Corsello, S. M., Peck, D. D., Natoli, T. E., Lu, X., . . . Golub, T. R. (2017). A next generation connectivity map: L1000 platform and the first 1,000,000 profiles. 
+
+Cell , 171 (6), 1437–1452. Sun, R., Qian, L., Li, Y., Cheng, H., Xue, Z., Zhang, X., . . . Guo, T. (2025). A pertur-bation proteomics-based foundation model for virtual cell construction. bioRxiv preprint: https://doi.org/10.1101/2025.02.07.637070 .Swinney, D. C., & Anthony, J. (2011). How were new medicines discovered? Nature Reviews Drug Discovery , 10 (7), 507–519. Ulmer, M., & Scheidegger, C. (2025). Anchor forest with sdmodels. (https://www.markus-ulmer .ch/SDModels/articles/AnchorForest.html [Accessed: 17.12.2025]) Ulmer, M., Scheidegger, C., & B¨ uhlmann, P. (2026). Spectrally deconfounded random forests. 
+
+Journal of Computational and Graphical Statistics , 35 (2), 758–768. van de Geer, S., B¨ uhlmann, P., Ritov, Y., & Dezeure, R. (2014). On asymptotically optimal confidence regions and tests for high-dimensional models. The Annals of Statistics , 42 (3), 1166–1202. Weinstein, J. N., Myers, T. G., O’Connor, P. M., Friend, S. H., Fornace, A. J., Kohn, K. W., . . . Paull, K. D. (1997). An information-intensive approach to the molecular pharmacology of cancer. Science , 275 (5298), 343–349. Wilhelm, S. M., Carter, C., Tang, L., Wilkie, D., McNabola, A., Rong, H., . . . Trail, P. A. (2004). BAY 43-9006 exhibits broad spectrum oral antitumor activity and targets the 28 
+
+> .CC-BY 4.0 International license available under a (which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made The copyright holder for this preprint this version posted June 22, 2026. ;https://doi.org/10.64898/2026.06.17.732914 doi: bioRxiv preprint
+
+RAF/MEK/ERK pathway and receptor tyrosine kinases involved in tumor progression and angiogenesis. Cancer Research , 64 (19), 7099–7109. Wong, Y. C., Ysselstein, D., & Krainc, D. (2018). Mitochondria–lysosome contacts regulate mitochondrial fission via RAB7 GTP hydrolysis. Nature , 554 (7692), 382–386. Xiao, Q., Zhang, F., Xu, L., Yue, L., Kon, O. L., Zhu, Y., & Guo, T. (2021). High-throughput proteomics and AI for cancer biomarker discovery. Advanced Drug Delivery Reviews , 176 .Yin, J., Ren, W., Huang, X., Deng, J., Li, T., & Yin, Y. (2018). Potential mechanisms connecting purine metabolism and cancer therapy. Frontiers in Immunology , 9 , 1697. Zagidullin, B., Aldahdooh, J., Zheng, S., Wang, W., Wang, Y., Saad, J., . . . Tang, J. (2019). DrugComb: an integrative cancer drug combination data portal. Nucleic Acids Research ,
+
+47 (W1), W43–W51. Zecha, J., Bayer, F. P., Wiechmann, S., Woortman, J., Berner, N., M¨ uller, J., . . . Kuster, B. (2023). Decrypting drug actions and protein modifications by dose- and time-resolved proteomics. 
+
+Science , 380 (6640), 93–101. Zhang, C.-H., & Zhang, S. S. (2014). Confidence intervals for low dimensional parameters in high dimensional linear models. Journal of the Royal Statistical Society Series B: Statistical Methodology , 76 (1), 217–242. Zhao, J., Zhang, H., Pan, C., He, Q., Zheng, K., & Tang, Y. (2024). Advances in research on the relationship between the LMNA gene and human diseases (review). Molecular Medicine Reports , 30 (6). Zhao, W., Li, J., Chen, M.-J. M., Luo, Y., Ju, Z., Nesser, N. K., . . . Liang, H. (2020). Large-scale characterization of drug responses of clinically relevant proteins in cancer cell lines. Cancer Cell , 38 (6), 829–843. 29

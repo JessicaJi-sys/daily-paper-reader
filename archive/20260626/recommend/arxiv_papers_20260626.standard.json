@@ -1,0 +1,273 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-26T21:32:33.855910+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 6,
+    "quick_skim_target": 11,
+    "quick_selected": 6
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.22823v1",
+      "source": "arxiv",
+      "title": "Retrieval-Augmented Multimodal Learning for Enzyme-Substrate Interaction Prediction Under Low-Homology Shift",
+      "abstract": "Enzyme substrate interaction (ESI) prediction is a fundamental computational task for biocatalyst discovery and reaction screening in large biochemical spaces. In practical settings, ESI prediction is challenged by sparse positive supervision and low-homology distribution shift, where test enzymes share limited sequence identity with those observed during training. To address these challenges, we propose RAMMESI, a retrieval-augmented multimodal framework for robust ESI prediction. RAMMESI learns explicit pairwise enzyme-substrate representations through directional cross-modal interaction modeling and adaptive fusion. To enhance robustness, RAMMESI retrieves neighboring enzymes at inference time, recombines them with the query substrate, and aggregates the resulting pairwise predictions as contextual evidence. To improve learning under sparse positive supervision, we further adopt an imbalance-aware weighted-BCE objective. Experiments on two ESI benchmarks under sequence-identity-aware splits demonstrate that RAMMESI achieves consistently strong performance, with particular advantages in more challenging low-identity regimes. In addition, the retrieval module improves multiple ESI backbones in a plug-and-play manner, suggesting that retrieval provides a general mechanism for improving robustness under homology shift.",
+      "authors": [
+        "Chen Liu",
+        "Bingxin Zhou",
+        "Xinyuan Wang",
+        "Ming Li",
+        "Guisheng Fan",
+        "Liang Hong"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-bio.QM"
+      ],
+      "published": "2026-06-22T04:01:18+00:00",
+      "link": "https://arxiv.org/pdf/2606.22823v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Adds cold-start in enzyme-substrate interaction retrieval-augmented multimodal method",
+      "llm_evidence_cn": "处理酶-底物相互作用中的低同源性（类似冷启动）问题，采用检索增强多模态学习",
+      "llm_evidence": "处理酶-底物相互作用中的低同源性（类似冷启动）问题，采用检索增强多模态学习",
+      "canonical_evidence": "处理酶-底物相互作用中的低同源性（类似冷启动）问题，采用检索增强多模态学习",
+      "llm_tldr_en": "Proposes RAMMESI for enzyme-substrate interaction prediction under low-homology shift, using retrieval-augmented multimodal learning to address sparse supervision and distribution shift.",
+      "llm_tldr_cn": "酶-底物相互作用预测面临低同源性漂移和稀疏标注的挑战。本文提出RAMMESI框架，通过方向性跨模态交互建模和自适应融合学习显式配对表征，并在推理时检索邻近酶进行重组。在基准数据集上，该方法显著提升了低同源性场景下的预测性能，为冷启动相互作用预测提供了可迁移的方法论。",
+      "llm_tldr": "酶-底物相互作用预测面临低同源性漂移和稀疏标注的挑战。本文提出RAMMESI框架，通过方向性跨模态交互建模和自适应融合学习显式配对表征，并在推理时检索邻近酶进行重组。在基准数据集上，该方法显著提升了低同源性场景下的预测性能，为冷启动相互作用预测提供了可迁移的方法论。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "cold-start drug-drug interaction prediction",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.22692v1",
+      "source": "arxiv",
+      "title": "VISTA Architect: A graph database-oriented health AI system demonstrated in multidisciplinary tumor boards",
+      "abstract": "We introduce VISTA Architect, a database-oriented AI architecture for integrating large language models (LLMs) with longitudinal electronic health records (EHRs). At ingestion, it transforms complex clinical documentation into a persistent, provenance-linked knowledge graph, eliminating repeated reprocessing of raw records at query time. The architecture has two layers: a source-faithful MEDS Graph preserving granular EHR structure with full provenance, and a clinically abstracted Timeline Object Architecture (TOA) that uses graph-guided LLM extraction to synthesize a concise timeline of deduplicated, temporally coherent clinical events. This addresses key limitations of direct long-context prompting and retrieval-augmented generation (RAG), which often miss temporal relationships and incur high cost and latency from repeated raw-text processing. By precomputing clinical synthesis once, downstream queries access an organized patient state and traverse to source documentation only when detailed verification is needed.   We demonstrate the system in multidisciplinary thoracic oncology tumor boards at Stanford Medicine, where precise reconstruction of patient histories is critical. Across 1,180 patients, VISTA Architect achieved 96.4% accuracy (mean 9.75/10) on 15 tumor board-salient variables (17,700 evaluations; 95% CI 96.1-96.7%), surpassing a matched BM25 RAG baseline and recent benchmarks for LLM-based clinical extraction. An agentic interface reduced preparation for a 30-patient held-out cohort to about 2.2 minutes without sacrificing accuracy. While configured here for thoracic oncology, the modular design adapts to other specialties through customizable event definitions, episode structures, and agentic tools; validation beyond thoracic oncology remains future work.",
+      "authors": [
+        "Tuomo Kiiskinen",
+        "Jason Fries",
+        "Philip Adamson",
+        "David Wu",
+        "Timothy John Ellis-Caleo",
+        "Aaron Fanous",
+        "Balasubramanian Narasimhan",
+        "Joel Neal",
+        "Sylvia Plevritis",
+        "Manuel A. Rivas"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.DB",
+        "cs.IR"
+      ],
+      "published": "2026-06-21T22:09:12+00:00",
+      "link": "https://arxiv.org/pdf/2606.22692v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "LLM+KG architecture for clinical data, transferable to DDI",
+      "llm_evidence_cn": "LLM与知识图谱结合的架构处理临床数据，可迁移至DDI",
+      "llm_evidence": "LLM与知识图谱结合的架构处理临床数据，可迁移至DDI",
+      "canonical_evidence": "LLM与知识图谱结合的架构处理临床数据，可迁移至DDI",
+      "llm_tldr_en": "VISTA Architect integrates LLMs with EHRs via a provenance-linked knowledge graph, enabling persistent structured representation for clinical AI.",
+      "llm_tldr_cn": "该论文提出VISTA Architect，一种将大语言模型与电子健康记录集成的图数据库AI架构。其在摄入时将复杂临床文档转化为永久的、可追溯来源的知识图谱，避免重复处理。架构分为保留粒度的MEDS图和临床抽象的时序对象架构。该方法可用于构建药物相互作用知识图谱，支撑冷启动预测。",
+      "llm_tldr": "该论文提出VISTA Architect，一种将大语言模型与电子健康记录集成的图数据库AI架构。其在摄入时将复杂临床文档转化为永久的、可追溯来源的知识图谱，避免重复处理。架构分为保留粒度的MEDS图和临床抽象的时序对象架构。该方法可用于构建药物相互作用知识图谱，支撑冷启动预测。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 请帮我查找ColdDDI：利用大型语言模型和生物医学知识图谱进行冷启动药物相互作用预测该方向有关的论文, especially work that connects or combines: Large Language Model + Drug-Drug Interaction Prediction; cold-start drug-drug interaction prediction; large language model for drug interaction; drug interaction prediction with knowledge graph; knowledge graph completion for drug discovery; cold start prediction in drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; Leveraging knowledge graphs for cold start drug interaction with large language models; Biomedical knowledge graph enhanced drug interaction prediction for new drugs.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.24145v1",
+      "source": "arxiv",
+      "title": "T2D-Bench: Evidence-Gated Evaluation of LLM Outputs for Type 2 Diabetes Using a Multi-Layer Clinical-Lifestyle Knowledge Graph",
+      "abstract": "Large language models (LLMs) can produce clinically fluent recommendations for type 2 diabetes while failing to satisfy guideline constraints or explicitly justify lifestyle-related glycemic claims. We present T2D-Bench, a reproducible benchmark and evidence-gated evaluation framework for testing whether LLM outputs satisfy explicit, graph-checkable evidence requirements. T2D-Bench is built on a multi-layer clinical-lifestyle knowledge graph that combines a biomedical spine (UMLS, DrugBank, SIDER), computable ADA Standards of Care rules, and lifestyle knowledge connected through a mechanistic bridge to glycemic laboratory effects. Across 100 structured vignettes spanning diagnosis, medication safety, and adversarial lifestyle conflicts, baseline outputs failed benchmark-defined evidence-path checks in 35% of cases for GPT-4o-mini and 33% for GPT-4o. The evidence gate detects unsupported omissions and uses constrained revision to bring outputs into verifier-level compliance with benchmark-defined evidence requirements. These results show that computable evidence constraints can make unsupported clinical omissions explicit, measurable, and correctable in diabetes-focused LLM outputs.",
+      "authors": [
+        "Saba A. Farahani",
+        "Hung Cao",
+        "Ramesh Jain",
+        "Amir M. Rahmani"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-23T05:02:21+00:00",
+      "link": "https://arxiv.org/pdf/2606.24145v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "KG-based evaluation of LLM outputs for diabetes, includes DrugBank",
+      "llm_evidence_cn": "基于知识图谱的LLM输出评估框架，包含DrugBank",
+      "llm_evidence": "基于知识图谱的LLM输出评估框架，包含DrugBank",
+      "canonical_evidence": "基于知识图谱的LLM输出评估框架，包含DrugBank",
+      "llm_tldr_en": "T2D-Bench evaluates LLM outputs for type 2 diabetes using a multi-layer KG combining UMLS, DrugBank, SIDER, and lifestyle rules.",
+      "llm_tldr_cn": "该论文提出T2D-Bench，一个可重复的基准和证据门控评估框架，用于测试LLM输出是否满足显式的、可通过图验证的证据要求。其多层临床-生活方式知识图谱结合了UMLS、DrugBank、SIDER等生物医学数据，并包含可计算的ADA护理标准规则。在100个糖尿病场景上评估了诊断、药物安全性等，其方法可扩展到药物相互作用预测。",
+      "llm_tldr": "该论文提出T2D-Bench，一个可重复的基准和证据门控评估框架，用于测试LLM输出是否满足显式的、可通过图验证的证据要求。其多层临床-生活方式知识图谱结合了UMLS、DrugBank、SIDER等生物医学数据，并包含可计算的ADA护理标准规则。在100个糖尿病场景上评估了诊断、药物安全性等，其方法可扩展到药物相互作用预测。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 请帮我查找ColdDDI：利用大型语言模型和生物医学知识图谱进行冷启动药物相互作用预测该方向有关的论文, especially work that connects or combines: Large Language Model + Drug-Drug Interaction Prediction; cold-start drug-drug interaction prediction; large language model for drug interaction; drug interaction prediction with knowledge graph; knowledge graph completion for drug discovery; cold start prediction in drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; Leveraging knowledge graphs for cold start drug interaction with large language models; Biomedical knowledge graph enhanced drug interaction prediction for new drugs.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2606.26458v1",
+      "source": "arxiv",
+      "title": "MKG-RAG-Bench: Benchmarking Retrieval in Multimodal Knowledge Graph-Augmented Generation",
+      "abstract": "Retrieval-augmented generation (RAG) over knowledge graphs has emerged as a promising approach for grounding large language models, yet existing benchmarks largely overlook the challenges of retrieval in multimodal knowledge graph RAG (MKG-RAG). In practice, retrieval is a critical bottleneck: multimodal knowledge is heterogeneous, difficult to align across modalities, and often poorly served by retrievers designed for unstructured corpora. To address this gap, we introduce MKG-RAG-Bench, a cross-domain benchmark explicitly designed to evaluate retrieval in MKG-RAG. MKG-RAG-Bench is constructed from two multimodal knowledge graphs spanning general and medical domains, and includes carefully aligned question-answering datasets that support controlled evaluation of both retrieval and downstream generation. The benchmark is built using an LLM-based curation pipeline that filters low-utility knowledge, generates structurally grounded queries with exact supervision, and systematically covers diverse modality configurations. Through extensive experiments across representative retriever families and modality settings, we show that effective multimodal retrieval remains challenging yet crucial for end-to-end MKG-RAG performance, and that retrieval quality strongly determines generation outcomes. By isolating retrieval as a first-class evaluation target, MKG-RAG-Bench provides a principled foundation for diagnosing current limitations and advancing multimodal knowledge graph RAG systems.",
+      "authors": [
+        "Xiaochen Wang",
+        "Bao Hoang",
+        "Han Liu",
+        "Ting Wang",
+        "Fenglong Ma"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-24T23:38:42+00:00",
+      "link": "https://arxiv.org/pdf/2606.26458v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "multimodal KG RAG benchmark with medical domain",
+      "llm_evidence_cn": "多模态知识图谱RAG基准，包含医学领域",
+      "llm_evidence": "多模态知识图谱RAG基准，包含医学领域",
+      "canonical_evidence": "多模态知识图谱RAG基准，包含医学领域",
+      "llm_tldr_en": "Introduces MKG-RAG-Bench, a benchmark for retrieval in multimodal knowledge graph RAG spanning general and medical domains, evaluating retrievers for LLM grounding.",
+      "llm_tldr_cn": "该论文提出了MKG-RAG-Bench，一个跨领域的多模态知识图谱RAG检索基准，包含医学知识图谱和问答数据集。该基准专门用于评估检索器在多模态KG增强生成中的性能，其方法可迁移至药物相互作用预测中的知识检索，为冷启动场景下利用LLM和KG提供了评估视角。",
+      "llm_tldr": "该论文提出了MKG-RAG-Bench，一个跨领域的多模态知识图谱RAG检索基准，包含医学知识图谱和问答数据集。该基准专门用于评估检索器在多模态KG增强生成中的性能，其方法可迁移至药物相互作用预测中的知识检索，为冷启动场景下利用LLM和KG提供了评估视角。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 请帮我查找ColdDDI：利用大型语言模型和生物医学知识图谱进行冷启动药物相互作用预测该方向有关的论文, especially work that connects or combines: Large Language Model + Drug-Drug Interaction Prediction; cold-start drug-drug interaction prediction; large language model for drug interaction; drug interaction prediction with knowledge graph; knowledge graph completion for drug discovery; cold start prediction in drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; Leveraging knowledge graphs for cold start drug interaction with large language models; Biomedical knowledge graph enhanced drug interaction prediction for new drugs.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-17-732914-v1",
+      "source": "biorxiv",
+      "title": "Drug-Prot: A query system for statistical inference of drug effects and interactions in dynamic proteomic networks",
+      "abstract": "Understanding drug effects and drug-drug interactions is essential for developing combination therapies. We present Drug-Prot, a computational framework that leverages large-scale perturbation proteomics to quantify causal drug effects, drug-drug interactions, and dynamic protein relationships. Using data from 63 single drugs and 59 drug combinations applied to 18 breast cancer cell lines at 6, 24, and 48 hours, Drug-Prot estimates drug effects on protein expression and reconstructs directed temporal protein dependency networks.\n\nThe publicly available software enables targeted analyses of user-defined protein sets, substantially reducing the multiple-testing burden. Through an interactive web application, users obtain corrected p-values for single-drug and combination effects, directed temporal dependency networks, and downloadable results without requiring access to the underlying proteomic dataset.\n\nAs a use case, we apply invariance-regularized Random Forests to triple-negative breast cancer cell lines to identify proteins associated with drug response. Querying these proteins in Drug-Prot reveals drug-specific and interaction effects at the protein-network level, illustrating how the framework links candidate causal protein features to actionable drug combinations.",
+      "authors": [
+        "Ulmer, M.",
+        "Sun, R.",
+        "Qian, L.",
+        "Aebersold, R.",
+        "Guo, T.",
+        "Buehlmann, P."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-22T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.17.732914v1.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "focuses on drug-drug interaction prediction using proteomic data",
+      "llm_evidence_cn": "专注于利用蛋白质组数据进行药物相互作用预测",
+      "llm_evidence": "专注于利用蛋白质组数据进行药物相互作用预测",
+      "canonical_evidence": "专注于利用蛋白质组数据进行药物相互作用预测",
+      "llm_tldr_en": "Drug-Prot uses perturbation proteomics to quantify causal drug effects and interactions, enabling DDI analysis across 63 drugs and 59 combinations.",
+      "llm_tldr_cn": "针对药物相互作用预测中缺乏系统因果推断工具的问题，本文提出Drug-Prot框架，利用大规模扰动蛋白质组数据量化药物效应和药物-药物相互作用。方法基于63种单药和59种组合在18种乳腺癌细胞系上的时间序列数据，重建动态蛋白质依赖网络。实验表明该方法能有效推断因果关系和交互作用。开源软件和网络应用降低了分析门槛，为组合疗法研究提供实用工具。",
+      "llm_tldr": "针对药物相互作用预测中缺乏系统因果推断工具的问题，本文提出Drug-Prot框架，利用大规模扰动蛋白质组数据量化药物效应和药物-药物相互作用。方法基于63种单药和59种组合在18种乳腺癌细胞系上的时间序列数据，重建动态蛋白质依赖网络。实验表明该方法能有效推断因果关系和交互作用。开源软件和网络应用降低了分析门槛，为组合疗法研究提供实用工具。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "Large Language Model + Drug-Drug Interaction Prediction",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-18-733117-v1",
+      "source": "biorxiv",
+      "title": "OmniPath Metabo: chemical structures, interactions and mechanisms to study the metabolome",
+      "abstract": "Mechanistic and functional analysis of omics data largely relies on the incorporation of prior knowledge; however, connecting metabolomics data and knowledge is a major methodological challenge. This is largely driven by the diverse prior knowledge being fragmented across many databases requiring the merging of different database records across chemical structures, identifiers, and varying levels of structural specificity. Hence, this limits mechanistic interpretation and functional characterisation of the metabolome.\n\nHere, we present OmniPath Metabo, a comprehensive, harmonized, metabolome-centric database covering metabolites, lipids, food-derived compounds, and small molecule drugs, along with their associated receptors, transporters, enzymes, reactions, allosteric regulators, and disease associations. OmniPath Metabo harmonizes attributes using controlled vocabularies and ontologies, structures and built-in cheminformatics to map identifiers and track ambiguity. OmniPath Metabo is built directly from 40+ original resources and is freely accessible via an interactive web app and API at metabo.omnipathdb.org. OmniPath Metabo enables dynamic, context-specific construction of subnetworks to serve dedicated purposes, such as cell-cell communication or integrated multi-omics metabolite-driven regulation, connecting reactions, allosteric regulation, metabolite-receptor and metabolite-transporter interactions. Combining it with the over 170 other resources in OmniPath, it can be used for integrated networks of signaling, gene regulation, and metabolism. We showcase the application of OmniPath Metabo by analysing publicly available metabolomics data of lung cancer cell lines and metabolic footprints to mutational patterns.\n\nIn summary, OmniPath Metabo transforms fragmented resources into a harmonised prior knowledge framework for a mechanistic and functional analysis of the metabolome.",
+      "authors": [
+        "Schaul, J.",
+        "Bai, Y.",
+        "Franken, J.",
+        "Lawrence, T.",
+        "Palacio-Escat, N.",
+        "Bottazzi, D.",
+        "Carreno, E.",
+        "Daley, M.",
+        "Gul, L.",
+        "Sahin, A.",
+        "Mananes, D.",
+        "Bohar, B.",
+        "Dugourd, A.",
+        "Korcsmaros, T.",
+        "Turei, D.",
+        "Schmidt, C.",
+        "Saez-Rodriguez, J."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-06-19T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.18.733117v1.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Provides harmonized knowledgebase of metabolite and drug interactions supporting DDI knowledge graph construction",
+      "llm_evidence_cn": "提供涵盖代谢物和药物的综合知识库，支持药物相互作用知识图的构建",
+      "llm_evidence": "提供涵盖代谢物和药物的综合知识库，支持药物相互作用知识图的构建",
+      "canonical_evidence": "提供涵盖代谢物和药物的综合知识库，支持药物相互作用知识图的构建",
+      "llm_tldr_en": "OmniPath Metabo is a comprehensive database of metabolites, drugs, and their interactions, integrating chemical structures and mechanisms to enable knowledge graph-based drug interaction prediction.",
+      "llm_tldr_cn": "代谢组学数据的机制解读受限于知识碎片化。OmniPath Metabo整合了代谢物、药物及相互作用知识，形成统一的化学结构与功能数据库。该资源可用于构建药物相互作用知识图，为冷启动DDI预测提供知识基础。",
+      "llm_tldr": "代谢组学数据的机制解读受限于知识碎片化。OmniPath Metabo整合了代谢物、药物及相互作用知识，形成统一的化学结构与功能数据库。该资源可用于构建药物相互作用知识图，为冷启动DDI预测提供知识基础。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
