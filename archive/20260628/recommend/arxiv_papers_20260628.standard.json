@@ -1,0 +1,150 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-06-28T21:17:54.280918+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 3,
+    "quick_skim_target": 11,
+    "quick_selected": 3
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.22692v1",
+      "source": "arxiv",
+      "title": "VISTA Architect: A graph database-oriented health AI system demonstrated in multidisciplinary tumor boards",
+      "abstract": "We introduce VISTA Architect, a database-oriented AI architecture for integrating large language models (LLMs) with longitudinal electronic health records (EHRs). At ingestion, it transforms complex clinical documentation into a persistent, provenance-linked knowledge graph, eliminating repeated reprocessing of raw records at query time. The architecture has two layers: a source-faithful MEDS Graph preserving granular EHR structure with full provenance, and a clinically abstracted Timeline Object Architecture (TOA) that uses graph-guided LLM extraction to synthesize a concise timeline of deduplicated, temporally coherent clinical events. This addresses key limitations of direct long-context prompting and retrieval-augmented generation (RAG), which often miss temporal relationships and incur high cost and latency from repeated raw-text processing. By precomputing clinical synthesis once, downstream queries access an organized patient state and traverse to source documentation only when detailed verification is needed.   We demonstrate the system in multidisciplinary thoracic oncology tumor boards at Stanford Medicine, where precise reconstruction of patient histories is critical. Across 1,180 patients, VISTA Architect achieved 96.4% accuracy (mean 9.75/10) on 15 tumor board-salient variables (17,700 evaluations; 95% CI 96.1-96.7%), surpassing a matched BM25 RAG baseline and recent benchmarks for LLM-based clinical extraction. An agentic interface reduced preparation for a 30-patient held-out cohort to about 2.2 minutes without sacrificing accuracy. While configured here for thoracic oncology, the modular design adapts to other specialties through customizable event definitions, episode structures, and agentic tools; validation beyond thoracic oncology remains future work.",
+      "authors": [
+        "Tuomo Kiiskinen",
+        "Jason Fries",
+        "Philip Adamson",
+        "David Wu",
+        "Timothy John Ellis-Caleo",
+        "Aaron Fanous",
+        "Balasubramanian Narasimhan",
+        "Joel Neal",
+        "Sylvia Plevritis",
+        "Manuel A. Rivas"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.CL",
+        "cs.DB",
+        "cs.IR"
+      ],
+      "published": "2026-06-21T22:09:12+00:00",
+      "link": "https://arxiv.org/pdf/2606.22692v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "integrates LLM and knowledge graph for clinical data, architecture relevant to cold-start DDI",
+      "llm_evidence_cn": "集成大语言模型和知识图谱处理临床数据，其架构对冷启动药物相互作用预测有启发性",
+      "llm_evidence": "集成大语言模型和知识图谱处理临床数据，其架构对冷启动药物相互作用预测有启发性",
+      "canonical_evidence": "集成大语言模型和知识图谱处理临床数据，其架构对冷启动药物相互作用预测有启发性",
+      "llm_tldr_en": "VISTA Architect uses LLMs and knowledge graphs to build a persistent, provenance-linked clinical knowledge base, enabling efficient querying and timeline generation.",
+      "llm_tldr_cn": "现有临床AI系统需反复处理原始病历，效率低下。VISTA Architect提出数据库导向架构，在数据摄入时将文档转换为持久化知识图谱，利用LLM进行图引导提取，合成去重后的临床事件时间线。该系统在多学科肿瘤委员会场景中展示了有效性。其将LLM与知识图谱深度融合的设计为冷启动药物相互作用预测等任务提供了可借鉴的架构思路。",
+      "llm_tldr": "现有临床AI系统需反复处理原始病历，效率低下。VISTA Architect提出数据库导向架构，在数据摄入时将文档转换为持久化知识图谱，利用LLM进行图引导提取，合成去重后的临床事件时间线。该系统在多学科肿瘤委员会场景中展示了有效性。其将LLM与知识图谱深度融合的设计为冷启动药物相互作用预测等任务提供了可借鉴的架构思路。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 请帮我查找ColdDDI：利用大型语言模型和生物医学知识图谱进行冷启动药物相互作用预测该方向有关的论文, especially work that connects or combines: Large Language Model + Drug-Drug Interaction Prediction; cold-start drug-drug interaction prediction; large language model for drug interaction; drug interaction prediction with knowledge graph; knowledge graph completion for drug discovery; cold start prediction in drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; Leveraging knowledge graphs for cold start drug interaction with large language models; Biomedical knowledge graph enhanced drug interaction prediction for new drugs.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.26179v1",
+      "source": "arxiv",
+      "title": "KG-TRACE: A Neuro-Symbolic Framework for Mechanistic Grounding in Antimicrobial Resistance Prediction",
+      "abstract": "While WGS-based AMR prediction has reached high accuracy, existing models lack a mechanism to ground neural attributions in established biological pathways. We present KG-TRACE, a novel neuro-symbolic framework that integrates the WHO mutation knowledge graph (KG) as a structured biological constraint on a neural genomic model. Unlike existing methods that learn statistical patterns in isolation, KG-TRACE fuses genomic features and RotatE-based KG embeddings through a learned epistemic trust gate, dynamically weighting neural evidence against symbolic biological knowledge.   Evaluated on the CRyPTIC M. tuberculosis cohort, KG-TRACE achieves an AUROC of 0.9760 for isoniazid, achieving competitive accuracy while its primary value lies in symbolic grounding, not predictive uplift. More importantly, we introduce the Biological Grounding Ratio (BGR), a dataset-level metric that quantifies alignment between neural attributions and established biology. Our framework achieves a 92.5% symbolic coverage of isoniazid-resistant predictions and effectively identifies MDR co-occurrence artifacts by issuing laboratory follow-up flags for 'UNCERTAIN' cases. We demonstrate that neuro-symbolic grounding provides a verifiable audit trail for clinicians, bridging the gap between predictive accuracy and clinical trust.",
+      "authors": [
+        "Naman Garg",
+        "Sarika Jain",
+        "Sourav Yadav",
+        "Bharat K. Bhargava",
+        "Ghanapriya Singh",
+        "Abhishek Srivastava",
+        "Parimal Kar"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "q-bio.QM"
+      ],
+      "published": "2026-06-24T12:35:18+00:00",
+      "link": "https://arxiv.org/pdf/2606.26179v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "neuro-symbolic framework combining KG and neural model for prediction, transferable to cold-start DDI",
+      "llm_evidence_cn": "结合知识图谱和神经网络的神经符号框架，可迁移至冷启动DDI",
+      "llm_evidence": "结合知识图谱和神经网络的神经符号框架，可迁移至冷启动DDI",
+      "canonical_evidence": "结合知识图谱和神经网络的神经符号框架，可迁移至冷启动DDI",
+      "llm_tldr_en": "KG-TRACE integrates WHO mutation KG as biological constraint into neural genomic model via epistemic trust gate, achieving high accuracy in AMR prediction, with methodology transferable to cold-start DDI.",
+      "llm_tldr_cn": "现有抗菌素耐药性（AMR）预测模型缺乏对生物学通路的可解释性依据。KG-TRACE提出一种神经符号框架，将世界卫生组织突变知识图谱作为结构约束融入神经网络模型，通过可学习的置信门动态加权神经证据与符号知识。在结核分枝杆菌数据集上，模型对异烟肼的AUROC达0.976，在保持高准确率的同时提供了机制性归因。该框架可直接迁移至冷启动药物相互作用预测，将药物知识图谱作为约束来增强新药对的预测。",
+      "llm_tldr": "现有抗菌素耐药性（AMR）预测模型缺乏对生物学通路的可解释性依据。KG-TRACE提出一种神经符号框架，将世界卫生组织突变知识图谱作为结构约束融入神经网络模型，通过可学习的置信门动态加权神经证据与符号知识。在结核分枝杆菌数据集上，模型对异烟肼的AUROC达0.976，在保持高准确率的同时提供了机制性归因。该框架可直接迁移至冷启动药物相互作用预测，将药物知识图谱作为约束来增强新药对的预测。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 请帮我查找ColdDDI：利用大型语言模型和生物医学知识图谱进行冷启动药物相互作用预测该方向有关的论文, especially work that connects or combines: Large Language Model + Drug-Drug Interaction Prediction; cold-start drug-drug interaction prediction; large language model for drug interaction; drug interaction prediction with knowledge graph; knowledge graph completion for drug discovery; cold start prediction in drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; Leveraging knowledge graphs for cold start drug interaction with large language models; Biomedical knowledge graph enhanced drug interaction prediction for new drugs.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-06-22-733382-v1",
+      "source": "biorxiv",
+      "title": "PhenoXtract: combining Large Language Model and Knowledge Graph embedding to extract phenotypes from clinical descriptions",
+      "abstract": "Motivation: Standardized phenotypic descriptions are essential for accurate diagnosis, yet clinicians and researchers face challenges in manually extracting and mapping phenotypes from scientific literature or patient clinical records to the Human Phenotype Ontology. Recent advances in deep learning offer new opportunities for automation. We developed PhenoXtract, a novel phenotype extraction approach that combines Large Language Models and Knowledge Graph embedding. PhenoXtract is a multistep pipeline that takes clinical descriptions as input, extracts candidate phenotype entities using large language models, and maps them to terms from an enriched version of the Human Phenotype Ontology, processed as a knowledge graph. Results: Evaluation against expert-curated ground-truth datasets show a recall of 0.70 and precision of 0.85 for PhenoXtract, demonstrating concordance with manually extracted phenotypes, with a computation time of 10-20 seconds for each text analyzed. Moreover, PhenoXtract surpasses rule-based and deep learning-based state-of-the-art tools in two out of the three ground-truth datasets evaluated. These results suggest that hybrid approaches combining Large Language Models and Knowledge Graph embeddings represent a promising direction for automated clinical phenotyping at scale.",
+      "authors": [
+        "Berardelli, S.",
+        "BRIERE, G.",
+        "Loire, B.",
+        "De Paoli, F.",
+        "Gazzo, A. M.",
+        "Limongelli, I.",
+        "Magni, P.",
+        "Zucca, S.",
+        "Baudot, A."
+      ],
+      "primary_category": "genomics",
+      "categories": [
+        "genomics"
+      ],
+      "published": "2026-06-26T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.06.22.733382v1.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "combines LLM and knowledge graph embedding for phenotype extraction, methodology transferable to cold-start DDI",
+      "llm_evidence_cn": "结合大语言模型和知识图谱嵌入进行表型提取，方法可迁移至冷启动药物相互作用预测",
+      "llm_evidence": "结合大语言模型和知识图谱嵌入进行表型提取，方法可迁移至冷启动药物相互作用预测",
+      "canonical_evidence": "结合大语言模型和知识图谱嵌入进行表型提取，方法可迁移至冷启动药物相互作用预测",
+      "llm_tldr_en": "PhenoXtract combines LLM and KG embedding to extract and map phenotypes from clinical text, offering a transferable pipeline for biomedical tasks like DDI prediction.",
+      "llm_tldr_cn": "现有表型提取依赖人工，效率低下。PhenoXtract提出结合大语言模型和知识图谱嵌入的多步骤流水线，先由LLM提取候选表型实体，再映射到人类表型本体术语。实验证明该方法在多项指标上优于基准。该工作展示了LLM与KG联合在生物医学信息提取中的潜力，为冷启动药物相互作用预测提供了可移植的方法论框架。",
+      "llm_tldr": "现有表型提取依赖人工，效率低下。PhenoXtract提出结合大语言模型和知识图谱嵌入的多步骤流水线，先由LLM提取候选表型实体，再映射到人类表型本体术语。实验证明该方法在多项指标上优于基准。该工作展示了LLM与KG联合在生物医学信息提取中的潜力，为冷启动药物相互作用预测提供了可移植的方法论框架。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "Leveraging knowledge graphs for cold start drug interaction with large language models",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

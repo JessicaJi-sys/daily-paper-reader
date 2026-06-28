@@ -1,0 +1,54 @@
+{
+  "label": "2026-06-28",
+  "date": "2026-06-28",
+  "generated_at": "2026-06-28T21:18:42",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202606/28/2606.22692v1-vista-architect-a-graph-database-oriented-health-ai-system-demonstrated-in-multidisciplinary-tumor-boards",
+      "section": "quick",
+      "title_en": "VISTA Architect: A graph database-oriented health AI system demonstrated in multidisciplinary tumor boards",
+      "authors": "Tuomo Kiiskinen, Jason Fries, Philip Adamson, David Wu, Timothy John Ellis-Caleo, Aaron Fanous, Balasubramanian Narasimhan, Joel Neal, Sylvia Plevritis, Manuel A. Rivas",
+      "date": "2026-06-21",
+      "pdf": "https://arxiv.org/pdf/2606.22692v1",
+      "score": "6.0",
+      "evidence": "集成大语言模型和知识图谱处理临床数据，其架构对冷启动药物相互作用预测有启发性",
+      "tldr": "传统基于长上下文提示和检索增强生成方法在处理电子健康记录时难以捕捉时序关系且重复处理原始文本导致高成本和延迟。本文提出VISTA Architect数据库导向AI架构，集成大语言模型与纵向电子健康记录，将临床文档转化为持久的可溯源知识图谱，通过源保真MEDS图和临床摘要TOA两层结构预计算去重时序事件。在斯坦福医学中心多学科肿瘤委员会中，对1170名患者15个变量的评估准确率达96.4%，优于BM25 RAG基线；基于该架构的交互界面准备30名患者约需2.2分钟。该架构通过预计算减少重复处理，提高效率，模块化设计可适配其他专科领域。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "We introduce VISTA Architect, a database-oriented AI architecture for integrating large language models (LLMs) with longitudinal electronic health records (EHRs). At ingestion, it transforms complex clinical documentation into a persistent, provenance-linked knowledge graph, eliminating repeated reprocessing of raw records at query time. The architecture has two layers: a source-faithful MEDS Graph preserving granular EHR structure with full provenance, and a clinically abstracted Timeline Object Architecture (TOA) that uses graph-guided LLM extraction to synthesize a concise timeline of deduplicated, temporally coherent clinical events. This addresses key limitations of direct long-context prompting and retrieval-augmented generation (RAG), which often miss temporal relationships and incur high cost and latency from repeated raw-text processing. By precomputing clinical synthesis once, downstream queries access an organized patient state and traverse to source documentation only when detailed verification is needed.   We demonstrate the system in multidisciplinary thoracic oncology tumor boards at Stanford Medicine, where precise reconstruction of patient histories is critical. Across 1,180 patients, VISTA Architect achieved 96.4% accuracy (mean 9.75/10) on 15 tumor board-salient variables (17,700 evaluations; 95% CI 96.1-96.7%), surpassing a matched BM25 RAG baseline and recent benchmarks for LLM-based clinical extraction. An agentic interface reduced preparation for a 30-patient held-out cohort to about 2.2 minutes without sacrificing accuracy. While configured here for thoracic oncology, the modular design adapts to other specialties through customizable event definitions, episode structures, and agentic tools; validation beyond thoracic oncology remains future work.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/28/2606.26179v1-kg-trace-a-neuro-symbolic-framework-for-mechanistic-grounding-in-antimicrobial-resistance-prediction",
+      "section": "quick",
+      "title_en": "KG-TRACE: A Neuro-Symbolic Framework for Mechanistic Grounding in Antimicrobial Resistance Prediction",
+      "authors": "Naman Garg, Sarika Jain, Sourav Yadav, Bharat K. Bhargava, Ghanapriya Singh, Abhishek Srivastava, Parimal Kar",
+      "date": "2026-06-24",
+      "pdf": "https://arxiv.org/pdf/2606.26179v1",
+      "score": "6.0",
+      "evidence": "结合知识图谱和神经网络的神经符号框架，可迁移至冷启动DDI",
+      "tldr": "针对基于WGS的AMR预测缺乏生物可解释性问题，提出KG-TRACE神经符号框架，将WHO突变知识图谱通过可学习信任门动态融入神经基因组模型。在结核分枝杆菌数据集上，对异烟肼预测AUROC达0.9760，且实现92.5%符号覆盖，能识别多重耐药共现假象。该框架通过提供可验证的神经归因审计，弥合了预测准确性与临床信任之间的差距。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "While WGS-based AMR prediction has reached high accuracy, existing models lack a mechanism to ground neural attributions in established biological pathways. We present KG-TRACE, a novel neuro-symbolic framework that integrates the WHO mutation knowledge graph (KG) as a structured biological constraint on a neural genomic model. Unlike existing methods that learn statistical patterns in isolation, KG-TRACE fuses genomic features and RotatE-based KG embeddings through a learned epistemic trust gate, dynamically weighting neural evidence against symbolic biological knowledge.   Evaluated on the CRyPTIC M. tuberculosis cohort, KG-TRACE achieves an AUROC of 0.9760 for isoniazid, achieving competitive accuracy while its primary value lies in symbolic grounding, not predictive uplift. More importantly, we introduce the Biological Grounding Ratio (BGR), a dataset-level metric that quantifies alignment between neural attributions and established biology. Our framework achieves a 92.5% symbolic coverage of isoniazid-resistant predictions and effectively identifies MDR co-occurrence artifacts by issuing laboratory follow-up flags for 'UNCERTAIN' cases. We demonstrate that neuro-symbolic grounding provides a verifiable audit trail for clinicians, bridging the gap between predictive accuracy and clinical trust.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202606/28/biorxiv-10-64898-2026-06-22-733382-v1-phenoxtract-combining-large-language-model-and-knowledge-graph-embedding-to-extract-phenotypes-from-clinical-descriptions",
+      "section": "quick",
+      "title_en": "PhenoXtract: combining Large Language Model and Knowledge Graph embedding to extract phenotypes from clinical descriptions",
+      "authors": "Berardelli, S., BRIERE, G., Loire, B., De Paoli, F., Gazzo, A. M., Limongelli, I., Magni, P., Zucca, S., Baudot, A.",
+      "date": "2026-06-26",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.06.22.733382v1.full.pdf",
+      "score": "6.0",
+      "evidence": "结合大语言模型和知识图谱嵌入进行表型提取，方法可迁移至冷启动药物相互作用预测",
+      "tldr": "标准化表型描述对精准诊断至关重要，但人工从文献或病历中提取并映射到人类表型本体（HPO）耗时费力。PhenoXtract结合大语言模型与知识图谱嵌入，构建多步流水线，从临床描述中提取候选表型实体并映射至增强版HPO知识图谱。在专家验证数据集上，召回率为0.70，精确率为0.85，每个文本处理仅需10-20秒，且在三个基准测试中两个优于现有工具。该研究展示了混合方法在大规模自动化临床表型提取中的潜力。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Motivation: Standardized phenotypic descriptions are essential for accurate diagnosis, yet clinicians and researchers face challenges in manually extracting and mapping phenotypes from scientific literature or patient clinical records to the Human Phenotype Ontology. Recent advances in deep learning offer new opportunities for automation. We developed PhenoXtract, a novel phenotype extraction approach that combines Large Language Models and Knowledge Graph embedding. PhenoXtract is a multistep pipeline that takes clinical descriptions as input, extracts candidate phenotype entities using large language models, and maps them to terms from an enriched version of the Human Phenotype Ontology, processed as a knowledge graph. Results: Evaluation against expert-curated ground-truth datasets show a recall of 0.70 and precision of 0.85 for PhenoXtract, demonstrating concordance with manually extracted phenotypes, with a computation time of 10-20 seconds for each text analyzed. Moreover, PhenoXtract surpasses rule-based and deep learning-based state-of-the-art tools in two out of the three ground-truth datasets evaluated. These results suggest that hybrid approaches combining Large Language Models and Knowledge Graph embeddings represent a promising direction for automated clinical phenotyping at scale.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
