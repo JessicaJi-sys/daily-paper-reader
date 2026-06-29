@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-06-29 <!--dpr-date:20260629-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/29/2606.27967v1-relball-relation-ball-with-quaternion-rotation-for-knowledge-graph-completion" data-sidebar-item="{&quot;title&quot;: &quot;RelBall: Relation Ball with Quaternion Rotation for Knowledge Graph Completion&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2606.27967v1-relball-relation-ball-with-quaternion-rotation-for-knowledge-graph-completion&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;用于药物发现的知识图谱完成方法&quot;}">RelBall: Relation Ball with Quaternion Rotation for Knowledge Graph Completion</a>
   * 2026-06-28 <!--dpr-date:20260628-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202606/28/2606.22692v1-vista-architect-a-graph-database-oriented-health-ai-system-demonstrated-in-multidisciplinary-tumor-boards" data-sidebar-item="{&quot;title&quot;: &quot;VISTA Architect: A graph database-oriented health AI system demonstrated in multidisciplinary tumor boards&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2606.22692v1-vista-architect-a-graph-database-oriented-health-ai-system-demonstrated-in-multidisciplinary-tumor-boards&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;集成大语言模型和知识图谱处理临床数据，其架构对冷启动药物相互作用预测有启发性&quot;}">VISTA Architect: A graph database-oriented health AI system demonstrated in multidisciplinary tumor boards</a>

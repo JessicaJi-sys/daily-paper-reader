@@ -1,0 +1,639 @@
+Title: RelBall: Relation Ball with Quaternion Rotation for Knowledge Graph Completion
+
+URL Source: https://arxiv.org/pdf/2606.27967v1
+
+Published Time: Mon, 29 Jun 2026 00:44:33 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# RelBall: Relation Ball with Quaternion Rotation for Knowledge Graph Completion 
+
+Yike Liu, Peijia Xie, Chao He, and Huiling Zhu ⋆
+
+South China Normal University, Guangzhou, China 
+
+Abstract. Real-world knowledge graphs are often incomplete, lacking many valid facts. Knowledge Graph Completion (KGC) aims to pre-dict missing links using known triples, thereby enhancing graph cov-erage. A key challenge is modeling diverse relational patterns such as symmetry, antisymmetry, inversion, composition and semantic hierar-chy. Existing models such as RotatE can capture symmetric, antisym-metric, inverse, and commutative composition patterns, yet struggle with non-commutative composition. Rotate3D addresses this by introducing non-commutativity via three-dimensional rotations, but still fails to cap-ture the semantic hierarchies prevalent in knowledge graphs. Moreover, both models cannot effectively model one-to-many relations. To over-come these limitations, we propose RelBall, which extends Rotate3D with two innovations. First, our model introduces modulus transforma-tion to model hierarchies, driving abstract concepts toward smaller mod-uli and concrete instances toward larger ones. Second, it introduces a tail-centric relation ball to model one-to-one, one-to-many, many-to-one, and many-to-many relations. RelBall offers the following advantages: (1) cov-erage of all relational patterns, including the ones mentioned above; (2) an interpretable hierarchical representation where the modulus directly reflect semantic levels; (3) support for one-to-one, one-to-many, many-to-one, and many-to-many relations. Experiments on multiple datasets demonstrate RelBall’s competitive link prediction performance against various baselines. 
+
+Keywords: Knowledge Graph Completion · Semantic Hierarchy · Quater-nion Rotation · Relation Ball. 
+
+## 1 Introduction 
+
+Knowledge graphs (KGs) represent real-world facts as triples (head entity, rela-tion, tail entity) and are widely used in tasks such as question answering and recommendation systems [7]. However, KGs are often incomplete, with many missing links that degrade downstream performance. Knowledge Graph Comple-tion (KGC) has thus emerged to predict missing entities or relations, improving KG coverage and accuracy.  
+
+> ⋆
+
+Corresponding author.  
+
+> arXiv:2606.27967v1 [cs.AI] 26 Jun 2026 2Y. Liu et al.
+
+Knowledge Graph Embedding (KGE) is a prevalent KGC approach that maps entities and relations into a low-dimensional vector space while preserving their structural and semantic information. KGE methods can be categorized into geometric transformations, tensor decompositions, and neural networks. Among these, geometric transformation models have drawn considerable attention due to their parameter efficiency, fast convergence, and high interpretability. Relations in knowledge graphs exhibit diverse patterns, including symmetry, antisymmetry, inversion, and composition. Composition relations can be further divided into commutative and non-commutative types. For instance, “wife’s fa-ther” and “father’s wife” refer to father-in-law and mother, respectively—their meanings depend on composition order, underscoring the importance of non-commutativity. While models like TransE and RotatE handle commutative com-position well, they struggle with non-commutative cases and often fail to distin-guish queries with different composition orders. Quaternion space, as a hypercomplex space, naturally captures 3D rota-tional transformations with greater flexibility. Models such as QuatE [18], Qua-tRE [8], and Rotate3D [6] employ quaternions for relational rotation and achieve strong completion performance. However, these methods typically use quater-nions solely for modeling relation directions, overlooking the expressive power of the modulus. This limitation makes it difficult to capture the hierarchical structures common in knowledge graphs. Moreover, prior rotation-based models such as RotatE and Rotate3D often assume one-to-one mappings and cannot effectively model one-to-many, many-to-one, or many-to-many relations, which are prevalent in real-world KGs. To address these limitations, we propose RelBall, a hierarchy-aware knowl-edge graph embedding model based on quaternion rotation and modulus scaling. RelBall introduces two key innovations. First, it performs rotations in quater-nion space to model relational patterns while adjusting hierarchical distances via modulus scaling, enabling simultaneous capture of both semantic hierarchy and relational direction. Second, it introduces a tail-centric relation ball that maps entities onto ball centered at the tail entity, allowing the model to naturally han-dle one-to-one, one-to-many, many-to-one, and many-to-many relations without additional parameters. The main contributions are as follows: 1. Semantic Hierarchy Modeling: Combines quaternion rotation with mod-ulus scaling to model hierarchical relations. Theoretical analysis proves that the modulus directly reflects semantic level, where higher-level entities con-verge toward smaller moduli and lower-level entities toward larger ones, aligning with human cognitive abstraction. 2. Advantages of 3D Rotations: Leverages quaternions for three-dimensional rotations, avoiding the gimbal lock problem of Euler angles and providing a more stable and expressive rotation representation. 3. Relation Ball for Complex Mappings: Introduces a tail-centric relation ball that enables flexible modeling of one-to-one, one-to-many, many-to-one, and many-to-many relations, overcoming a key limitation of prior rotation-based models. RelBall 3
+
+4. Empirical Results: Experiments on two standard benchmarks demonstrate RelBall’s advantages in both hierarchical relation modeling and link predic-tion against competitive baselines. This paper is organized as follows. Section 2 reviews related work on knowl-edge graph embedding and hierarchical relation modeling. Section 3 covers pre-liminaries on quaternion rotation and Rotate3D. Section 4 presents the RelBall model along with its theoretical analysis. Section 5 reports experimental results and discussion. Section 6 concludes the paper. 
+
+## 2 Related Work 
+
+2.1 Knowledge Graph Embedding Methods 
+
+Knowledge graph embedding methods can be grouped into three categories based on their modeling approach: geometric transformation models, tensor decompo-sition models, and neural network models. 
+
+Geometric transformation models treat relations as geometric opera-tions in the embedding space. Translation-based models like TransE [4] view rela-tions as translations from head to tail entities but struggle with complex relations patterns. Rotation-based models like RotatE [12] introduce rotational operations in complex space, capable of modeling symmetric, inverse, and other relations; QuatE [18] extends this to quaternion hypercomplex space, and HRotatE [11] further introduces hierarchy-aware rotations. Hyperbolic geometry models like MuRP [2] and HAKE [19] utilize the exponential growth property of hyperbolic space to model hierarchical structures. BoxE [1] uses box regions to represent entities and relations, modeling complex relations patterns. 
+
+Tensor decomposition models treat the knowledge graph as a third-order tensor for decomposition. DistMult [16] uses diagonal matrices for simplified decomposition but can only handle symmetric relations; ComplEx [14] introduces complex embeddings, effectively modeling asymmetric relations. 
+
+Neural network models leverage deep networks to learn interaction fea-tures between entities and relations. ConvE [5] uses 2D convolutions to learn embedding interactions; A2N [3] introduces attention mechanisms for neighbor aggregation. 
+
+2.2 Hierarchical Relation Modeling 
+
+Modeling hierarchical relations is crucial in knowledge graph embedding. Early methods like TransE [4] struggle with this because translation cannot capture semantic distance variations. HAKE [19] uses the magnitude in plane polar co-ordinates to represent semantic hierarchy. 4 Y. Liu et al. 
+
+2.3 Quaternions in Representation Learning 
+
+Quaternions have also found applications in knowledge graph completion: QuatE [18] first introduced quaternions to knowledge graph embeddings, us-ing the Hamilton product for relational rotations. QuatRE [8] extended this idea with relation-aware quaternion transformations. HRotatE [11] introduced hierarchy-aware rotations in quaternion space but still focused on rotation op-erations. 
+
+## 3 Preliminaries 
+
+3.1 Quaternion Basics 
+
+A quaternion q has the following form: q = a + bi + cj + dk , where a, b, c, d ∈ R.It consists of one real part and three imaginary parts. Complex numbers can be seen as a special case of quaternions with c = d = 0 . A quaternion [10] can also be represented as a scalar-vector pair q = [ a, u], where a ∈ R and u ∈ Ri + Rj + Rk.The imaginary units i, j, k satisfy the following rules: 
+
+i2 = j2 = k2 = ijk = −1 (1) From these rules, the following can be obtained: 
+
+ij = k = −ji, jk = i = −kj, ki = j = −ik (2) Based on these equations, the multiplication of two quaternions q1 = [ a1, u1]
+
+and q2 = [ a2, u2] is: 
+
+q1q2 = [ a1a2 − u1 · u2, a 1u2 + a2u1 + u1 × u2] (3) Importantly, due to the presence of the vector cross product u1 × u2, multipli-cation is non-commutative: q1q2̸ = q2q1.
+
+3.2 Representing 3D Rotations with Quaternions 
+
+Let v ∈ R3 denote a point or vector in three-dimensional space [6]. To per-form rotation operations using quaternions, v is represented as a pure imaginary quaternion with zero real part: 
+
+v = [0 , v] (4) A rotation is defined by an axis and an angle. Let u ∈ R3 be a unit vector representing the direction of the rotation axis, and let θ ∈ R be the rotation angle. The corresponding rotation is represented by the unit quaternion: 
+
+q = cos θ
+
+2 + u sin θ
+
+2 =
+
+
+
+cos θ
+
+2 , sin θ
+
+2 u
+
+
+
+(5) RelBall 5
+
+This quaternion satisfies qq ∗ = 1 , where q∗ = cos θ 
+
+> 2
+
+− u sin θ 
+
+> 2
+
+is the conjugate and inverse q−1 of q. The rotated vector v′ is obtained via the following quaternion multiplication: 
+
+v′ = q v q −1 (6) with v′ = [0 , v′].Geometrically, decompose v into components parallel and perpendicular to the rotation axis u:
+
+v = v∥ + v⊥ (7) Under the rotation v′ = qvq −1, the parallel component v∥ remains unchanged, while the perpendicular component v⊥ rotates around u by angle θ. Therefore, the quaternion multiplication v′ = qvq −1 exactly represents a rotation of v by θ
+
+about the axis u.
+
+3.3 Rotate3D Model 
+
+Rotate3D [6] projects entities to h, t ∈ R3×n and defines each relation as an element-wise rotation. For a triple (h, r, t ):
+
+t(i) = qih(i)q−1 
+
+> i
+
+(8) where i ∈ { 1, . . . , n }, h(i) = [0 , h(i)], t(i) = [0 , t(i)], qi = [cos θ 
+
+> 2
+
+, sin θ 
+
+> 2
+
+u], and θ
+
+and u constitute r(i). For simplicity, this rotation is written as: 
+
+t(i) = h(i) ⊙ r(i) (9) where ⊙ : R3 × R3 → R3 represents a 3D rotation induced by r(i). This follows the standard Rotate3D formulation. The score function is defined as: 
+
+fr (h, t ) = −
+
+> n
+
+X
+
+> i=1
+
+∥h(i) ⊙ r(i) − t(i)∥p (10) where ∥ · ∥ p denotes the L1 norm if p = 1 or the L2 norm if p = 2 . Let b ∈ Rn be a relation-specific bias vector, where b(i) denotes its i-th component (a scalar). Then: 
+
+fr (h, t ) = −
+
+> n
+
+X
+
+> i=1
+
+∥(h(i) ⊙ r(i)) · b(i) − t(i)∥p (11) Rotate3D primarily focuses on rotational transformations. Its relation-specific bias term performs element-wise multiplication on the rotated vector. The orig-inal Rotate3D paper does not constrain the sign of this bias term. This paper further imposes a range constraint on the bias. Geometric modeling and exper-imental results demonstrate that the constrained bias term captures semantic distances in hierarchical relations. This capability is not explored in the original Rotate3D paper. 6 Y. Liu et al. 
+
+## 4 RelBall Model 
+
+4.1 Model Formulation 
+
+RelBall extends Rotate3D by introducing modulus scaling and a relation ball mechanism. Let sr , ρr ∈ (R+)n be learnable vectors with components s(i) 
+
+> r
+
+and 
+
+ρ(i) 
+
+> r
+
+, respectively, where sr is the scaling factor and ρr is the radius factor. The relation ball radius in the i-th subspace is proportional to the local modulus of the tail entity: 
+
+R(i) 
+
+> r
+
+= ρ(i) 
+
+> r
+
+∥t(i)∥p, (12) where ∥ · ∥ p is the Lp-norm used in Rotate3D. The head entity is first scaled then rotated: 
+
+t(i) = ( s(i) 
+
+> r
+
+· h(i)) ⊙ r(i), (13) with ⊙ denoting the quaternion rotation defined in Rotate3D. The scoring func-tion becomes: 
+
+fr (h, t ) = −
+
+> n
+
+X
+
+> i=1
+
+max  0, ∥(s(i) 
+
+> r
+
+· h(i)) ⊙ r(i) − t(i)∥p − R(i)
+
+> r
+
+. (14) 
+
+4.2 Geometric Representation for Semantic Hierarchies and Complex Relations x
+
+y
+
+z
+
+u
+
+hs
+
+h
+
+t
+
+> r
+> θ
+
+Fig. 1: RelBall Model Illustration The model leverages radial layering to characterize semantic hierarchies. En-tities with smaller moduli correspond to more abstract concepts, whereas those RelBall 7
+
+with larger moduli represent concrete ones. Complex relations (1-to-1, 1-to-N, N-to-1, N-to-N) are modeled using relation ball. Specifically, the transformed head entity is constrained within the ball centered at the tail entity, enabling multiple heads to map to one tail, or a single head to belong to multiple relation ball. The overall architecture of RelBall is illustrated in Figure 1. Combining scaling, rotation and relation ball operations, RelBall jointly learns semantic hierarchies and complex relations. Concretely, the head entity h
+
+is scaled by factor sr , and then matched with the tail entity t through quaternion rotation. RelBall integrates quaternion rotation, modulus scaling and relation ball into a unified framework. Rotation captures relational directionality, scaling encodes hierarchical semantics, and relation ball handle complex relations. This frame-work offers a full geometric explanation for knowledge graph representation learning. 
+
+4.3 Semantic Hierarchy Characteristics 
+
+In the RelBall model, hierarchical structures are primarily represented by the modulus scaling factor sr , while the relation ball radius Rr provides a geometric interpretation of the tolerance boundary for hierarchical mappings. Specifically: When sr < 1, the head entity h resides at a higher semantic level and the tail entity t at a lower level. If ρr is small, the ball radius Rr is correspondingly small, indicating a precise mapping from higher-level to lower-level entities with limited tolerance. If ρr is large, greater deviation is permitted, reflecting a degree of fuzziness in the hierarchical mapping. When sr = 1 , the head and tail entities lie at the same level of abstraction. In this case, the magnitude of ρr determines the tolerance range between same-level entities: a small ρr enforces strict equivalence relations, while a large ρr allows for looser semantic similarity. When sr > 1, the head entity h resides at a lower semantic level and the tail entity t at a higher level. Similarly, ρr controls the ball tolerance for mappings from lower-level to higher-level entities: a small ρr indicates precise hypernym mappings, while a large ρr permits fuzzy hypernym relations. Furthermore, sr and Rr admit a joint interpretation: sr determines the direc-tion and magnitude of the hierarchical shift, while Rr determines the tolerance range of that shift. Together, they enable RelBall to model both strict hierarchi-cal structures (small sr deviation with small ρr ) and loose hierarchical structures (large sr deviation with large ρr ). 
+
+4.4 Modeling Capability of Relation Patterns 
+
+RelBall maintains strong modeling capability for relation patterns, representing the following types of relations: 8 Y. Liu et al. 
+
+Symmetric Relations For a symmetric relation pattern, if (h, r, t ) ∈ T and 
+
+(t, r, h ) ∈ T , then the ball constraints impose: 
+
+
+
+∥t − sr · (qr h q −1 
+
+> r
+
+)∥p ≤ Rr
+
+∥h − sr · (qr t q −1 
+
+> r
+
+)∥p ≤ Rr
+
+Substituting the first inequality into the second yields: 
+
+∥h − sr · (qr t q −1 
+
+> r
+
+)∥p = h − sr ·  qr
+
+ sr · (qr h q −1 
+
+> r
+
+) + δ q−1
+
+> r
+
+
+
+> p
+
+= h − s2 
+
+> r
+
+·  q2 
+
+> r
+
+h q −2
+
+> r
+
+ − sr · (qr δ q −1 
+
+> r
+
+) p
+
+≤ Rr
+
+where ∥δ∥p ≤ Rr is the deviation vector (pure quaternion) from the first ball constraint. For this inequality to hold for arbitrary h within the ball tolerance, the core rotation-scaling condition must be satisfied: 
+
+s2 
+
+> r
+
+= 1 and q2 
+
+> r
+
+= ±1
+
+Since sr ∈ R+, it follows that sr = 1 . The condition q2 
+
+> r
+
+= ±1 corresponds to rotation angles θr ∈ { 0, π }.
+
+Antisymmetric Relations For an antisymmetric relation pattern, (h, r, t ) ∈T ⇒ (t, r, h ) /∈ T , the ball constraints give: 
+
+
+
+∥t − sr · (qr h q −1 
+
+> r
+
+)∥p ≤ Rr
+
+∥h − sr · (qr t q −1 
+
+> r
+
+)∥p > R r
+
+Expanding the second inequality with the first constraint: 
+
+h − s2 
+
+> r
+
+·  q2 
+
+> r
+
+h q −2
+
+> r
+
+ − sr · (qr δ q −1 
+
+> r
+
+) p > R r
+
+For antisymmetry to be enforced, at least one of the following conditions must hold: 
+
+s2
+
+> r
+
+̸ = 1 or q2
+
+> r
+
+̸ = ±1
+
+Composition Relations For a composition relation pattern, if (h, r 1, t ) ∈ T ,
+
+(t, r 2, z ) ∈ T and (h, r 3, z ) ∈ T , then the ball constraints impose: 
+
+
+
+∥t − sr1 · (qr1 h q −1 
+
+> r1
+
+)∥p ≤ Rr1
+
+∥z − sr2 · (qr2 t q −1 
+
+> r2
+
+)∥p ≤ Rr2
+
+∥z − sr3 · (qr3 h q −1 
+
+> r3
+
+)∥p ≤ Rr3RelBall 9
+
+Combining the first two constraints: 
+
+z = sr2 · (qr2 t q −1 
+
+> r2
+
+) + δ2
+
+= sr2 ·  qr2
+
+ sr1 · (qr1 h q −1 
+
+> r1
+
+) + δ1
+
+ q−1
+
+> r2
+
+ + δ2
+
+= ( sr1 sr2 ) ·  (qr2 qr1 ) h (qr2 qr1 )−1 + sr2 · (qr2 δ1 q−1 
+
+> r2
+
+) + δ2
+
+where ∥δ1∥p ≤ Rr1 and ∥δ2∥p ≤ Rr2 (both pure quaternions). For z to satisfy the third ball constraint, the ideal composition conditions are: 
+
+sr3 = sr1 sr2 and qr3 = ± qr2 qr1
+
+Furthermore, the ball radii must satisfy a cumulative constraint to accommodate the propagated errors: 
+
+Rr3 ≥ sr2 · Rr1 + Rr2 .
+
+If r1 and r2 are commutative, then: 
+
+qr1 qr2 = qr2 qr1
+
+If r1 and r2 are non-commutative, then: 
+
+qr1 qr2̸ = qr2 qr1
+
+Inverse Relations For an inverse relation pattern, if (h, r 1, t ) ∈ T and (t, r 2, h ) ∈T , where r1 and r2 are a pair of inverse relations, the ball constraints impose: 
+
+
+
+∥t − sr1 · (qr1 h q −1 
+
+> r1
+
+)∥p ≤ Rr1
+
+∥h − sr2 · (qr2 t q −1 
+
+> r2
+
+)∥p ≤ Rr2
+
+Substituting the first inequality into the second yields: 
+
+∥h − sr2 · (qr2 t q −1 
+
+> r2
+
+)∥p = h − sr2 ·  qr2
+
+ sr1 · (qr1 h q −1 
+
+> r1
+
+) + δ1
+
+ q−1
+
+> r2
+
+
+
+> p
+
+= h − (sr1 sr2 ) ·  (qr2 qr1 ) h (qr2 qr1 )−1 − sr2 · (qr2 δ1 q−1 
+
+> r2
+
+) p
+
+≤ Rr2
+
+where ∥δ1∥p ≤ Rr1 is a pure quaternion deviation. For this to hold for arbitrary 
+
+h within the ball tolerance, the core conditions are: 
+
+sr1 sr2 = 1 and qr2 qr1 = ±1
+
+Since sr1 , s r2 ∈ R+, it follows that sr2 = s−1 
+
+> r1
+
+. The quaternion condition qr2 qr1 =
+
+±1 implies qr2 = ±q−1 
+
+> r1
+
+, i.e., the rotation of the inverse relation is the inverse (or negative inverse) of the original rotation. Additionally, the ball radii must satisfy: 
+
+Rr2 ≥ sr2 · Rr1 = s−1 
+
+> r1
+
+· Rr1 .10 Y. Liu et al. 
+
+4.5 Loss Function and Training 
+
+During training, each triple (h, r, t ) in the training set is treated as a positive sample. For each positive samples, n negative triples (h′
+
+> i
+
+, r, t ′
+
+> i
+
+) are constructed by randomly replacing the head or tail entity, ensuring that these negative samples are not present in the training set. The model is optimized using the negative sampling loss with self-adversarial training [12]: 
+
+L = − log σ(γ − fr (h, t )) 
+
+−
+
+> n
+
+X
+
+> i=1
+
+p(h′
+
+> i
+
+, r, t ′
+
+> i
+
+) log σ(fr (h′
+
+> i
+
+, t ′
+
+> i
+
+) − γ) (15) where σ is the sigmoid function, γ is a margin hyperparameter, and fr (h, t )
+
+is the score function for the triple. The negative sample sampling probability is defined as: 
+
+p(h′ 
+
+> j
+
+, r, t ′ 
+
+> j
+
+) = exp( αf r (h′ 
+
+> j
+
+, t ′ 
+
+> j
+
+)) 
+
+Pni=1 exp( αf r (h′
+
+> i
+
+, t ′
+
+> i
+
+)) (16) where α is the sampling temperature parameter controlling the sampling weight of negative samples. This mechanism assigns higher sampling probabil-ities to hard negative samples with higher scores, thus improving training effi-ciency. 
+
+4.6 Implementation Details 
+
+RelBall is implemented using PyTorch with the following main configurations: Hyperparameter ranges include embedding dimension d ∈ { 500 , 750 , 1000 , 1500 },margin parameter γ ∈ { 6, 9, 12 , 24 }, self-adversarial sampling temperature τ ∈{0.5, 1.0}, batch size B ∈ { 512 , 1024 }, regularization coefficient λ ∈ [0 , 1] , p-norm p ∈ { 1, 2}, number of negative samples Nneg = 256 , maximum training steps T ∈ [8 × 10 4, 2.0 × 10 5]. The Adam optimizer is used with learning rate 
+
+η ∈ [5 × 10 −5, 2 × 10 −4], and a learning rate decay strategy is employed. 
+
+## 5 Experiments 
+
+5.1 Experimental Setup Datasets Experiments on RelBall are performed on two standard benchmark knowledge graph completion datasets: WN18RR [13] and FB15k-237 [5]. Table 1 summarizes their statistics. 
+
+Baseline Methods RelBall is compared against several geometric transfor-mation baselines, including RotatE, QuatE, QuatRE, Rotate3D, HA-RotatE, HAKE, MuRP, HBE, and RotatH. Among these, HA-RotatE, HAKE, MuRP, and HBE are hierarchy-aware, while RotatH is capable of handling complex relations. RelBall 11 
+
+Table 1: Dataset Statistics            
+
+> Dataset #Entities #Relations #Training #Validation #Test
+> WN18RR 40943 11 86835 3034 3134 FB15k-237 14541 237 272115 17535 20466
+
+Evaluation Metrics For each triple (h, r, t ) in the test set, the head or tail entity is replaced with every candidate entity to create candidate triples. The fil-tered setting is used, excluding existing valid triples. Evaluation metrics include Mean Reciprocal Rank (MRR) and Hits@k (k = 1, 3, 10). 
+
+Implementation Details All experiments are run on NVIDIA RTX 4090 GPUs. 
+
+5.2 Main Results 
+
+This section presents the experimental results in four parts. First, the overall per-formance of RelBall is compared with baseline models. Second, the distribution of scaling factor values across different relations is analyzed. Third, the perfor-mance of RelBall on complex relations is evaluated. Finally, the contribution of each component is assessed through ablation studies. 
+
+Overall Performance Based on the experimental results presented in Table 2, the following conclusions can be drawn. This table compares models without Table 2: Link prediction results on WN18RR and FB15k-237. 
+
+Model WN18RR FB15k-237 MRR H@1 H@3 H@10 MRR H@1 H@3 H@10 HAKE [19] 0.497 0.452 0.516 0.582 0.346 0.250 0.381 0.542 
+
+HA-RotatE [15] 0.491 0.445 0.511 0.587 0.346 0.250 0.384 0.539 MuRP [2] 0.481 0.440 0.495 0.566 0.335 0.243 0.367 0.518 HBE [9] 0.488 0.448 0.502 0.570 0.336 0.239 0.372 0.534 RotatH [14] 0.472 0.432 0.484 0.554 0.342 0.250 0.378 0.526 RotatE [12] 0.476 0.428 0.492 0.571 0.338 0.241 0.375 0.533 QuatE [18] 0.481 0.436 0.500 0.564 0.311 0.221 0.342 0.495 QuatRE [8] 0.479 0.429 0.503 0.571 0.332 0.238 0.367 0.522 Rotate3D [6] 0.489 0.442 0.505 0.579 0.347 0.250 0.385 0.543 RelBall 0.491 0.446 0.507 0.583 0.349 0.251 0.387 0.544 12 Y. Liu et al. 
+
+explicit semantic hierarchy modeling capabilities (RotatE, QuatE, QuatRE, Ro-tate3D), aiming to verify the fundamental effectiveness of RelBall in general knowledge graph reasoning tasks. It also compares models with semantic hierar-chy awareness or complex relations modeling capabilities (HAKE, HA-RotatE, MuRP, HBE, RotatH), to evaluate the competitive advantage of RelBall in han-dling complex semantic hierarchical relations. On the FB15k-237 dataset, RelBall demonstrates excellent modeling capabil-ity, ranking first across all evaluation metrics, which fully demonstrates its com-prehensive advantage in handling complex relations patterns contained in this dataset. On the WN18RR datasets, RelBall also exhibits outstanding robust-ness, with all evaluation metrics ranking among the top. These results confirm its strong generalization ability and robustness. 
+
+Semantic Hierarchy Analysis This paper analyzes the distribution of scaling factor values across different relations. In Figure 2, both the mean and median scaling factors for subfigures (a), fall below 1; for (b), they approximate 1; for (c), they exceed 1. This aligns with theoretical expectations: as discussed in the hierarchical interpretation of the modulus transformation, the scaling factor mathematically captures semantic hierarchical structures, where values below 1, near 1, and above 1 respectively correspond to the head entity being at a higher, same, or lower semantic level than the tail entity.  
+
+> (a) _hypernym (b) _verb_group
+> (c) _member_meronym
+
+Fig. 2: Distribution of the modulus scale parameter across three relation types. Red solid line: Baseline ( = 1 .0); green dashed line: Mean; orange dash-dotted line: Median. RelBall 13 
+
+Table 3: The results of mapping properties of relations on FB15k-237. [ †] denotes results reported in [17]. [ ‡] denotes results from [14].                                                                                                                   
+
+> Category Predicting Head (MRR) Predicting Tail (MRR) 1-to-1 1-to-N N-to-1 N-to-N 1-to-1 1-to-N N-to-1 N-to-N TransE [4][ †]0.490 0.450 0.081 0.248 0.481 0.070 0.746 0.364 ComplEx [14][ †]0.367 0.463 0.091 0.249 0.362 0.064 0.737 0.357 RotatE [12][ †]0.496 0.463 0.086 0.253 0.482 0.072 0.757 0.369
+> ReflectE [17][ †]0.459 0.448 0.137 0.282 0.466 0.085 0.753 0.392
+> RotatH [14][ ‡]0.481 0.464 0.077 0.268 0.484 0.071 0.744 0.381 RelBall 0.504 0.480 0.117 0.269 0.486 0.075 0.777 0.381 Category Predicting Head (Hits@10) Predicting Tail (Hits@10) 1-to-1 1-to-N N-to-1 N-to-N 1-to-1 1-to-N N-to-1 N-to-N TransE [4][ †]0.594 0.659 0.162 0.458 0.583 0.138 0.879 0.606 ComplEx [14][ †]0.521 0.655 0.170 0.454 0.531 0.126 0.862 0.591 RotatE [12][ †]0.594 0.658 0.167 0.463 0.563 0.131 0.880 0.609
+> ReflectE [17][ †]0.563 0.642 0.248 0.484 0.568 0.157 0.883 0.623
+> RotatH [14][ ‡]0.542 0.656 0.148 0.476 0.568 0.128 0.874 0.607 RelBall 0.609 0.679 0.220 0.483 0.599 0.145 0.890 0.619
+
+Performance by Relation Type Furthermore, RelBall is evaluated on dif-ferent relation types, including 1-to-1, 1-to-N, N-to-1, and N-to-N. Specifically, head prediction and tail prediction tasks are analyzed separately. The head pre-diction is processed by taking each positive triple, removing the head entity, and keeping the relation and tail entity. The head is then replaced with candidate en-tities to predict whether the newly created triple is valid, i.e., predicting (? , r, t ).Tail prediction is performed in the same way, but the replaced entity is the tail entity, i.e., predicting (h, r, ?) . The results are summarized in Table 3. As shown in the table, RelBall achieves particularly strong performance on complex rela-tions. These gains can be attributed to the ball constraint, which allows multiple head or tail entities to be valid within the tolerance boundary defined by Rr .
+
+Ablation Study To evaluate the contribution of each component in RelBall, ablation experiments are conducted on WN18RR and FB15k-237 by selectively removing the modulus scaling factor sr and the radius factor ρr . The modulus scaling factor sr controls the semantic-level adjustment of the head entity, while the radius factor ρr determines the size of the relational ball centered at the tail entity. Removing sr reduces the modulus transformation to an identity mapping, restricting the model to represent relations only at the same semantic level. Removing ρr collapses the relational ball into a single point, eliminating tolerance for complex relations. 14 Y. Liu et al. 
+
+Table 4: Ablation study on model components on WN18RR and FB15k-237. 
+
+sr ρr
+
+WN18RR FB15k-237 MRR Hit@1 Hit@3 Hit@10 MRR Hit@1 Hit@3 Hit@10 
+
+✓ ✓ 0.491 0.446 0.507 0.583 0.349 0.251 0.387 0.544 
+
+✓ × 0.493 0.446 0.510 0.583 0.347 0.250 0.385 0.543 
+
+× ✓ 0.486 0.441 0.503 0.574 0.344 0.248 0.382 0.537 
+
+× × 0.487 0.441 0.504 0.577 0.344 0.248 0.382 0.537 
+
+Note: ✓ indicates the component is included, × indicates it is removed. The four rows represent: (1) with both scale and radius; (2) with scale only; (3) with radius only; (4) without both. 
+
+The results are reported in Table 4. The results show that the complete RelBall model, which includes both sr and ρr , achieves excellent performance on most metrics. 
+
+## 6 Conclusion 
+
+This paper proposes RelBall, a knowledge graph embedding model that inte-grates quaternion rotation, modulus transformation, and relation ball. Theoret-ical analysis and experimental results demonstrate that modulus transforma-tion reflects the semantic hierarchy of entities: higher-level entities correspond to smaller moduli, while lower-level entities correspond to larger moduli. Mean-while, the introduction of the relation ball enables it to effectively model complex relations. 
+
+## References 
+
+1. Abboud, R., Ceylan, I.I., Lukasiewicz, T., Salvatori, T.: BoxE: A Box Embedding Model for Knowledge Base Completion. In: Advances in Neural Information Pro-cessing Systems 33: Annual Conference on Neural Information Processing Systems 2020 (2020) 2. Balazevic, I., Allen, C., Hospedales, T.M.: Multi-relational Poincaré Graph Em-beddings. In: Advances in Neural Information Processing Systems 32: Annual Con-ference on Neural Information Processing Systems 2019. pp. 4465–4475 (2019) 3. Bansal, T., Juan, D.C., Ravi, S., McCallum, A.: A2N: Attending to Neighbors for Knowledge Graph Inference. In: Proceedings of the 57th Conference of the Association for Computational Linguistics. pp. 4387–4392 (2019) 4. Bordes, A., Usunier, N., García-Durán, A., Weston, J., Yakhnenko, O.: Translat-ing Embeddings for Modeling Multi-relational Data. In: Advances in Neural In-formation Processing Systems 26: 27th Annual Conference on Neural Information Processing Systems 2013. pp. 2787–2795 (2013) 5. Dettmers, T., Minervini, P., Stenetorp, P., Riedel, S.: Convolutional 2D Knowledge Graph Embeddings. In: Proceedings of the Thirty-Second AAAI Conference on Artificial Intelligence, the 30th innovative Applications of Artificial Intelligence, RelBall 15 and the 8th AAAI Symposium on Educational Advances in Artificial Intelligence. pp. 1811–1818 (2018) 6. Gao, C., Sun, C., Shan, L., Lin, L., Wang, M.: Rotate3D: Representing Relations as Rotations in Three-Dimensional Space for Knowledge Graph Embedding. In: CIKM ’20: The 29th ACM International Conference on Information and Knowledge Management. pp. 385–394 (2020) 7. H. Ren, Z. Chen, X. Liang, C. Yang, W. Gui: Association Hierarchical Representa-tion Learning for Plant-Wide Process Monitoring by Using Multilevel Knowledge Graph. IEEE Transactions on Artificial Intelligence 4(4), 636–649 (Aug 2023) 8. Nguyen, D.Q., Vu, T., Nguyen, T.D., Phung, D.Q.: QuatRE: Relation-Aware Quaternions for Knowledge Graph Embeddings. In: Companion of The Web Con-ference 2022. pp. 189–192 (2022) 9. Pan, Z., Wang, P.: Hyperbolic Hierarchy-Aware Knowledge Graph Embedding for Link Prediction. In: Findings of the Association for Computational Linguistics: EMNLP 2021. pp. 2941–2948 (2021) 10. Sarabandi, S., Thomas, F.: A Survey on the Computation of Quaternions From Rotation Matrices. Journal of Mechanisms and Robotics 11 (021006) (Mar 2019) 11. Shah, A., Molokwu, B.C., Kobti, Z.: HRotatE: Hybrid Relational Rotation Embed-ding for Knowledge Graph. In: International Joint Conference on Neural Networks. pp. 1–8 (2021) 12. Sun, Z., Deng, Z.H., Nie, J.Y., Tang, J.: RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space. In: 7th International Conference on Learning Representations (2019) 13. Toutanova, K., Chen, D.: Observed versus latent features for knowledge base and text inference. In: Proceedings of the 3rd Workshop on Continuous Vector Space Models and their Compositionality. pp. 57–66 (2015) 14. Trouillon, T., Welbl, J., Riedel, S., Gaussier, É., Bouchard, G.: Complex Em-beddings for Simple Link Prediction. In: Proceedings of the 33nd International Conference on Machine Learning. pp. 2071–2080 (2016) 15. Wang, S., Fu, K., Sun, X., Zhang, Z., Li, S., Jin, L.: Hierarchical-aware relation rotational knowledge graph embedding for link prediction. Neurocomputing 458 ,259–270 (2021) 16. Yang, B., Yih, W.t., He, X., Gao, J., Deng, L.: Embedding Entities and Relations for Learning and Inference in Knowledge Bases. In: 3rd International Conference on Learning Representations (2015) 17. Zhang, Q., Wang, R., Yang, J., Xue, L.: Knowledge graph embedding by reflection transformation. Knowl. Based Syst. 238 , 107861 (2022) 18. Zhang, S., Tay, Y., Yao, L., Liu, Q.: Quaternion Knowledge Graph Embeddings. In: Advances in Neural Information Processing Systems 32: Annual Conference on Neural Information Processing Systems 2019. pp. 2731–2741 (2019) 19. Zhang, Z., Cai, J., Zhang, Y., Wang, J.: Learning Hierarchy-Aware Knowledge Graph Embeddings for Link Prediction. In: The Thirty-Fourth AAAI Conference on Artificial Intelligence, The Thirty-Second Innovative Applications of Artificial Intelligence Conference, The Tenth AAAI Symposium on Educational Advances in Artificial Intelligence. pp. 3065–3072 (2020)
