@@ -1,0 +1,24 @@
+{
+  "label": "2026-06-30",
+  "date": "2026-06-30",
+  "generated_at": "2026-06-30T22:01:30",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202606/30/2606.29773v1-glip-graph-and-llm-joint-pretraining-for-graph-level-tasks",
+      "section": "quick",
+      "title_en": "GLIP: Graph and LLM Joint Pretraining for Graph-Level Tasks",
+      "authors": "Haoxin Sun, Yiqing Lin, Yajun Huang, Chenhui Dong, Mingjun Li, Zhongzhi Zhang",
+      "date": "2026-06-29",
+      "pdf": "https://arxiv.org/pdf/2606.29773v1",
+      "score": "6.0",
+      "evidence": "图与大型语言模型联合预训练用于图级任务，可应用于基于知识图谱的药物相互作用预测",
+      "tldr": "针对图级任务中图神经网络与大规模语言模型结合不足、现有图预训练未引入语言模型的问题，提出GLIP框架。通过图增强构建正负样本对，利用多token选择策略提取结构和特征信息块，并采用扩散投影器融合全局与局部上下文。联合语义判断与对比对齐损失进行预训练，微调后在图分类和推理任务上超越现有方法。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Graphs are widely used to model relational systems, with applications in domains such as social networks, finance, and biomedicine. Graph neural networks (GNNs) have become a mainstream approach for learning graph representations. With the rise of large language models (LLMs), recent studies have attempted to combine GNNs with LLMs. However, most existing works concentrate on node-level and edge-level tasks, while graph-level tasks, which require capturing more complex structural and feature information, remain relatively underexplored. Moreover, graph pretraining is a widely adopted strategy to alleviate the challenge of label scarcity. Most existing approaches are designed solely for GNNs such as GraphCL, leaving LLMs uninvolved in the process. To address these limitations, we propose GLIP, a Graph-LLM JoInt Pretraining framework for graph-level tasks. GLIP first performs graph augmentation to construct positive and negative pairs and introduces a multi-token selection strategy to identify patches informative in both structure and features. It further leverages a diffusion-based projector to enrich them with contextual information, enabling GLIP to capture signals from both global and local perspectives. Finally, GLIP employs a joint objective that integrates the LLM's semantic judgments with a contrastive alignment loss, ensuring consistent supervision at both the semantic and structural levels. After pretraining, GLIP is fine-tuned with limited labeled data for downstream tasks, and extensive experiments show that it outperforms state-of-the-art methods on graph-level classification and reasoning tasks. Our source code is publicly available at https://anonymous.4open.science/r/GLIP.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
