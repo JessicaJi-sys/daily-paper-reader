@@ -6,28 +6,34 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-06-30
-- 运行时间：2026-06-30 22:01:24 UTC
+- 最新运行日期：2026-07-01
+- 运行时间：2026-07-01 21:52:52 UTC
 - 运行状态：成功
-- 本次总论文数：1
-- 精读区：0
-- 速读区：1
+- 本次总论文数：4
+- 精读区：1
+- 速读区：3
 
 ### 今日简报（AI）
-今日仅速读1篇论文，聚焦图与LLM联合预训练。
-
-该论文提出GLIP框架用于图级任务，值得关注图与语言模型的交叉方向。
-
-建议后续深入精读该领域的代表性工作，对比不同融合策略。
-- 详情：[/202606/30/README](/202606/30/README)
+今日精读DDI预测论文，速读知识图谱与图学习三篇。  
+最推荐《DDIAgents: Mechanism-Conditioned Context Flow for Drug-Drug Interaction Prediction》，其次关注关系集补全和GNN+LLM融合。  
+后续可重点探索药物交互机制建模，并留意知识图谱补全与非三元组合理性的扩展思路。
+- 详情：[/202607/01/README](/202607/01/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [DDIAgents: Mechanism-Conditioned Context Flow for Drug-Drug Interaction Prediction](/202607/01/2606.31085v1-ddiagents-mechanism-conditioned-context-flow-for-drug-drug-interaction-prediction)  
+   标签：评分：8.0/10、query:cold-ddi
+   evidence：使用机制条件上下文流的多智能体框架进行药物相互作用预测
 
 ### 速读区论文标签
-1. [GLIP: Graph and LLM Joint Pretraining for Graph-Level Tasks](/202606/30/2606.29773v1-glip-graph-and-llm-joint-pretraining-for-graph-level-tasks)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：图与大型语言模型联合预训练用于图级任务，可应用于基于知识图谱的药物相互作用预测
+1. [Beyond Triplet Plausibility: Relation Set Completion in Knowledge Graphs](/202607/01/2606.29860v1-beyond-triplet-plausibility-relation-set-completion-in-knowledge-graphs)  
+   标签：评分：7.0/10、query:cold-ddi
+   evidence：知识图谱补全方法可用于药物发现
+2. [Beyond Triplet Plausibility: Relation Set Completion in Knowledge Graphs](/202607/01/2606.29860v2-beyond-triplet-plausibility-relation-set-completion-in-knowledge-graphs)  
+   标签：评分：7.0/10、query:cold-ddi
+   evidence：提出知识图谱关系集补全，直接可应用于药物发现中的知识图谱补全
+3. [PromptGNN-sim: Deep Fusion and Alignment of GNN and LLMs for Text-Attributed Graph Learning](/202607/01/2606.30291v1-promptgnn-sim-deep-fusion-and-alignment-of-gnn-and-llms-for-text-attributed-graph-learning)  
+   标签：评分：7.0/10、query:cold-ddi
+   evidence：GNN与LLM的深度融合用于文本属性图学习，可应用于药物相互作用预测
 
 
 <div class="dpr-home-promo-card">
