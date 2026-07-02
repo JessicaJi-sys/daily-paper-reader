@@ -1,0 +1,559 @@
+Title: Beyond Triplet Plausibility: Relation Set Completion in Knowledge Graphs
+
+URL Source: https://arxiv.org/pdf/2606.29860v3
+
+Published Time: Thu, 02 Jul 2026 00:22:10 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+> JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 1
+
+# Beyond Triplet Plausibility: Relation Set Completion in Knowledge Graphs 
+
+Zihao Zheng, Borui Cai, Yao Zhao, Xin Han, Mengqi Ji 
+
+Abstract —Knowledge graphs (KGs) organize real-world knowledge as triplets and underpin many downstream ap-plications. Due to their inherent incompleteness, knowledge graph completion (KGC) is widely studied and is typically formulated as triplet prediction, with link prediction as the dominant paradigm. However, this formulation focuses on the incompleteness of triplet-wise information and overlooks the incompleteness of entity-relation compatibility information. To address this limitation, we introduce a relation set completion task (RSC), which complements the link prediction task and aims to reason about missing relations that are semantically compatible with a given entity. We further propose a Relation Set Embedding model (RelSetE), which models latent patterns among the observed relations of entities to infer missing ones. To evaluate RelSetE, we derive three benchmark datasets from standard KG benchmarks. Extensive experiments demonstrate that RelSetE effectively captures entity-relation compatibility patterns and performs favorably in inferring missing relations of entities. Code and data are publicly available. 1
+
+Index Terms —Knowledge graph, relation set completion, rep-resentation learning. 
+
+I. I NTRODUCTION 
+
+# KNOWLEDGE graphs (KGs) organize structured real-world knowledge as triplets of the form ⟨head entity, relation, tail entity ⟩, and underpin a wide range of downstream applications such as information retrieval [1]– [3] and recommendation systems [4], [5]. Despite their prac-tical importance, real-world KGs are inherently incomplete, prompting extensive research on knowledge graph completion (KGC) [6]. In recent years, KGC has predominantly been formulated as a link prediction (LP) task, aiming to infer missing facts by predicting the missing entities or relations in incomplete triplets. Such a formulation primarily relies on triplet-wise information, i.e., the likelihood that a given head entity, relation, and tail entity form a valid fact. While existing LP methods focus primarily on triplet plausibility, entity–relation compatibility remains unexplored. In many real-world settings, KGs are constructed alongside pre-defined ontologies or domain knowledge that explicitly 
+
+Z. Zheng and X. Han are with the School of Information Technology, Deakin University, VIC 3125, Australia. E-mail: z.zheng@deakin.edu.au; xinhan@ieee.org. B. Cai is with Hangzhou International Innovation Institute, Beihang Uni-versity, Hangzhou 311115, China. E-mail: caibr@buaa.edu.cn. Y. Zhao is with the School of Information Technology, Victoria University, VIC 3011, Australia. E-mail: yao.zhao@vu.edu.au. M. Ji is with School of Artificial Intelligence, Beihang University, Beijing 100191, China. E-mail: jimengqi@buaa.edu.cn. Corresponding author: Borui Cai 
+
+> 1
+
+https://github.com/zihao-johnson/knowledge-graph-relation-set-completion. 
+
+specify which relations are semantically compatible with dif-ferent types of entities. Under this assumption, entity–relation compatibility is regarded as prior knowledge, and the set of relations compatible with each entity is assumed to be known. However, with large-scale information extraction and the emergence of open-world settings [7], KGs continuously grow and evolve, inevitably outpacing the coverage of any pre-defined ontologies or domain knowledge, making this assumption increasingly unrealistic. As a result, the compatible relation sets of entities can no longer be reliably derived from pre-defined ontologies, as entities may either fail to fit into pre-defined ontological categories or participate in relations beyond their coverage. This limitation is further reflected at the data level. Because KGs are inherently incomplete, the observed triplets associated with an entity usually reveal only a partial view of its full compatible relation set. In other words, the absence of a relation from the observed KG does not necessarily mean that the relation is semantically incompatible with the entity. Without recovering such missing compatibility information, the semantic representation of an entity may remain incom-plete, which can further affect downstream KG-based tasks. This highlights the need to study the completion of en-tity–relation compatibility information, which to the best of our knowledge remains unexplored. To address this gap, we introduce Relation Set Completion (RSC), a novel KGC task that operates at the entity level rather than the triplet level. Formally, given an entity, RSC aims to infer the set of relations that are semantically compatible with that entity but have not yet been associated with it in the KG. While LP determines whether a specific triplet is plausible, RSC determines which relations are semantically applicable to an entity, making the two tasks complementary perspectives on KG completion. We then propose Relation Set Embedding (RelSetE), a sim-ple yet effective baseline designed to establish an initial bench-mark for the proposed RSC task. RelSetE formulates RSC as predicting missing compatible relations conditioned on an entity’s observed relation set. Since relation sets are naturally permutation-invariant, variable-sized, and free of duplicates, RelSetE adopts a set-aware modeling approach. Specifically, it encodes the observed relation set into a hidden representation using multi-head attention and attention pooling, and predicts missing compatible relations by measuring the similarity be-tween this representation and candidate relation embeddings. We further construct three datasets tailored for RSC from standard KGC benchmarks and conduct comprehensive experi-ments. The results show that RelSetE consistently outperforms strong baselines in prediction accuracy. Our main contributions  
+
+> arXiv:2606.29860v3 [cs.AI] 1 Jul 2026 JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 2
+
+Relation set completion      
+
+> Alice
+> lives_in
+> works_at
+> married_to
+> awarded_by
+> member_of
+> has_written
+> works_in married_to ... member _of awarded _by ...
+> Observed relations Missing relations
+
+Link prediction 
+
+> Alice
+> lives_in
+> awarded_by married_to
+> has_degree
+> lives_in
+> awarded_by
+> Missing triplets
+> married_to
+> has_degree
+> Observed triplets
+
+Fig. 1: Comparison of link prediction and the proposed relation set completion. are summarized as follows:  
+
+> •
+
+We introduce Relation Set Completion (RSC), a novel entity-level KGC task that targets the completion of entity–relation compatibility information, complementing traditional triplet-level link prediction.  
+
+> •
+
+We propose Relation Set Embedding (RelSetE), a set-aware model that captures semantic dependencies among relations to predict missing compatible relations for an entity.  
+
+> •
+
+We construct three benchmark datasets for RSC from standard KGC datasets and conduct comprehensive ex-periments, demonstrating that RelSetE consistently out-performs strong baselines and effectively predicts missing compatible relations across datasets. II. R ELATED WORK 
+
+A. Knowledge Graph Completion 
+
+Knowledge graphs (KGs) encode real-world facts as triplets and support a wide range of downstream applications, yet they are inherently incomplete. To mitigate this, knowledge graph completion (KGC) has been widely studied, with link predic-tion (LP), which assesses the plausibility of candidate triplets, being the predominant task. Existing LP approaches mainly fall into two broad categories. The first is probabilistic mod-eling, including Markov logic networks [8], which integrate first-order logic with probabilistic graphical models to handle uncertain relational dependencies, and Bayesian networks [9], [10], which capture probabilistic dependencies among entities and relations for relational inference. The second, and more dominant, category is representation learning, which embeds entities and relations into continuous vector spaces. Within this paradigm, translational models [6], [11], [12] interpret relations as translations between head and tail entity embed-dings; factorization-based models [13]–[16] decompose the KG tensor or scoring function to capture latent relational structure; and neural architectures [17], [18] learn nonlinear scoring functions for triplet plausibility. Beyond these foun-dations, several lines of work extend standard LP with aux-iliary information, such as path-aware reasoning [19], which exploits multi-hop relational paths as contextual evidence, and knowledge-aware reasoning [20], which incorporates external structured knowledge to enhance inference. Different from these works, this paper introduces RSC, a novel entity-level KGC task that shifts the focus from triplet plausibility to entity–relation compatibility, aiming to complete the full set of relations that are semantically compatible with each entity. 
+
+B. Set Modeling 
+
+Set modeling studies how to learn representations or make predictions from data whose elements form an unordered collection. Early work [21] investigates the role of ordering in sequence-to-sequence models for set-structured problems, proposing a read-process-write framework that encodes the input set in a permutation-invariant manner while generating the output auto-regressively. A parallel line of research fo-cuses on learning permutation-invariant representations from set-structured inputs. Bayesian Sets [22] provide an early probabilistic formulation for modeling exchangeable sets, but their applicability to large-scale data is limited. DeepSet [23] provides a formal characterization of permutation-invariant functions, showing that any such function can be decom-posed into a shared element-wise transformation followed by a permutation-invariant aggregation. Set Transformer [24] further improves model expressiveness by replacing the ag-gregation with self-attention to capture dependencies between set elements. Meanwhile, many works focus on output-set modeling, especially in natural language processing, where the input is a sequence and the output is an unordered set of labels. A key challenge here is the mismatch between sequential decoding and unordered set targets. Some methods address this through order-invariant objectives or set-level rewards [25], [26], while others marginalize over label permutations or incorporate set cardinality information [27]–[29]. III. P ROBLEM FORMULATION 
+
+In this section, we introduce the key notation used through-out the paper, and provide the definition of the proposed RSC problem. A knowledge graph (KG) is denoted as G =(E, R, T ), where E, R, and T denote the sets of entities, relations, and triplets, respectively. Each triplet (h, r, t ) ∈ T 
+
+includes a head entity h ∈ E , a tail entity t ∈ E , and the relation that connects them r ∈ R . We embed a relation r
+
+into the vector space and denote it as r ∈ Rd, where d is the embedding dimension. Given an entity e ∈ E , all the relations JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 3r1      
+
+> r3r4
+> e
+> Observed
+> relations r2
+> R- Relation
+> Embeddings
+> Scaled Dot-Product
+> Attention
+> WQWKWV
+> RRR
+> Concat
+> Linear
+> H
+> Seed
+> Vector
+> Pooling
+> Attention
+> Encoder
+> ...
+> ...
+> ×
+> Decoder
+> z
+> Candidate
+> relations
+> Scores
+
+Fig. 2: The overall framework of RelSetE, which predicts missing compatible relations from an entity’s observed relations using relation embeddings, a permutation-invariant encoder, and a compatibility scoring decoder. TABLE I: Key notations. 
+
+Notation Meaning 
+
+G The knowledge graph 
+
+E All entities in the knowledge graph 
+
+R All relations in the knowledge graph 
+
+T All triplets in the knowledge graph 
+
+e, r Entity, relation 
+
+R+(e) The set of compatible relations of e
+
+R−(e) The set of incompatible relations of e
+
+Ro(e) The set of observed relations of e
+
+Rm(e) The set of missing relations of e
+
+Rc(e) The set of candidate relations of e
+
+N (e) Negative sampled relations of es(r|R o(e)) The score of r given Ro(e)
+
+in R can be divided into two sets, the compatible relation set 
+
+R+(e) and the incompatible relation set R−(e), and there is: 
+
+R = R+(e) ∪ R −(e)
+
+∅ = R+(e) ∩ R −(e). (1) We denote the observed relation set of entity e as Ro(e), and it includes relations that have been associated with it through observed triplets in the KG: 
+
+Ro(e) = {r ∈ R | ∃ (h, r, t ) ∈ T , h = e ∨ t = e}, (2) Accordingly, we denote the missing relation set of entity e as 
+
+Rm(e). It includes relations that are compatible with e but have not been associated with e in the KG, and there is: 
+
+R+(e) = Rm(e) ∪ R o(e). (3) Then, we define the RSC problem as: 
+
+f : ( G, e ) → R m(e), (4) where f is the model to be learned. Given a target entity e and the KG, the goal of RSC is to learn f such that the predicted missing relation set approximates the true missing relation set 
+
+Rm(e) as closely as possible. IV. M ETHODOLOGY 
+
+In this section, we present the proposed RelSetE method. RelSetE formulates RSC as predicting missing compatible relations conditioned on the observed relations of a target entity, based on the premise that compatible relations of an entity exhibit semantic dependencies that can be exploited to infer missing ones. 
+
+A. Overview 
+
+RelSetE resolves the RSC problem by adopting the semantic dependencies among relations. For an entity e, it measures the compatibility score of a candidate relation r as follows: 
+
+s(r | R o(e)) : E × R → R (5) Candidates with the highest scores will be regarded as pre-dicted missing relations. RelSetE consists of three compo-nents: a relation embedding layer, a permutation-invariant encoder, and a compatibility scoring decoder. Given an entity 
+
+e with observed relation set Ro(e), the model proceeds as follows. First, each relation is mapped to a dense vector via the relation embedding layer. The encoder takes the relation embedding set of Ro(e) as input and aggregates them into a single relation-aware hidden representation z ∈ Rd. Specifi-cally, to preserve the permutation-invariant nature of relation sets, the encoder first obtains contextualized relation embed-dings with multi-head attention, which capture interactions among observed relations, and then adopts attention pooling to aggregate contextualized relation embeddings into the hidden representation z for Ro(e) in a permutation-invariant manner. Finally, the decoder estimates the compatibility score of each candidate relation by measuring its similarity with z, where a higher score indicates greater semantic compatibility with the entity. The overview of RelSetE is illustrated in Figure 2. 
+
+B. Encoder 
+
+For an entity e, the encoder of RelSetE encodes its ob-served relation set Ro(e) into the hidden representation z.We denote the relation embedding set of Ro(e) as R =
+
+{r1; ... ; r|R o(e)|}, where ri ∈ Ro(e). As discussed, a set is inherently permutation-invariant, i.e., the information it encodes is independent of the order in which its elements are arranged. The attention mechanism is naturally suited to this requirement, as each output is computed as a weighted sum over all input elements where the weights depend only on pair-wise key-query similarities. As a result, any permutation of the inputs permutes the keys and values consistently, leaving the output unchanged. This makes attention a principled choice for aggregating relational information in a permutation-invariant JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 4
+
+manner. Specifically, we adopt scaled dot-product attention [30] as follows: 
+
+Att( Q, K, V ) = softmax( QK T
+
+√dK
+
+)V, (6) where Q, K, V are query, key and value, dK is the dimension of the key vectors. Based on this, we adopt multi-head attention and attention pooling to obtain the permutation-invariant hidden represen-tation z. Specifically, the attention of Ro(e) is computed as follows: 
+
+head = Att 
+
+
+
+RW Qi , RW Ki , RW Vi
+
+
+
+, (7) where W Q, W K , W V ∈ Rd×m× dm are trainable projection matrices. The contextualized relation representation is then obtained by: 
+
+H = concat( head 1, . . . , head m) · W l, (8) where W l is a linear transformation, and H ∈ R|R o(e)|× d
+
+represents contextualized relation representations for Ro(e).Attention pooling is then applied to H to generate z as follows: 
+
+z = Att( ω, H, H ) = softmax( ωHT
+
+√dH
+
+)H, (9) where ω ∈ Rd is a trainable seed vector. In this way, RelSetE encodes the information in Ro(e) into z.
+
+C. Decoder 
+
+With the observed relation set Ro(e) of entity e, the decoder predicts missing relations by measuring the compatibility of candidate relations in Rc(e), which is defined as: 
+
+Rc(e) = R \ R o(e). (10) That is, the decoder queries z (yielded from the encoder) to measure the compatibility score of a candidate relation r with the dot product as follows: 
+
+s(r | R o(e)) = z · r, r ∈ R c(e). (11) A higher compatibility score means the candidate relation is more likely to be compatible with the entity. We adopt such a measurement for all candidate relations r ∈ Rc(e) and obtain their compatibility scores. Candidate relations with top-k ranked compatibility scores are regarded as the predicted missing relations. 
+
+D. Learning Objective 
+
+As explained above, we expect the model to produce higher scores for compatible relations and lower scores for incompat-ible relations. That is, for any r ∈ R +(e) and r− ∈ R −(e),we aim to satisfy: 
+
+s(r | R o(e)) > s (r− | R o(e)) . (12) Training the model relies on the ground-truth set Rm(e). How-ever, they are challenging to obtain in real-world scenarios. Therefore, we refer to the paradigm of self-supervised learning for effective model training. During training, for an entity e,its observed relations Ro(e) are randomly partitioned into a pseudo-observed set C(e) and a pseudo-missing compatible relation set P(e). Then, the objective is to maximize the score of s(r | C (e)) , r ∈ P (e). In addition, we introduce negative samples into the objective to further improve the discriminative ability for compatible relations and incompatible relations. The negative samples are randomly sampled from Rc(e), i.e., 
+
+N (e) = {r−|r− ∼ R c(e)}, where the probability of sampling a missing relation is negligible given the size of the candidate set. The learning objective is: 
+
+L(θ) = X
+
+> e∈E
+
+X
+
+> P(e)⊆R o(e)
+
+1
+
+|P (e)|
+
+X
+
+> r∈P (e)
+
+− log es(r|C (e)) /τ 
+
+es(r|C (e)) /τ + P 
+
+> r−∈N (e)
+
+es(r−|C (e)) /τ 
+
+ ,
+
+(13) where τ > 0 is a temperature parameter. We adopt multiple random partitions for Ro(e) to obtain different C(e) and 
+
+P(e) in each training round to enhance model generalization. The entire RelSetE model is trained end-to-end via standard backpropagation. V. E XPERIMENTS AND RESULTS 
+
+A. Dataset 
+
+To evaluate the proposed RelSetE method for the RSC prob-lem, we reconstruct three datasets from existing KGC datasets, and they are FB15k-237-re, NELL-995-re, and NELL-1115-re. Specifically, FB15k-237-re and NELL-995-re are derived from FB15k-237 [31] and NELL-995 [32], which are KG benchmarks extracted from Freebase, which covers entities such as people, places, films, and organizations, and the NELL system, which is automatically constructed from web text spanning multiple domains, respectively. NELL-1115-re is derived from the large-scale NELL-08m-1115 dataset [33] by selecting information-rich and high-degree subgraphs. The dataset reconstruction is processed by the following steps. We first derive the relation set of each entity from its associated triplets in the KG, collecting all relations that appear in triplets involving that entity. Entities with fewer than 2 relations are removed since they provide insufficient relation context for RSC. For the remaining entities, their relation sets are partitioned into training, validation, and test splits at the dataset level, maintaining an approximate 8:1:1 ratio. The statistics of the three reconstructed datasets are sum-marized in Table II. Generally, the training sets of FB15k-237-re, NELL-995-re, and NELL-1115-re contain rich relation types, providing sufficient relation diversity for the evaluation. Among the three datasets, FB15k-237-re exhibits the richest relation sets per entity (|R (e)|), while NELL-995-re and NELL-1115-re have comparatively fewer relations per entity. All three datasets exhibit a long-tail relation distribution, where a significant proportion of relations are associated with only a small number of entities, posing additional challenges for RSC. The detailed relation frequency distributions of the JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 510 3      
+
+> 10 2
+> 10 1
+> 10 0
+> Relation(rankedby frequency )
+> Frequency (Log scale)
+> 050 100 150 200
+> Train
+> Valid
+> Test
+
+(a) FB15k-237-re 10 2
+
+> 10 2
+> 10 1
+> 10 0
+
+103 Train 
+
+Valid 
+
+102 Test 
+
+101 作 ```markdown ``` 
+
+10? 025 50 75 100 125 150 175 200           
+
+> Relation type(ranked)
+> Train
+> Valid
+> Test
+> 025 50 75 100 125 150 175 200
+> Relation (ranked by frequency )
+
+(b) NELL-995-re 103 
+
+102 
+
+101 
+
+10?         
+
+> Train
+> Valid
+> Test
+> 050 100 150 200 250 300
+> Relation (ranked by frequency )
+
+(c) NELL-1115-re 
+
+Fig. 3: Relation frequency distribution of each reconstructed dataset. TABLE II: Statistics of the three reconstructed datasets, in-cluding dataset size, the relation set size for each entity (|R (e)|), and the number of entities associated with each relation ( |E (r)|).                                                                 
+
+> Dataset Size |R (e)||E (r)|| E | | R | Range Mean Range Mean FB15k-237-re Train 11,067 229 3∼24 8.03 2∼4,212 388.22 Valid 1,928 146 2∼52.28 1∼160 30.05 Test 1,927 146 2∼52.29 1∼163 30.16 NELL-995-re Train 11,224 199 3∼32 4.23 1∼2,280 238.42 Valid 1,164 164 2∼82.33 1∼124 16.54 Test 1,163 166 2∼82.35 1∼108 16.47 NELL-1115-re Train 4,501 406 3∼53 4.41 1∼1,110 48.89 Valid 762 240 1∼14 2.02 1∼67 6.42 Test 761 222 1∼11 2.15 1∼69 7.36
+
+three datasets are shown in Figure 3, revealing a highly imbal-anced pattern where a small number of relations account for the majority of entity associations, while most relations appear only rarely. This imbalance makes it particularly challenging to predict infrequent relations, as the model has limited exposure to them during training. 
+
+B. Baseline Models 
+
+To evaluate RelSetE, we compare it against baseline meth-ods spanning three categories of set modeling paradigms: sequence-to-sequence, sequence-to-set, and set-to-set. For sequence-to-sequence, we include RNN and RPW RNN [21]; for sequence-to-set, we include Seq2Set [25] and OT-Seq2Set [26]; for set-to-set, we include DeepSet [23], Set Transformer [24], and multi-label classification (MLC) [34].  
+
+> •
+
+RNN and RPW RNN [21] adopt vanilla RNN for the input and generate output in an auto-regressive manner. RPW RNN further introduces set-based memory process-ing to reduce sensitivity to input orders.  
+
+> •
+
+Seq2Set [25] adopts sequential encoding and addresses the mismatch between sequential decoding and unordered targets through permutation-invariant loss optimization.  
+
+> •
+
+OTSeq2Set [26] extends Seq2Set by incorporating opti-mal transport theory to better align sequential predictions with unordered target sets, enabling more robust matching between generated outputs and ground-truth labels.  
+
+> •
+
+DeepSet [23] proposes a permutation-invariant neural network framework for set-structured inputs, processing each element independently and aggregating representa-tions via a symmetric pooling function to ensure invari-ance to input ordering.  
+
+> •
+
+Set Transformer [24] introduces an attention-based framework for permutation-invariant processing of set-structured inputs, leveraging self-attention and induced set attention blocks to efficiently capture interactions among set elements.  
+
+> •
+
+MLC [34] proposes a modified loss function that assigns higher weights to confidently correct predictions to im-prove classification performance. We set its encoder to the same as RelSetE for fair comparison. 
+
+C. Experimental Setup 
+
+For all experiments, we use a batch size of 128 and train all models using the Adam optimizer with a learning rate of 1 × 10 −3 and gradient clipping at a maximum norm of 1.0. For DeepSet, Set Transformer, and RelSetE, the number of negative relations is fixed as 32. Unless otherwise spec-ified, the dropout rate, relation embedding dimension, and hidden dimension are set to 0.2, 256, and 256, respectively. The hyperparameters for each baseline are configured as follows. For RNN and RPW RNN, we use 256-dimensional embeddings, a hidden dimension of 512, 2 recurrent layers, a dropout rate of 0.1, and a teacher forcing ratio of 0.2; RPW RNN additionally replaces the recurrent encoder with an RPW module. Seq2Set and OTSeq2Set share the same recurrent backbone with identical hyperparameters, but differ in their training objectives: Seq2Set optimizes a reinforcement learning objective based on set-level reward, while OTSeq2Set employs bipartite matching followed by cross-entropy loss. For DeepSet, Set Transformer, and RelSetE, the same scoring decoder is shared across all three models. DeepSet uses 256-dimensional relation embeddings with mean pooling; Set Transformer employs 2 set-attention layers with 2 attention heads; RelSetE uses 2 multi-head attention layers with 2 attention heads and a trainable attention-pooling seed vector of dimension 256. For MLC, a 256-dimensional relation-aware representation is passed to a classification head with hidden layers of dimensions 512 and 256, trained with binary cross-entropy (BCE) loss. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 6
+
+TABLE III: The performance of compared models on FB15k-237-re, NELL-995-re, and NELL-1115-re. Each cell reports the mean with the variance underneath. Best results are in bold. 
+
+Model FB15k-237-re NELL-995-re NELL-1115-re 
+
+Precision Recall F1-score Precision Recall F1-score Precision Recall F1-score RNN [21] 0.3198 0.1453 0.1984 0.1422 0.0627 0.0856 0.0639 0.0440 0.0500         
+
+> ±1.7×10 −3±3.3×10 −4±6.3×10 −4±1.6×10 −3±3.8×10 −4±6.7×10 −4±3.9×10 −4±2.8×10 −4±3.0×10 −4
+
+RPW RNN [21] 0.4965 0.4860 0.4265 0.4865 0.2259 0.3042 0.4142 0.1871 0.2544         
+
+> ±5.3×10 −2±5.4×10 −2±1.0×10 −5±4.4×10 −5±3.4×10 −5±1.4×10 −5±1.4×10 −2±4.2×10 −3±7.2×10 −3
+
+Seq2Set [25] 0.1774 0.2712 0.2020 0.0702 0.1801 0.0936 0.0197 0.0726 0.0296         
+
+> ±1.9×10 −3±1.7×10 −3±3.4×10 −4±7.0×10 −4±9.5×10 −4±4.5×10 −4±6.4×10 −5±7.3×10 −4±1.4×10 −4
+
+OTSeq2Set [26] 0.3928 0.1779 0.2331 0.1493 0.0650 0.0892 0.0792 0.0534 0.0670         
+
+> ±7.0×10 −3±1.4×10 −3±2.6×10 −3±2.7×10 −4±7.0×10 −5±1.2×10 −4±2.7×10 −4±6.7×10 −5±4.1×10 −5
+
+DeepSet [23] 0.3729 0.4784 0.4159 0.1589 0.2798 0.1995 0.0765 0.1709 0.0995         
+
+> ±1.2×10 −5±5.0×10 −4±2.0×10 −5±4.2×10 −6±1.6×10 −5±6.8×10 −6±1.2×10 −3±6.1×10 −3±2.1×10 −3
+
+Set Transformer [24] 0.3382 0.4564 0.3850 0.2405 0.4178 0.3004 0.1883 0.4386 0.2506         
+
+> ±3.5×10 −4±7.0×10 −4±4.9×10 −4±5.5×10 −7±3.3×10 −10 ±8.1×10 −9±3.1×10 −4±3.8×10 −3±5.2×10 −3
+
+MLC [34] 0.3735 0.5047 0.4254 0.3344 0.4408 0.3745 0.1257 0.2842 0.1650         
+
+> ±4.6×10 −3±8.3×10 −4±4.7×10 −3±3.8×10 −5±8.7×10 −5±5.7×10 −5±5.5×10 −3±2.8×10 −2±9.7×10 −3
+
+RelSetE 0.5993 0.5391 0.5625 0.3755 0.4905 0.4185 0.4395 0.5159 0.4496         
+
+> ±9.3×10 −4±1.5×10 −3±1.3×10 −3±8.1×10 −3±1.2×10 −2±9.6×10 −3±2.9×10 −4±3.3×10 −4±2.8×10 −4
+
+D. Main Results 
+
+Table III reports RSC performance of the proposed RelSetE and benchmark models on FB15k-237-re, NELL-995-re, and NELL-1115-re. Overall, RelSetE achieves the best F1-score on all three datasets, demonstrating consistent effectiveness for the relation set completion. On FB15k-237-re, NELL-995-re, and NELL-1115-re, RelSetE achieves F1-scores of 0.5625, 0.4185, and 0.4496, respectively, consistently outperforming all baselines across all three datasets. The margins are particularly pronounced on FB15k-237-re and NELL-1115-re, where the strongest base-lines, RPW RNN and Set Transformer, reach only 0.4265 and 0.2544, respectively. These results demonstrate that RelSetE delivers robust prediction quality across datasets with varying relation distributions. Beyond F1, RelSetE also maintains a fa-vorable precision-recall balance. On FB15k-237-re and NELL-1115-re, RelSetE leads in all three metrics simultaneously, indicating improvements in both prediction correctness and ground-truth coverage. On NELL-995-re, RPW RNN attains higher precision than RelSetE, but its substantially lower recall yields a weaker F1-score, suggesting a tendency to predict fewer but more conservative relations. The comparison with sequence-to-sequence models (RNN, RPW RNN) highlights the limitation of imposing artificial orders on relation sets. The RNN baseline performs weakly across all datasets, especially on NELL-995-re and NELL-1115-re, where its F1-scores are 0.0856 and 0.0500, respec-tively. RPW RNN improves over RNN by reducing input-order sensitivity, but it still relies on auto-regressive decod-ing and therefore retains an enforced output-order. Although RPW RNN performs competitively on FB15k-237-re and NELL-995-re, its recall remains substantially lower than that of RelSetE, and its performance drops on NELL-1115-re. Sequence-to-set methods, including Seq2Set and OTSeq2Set, are designed to address unordered output sets by proposing an order-invariant loss function, while retaining the sequential input. They do not perform competitively in this task. Their relatively low F1-scores indicate that output-order correction alone does not fully address the RSC problem, where the input itself is also a set of relations. Set-based baselines confirm the benefit of permutation-invariant input modeling. DeepSet and Set Transformer generally achieve higher recall than sequence-based baselines, validating the importance of respecting the unordered nature of relation sets. However, their F1-scores remain below those of RelSetE across all datasets. 
+
+E. Effect of Relation Frequency 
+
+We analyze the performance of RelSetE regarding relations with different frequency, i.e., |E (r)|, which is the number of entities associated with relation r in the dataset. For this, we rank all relations by their frequencies and evenly split them into 8 groups for the comparison, evaluating prediction accuracy within each group. The results are shown in Table IV. Generally, the results show higher prediction accuracy for relations of larger frequencies. In FB15k-237-re, recall in-creases substantially from 0.2313 for relations of the lowest frequency to 0.9524 for relations of the highest frequency. The precision and F1-score show similar upward trends, rising from 0.2388 to 0.8117 and from 0.2338 to 0.8573, respectively. A similar trend can also be observed in NELL-1115-re. That is, from relations of the lowest frequencies to relations of the highest frequencies, precision, recall, and F1-score increase from 0.1966 to 0.6620, 0.9032, and 0.7377, respectively. For NELL-995-re, a similar improvement is observed, with precision, recall, and F1-score rising from 0.3182, 0.3409, and 0.3258 for the lowest-frequency relations to 0.5146, 0.7653, and 0.5818 for the highest-frequency relations, respectively. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 7
+
+TABLE IV: The performance of RelSetE regarding different relation frequencies ( |E (r)|).                                                                             
+
+> Dataset |E (r)|Precision Recall F1-score
+> FB15k-237-re 5∼97 0.2388 0.2313 0.2338 100 ∼128 0.3057 0.4157 0.3380 129 ∼175 0.3732 0.4645 0.4006 175 ∼265 0.2878 0.4731 0.3467 276 ∼482 0.5302 0.6398 0.5631 484 ∼840 0.5722 0.8503 0.6556 910 ∼2,567 0.4930 0.9701 0.6263 3,078 ∼4,212 0.8117 0.9524 0.8573 NELL-995-re 1∼40 0.3182 0.3409 0.3258 41 ∼94 0.5953 0.6524 0.6087 95 ∼113 0.6203 0.6466 0.6266 114 ∼165 0.4700 0.6900 0.5353 175 ∼248 0.5657 0.7276 0.6135 254 ∼507 0.6565 0.7554 0.6824 508 ∼1,219 0.4465 0.7362 0.5281 1,275 ∼2,280 0.5146 0.7653 0.5818 NELL-1115-re 4∼14 0.1966 0.1966 0.1966 15 ∼21 0.3646 0.3854 0.3746 22 ∼41 0.4712 0.4808 0.4742 41 ∼72 0.5110 0.5623 0.5194 72 ∼89 0.5647 0.6744 0.5896 92 ∼149 0.6206 0.7167 0.6504 164 ∼488 0.4831 0.8905 0.5884 532 ∼1,110 0.6620 0.9032 0.7377
+
+These results are consistent with the intuition that relations with larger |E (r)| provide richer supervision during training, enabling RelSetE to better capture their semantic compatibility with entities and recover missing relations more effectively. Conversely, for less frequent relations, the limited training evidence makes it difficult for the model to learn reliable com-patibility patterns, leading to degraded prediction performance. This performance gap highlights the inherent challenge posed by the long-tail relation distribution in RSC, and suggests that incorporating auxiliary structural or semantic information, such as entity neighborhood context or relation semantics from pre-trained language models, could be a promising direction to further improve performance on infrequent relations. 
+
+F. Effect of Relation-set Size 
+
+In this section, we analyze how RelSetE performs on enti-ties with different relation-set sizes ( |R o(e)|), where |R o(e)|
+
+denotes the number of distinct types of relation compatible with entity e. For this, we evenly split entities into 6 groups by the relation-set size. As shown in Table V, the relation-set size of entities in the three datasets shows clear long-tail distributions, i.e., most entities have small relation sets due to the incompleteness of KGs. Generally, the F1-score increases for entities of larger 
+
+|R o(e)|. The F1-score increases from 0.5330 to 0.6008 on FB15k-237-re, from 0.3671 to 0.6343 on NELL-995-re, and from 0.3365 to 0.5441 on NELL-1115-re as |R o(e)| grows. However, all three datasets exhibit a performance drop for entities with the largest |R o(e)|, which can be partly attributed to the small sample size in this group. Meanwhile, Recall decreases as |R o(e)| grows, likely due to the increasing TABLE V: The performance of RelSetE under different entity relation-set sizes. “No.” denotes the number of entities with the corresponding relation-set size.                                                                  
+
+> Dataset |R o(e)|No. Precision Recall F1-score
+> FB15k-237-re 9∼11 1210 0.4442 0.6661 0.5330 12 ∼14 588 0.5199 0.5975 0.5509 15 ∼17 109 0.5811 0.5344 0.5544 18 ∼20 17 0.7059 0.5236 0.6008 22 ∼24 30.6667 0.4000 0.5000 NELL-995-re 4∼8954 0.2452 0.7373 0.3671 9∼13 158 0.3758 0.7221 0.4916 14 ∼18 40 0.4750 0.6663 0.5523 19 ∼24 80.6220 0.6512 0.6343 26 ∼32 30.5000 0.4345 0.4635 NELL-1115-re 4∼13 717 0.2220 0.7839 0.3365 14 ∼23 29 0.4663 0.5845 0.5151 24 ∼33 11 0.5303 0.4316 0.4741 34 ∼43 20.6905 0.4500 0.5441 44 ∼53 30.3333 0.1545 0.2109
+
+complexity and rarity of relation patterns associated with larger relation sets. The highest Recall values, i.e., 0.6661, 0.7373, and 0.7839 on FB15k-237-re, NELL-995-re, and NELL-1115-re, respectively, all occur at the smallest |R o(e)| group. Notably, for the smallest |R o(e)| groups, RelSetE still obtains meaningful prediction performance across all datasets. The F1-scores are 0.5330 for entities of 9 ∼ 11 on FB15k-237-re, 0.3671 for entities of 4 ∼ 8 on NELL-995-re, and 0.3365 for entities of 4 ∼ 13 on NELL-1115-re. These groups contain the majority of entities in each dataset, with 62 .7% , 82 .0% ,and 94 .1% entities, respectively. This shows that RelSetE is relatively effective at inferring missing compatible relations even for entities whose observed relation sets are relatively small. 1 2 3 4 5 6 7              
+
+> Top-k
+> 0.8
+> 0.6
+> 0.4
+> 0.2
+> FB15k-237 -re
+> 1234567
+> Top-k
+> NELL-995 -re
+> 1234567
+> Top-k
+> NELL-1115 -re
+> Precision Recall F1 -score
+
+Fig. 4: Top-k sensitivity of RelSetE. 816 24 32 40 48 56 64 72 80    
+
+> ||
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7 FB15k-237-re
+> 816 24 32 40 48 56 64 72 80
+> ||
+> NELL-995-re
+> 816 24 32 40 48 56 64 72 80
+> ||
+> NELL-1115-re
+> Precision Recall F1-score
+
+Fig. 5: Negative sampling sensitivity of RelSetE, |N | is negative sampling size. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 8
+
+G. Hyperparameter Analysis 
+
+Top-k sensitivity : Figure 4 shows the sensitivity of RelSetE regarding top-k ∈ { 1, . . . , 7}, which decides the number of pre-dicted missing relations. As k increases, Precision consistently decreases since more predicted relations introduce additional false positives, while Recall increases due to broader coverage of the ground-truth relation set. RelSetE achieves its best F1-score at a moderate k, specifically 2, 3, and 3 for FB15k-237-re, NELL-995-re, and NELL-1115-re, respectively, which aligns with the mean missing relation-set size reported in Table II. This suggests that RelSetE performs best when k matches the typical number of missing relations; beyond this point, additional predictions mostly introduce false positives, and the resulting loss in precision outweighs the gain in recall. 
+
+Negative sampling sensitivity: Figure 5 shows the per-formance of RelSetE regarding different negative sampling sizes |N | across FB15k-237-re, NELL-995-re, and NELL-1115-re. Overall, RelSetE shows stable performance under different negative sampling sizes. On FB15k-237-re, all three metrics remain stable with varying |N | , with Precision around 
+
+0.34 ∼ 0.41 , Recall around 0.46 ∼ 0.55 , and F1-score around 0.39 ∼ 0.47 . On NELL-995-re, F1-score stays around 
+
+0.27 ∼ 0.30 , suggesting that the model is less sensitive to negative sampling on this dataset. On NELL-1115-re, the best F1-score appears around |N | = 40 , after which the performance slightly decreases. These results indicate that a larger negative sampling size can provide richer contrastive supervision, but it may also introduce harder optimization or less informative negative comparisons. 
+
+H. Ablation Analysis 
+
+We implement three variants to study the effectiveness of the three components in RelSetE. They are: 1) w/o MHA by removing the multi-head attention layers; 2) w/o AP by replacing attention pooling with mean pooling; and 3) w/o ENC by replacing the encoder in RelSetE with a multilayer perceptron. As shown in Table VI, RelSetE outperforms these variants on all three datasets. All variants cause significant accuracy degradation, especially on Precision. Removing MHA causes the largest Recall drop on all three datasets (22.4%, 41.6%, and 30.9%, respectively) and the largest F1 drop on FB15k-237-re and NELL-995-re, confirming its key role in capturing cross-instance dependencies. On NELL-1115-re, however, w/o AP causes the largest degradation (Precision nearly halves, from 0.4395 to 0.2108), showing attention pooling is critical for suppressing noisy instances. Replacing the encoder with an MLP (w/o ENC) also yields severe drops, e.g., F1-score falls by 37.2% on NELL-995-re, exceeding even w/o AP on that dataset. Notably, Precision degrades more than Recall across all variants and datasets, suggesting these components mainly help filter out false positives rather than expand coverage, confirming that multi-head attention, attention pooling, and the encoder are all indispensable to RelSetE. TABLE VI: Ablation study on FB15k-237-re, NELL-995-re, and NELL-1115-re. Each cell reports the mean with the variance underneath.                                                                 
+
+> Dataset Model Precision Recall F1-score FB15k-237-re
+> RelSetE 0.4893 0.6568 0.5555
+> 1.0×10 −42.0×10 −41.0×10 −4
+> w/o ENC 0.3078 0.5482 0.3905
+> 6.0×10 −42.0×10 −31.0×10 −3
+> w/o AP 0.2994 0.5398 0.3818
+> 6.0×10 −76.0×10 −77.0×10 −7
+> w/o MHA 0.2831 0.5095 0.3608
+> 3.0×10 −59.0×10 −55.0×10 −5
+> NELL-995-re
+> RelSetE 0.3198 0.5611 0.3996
+> 7.3×10 −55.2×10 −42.6×10 −4
+> w/o ENC 0.2006 0.3500 0.2509
+> 5.9×10 −51.9×10 −49.5×10 −5
+> w/o AP 0.2227 0.3951 0.2808
+> 5.0×10 −61.5×10 −57.6×10 −6
+> w/o MHA 0.1843 0.3279 0.2326
+> 2.9×10 −61.8×10 −63.2×10 −6
+> NELL-1115-re
+> RelSetE 0.4395 0.5159 0.4496
+> 2.9×10 −43.3×10 −42.8×10 −4
+> w/o ENC 0.2164 0.4916 0.2853
+> 1.0×10 −62.5×10 −55.0×10 −6
+> w/o AP 0.2108 0.3857 0.2580
+> 4.0×10 −61.4×10 −59.0×10 −6
+> w/o MHA 0.2851 0.3564 0.3264
+> 2.4×10 −41.0×10 −34.0×10 −4
+
+I. Relation Embedding Visualization 
+
+We further visualize the relation embeddings learned by RelSetE on NELL-995-re. Since the relations in NELL-995-re have descriptive names but lack predefined semantic labels, we use an LLM-assisted labeling process, followed by manual checking, to identify 12 semantically coherent categories and assign relations to them. These categories range from Bio-graphical to Biomedical, as shown in Table VII. Based on these pseudo-labels, we apply t-SNE [35] to project the relation embeddings learned by different models into a 2-dimensional space, with the results shown in Figure 6. Generally, RelSetE produces the most well-separated and compact clusters among all compared models, i.e., relations belonging to the same semantic group (e.g., C2-Biological, C9-National, C11-Regional) tend to occupy clearly distinct regions in the embedding space, with relatively sharp inter-group boundaries. DeepSet and Set Transformer show partial clustering tendencies, with some semantic groups loosely grouped, but considerable overlap remaining between others. In contrast, MLC, RPW RNN, and OTSeq2Set exhibit largely intermixed embeddings, where points from different semantic categories are scattered throughout the embedding space with little discernible cluster structure. These results suggest that RelSetE is better able to capture the underlying semantic structure of relations in its learned embeddings. In addition, we quantitatively evaluate clustering quality by applying K-means to the relation embeddings and computing JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 9
+
+Fig. 6: t-SNE visualization of relation embeddings across different models (on NELL-995-re). 0.0 0.2 0.4 0.6 0.8 1.0 
+
+Normalized Mutual Information 
+
+RelSetE 
+
+Set Transformer 
+
+DeepSet 
+
+RPW RNN 
+
+MLC 
+
+OTSeq2Set 
+
+0.6285 
+
+0.5879 
+
+0.4444 
+
+0.2912 
+
+0.1726 
+
+0.1502 
+
+Fig. 7: Relation clustering performance on NELL-995-re. the Normalized Mutual Information (NMI) score against the pseudo-labels generated by ChatGPT. As the results shown in Figure 7, RelSetE achieves the highest NMI of 0.628, followed by Set Transformer (0.588) and DeepSet (0.444), while RPW RNN, MLC, and OTSeq2Set obtain considerably lower scores of 0.291, 0.173, and 0.150, respectively. This further confirms that the relation embeddings learned by RelSetE align best with the underlying semantic structure of the relations, consistent with the clustering patterns observed in the t-SNE visualization. VI. C ONCLUSION 
+
+In this work, we introduce RSC, a new task that aims to infer the set of relations semantically compatible with an entity but not yet observed in the knowledge graph, and propose RelSetE to address it, which predicts these miss-ing relations by encoding an entity’s observed relation set TABLE VII: Semantic categories of relations in NELL-995-re.    
+
+> Category Relation types, shown as domain →range
+
+# •C1 Biographical person → country; politician → political office; book → writer; actor → movie 
+
+# •C2 Biological animal → animal; arthropod → arthropod; animal → insect; animal → invertebrate; fish → food; mammal → mammal; invertebrate → food 
+
+# •C3 Municipal river → river; television station → city; stadium/event venue → city; city → state/province; radiostation → city; transportation → city; city → geopolitical location; attraction → city 
+
+# •C4 Objects plant → plant; clothing → clothing; visualizable thing → geometric shape; plant → emotion; sport → sportsequipment; furniture → room; visualizableobject → visualizableobject; weapon →
+
+> weapon
+
+# •C5 Corporate company → company; organization → organization; person → company; ceo → company; bank  
+
+> →bank
+
+# •C6 Scholarly academic field → thing; agent → creative work; profession → tool; academic field → university; academic field → academic field 
+
+# •C7 Franchise sports game → sports team; organization → state/province; coach → sports team; sports team →  
+
+> city; sports team →stadium/event venue
+
+# •C8 Institutional person → organization; organization → organization; agent → agent; television station →      
+
+> televisionnetwork; human agent →organization; organization →person; agent →thing
+
+# •C9 National city → country; agricultural product → country; country → currency; country → geopolitical location; language → country 
+
+# •C10 Athletic athlete → sports team; athlete → sports team position; coach → award/trophy/tournament; athlete    
+
+> →sports league; athlete →stadium/event venue
+
+# •C11 Regional mountain → state/province; lake → state/province; politician → location; state/province → city 
+
+# •C12 Biomedical drug → medical condition; chemical → chemical; bacteria → medical condition 
+
+through a permutation-invariant encoder and a self-supervised contrastive objective. Experiments on three reconstructed benchmarks, FB15k-237-re, NELL-995-re, and NELL-1115-re, show that RelSetE consistently outperforms baselines spanning sequence-to-sequence, sequence-to-set, and set-to-set paradigms, achieving the best F1-scores across all datasets and learning relation embeddings with markedly clearer semantic structure (NMI of 0.628). Further analyses reveal that the long-tail relation distribution remains a key bottleneck, with infrequent relations being substantially harder to predict due to limited training supervision, pointing to entity neighborhood context or pre-trained language model semantics as promising directions for future work. Overall, our study establishes RSC as a practical complement to link prediction, opening up a new JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 10 
+
+direction for knowledge graph completion. REFERENCES [1] C. Xiong, R. Power, and J. Callan, “Explicit semantic ranking for academic search via knowledge graph embedding,” in Proceedings of the 26th international conference on world wide web , 2017, pp. 1271– 1279. [2] Z. Yang, “Biomedical information retrieval incorporating knowledge graph for explainable precision medicine,” in Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval , 2020, pp. 2486–2486. [3] Z. Yang, Y. Bi, L. Wang, D. Cao, R. Li, and Q. Li, “Development and application of a field knowledge graph and search engine for pavement engineering,” Scientific Reports , vol. 12, no. 1, p. 7796, 2022. [4] M. Gao, J.-Y. Li, C.-H. Chen, Y. Li, J. Zhang, and Z.-H. Zhan, “En-hanced multi-task learning and knowledge graph-based recommender system,” IEEE Transactions on Knowledge and Data Engineering ,vol. 35, no. 10, pp. 10 281–10 294, 2023. [5] Z. Shokrzadeh, M.-R. Feizi-Derakhshi, M.-A. Balafar, and J. B. Mo-hasefi, “Knowledge graph-based recommendation system enhanced by neural collaborative filtering and knowledge graph embedding,” Ain Shams Engineering Journal , vol. 15, no. 1, p. 102263, 2024. [6] A. Bordes, N. Usunier, A. Garcia-Duran, J. Weston, and O. Yakhnenko, “Translating embeddings for modeling multi-relational data,” Advances in neural information processing systems , vol. 26, 2013. [7] R. Yang, B. Yang, X. Zhao, F. Gao, A. Feng, S. Ouyang, M. Blum, T. She, Y. Jiang, F. Lecue et al. , “Graphusion: A rag framework for scientific knowledge graph construction with a global perspective,” in 
+
+Companion Proceedings of the ACM on Web Conference 2025 , 2025, pp. 2579–2588. [8] H. Lu, Y. Zidu, W. Yujie, H. Kuang, and Y. Kun, “Link prediction of knowledge graph based on bayesian network,” Journal of Frontiers of Computer Science & Technology , vol. 11, no. 5, p. 742, 2017. [9] N. Lao and W. W. Cohen, “Relational retrieval using a combination of path-constrained random walks,” Machine learning , vol. 81, no. 1, pp. 53–67, 2010. [10] S. ZHAI et al. , “Method for knowledge graph completion based on bayesian reasoning,” Journal of Chinese Computer Systems , vol. 39, no. 5, pp. 995–999, 2018. [11] Z. Wang, J. Zhang, J. Feng, and Z. Chen, “Knowledge graph embedding by translating on hyperplanes,” in Proceedings of the AAAI conference on artificial intelligence , vol. 28, no. 1, 2014. [12] L. Chang, M. Zhu, T. Gu, C. Bin, J. Qian, and J. Zhang, “Knowledge graph embedding by dynamic translation,” IEEE access , vol. 5, pp. 20 898–20 907, 2017. [13] B. Yang, W.-t. Yih, X. He, J. Gao, and L. Deng, “Embedding entities and relations for learning and inference in knowledge bases,” arXiv preprint arXiv:1412.6575 , 2014. [14] T. Trouillon, J. Welbl, S. Riedel, ´ E. Gaussier, and G. Bouchard, “Com-plex embeddings for simple link prediction,” in International conference on machine learning . PMLR, 2016, pp. 2071–2080. [15] I. Balaˇ zevi´ c, C. Allen, and T. M. Hospedales, “Tucker: Tensor factoriza-tion for knowledge graph completion,” arXiv preprint arXiv:1901.09590 ,2019. [16] Z. Zhang, J. Cai, Y. Zhang, and J. Wang, “Learning hierarchy-aware knowledge graph embeddings for link prediction,” in Proceedings of the AAAI conference on artificial intelligence , vol. 34, no. 03, 2020, pp. 3065–3072. [17] R. Socher, D. Chen, C. D. Manning, and A. Ng, “Reasoning with neural tensor networks for knowledge base completion,” Advances in neural information processing systems , vol. 26, 2013. [18] T. Dettmers, P. Minervini, P. Stenetorp, and S. Riedel, “Convolutional 2d knowledge graph embeddings,” in Proceedings of the AAAI conference on artificial intelligence , vol. 32, no. 1, 2018. [19] Y. Lin, Z. Liu, H. Luan, M. Sun, S. Rao, and S. Liu, “Modeling relation paths for representation learning of knowledge bases,” arXiv preprint arXiv:1506.00379 , 2015. [20] T. Ma, L. Huang, Q. Lu, and S. Hu, “Kr-gcn: Knowledge-aware reason-ing with graph convolution network for explainable recommendation,” 
+
+ACM Transactions on Information Systems , vol. 41, no. 1, pp. 1–27, 2023. [21] O. Vinyals, S. Bengio, and M. Kudlur, “Order matters: Sequence to sequence for sets,” arXiv preprint arXiv:1511.06391 , 2015. [22] Z. Ghahramani and K. A. Heller, “Bayesian sets,” Advances in neural information processing systems , vol. 18, 2005. [23] M. Zaheer, S. Kottur, S. Ravanbakhsh, B. Poczos, R. R. Salakhutdinov, and A. J. Smola, “Deep sets,” Advances in neural information processing systems , vol. 30, 2017. [24] J. Lee, Y. Lee, J. Kim, A. Kosiorek, S. Choi, and Y. W. Teh, “Set trans-former: A framework for attention-based permutation-invariant neural networks,” in International conference on machine learning . PMLR, 2019, pp. 3744–3753. [25] P. Yang, F. Luo, S. Ma, J. Lin, and X. Sun, “A deep reinforced sequence-to-set model for multi-label classification,” in Proceedings of the 57th annual meeting of the association for computational linguistics , 2019, pp. 5252–5258. [26] J. Cao and Y. Zhang, “Otseq2set: An optimal transport enhanced sequence-to-set model for extreme multi-label text classification,” in 
+
+Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing , 2022, pp. 5588–5597. [27] K. Qin, C. Li, V. Pavlu, and J. Aslam, “Adapting rnn sequence prediction model to multi-label set prediction,” in Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) , 2019, pp. 3181–3190. [28] A. Madaan, D. Rajagopal, N. Tandon, Y. Yang, and A. Bosselut, “Conditional set generation using seq2seq models,” in Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing , 2022, pp. 4874–4896. [29] L. Tang, Y. Zhou, and Y. Yang, “Sequence-to-set generative models,” Ad-vances in Neural Information Processing Systems , vol. 35, pp. 14 986– 14 997, 2022. [30] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin, “Attention is all you need,” Advances in neural information processing systems , vol. 30, 2017. [31] K. Toutanova and D. Chen, “Observed versus latent features for knowl-edge base and text inference,” in Proceedings of the 3rd workshop on continuous vector space models and their compositionality , 2015, pp. 57–66. [32] W. Xiong, T. Hoang, and W. Y. Wang, “DeepPath: A reinforcement learning method for knowledge graph reasoning,” in Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing , M. Palmer, R. Hwa, and S. Riedel, Eds. Association for Computational Linguistics, Sep. 2017, pp. 564–573. [33] A. Carlson, J. Betteridge, B. Kisiel, B. Settles, E. Hruschka, and T. Mitchell, “Toward an architecture for never-ending language learn-ing,” in Proceedings of the AAAI conference on artificial intelligence ,vol. 24, no. 1, 2010, pp. 1306–1313. [34] G. Zhao, W. Yang, X. Ren, L. Li, Y. Wu, and X. Sun, “Well-classified ex-amples are underestimated in classification with deep neural networks,” in Proceedings of the AAAI conference on artificial intelligence , vol. 36, no. 8, 2022, pp. 9180–9189. [35] L. Van der Maaten and G. Hinton, “Visualizing data using t-sne.” Journal of machine learning research , vol. 9, no. 11, 2008.

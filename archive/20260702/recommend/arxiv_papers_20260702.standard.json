@@ -1,0 +1,138 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-02T21:46:24.974821+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 3,
+    "quick_skim_target": 11,
+    "quick_selected": 3
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2606.29860v3",
+      "source": "arxiv",
+      "title": "Beyond Triplet Plausibility: Relation Set Completion in Knowledge Graphs",
+      "abstract": "Knowledge graphs (KGs) organize real-world knowledge as triplets and underpin many downstream applications. Due to their inherent incompleteness, knowledge graph completion (KGC) is widely studied and is typically formulated as triplet prediction, with link prediction as the dominant paradigm. However, this formulation focuses on the incompleteness of triplet-wise information and overlooks the incompleteness of entity-relation compatibility information. To address this limitation, we introduce a relation set completion task (RSC), which complements the link prediction task and aims to reason about missing relations that are semantically compatible with a given entity. We further propose a Relation Set Embedding model (RelSetE), which models latent patterns among the observed relations of entities to infer missing ones. To evaluate RelSetE, we derive three benchmark datasets from standard KG benchmarks. Extensive experiments demonstrate that RelSetE effectively captures entity-relation compatibility patterns and performs favorably in inferring missing relations of entities. Code and data are publicly available.",
+      "authors": [
+        "Zihao Zheng",
+        "Borui Cai",
+        "Yao Zhao",
+        "Xin Han",
+        "Mengqi Ji"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-06-29T06:54:40+00:00",
+      "link": "https://arxiv.org/pdf/2606.29860v3",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "knowledge graph completion method, applicable to drug discovery",
+      "llm_evidence_cn": "知识图谱补全方法，适用于药物发现",
+      "llm_evidence": "知识图谱补全方法，适用于药物发现",
+      "canonical_evidence": "知识图谱补全方法，适用于药物发现",
+      "llm_tldr_en": "Introduces relation set completion (RSC) for KGs, proposing RelSetE to model entity-relation compatibility, improving over link prediction.",
+      "llm_tldr_cn": "该论文提出了关系集补全（RSC）任务，以解决知识图谱中实体-关系兼容性信息的不完整性。RelSetE模型通过建模潜在参数捕获实体与关系的兼容性，在药物相关知识图谱上具有潜力。该工作补充了链接预测，为药物相互作用预测等下游任务提供了新的知识图谱补全视角。",
+      "llm_tldr": "该论文提出了关系集补全（RSC）任务，以解决知识图谱中实体-关系兼容性信息的不完整性。RelSetE模型通过建模潜在参数捕获实体与关系的兼容性，在药物相关知识图谱上具有潜力。该工作补充了链接预测，为药物相互作用预测等下游任务提供了新的知识图谱补全视角。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "knowledge graph completion for drug discovery",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.30922v1",
+      "source": "arxiv",
+      "title": "An Interaction Language Model: Mechanism Discovery from Statistical Patterns of Physical Interactions",
+      "abstract": "Interactions among building blocks in physical, chemical, and biological systems follow structured patterns interpretable as a learnable language: just as language models learn which words tend to follow others, one can learn which physical phenomena follow others and under what conditions. We introduce an Interaction Language Model (ILM): a framework that treats interaction as a statistically structured, learnable language for design-to-function reasoning across fields. By learning statistical dependencies and ordering among components, ILMs infer interaction pathways, identify missing steps, and predict the next likely interaction. We demonstrate it through two complementary components, PhenoLink and PhenoSeq, applied to molecular diffusion, a ubiquitous mechanism for energy and particle transport. PhenoLink is a directed graph of interactions among diffusion-based events extracted from publications, where each edge aggregates paragraph-level evidence and carries a transition probability interpreted as an information cost. PhenoSeq complements this with a sequence model that proposes missing mechanistic steps under endpoint constraints. Together they form a generate-then-verify pipeline returning every explanation with a reproducible, per-step, corpus-grounded audit trail. Across four held-out suites of 172 queries, the pipeline matches a zero-shot Claude Opus 4.7 baseline on in-distribution accuracy, yet unlike the baseline, which fabricates a chain for every impossible query, it refuses up to 93.5% of transitions in corpus evidence by construction. ILM thus delivers what zero-shot generation structurally cannot: deterministic refusal of evidence-absent queries and auditable, per-step support. The framework extends to natural and engineered systems where function emerges from sequential and conditional interactions among molecules, cells, devices, or other components.",
+      "authors": [
+        "Triparna Ganguly",
+        "Hanqi Jiang",
+        "Xinliang Li",
+        "Yi Pan",
+        "Junhao Chen",
+        "Miyuki Karunathilaka",
+        "Tianming Liu",
+        "Yohannes Abate"
+      ],
+      "primary_category": "cond-mat.other",
+      "categories": [
+        "cond-mat.other"
+      ],
+      "published": "2026-06-29T21:15:40+00:00",
+      "link": "https://arxiv.org/pdf/2606.30922v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "interaction language model for predicting next interactions broadly, transferable to DDI",
+      "llm_evidence_cn": "交互语言模型用于预测下一步交互，可迁移至药物相互作用预测",
+      "llm_evidence": "交互语言模型用于预测下一步交互，可迁移至药物相互作用预测",
+      "canonical_evidence": "交互语言模型用于预测下一步交互，可迁移至药物相互作用预测",
+      "llm_tldr_en": "Proposes an Interaction Language Model (ILM) that treats physical interactions as a language, learning patterns to predict interaction pathways and missing steps, applicable to drug-drug interactions.",
+      "llm_tldr_cn": "该论文提出交互语言模型（ILM），将物理、化学和生物系统中的交互视为可学习的语言，通过统计模式学习交互路径并预测下一个交互。该方法可迁移至药物-药物相互作用预测领域，为冷启动问题提供思路。实验通过PhenoLink和PhenoSeq组件展示了其在生物交互预测中的潜力。",
+      "llm_tldr": "该论文提出交互语言模型（ILM），将物理、化学和生物系统中的交互视为可学习的语言，通过统计模式学习交互路径并预测下一个交互。该方法可迁移至药物-药物相互作用预测领域，为冷启动问题提供思路。实验通过PhenoLink和PhenoSeq组件展示了其在生物交互预测中的潜力。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 请帮我查找ColdDDI：利用大型语言模型和生物医学知识图谱进行冷启动药物相互作用预测该方向有关的论文, especially work that connects or combines: Large Language Model + Drug-Drug Interaction Prediction; cold-start drug-drug interaction prediction; large language model for drug interaction; drug interaction prediction with knowledge graph; knowledge graph completion for drug discovery; cold start prediction in drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; Leveraging knowledge graphs for cold start drug interaction with large language models; Biomedical knowledge graph enhanced drug interaction prediction for new drugs.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2606.31171v1",
+      "source": "arxiv",
+      "title": "Cross-Domain Feature Expansion for Tabular Medical Data via Knowledge Graphs Injection",
+      "abstract": "Acquiring comprehensive cross-domain biomedical profiles is often costly and time-consuming, resulting in severe data scarcity in medical research. To address this challenge, we propose MedKGTab, a knowledge-injected framework specifically engineered for cross-domain feature expansion in tabular medical data. MedKGTab seeks to infer uncollected biomedical features from available ones by exploiting their inherent statistical dependencies and established medical correlations. By employing a row-column dual-attention mechanism, MedKGTab operates directly on raw structured tabular data, inherently capturing exact numerical distributions without the structural loss caused by tokenization. Crucially, MedKGTab integrates data-driven statistical priors with the SPOKE biomedical knowledge graph, achieving an optimal synergy between the data and knowledge channels. Within this synergy, the representations derived from the data channel are modulated by the injected biomedical knowledge, ensuring the final generated data are grounded in empirical medical research. Experimental results demonstrate that MedKGTab achieves high data fidelity and realistic data representation in cross-domain feature expansion. It outperforms both SOTA medical large models (e.g., Baichuan M3-plus) and specialized tabular models designed for medical data generation. Furthermore, MedKGTab consistently delivers superior performance across various data generation scenarios, whether inferring missing features within the same dataset or generalizing across different medical cohorts.",
+      "authors": [
+        "Mengying Zhou",
+        "Yongjie Yin",
+        "Haoyan Xin",
+        "Guoping Liu",
+        "Yang Chen"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.ET"
+      ],
+      "published": "2026-06-30T06:01:54+00:00",
+      "link": "https://arxiv.org/pdf/2606.31171v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "uses knowledge graphs injection for cross-domain feature expansion in medical data",
+      "llm_evidence_cn": "利用知识图谱注入实现医疗数据的跨域特征扩展",
+      "llm_evidence": "利用知识图谱注入实现医疗数据的跨域特征扩展",
+      "canonical_evidence": "利用知识图谱注入实现医疗数据的跨域特征扩展",
+      "llm_tldr_en": "MedKGTab injects knowledge graph information into tabular medical data via a dual-attention mechanism to infer missing biomedical features, directly supporting drug interaction prediction by enriching feature spaces.",
+      "llm_tldr_cn": "医疗研究中跨域生物医学特征获取成本高，导致数据稀疏。MedKGTab提出一种知识注入框架，通过行-列双注意力机制在结构化表格数据上利用知识图谱中的医学关联推断未收集的特征。该方法保留了数值分布，无需标记化，在多个医疗数据集上显著提升下游任务性能。其知识图谱增强特征扩展的思路可直接用于药物相互作用预测中的冷启动场景，为缺乏历史数据的新药物生成特征表示。",
+      "llm_tldr": "医疗研究中跨域生物医学特征获取成本高，导致数据稀疏。MedKGTab提出一种知识注入框架，通过行-列双注意力机制在结构化表格数据上利用知识图谱中的医学关联推断未收集的特征。该方法保留了数值分布，无需标记化，在多个医疗数据集上显著提升下游任务性能。其知识图谱增强特征扩展的思路可直接用于药物相互作用预测中的冷启动场景，为缺乏历史数据的新药物生成特征表示。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

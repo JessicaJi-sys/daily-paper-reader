@@ -1,0 +1,54 @@
+{
+  "label": "2026-07-02",
+  "date": "2026-07-02",
+  "generated_at": "2026-07-02T21:48:34",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202607/02/2606.29860v3-beyond-triplet-plausibility-relation-set-completion-in-knowledge-graphs",
+      "section": "quick",
+      "title_en": "Beyond Triplet Plausibility: Relation Set Completion in Knowledge Graphs",
+      "authors": "Zihao Zheng, Borui Cai, Yao Zhao, Xin Han, Mengqi Ji",
+      "date": "2026-06-29",
+      "pdf": "https://arxiv.org/pdf/2606.29860v3",
+      "score": "6.0",
+      "evidence": "知识图谱补全方法，适用于药物发现",
+      "tldr": "知识图谱普遍存在不完整性，现有知识图谱补全主要聚焦于链路预测，即预测缺失的三元组，但忽略了实体与关系之间兼容性信息的缺失。为此，本文提出关系集补全任务，旨在推断与给定实体语义兼容的缺失关系。作者设计关系集嵌入模型RelSetE，通过建模实体观测关系的潜在模式来推断缺失关系。在三个基准数据集上的实验表明，RelSetE能有效捕捉实体-关系兼容性，并优于基线方法。该工作为知识图谱补全提供了新的视角和任务范式。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Knowledge graphs (KGs) organize real-world knowledge as triplets and underpin many downstream applications. Due to their inherent incompleteness, knowledge graph completion (KGC) is widely studied and is typically formulated as triplet prediction, with link prediction as the dominant paradigm. However, this formulation focuses on the incompleteness of triplet-wise information and overlooks the incompleteness of entity-relation compatibility information. To address this limitation, we introduce a relation set completion task (RSC), which complements the link prediction task and aims to reason about missing relations that are semantically compatible with a given entity. We further propose a Relation Set Embedding model (RelSetE), which models latent patterns among the observed relations of entities to infer missing ones. To evaluate RelSetE, we derive three benchmark datasets from standard KG benchmarks. Extensive experiments demonstrate that RelSetE effectively captures entity-relation compatibility patterns and performs favorably in inferring missing relations of entities. Code and data are publicly available.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/02/2606.30922v1-an-interaction-language-model-mechanism-discovery-from-statistical-patterns-of-physical-interactions",
+      "section": "quick",
+      "title_en": "An Interaction Language Model: Mechanism Discovery from Statistical Patterns of Physical Interactions",
+      "authors": "Triparna Ganguly, Hanqi Jiang, Xinliang Li, Yi Pan, Junhao Chen, Miyuki Karunathilaka, Tianming Liu, Yohannes Abate",
+      "date": "2026-06-29",
+      "pdf": "https://arxiv.org/pdf/2606.30922v1",
+      "score": "6.0",
+      "evidence": "交互语言模型用于预测下一步交互，可迁移至药物相互作用预测",
+      "tldr": "物理、化学、生物等系统的交互模式可视为可学习的语言。本文提出交互语言模型ILM，通过PhenoLink有向图聚合段落证据并计算转移概率，结合PhenoSeq序列模型推测缺失步骤，形成生成-验证流水线。在分子扩散任务中，ILM在172个查询上匹配Claude Opus 4.7零样本精度，但能拒绝高达93.5%的无证据转换，并提供可审计的逐步骤支持。该框架可推广至分子、细胞、设备等顺序条件交互系统。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Interactions among building blocks in physical, chemical, and biological systems follow structured patterns interpretable as a learnable language: just as language models learn which words tend to follow others, one can learn which physical phenomena follow others and under what conditions. We introduce an Interaction Language Model (ILM): a framework that treats interaction as a statistically structured, learnable language for design-to-function reasoning across fields. By learning statistical dependencies and ordering among components, ILMs infer interaction pathways, identify missing steps, and predict the next likely interaction. We demonstrate it through two complementary components, PhenoLink and PhenoSeq, applied to molecular diffusion, a ubiquitous mechanism for energy and particle transport. PhenoLink is a directed graph of interactions among diffusion-based events extracted from publications, where each edge aggregates paragraph-level evidence and carries a transition probability interpreted as an information cost. PhenoSeq complements this with a sequence model that proposes missing mechanistic steps under endpoint constraints. Together they form a generate-then-verify pipeline returning every explanation with a reproducible, per-step, corpus-grounded audit trail. Across four held-out suites of 172 queries, the pipeline matches a zero-shot Claude Opus 4.7 baseline on in-distribution accuracy, yet unlike the baseline, which fabricates a chain for every impossible query, it refuses up to 93.5% of transitions in corpus evidence by construction. ILM thus delivers what zero-shot generation structurally cannot: deterministic refusal of evidence-absent queries and auditable, per-step support. The framework extends to natural and engineered systems where function emerges from sequential and conditional interactions among molecules, cells, devices, or other components.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/02/2606.31171v1-cross-domain-feature-expansion-for-tabular-medical-data-via-knowledge-graphs-injection",
+      "section": "quick",
+      "title_en": "Cross-Domain Feature Expansion for Tabular Medical Data via Knowledge Graphs Injection",
+      "authors": "Mengying Zhou, Yongjie Yin, Haoyan Xin, Guoping Liu, Yang Chen",
+      "date": "2026-06-30",
+      "pdf": "https://arxiv.org/pdf/2606.31171v1",
+      "score": "6.0",
+      "evidence": "利用知识图谱注入实现医疗数据的跨域特征扩展",
+      "tldr": "针对表格医疗数据跨域特征获取成本高导致数据稀缺的问题，提出MedKGTab框架。它通过行-列双注意力机制直接处理原始表格数据，并融合SPOKE生物医学知识图谱与数据驱动统计先验，实现未收集特征的高保真推断。实验表明，在数据保真度和真实性上超越医学大模型与专用表格模型，且在不同生成场景中性能稳定。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Acquiring comprehensive cross-domain biomedical profiles is often costly and time-consuming, resulting in severe data scarcity in medical research. To address this challenge, we propose MedKGTab, a knowledge-injected framework specifically engineered for cross-domain feature expansion in tabular medical data. MedKGTab seeks to infer uncollected biomedical features from available ones by exploiting their inherent statistical dependencies and established medical correlations. By employing a row-column dual-attention mechanism, MedKGTab operates directly on raw structured tabular data, inherently capturing exact numerical distributions without the structural loss caused by tokenization. Crucially, MedKGTab integrates data-driven statistical priors with the SPOKE biomedical knowledge graph, achieving an optimal synergy between the data and knowledge channels. Within this synergy, the representations derived from the data channel are modulated by the injected biomedical knowledge, ensuring the final generated data are grounded in empirical medical research. Experimental results demonstrate that MedKGTab achieves high data fidelity and realistic data representation in cross-domain feature expansion. It outperforms both SOTA medical large models (e.g., Baichuan M3-plus) and specialized tabular models designed for medical data generation. Furthermore, MedKGTab consistently delivers superior performance across various data generation scenarios, whether inferring missing features within the same dataset or generalizing across different medical cohorts.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

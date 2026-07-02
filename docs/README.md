@@ -6,34 +6,30 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-01
-- 运行时间：2026-07-01 21:52:52 UTC
+- 最新运行日期：2026-07-02
+- 运行时间：2026-07-02 21:48:28 UTC
 - 运行状态：成功
-- 本次总论文数：4
-- 精读区：1
+- 本次总论文数：3
+- 精读区：0
 - 速读区：3
 
 ### 今日简报（AI）
-今日精读DDI预测论文，速读知识图谱与图学习三篇。  
-最推荐《DDIAgents: Mechanism-Conditioned Context Flow for Drug-Drug Interaction Prediction》，其次关注关系集补全和GNN+LLM融合。  
-后续可重点探索药物交互机制建模，并留意知识图谱补全与非三元组合理性的扩展思路。
-- 详情：[/202607/01/README](/202607/01/README)
+今日速读3篇6分论文，涵盖知识图谱关系集补全、物理交互机制发现及医学表格数据跨域特征扩展。其中《Beyond Triplet Plausibility》与《Cross-Domain Feature Expansion》分别针对关系型补全和医疗数据增强提出新思路。建议优先关注知识图谱注入如何提升现有医疗数据模型的预测能力。
+- 详情：[/202607/02/README](/202607/02/README)
 
 ### 精读区论文标签
-1. [DDIAgents: Mechanism-Conditioned Context Flow for Drug-Drug Interaction Prediction](/202607/01/2606.31085v1-ddiagents-mechanism-conditioned-context-flow-for-drug-drug-interaction-prediction)  
-   标签：评分：8.0/10、query:cold-ddi
-   evidence：使用机制条件上下文流的多智能体框架进行药物相互作用预测
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Beyond Triplet Plausibility: Relation Set Completion in Knowledge Graphs](/202607/01/2606.29860v1-beyond-triplet-plausibility-relation-set-completion-in-knowledge-graphs)  
-   标签：评分：7.0/10、query:cold-ddi
-   evidence：知识图谱补全方法可用于药物发现
-2. [Beyond Triplet Plausibility: Relation Set Completion in Knowledge Graphs](/202607/01/2606.29860v2-beyond-triplet-plausibility-relation-set-completion-in-knowledge-graphs)  
-   标签：评分：7.0/10、query:cold-ddi
-   evidence：提出知识图谱关系集补全，直接可应用于药物发现中的知识图谱补全
-3. [PromptGNN-sim: Deep Fusion and Alignment of GNN and LLMs for Text-Attributed Graph Learning](/202607/01/2606.30291v1-promptgnn-sim-deep-fusion-and-alignment-of-gnn-and-llms-for-text-attributed-graph-learning)  
-   标签：评分：7.0/10、query:cold-ddi
-   evidence：GNN与LLM的深度融合用于文本属性图学习，可应用于药物相互作用预测
+1. [Beyond Triplet Plausibility: Relation Set Completion in Knowledge Graphs](/202607/02/2606.29860v3-beyond-triplet-plausibility-relation-set-completion-in-knowledge-graphs)  
+   标签：评分：6.0/10、query:cold-ddi
+   evidence：知识图谱补全方法，适用于药物发现
+2. [An Interaction Language Model: Mechanism Discovery from Statistical Patterns of Physical Interactions](/202607/02/2606.30922v1-an-interaction-language-model-mechanism-discovery-from-statistical-patterns-of-physical-interactions)  
+   标签：评分：6.0/10、query:cold-ddi
+   evidence：交互语言模型用于预测下一步交互，可迁移至药物相互作用预测
+3. [Cross-Domain Feature Expansion for Tabular Medical Data via Knowledge Graphs Injection](/202607/02/2606.31171v1-cross-domain-feature-expansion-for-tabular-medical-data-via-knowledge-graphs-injection)  
+   标签：评分：6.0/10、query:cold-ddi
+   evidence：利用知识图谱注入实现医疗数据的跨域特征扩展
 
 
 <div class="dpr-home-promo-card">
