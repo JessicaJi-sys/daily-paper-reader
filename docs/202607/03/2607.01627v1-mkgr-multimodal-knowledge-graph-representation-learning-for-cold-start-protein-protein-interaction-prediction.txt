@@ -1,0 +1,226 @@
+Title: MKGR: Multimodal Knowledge-Graph Representation Learning for Cold-Start Protein-Protein Interaction Prediction
+
+URL Source: https://arxiv.org/pdf/2607.01627v1
+
+Published Time: Fri, 03 Jul 2026 00:26:45 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# MKGR: M ULTIMODAL KNOWLEDGE -G RAPH REPRESENTATION 
+
+# LEARNING FOR COLD -S TART PROTEIN -P ROTEIN INTERACTION 
+
+# PREDICTION 
+
+Wenbo Zhang 
+
+College of Computer and Information Science, Southwest University, Chongqing Chongqing, China 
+
+z13996091260@email.swu.edu.cn 
+
+# ABSTRACT 
+
+Accurate protein-protein interaction (PPI) prediction is central to functional genomics, disease mech-anism discovery, and drug development. A difficult setting arises when candidate interactions include proteins that have no observed PPI edges during training, where models relying on network topology alone often lose useful context. This paper presents MKGR, a multimodal representation framework for cold-start PPI prediction. MKGR combines region-aware protein sequence encoding with four protein-centered biomedical knowledge graphs, including protein-drug, protein-disease, protein-miRNA, and protein-lncRNA associations. The sequence branch extracts contextual representations from structurally informed sequence regions, while graph attention encoders learn modality-specific protein embeddings from sparse biomedical associations. A bridge reconstruction objective regular-izes graph learning by recovering shared protein-entity associations, and a pair-level gating module adaptively integrates sequence and graph evidence for each candidate protein pair. Experiments on two benchmark datasets under novel-old and novel-novel cold-start settings show that MKGR consistently outperforms competitive sequence, network, and knowledge-graph baselines across ACC, F1, AUC, AUPR, and MCC. 
+
+Keywords Protein-protein interaction prediction · Cold-start learning · Multimodal knowledge graph · Graph neural network · Protein sequence representation 
+
+# 1 Introduction 
+
+Protein-protein interactions organize many cellular processes, including signal transduction, transcriptional regulation, immune response, and metabolic control. Experimental assays such as yeast two-hybrid screening and affinity purification followed by mass spectrometry have produced large interaction resources, but they remain costly, condition-dependent, and incomplete. Computational PPI prediction therefore plays an important role in prioritizing candidate interactions and expanding biological networks beyond experimentally verified edges. Recent deep learning models have improved PPI prediction by encoding amino-acid sequences, protein structures, and interaction networks. Sequence-based models benefit from pretrained protein language models and convolutional or attention-based encoders, while graph models exploit relational structure among proteins or between proteins and biomedical entities. However, the cold-start case remains challenging: for a newly introduced protein, observed PPI edges are unavailable or sparse, so a predictor must transfer information from intrinsic sequence patterns and external biomedical associations. Relying on only one evidence source is often fragile. Sequence encoders may miss disease-, drug-, or RNA-related context, whereas graph encoders may suffer when a protein has limited coverage in a particular biomedical modality. This paper studies cold-start PPI prediction with a multimodal sequence-graph design. We propose MKGR, a rep-resentation learning framework that models both intrinsic protein sequence signals and extrinsic biomedical graph signals. In the sequence branch, each protein is divided into structural regions and encoded with a pretrained protein 
+
+> arXiv:2607.01627v1 [cs.LG] 2 Jul 2026
+
+MKGR for Cold-Start PPI Prediction language model followed by a Transformer encoder. In the graph branch, four modality-specific protein-entity graphs are modeled with graph attention networks. To make sparse graph learning more robust, MKGR introduces a bridge reconstruction task that encourages protein and entity embeddings to preserve shared biomedical associations. Finally, pair-level gated fusion combines sequence and graph representations in a candidate-specific manner, allowing the model to adjust the contribution of each modality for each protein pair. The main contributions are as follows. First, we formulate a cold-start PPI model that jointly uses protein sequences and multimodal biomedical knowledge graphs. Second, we design a bridge reconstruction objective for graph-regularized protein representation learning under sparse protein-entity associations. Third, we introduce pair-level gated fusion to adaptively integrate heterogeneous modalities. Fourth, experiments on two datasets and two cold-start tasks demonstrate consistent gains over representative baselines. 
+
+# 2 Related Work 
+
+Computational PPI prediction. Early computational PPI methods used protein descriptors, kernels, matrix factoriza-tion, or network propagation to infer missing interactions from biological features and known interaction networks. Recent deep models have shifted toward end-to-end representation learning over sequences, structures, and interaction neighborhoods. TAGPPI integrates sequence features with structural contact maps, while HNSPPI combines sequence and network evidence for supervised PPI prediction [ 1, 2 ]. EResCNN uses ensemble residual convolution over sequence descriptors, and BaPPI studies balanced learning for interaction classification [ 3 , 4]. Sequence-based PPI predictors such as PIPR and D-SCRIPT further show that protein sequences can support interaction inference when structure or network information is incomplete [ 5, 6]. Protein resources and structure predictors, including UniProt, ESM, ESMFold, and AlphaFold, have also strengthened sequence-centered protein representation learning [ 7, 8, 9, 10 ]. These methods provide powerful protein representations, but they still face difficulty when test proteins have no observed PPI links during training. 
+
+Protein sequence and biomedical graph evidence. Sequence-only models capture intrinsic amino-acid patterns, whereas graph-based models can exploit external biomedical associations that are not directly available from the PPI network. Graph neural networks provide a general mechanism for neighborhood aggregation and inductive node representation learning [ 11 , 12 ]. Attention-based and expressive message-passing variants further improve local relation modeling in heterogeneous or sparse graphs [ 13 , 14 ], and graph benchmarks support systematic evaluation of such methods [ 15 ]. In biomedical settings, resources such as STRING, DrugBank, CTD, miRTarBase, and LncTarD connect proteins to interaction partners, chemicals, diseases, miRNAs, and lncRNAs [ 16 , 17 , 18 , 19 , 20 ]. Interaction and ontology resources such as IntAct and the Gene Ontology provide additional curated biological context [ 21 , 22 ]. Larger biomedical knowledge graphs such as Hetionet and PrimeKG show that integrating heterogeneous biomedical entities can support downstream discovery tasks [ 23 , 24 ]. Multi-relational embedding and relational GCN models provide general tools for knowledge-graph representation [ 25 , 26 ], and graph models have also been used for biomedical relation prediction such as polypharmacy side-effect modeling [ 27 ]. Knowledge-graph-enhanced PPI models, including KGF-GNN and HEENN, demonstrate the value of protein-associated graph context [ 28 , 29 ]. Multimodal knowledge graph fusion has also been used for related biomedical relation prediction problems such as drug-drug interaction prediction [30]. 
+
+Sparse and incomplete-data representation. Cold-start PPI prediction can be viewed as a sparse representation problem in which different proteins have uneven information coverage across modalities. Latent factor models and graph-regularized factorization methods have long studied how to learn compact representations from sparse and incomplete observations [ 31 , 32 , 33 , 34 , 35 , 36 ]. Adaptive regularization, non-negative latent factor modeling, and dynamic sparse tensor estimation further improve robustness when data are high-dimensional or partially observed [37 , 38 , 39 , 40 , 41 ]. Federated latent factor learning, differential-evolution-enhanced latent factor analysis, multi-metric autoencoders, and adaptive regularization all show how auxiliary optimization or structural constraints can be integrated into representation learning. 
+
+Latent factor learning and streaming features. Several studies by Luo and collaborators investigate sparse matrix representation, service QoS prediction, and non-negative latent factor learning from complementary viewpoints. Prediction-sampling and double-space modeling provide two additional examples of robust latent representation under sparse observations [ 42 , 43 , 44 , 45 ]. Online feature selection is another relevant line because cold-start biological data often arrive with changing or incomplete feature sets. Tensor compression and related low-rank representation studies also support robust representation learning for sparse or incomplete observations [ 46 , 47 ]. Time-dependent incomplete data studies further motivate designs that adapt to changing observations. 
+
+High-order, tensor, and graph representation. Auxiliary relational structure is often useful when target labels are sparse. Tensor and high-order graph models are closely related to multimodal biomedical learning because multiple 2MKGR for Cold-Start PPI Prediction entity types naturally induce high-order relations. Adaptive Tucker decomposition, tensor low-rank compression, and neural Tucker factorization provide representative examples of high-order representation learning [ 46 , 47 , 48 ]. Multi-aspect self-attending neural Tucker factorization and multi-projection self-attending Tucker models further extend tensor learning to spatiotemporal and incomplete data [ 49 , 50 ]. Graph convolutional and modular graph models provide additional strategies for propagating information over structured data [ 51 , 52 ]. Graph-incorporated factor analysis and multi-metric latent feature analysis also connect sparse representation learning with graph or metric structure [ 53 , 54 , 55 , 56 ]. Broader surveys and tensor-based causal or spatiotemporal models show the continuing development of high-order representation learning [57, 58, 59]. 
+
+Recent multimodal applications. Recent representation-learning studies have explored cross-modal medical learning, semantic segmentation distillation, scalable sentiment analysis, mixture-of-experts learning, and neural community search [ 60 , 61 , 62 , 63 , 64 ]. Other works study robust optimization, contrastive distillation for electricity-theft detection, knowledge-driven multiple-instance learning, dynamic optimization, and precise latent factor analysis [ 65 , 66 , 67 ,68 , 69 ]. Contrastive and collaborative distillation approaches have also been used for medical, graph-structured, and service data representation [ 70 , 71 , 72 , 73 ]. Industrial and educational applications, including distributed optimization, student emotion analysis, PID-enhanced factor analysis, robot calibration, and traffic-data imputation, illustrate the breadth of multimodal representation learning under heterogeneous observations [ 74 , 75 , 76 , 77 , 78 , 79 ]. Biomedical and healthcare-oriented studies, including drug repositioning, medical image representation, large language models for healthcare, organoid classification, and larynx pathological grading, are particularly close to the multimodal biomedical motivation of this work [ 80 , 81 , 82 , 72 , 67 ]. Additional studies on matrix factorization review, deep latent factor learning, graph convolution enhancement, robot calibration, posterior-neighborhood regularization, traffic prediction, learning-error refinement, and hash-factor representation show that robust representation learning remains broadly useful across domains [ 83 , 84 , 85 , 86 , 87 , 88 , 77 , 89 ]. MKGR follows this broad representation-learning view but specializes it for cold-start PPI prediction by combining modality-specific graph encoders, bridge reconstruction, and adaptive fusion across sequence and biomedical graph branches. 
+
+# 3 Preliminaries 
+
+Cold-start PPI setting. Let P be the protein universe and let Ω ⊆ P × P be the set of candidate pairs with binary labels 
+
+yij ∈ { 0, 1}. Proteins are split into an observed subset Po and a disjoint novel subset Pn. The learner is fitted only on labeled pairs from Po × P o and is evaluated on two transfer regimes: Pn × P o and Pn × P n. Thus, the prediction function must infer an interaction probability 
+
+ˆyij = FΘ(xi, x j , Gi, Gj ), (1) where xi denotes sequence-derived information of pi, Gi denotes its biomedical graph context, and Θ denotes trainable parameters. 
+
+Protein views. Each protein is represented from two complementary views. The sequence view is an ordered set of region-level inputs xi = {xi1, . . . , x iL i } obtained from amino-acid segments. The graph view is built from M
+
+protein-entity bipartite graphs Gm = ( P, Em, Rm), where Em is a modality-specific entity set and Rm records observed protein-entity links. In this work, M = 4 and the modalities correspond to drugs, diseases, miRNAs, and lncRNAs. 
+
+Learning objective. The central difficulty is information imbalance: a novel protein may have no PPI links, incomplete biomedical associations, or uneven coverage across graph modalities. MKGR therefore learns one sequence embedding and multiple graph embeddings for each protein, then estimates a pair label by adaptively weighting these views. The model is trained with binary PPI supervision and an auxiliary graph reconstruction signal that encourages proteins sharing biomedical entities to occupy compatible graph neighborhoods. 
+
+# 4 Proposed Method 
+
+Overview. Figure 1 summarizes MKGR. The framework first obtains a sequence representation from region-level protein language model features and obtains graph representations from modality-specific protein-entity graphs. It then regularizes graph embeddings with bridge reconstruction and predicts PPI labels through pair-level gated fusion. 3MKGR for Cold-Start PPI Prediction 
+
+Figure 1: Overview of MKGR. The model combines a region-aware protein sequence branch, multimodal knowledge-graph branches, bridge reconstruction, and pair-level gated fusion for cold-start PPI prediction. 
+
+4.1 Sequence and Graph Encoding 
+
+For the sequence view, region features generated by a frozen ESM2 encoder are passed to a Transformer encoder. Given contextual region vectors {ui1, . . . , u iL i }, MKGR forms a protein sequence embedding by soft region aggregation: 
+
+si =
+
+> Li
+
+X
+
+> t=1
+
+αit uit , αit = softmax t
+
+ q⊤ 
+
+> s
+
+tanh( Wsuit ) . (2) This aggregation compresses variable-length region sequences into a fixed-dimensional representation while retaining region-level context. For the graph view, each modality graph Gm is encoded independently. Let hm,ℓ u be the representation of node u at layer ℓ. A graph attention update can be written compactly as 
+
+hm,ℓ +1  
+
+> u
+
+= σ
+
+ X
+
+> v∈N m(u)
+
+am,ℓ uv W ℓmhm,ℓ v
+
+ , am,ℓ uv = softmax v
+
+ ρ⊤
+
+> m
+
+[W ℓmhm,ℓ u ∥W ℓmhm,ℓ v ] . (3) After the final layer, the modality-specific protein representation is denoted by gmi .
+
+4.2 Bridge-Regularized Pair Learning 
+
+Biomedical graph links are sparse, especially for proteins appearing in cold-start evaluation. To regularize graph representations, MKGR reconstructs whether two proteins share an entity in a modality graph. For sampled triples 
+
+(pi, p j , e k), define 
+
+rmijk = I[ek ∈ N m(pi) ∩ N m(pj )] , ˆrmijk = MLP m([ gmi ∥gmj ∥hmek ]) . (4) This objective encourages proteins connected to similar biomedical contexts to obtain compatible modality embeddings, providing a transfer signal when direct PPI observations are absent. 
+
+4.3 Adaptive Fusion and Objective 
+
+For each branch b ∈ { seq, 1, . . . , M }, MKGR constructs a symmetric pair vector 
+
+dbij = [ |hbi − hbj |∥ hbi ⊙ hbj ], (5) 4MKGR for Cold-Start PPI Prediction                                                                                           
+
+> Dataset Metric TAGPPI HNSPPI EResCNN BaPPI KGF HEENN ESM2-AMP MKGR Dataset1 Acc 59 .39 ±1.18 63 .38 ±0.41 65 .38 ±1.76 66 .40 ±1.41 56 .71 ±4.38 62 .81 ±1.46 77 .99 ±0.81 81 .31 ±1.28
+> Sen 38 .17 ±3.76 63 .72 ±0.91 44 .13 ±5.74 73 .06 ±1.62 22 .54 ±2.90 51 .83 ±25 .53 77 .02 ±2.57 78 .41 ±3.10
+> Pre 66 .80 ±3.01 63 .56 ±0.78 77 .14 ±2.17 64 .78 ±2.69 79 .52 ±0.49 70 .50 ±7.64 78 .67 ±1.10 83 .61 ±1.40
+> F1 48 .42 ±2.59 63 .39 ±0.40 55 .92 ±4.32 68 .62 ±1.06 35 .08 ±3.57 56 .18 ±8.95 77 .80 ±0.96 80 .89 ±1.40
+> Auc 62 .60 ±2.03 68 .23 ±0.79 75 .39 ±1.24 71 .96 ±0.71 75 .16 ±2.81 73 .98 ±1.71 85 .68 ±0.71 88 .79 ±0.98
+> Aupr 65 .11 ±1.35 68 .23 ±0.63 74 .77 ±1.14 69 .08 ±1.69 72 .39 ±2.06 71 .12 ±1.00 84 .90 ±0.75 88 .38 ±0.54
+> Mcc 21 .02 ±2.36 27 .24 ±0.81 34 .18 ±2.66 33 .12 ±2.39 24 .51 ±1.96 30 .43 ±3.78 56 .04 ±1.57 62 .83 ±2.35
+> Dataset2 Acc 68 .52 ±1.37 57 .20 ±0.50 55 .38 ±0.47 62 .95 ±3.18 62 .80 ±0.79 66 .33 ±3.67 58 .72 ±0.86 84 .61 ±0.53
+> Sen 57 .90 ±5.71 57 .18 ±0.77 84 .91 ±0.64 62 .95 ±2.88 42 .88 ±3.42 48 .72 ±12 .75 67 .97 ±10 .56 77 .44 ±0.96
+> Pre 73 .83 ±1.96 57 .23 ±0.65 53 .41 ±0.52 46 .10 ±3.11 71 .39 ±1.19 76 .36 ±6.03 57 .57 ±2.38 90 .43 ±0.54
+> F1 64 .66 ±2.95 57 .20 ±0.50 65 .57 ±0.33 53 .18 ±2.58 53 .49 ±2.51 58 .34 ±7.99 61 .95 ±2.93 83 .43 ±0.51
+> Auc 77 .12 ±1.11 61 .39 ±0.79 55 .34 ±0.50 68 .67 ±2.00 69 .88 ±0.87 75 .24 ±3.50 62 .71 ±0.76 92 .27 ±0.45
+> Aupr 75 .42 ±1.07 63 .42 ±0.51 53 .19 ±0.56 51 .78 ±0.90 69 .01 ±0.86 75 .41 ±3.68 64 .26 ±0.50 92 .72 ±0.25
+> Mcc 38 .15 ±2.04 14 .40 ±1.01 13 .30 ±1.06 24 .56 ±5.34 27 .97 ±1.11 35 .34 ±6.42 18 .27 ±0.47 69 .95 ±0.95
+
+Table 1: Performance comparison on Task 1, where test pairs contain one novel protein and one old protein. where hseq i = si and hmi = gmi for graph modality m. A gate then assigns pair-specific branch weights and produces the final predictor: 
+
+λij = softmax( Wg [dseq ij ∥d1 
+
+> ij
+
+∥ · · · ∥ dMij ]) , ˆyij = σ  Wo[λseq ij dseq ij ∥λ1 
+
+> ij
+
+d1 
+
+> ij
+
+∥ · · · ∥ λMij dMij ] . (6) The complete training criterion is 
+
+L = 1
+
+|D| 
+
+X
+
+> (i,j )∈D
+
+ℓbce (ˆ yij , y ij ) + η
+
+> M
+
+X
+
+> m=1
+
+1
+
+|S m|
+
+X
+
+> (i,j,k )∈S m
+
+ℓbce (ˆ rmijk , r mijk ), (7) where D is the supervised PPI training set, Sm is the sampled bridge set of modality m, and η balances PPI supervision and bridge reconstruction. 
+
+# 5 Experiments 
+
+5.1 Experimental Settings Datasets. We evaluate MKGR on two PPI benchmark datasets with multimodal protein knowledge graphs. Dataset1 is derived from MTV-PPI, and Dataset2 is constructed from public biological databases including STRING, DrugBank, LncTarD, miRTarBase, and CTD. Both datasets contain protein sequences and four types of protein-associated biomedical entities: drugs, diseases, miRNAs, and lncRNAs. For each dataset, proteins are split at protein level into old and novel groups. Old-old pairs are used for training, with 10% held out for validation, while novel-old and novel-novel pairs are used for cold-start testing. 
+
+Metrics and baselines. We report Accuracy (ACC), Sensitivity (SEN), Precision (PRE), F1-score (F1), ROC-AUC (AUC), PR-AUC (AUPR), and Matthews Correlation Coefficient (MCC). MKGR is compared with TAGPPI [ 1], HNSPPI [ 2], EResCNN [ 3 ], BaPPI [ 4], KGF-GNN [ 28 ], HEENN [ 29 ], and ESM2_AMP [ 90 ]. Training uses 100 epochs, batch size 1024, learning rate 6 × 10 −4, and 256-dimensional embeddings. The sequence and graph encoders use a 6-layer Transformer and a 2-layer GAT, respectively. 
+
+5.2 Comparative Performance 
+
+Tables 1 and 2 show that MKGR achieves the strongest overall performance in both cold-start settings. On Task 1, MKGR obtains the best score for all metrics on Dataset1 and for six of seven metrics on Dataset2. The only exception is SEN on Dataset2, where EResCNN reaches higher recall but has substantially lower PRE, F1, AUC, AUPR, and MCC. This pattern suggests that MKGR provides a more balanced decision boundary rather than only increasing positive predictions. Task 2 is more difficult because neither protein in the candidate pair has observed PPI edges during training. MKGR still obtains the best ACC, F1, AUC, AUPR, and MCC on both datasets. The gains are especially clear for AUC, AUPR, and MCC, which are sensitive to ranking quality and balanced binary prediction. These results support the central design of MKGR: sequence information supplies intrinsic protein features, biomedical knowledge graphs provide external relational context, and gated fusion adjusts the use of each modality for the candidate pair. 5MKGR for Cold-Start PPI Prediction                                                                                                                    
+
+> Dataset Metric TAGPPI HNSPPI EResCNN BaPPI KGF HEENN ESM2-AMP MKGR Dataset1 Acc 54 .73 ±2.56 50 .22 ±1.31 52 .75 ±1.89 57 .48 ±2.28 53 .33 ±3.63 53 .41 ±3.35 59 .23 ±1.60 74 .40 ±1.85
+> Sen 46 .04 ±18 .44 50 .25 ±1.87 8.18 ±1.61 59 .91 ±6.33 16 .48 ±15 .22 18 .36 ±6.86 79 .36 ±9.69 68 .47 ±7.83
+> Pre 56 .94 ±7.35 49 .73 ±2.63 79 .16 ±5.12 57 .24 ±5.00 53 .97 ±5.44 60 .46 ±5.24 56 .24 ±2.98 77 .43 ±3.79
+> F1 49 .47 ±7.58 49 .92 ±1.05 14 .78 ±2.69 58 .22 ±3.12 22 .86 ±17 .60 27 .46 ±7.96 65 .59 ±0.36 72 .34 ±3.75
+> Auc 57 .60 ±3.31 50 .53 ±1.91 63 .56 ±2.54 59 .23 ±2.73 52 .59 ±5.20 56 .07 ±2.85 64 .14 ±2.55 82 .15 ±2.75
+> Aupr 57 .43 ±5.17 50 .07 ±3.75 63 .82 ±2.87 52 .24 ±10 .26 49 .28 ±1.10 54 .51 ±1.45 59 .47 ±13 .40 82 .00 ±2.61
+> Mcc 10 .90 ±4.93 0.53 ±2.60 13 .54 ±1.89 14 .56 ±4.74 2.86 ±3.92 8.36 ±4.14 20 .44 ±2.82 48 .85 ±3.59
+> Dataset2 Acc 59 .05 ±3.03 51 .47 ±0.54 54 .84 ±0.90 59 .29 ±2.15 53 .39 ±1.03 55 .79 ±0.71 58 .29 ±2.00 79 .56 ±1.85
+> Sen 53 .77 ±8.78 51 .48 ±0.69 83 .79 ±2.34 51 .67 ±2.46 49 .47 ±12 .44 15 .11 ±4.90 66 .76 ±9.90 67 .53 ±4.01
+> Pre 60 .54 ±2.91 51 .28 ±1.78 52 .96 ±1.39 40 .11 ±0.86 52 .86 ±2.44 86 .21 ±4.94 55 .53 ±3.18 88 .78 ±1.11
+> F1 56 .62 ±5.46 51 .37 ±0.95 64 .87 ±0.83 45 .15 ±1.44 50 .74 ±7.84 25 .40 ±6.84 60 .13 ±2.29 76 .65 ±2.42
+> Auc 62 .74 ±4.74 52 .66 ±0.67 54 .69 ±0.83 58 .14 ±1.72 53 .28 ±1.95 69 .29 ±1.34 60 .82 ±1.82 89 .09 ±1.57
+> Aupr 61 .31 ±4.07 52 .42 ±1.14 52 .89 ±1.31 36 .74 ±4.08 52 .19 ±3.42 70 .66 ±1.24 54 .76 ±10 .08 89 .15 ±1.34
+> Mcc 18 .35 ±5.87 2.97 ±1.09 12 .19 ±2.44 13 .84 ±3.47 6.21 ±2.29 21 .74 ±1.92 15 .19 ±2.64 60 .90 ±2.74
+
+Table 2: Performance comparison on Task 2, where both proteins in each test pair are novel proteins. 
+
+# 6 Conclusion 
+
+This paper presented MKGR, a multimodal sequence-graph framework for cold-start PPI prediction. MKGR combines region-aware sequence representation, modality-specific graph attention encoders, bridge reconstruction, and pair-level gated fusion. Experiments on two datasets under novel-old and novel-novel cold-start settings show consistent improvements over representative PPI prediction baselines. Future work will extend MKGR to additional biomedical modalities and evaluate its transferability across species and disease-specific interaction networks. 
+
+# References 
+
+[1] Bosheng Song, Xiaoyan Luo, Xiaoli Luo, Yuansheng Liu, Zhangming Niu, and Xiangxiang Zeng. Learning spatial structures of proteins improves protein–protein interaction prediction. Briefings in Bioinformatics , 23(2):bbab558, 2022. [2] Shijie Xie, Xiaojun Xie, Xin Zhao, Fei Liu, Yiming Wang, Jihui Ping, and Zhiwei Ji. Hnsppi: a hybrid computational model combing network and sequence information for predicting protein–protein interaction. 
+
+Briefings in Bioinformatics , 24(5):bbad261, 2023. [3] Hongli Gao, Cheng Chen, Shuangyi Li, Congjing Wang, Weifeng Zhou, and Bin Yu. Prediction of protein-protein interactions based on ensemble residual convolutional neural network. Computers in Biology and Medicine ,152:106471, 2023. [4] Tao Tang, Tianyang Li, Weizhuo Li, Xiaofeng Cao, Yuansheng Liu, and Xiangxiang Zeng. Anti-symmetric framework for balanced learning of protein–protein interactions. Bioinformatics , 40(10):btae603, 2024. [5] Muhao Chen, Chelsea J.-T. Ju, Guangyu Zhou, Xiangnan Chen, Tianran Zhang, Kai-Wei Chang, Carlo Zaniolo, and Wei Wang. Multifaceted protein-protein interaction prediction based on siamese residual rcnn. Bioinformatics ,35(14):i305–i314, 2019. [6] Samuel Sledzieski, Rohit Singh, Lenore Cowen, and Bonnie Berger. D-script translates genome to phenome with sequence-based, structure-aware, genome-scale predictions of protein-protein interactions. Cell Systems ,12(10):969–982.e6, 2021. [7] The UniProt Consortium. Uniprot: the universal protein knowledgebase in 2021. Nucleic Acids Research ,49(D1):D480–D489, 2021. [8] Alexander Rives, Joshua Meier, Tom Sercu, Siddharth Goyal, Zeming Lin, Jason Liu, Demi Guo, Myle Ott, C. Lawrence Zitnick, Jerry Ma, and Rob Fergus. Biological structure and function emerge from scaling unsupervised learning to 250 million protein sequences. Proceedings of the National Academy of Sciences ,118(15):e2016239118, 2021. [9] Zeming Lin, Halil Akin, Roshan Rao, Brian Hie, Zhongkai Zhu, Wenting Lu, Nikita Smetanin, Robert Verkuil, Ori Kabeli, Yaniv Shmueli, et al. Evolutionary-scale prediction of atomic-level protein structure with a language model. Science , 379(6637):1123–1130, 2023. [10] John Jumper, Richard Evans, Alexander Pritzel, Tim Green, Michael Figurnov, Olaf Ronneberger, Kathryn Tunyasuvunakool, Russ Bates, Augustin Zidek, Anna Potapenko, et al. Highly accurate protein structure prediction with alphafold. Nature , 596(7873):583–589, 2021. 6MKGR for Cold-Start PPI Prediction [11] Thomas N. Kipf and Max Welling. Semi-supervised classification with graph convolutional networks. In 
+
+International Conference on Learning Representations , 2017. [12] William L. Hamilton, Rex Ying, and Jure Leskovec. Inductive representation learning on large graphs. In Advances in Neural Information Processing Systems , pages 1024–1034, 2017. [13] Petar Velickovic, Guillem Cucurull, Arantxa Casanova, Adriana Romero, Pietro Lio, and Yoshua Bengio. Graph attention networks. In International Conference on Learning Representations , 2018. [14] Keyulu Xu, Weihua Hu, Jure Leskovec, and Stefanie Jegelka. How powerful are graph neural networks? In 
+
+International Conference on Learning Representations , 2019. [15] Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta, and Jure Leskovec. Open graph benchmark: Datasets for machine learning on graphs. In Advances in Neural Information Processing Systems , volume 33, pages 22118–22133, 2020. [16] Damian Szklarczyk, Annika L. Gable, David Lyon, Alexander Junge, Stefan Wyder, Jaime Huerta-Cepas, Milan Simonovic, Nadezhda T. Doncheva, John H. Morris, Peer Bork, et al. String v11: protein-protein association networks with increased coverage, supporting functional discovery in genome-wide experimental datasets. Nucleic Acids Research , 47(D1):D607–D613, 2019. [17] David S. Wishart, Yannick D. Feunang, An C. Guo, Elvis J. Lo, Ana Marcu, Jason R. Grant, Tanvir Sajed, Daniel Johnson, Carin Li, Zinat Sayeeda, et al. Drugbank 5.0: a major update to the drugbank database for 2018. Nucleic Acids Research , 46(D1):D1074–D1082, 2018. [18] Allan Peter Davis, Thomas C. Wiegers, Robin J. Johnson, Daniela Sciaky, Jolene Wiegers, and Carolyn J. Mattingly. Comparative toxicogenomics database (ctd): update 2021. Nucleic Acids Research , 49(D1):D1138–D1143, 2021. [19] Hsi-Yuan Huang, Yu-Chen-Da Lin, Jing Li, Kai-Yao Huang, Sirjana Shrestha, Hsin-Chang Hong, Yi Tang, Yu-Gang Chen, Chun-Nan Jin, Yang Yu, et al. mirtarbase 2020: updates to the experimentally validated microrna-target interaction database. Nucleic Acids Research , 48(D1):D148–D154, 2020. [20] Hongqiang Zhao, Jing Shi, Yijie Zhang, Aimei Xie, Liang Yu, Chunquan Zhang, Jianjun Lei, Huixiao Xu, Zhiguang Leng, Tianqi Li, et al. Lnctard: a manually-curated database of experimentally-supported functional lncrna-target regulations in human diseases. Nucleic Acids Research , 48(D1):D118–D126, 2020. [21] Sandra Orchard, Mais Ammari, Bruno Aranda, Lionel Breuza, Leonardo Briganti, Fiona Broackes-Carter, Nancy H. Campbell, Gayatri Chavali, Carol Chen, Noemi del Toro, et al. The mintact project–intact as a common curation platform for 11 molecular interaction databases. Nucleic Acids Research , 42(D1):D358–D363, 2014. [22] The Gene Ontology Consortium. The gene ontology resource: enriching a gold mine. Nucleic Acids Research ,49(D1):D325–D334, 2021. [23] Daniel Scott Himmelstein, Antoine Lizee, Christine Hessler, Leo Brueggeman, Sabrina L. Chen, Dexter Hadley, Ari Green, Pouya Khankhanian, and Sergio E. Baranzini. Systematic integration of biomedical knowledge prioritizes drugs for repurposing. eLife , 6:e26726, 2017. [24] Payal Chandak, Kexin Huang, and Marinka Zitnik. A knowledge graph to interpret clinical proteomics data. 
+
+Nature Biotechnology , 41:754–764, 2023. [25] Antoine Bordes, Nicolas Usunier, Alberto Garcia-Duran, Jason Weston, and Oksana Yakhnenko. Translating embeddings for modeling multi-relational data. In Advances in Neural Information Processing Systems , pages 2787–2795, 2013. [26] Michael Schlichtkrull, Thomas N. Kipf, Peter Bloem, Rianne van den Berg, Ivan Titov, and Max Welling. Modeling relational data with graph convolutional networks. In The Semantic Web , pages 593–607. Springer, 2018. [27] Marinka Zitnik, Monica Agrawal, and Jure Leskovec. Modeling polypharmacy side effects with graph convolu-tional networks. Bioinformatics , 34(13):i457–i466, 2018. [28] Jie Yang, Yapeng Li, Guoyin Wang, Zhong Chen, and Di Wu. An end-to-end knowledge graph fused graph neural network for accurate protein-protein interactions prediction. IEEE/ACM Transactions on Computational Biology and Bioinformatics , 21(6):2518–2530, 2024. [29] Jie Yang, Xijie Lan, Guoyin Wang, Zhong Chen, Yuwen Chen, and Di Wu. A hybrid ensemble end-to-end neural network for accurate protein-protein interactions prediction. IEEE Transactions on Computational Biology and Bioinformatics , 22(6):2540–2553, 2025. [30] Di Wu, Wu Sun, Yi He, Zhong Chen, and Xin Luo. Mkg-fenn: A multimodal knowledge graph fused end-to-end neural network for accurate drug-drug interaction prediction. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 38, pages 10216–10224, 2024. 7MKGR for Cold-Start PPI Prediction [31] Chengjun Yu, Di Wu, Yi He, Jia Chen, and Xin Luo. Federated latent factor learning for privacy-preserving spatio-temporal signal recovery. In WWW , pages 2905–2916, 2026. [32] Di Wu, Xin Luo, Mingsheng Shang, Yi He, Guoyin Wang, and Xindong Wu. A data-characteristic-aware latent factor model for web service qos prediction. IEEE Transactions on Knowledge and Data Engineering ,34(6):2525–2538, 2022. [33] Jia Chen, Renfang Wang, Di Wu, and Xin Luo. A differential evolution-enhanced position-transitional approach to latent factor analysis. IEEE Trans. Emerg. Top. Comput. Intell. , 7(2):389–401, 2023. [34] Ruiyang Xu, Di Wu, and Xin Luo. Recursion-and-fuzziness reinforced online sparse streaming feature selection. 
+
+IEEE Trans. Fuzzy Syst. , 33(8):2574–2586, 2025. [35] Cheng Liang, Di Wu, Yi He, Teng Huang, Zhong Chen, and Xin Luo. Mma: Multi-metric-autoencoder for analyzing high-dimensional and incomplete data. In ECML/PKDD (5) , pages 3–19, 2023. [36] Ruiyang Xu, Di Wu, Renfang Wang, and Xin Luo. A highly-accurate three-way decision-incorporated online sparse streaming features selection model. IEEE Trans. Syst. Man Cybern. Syst. , 55(6):4258–4272, 2025. [37] Xin Luo, Ye Yuan, and Di Wu. Adaptive regularization-incorporated latent factor analysis. In ICKG , pages 481–488, 2020. [38] Xin Luo, Mengchu Zhou, Shuai Li, Di Wu, Zhigang Liu, and Mingsheng Shang. Algorithms of unconstrained non-negative latent factor analysis for recommender systems. IEEE Trans. Big Data , 7(1):227–240, 2021. [39] Ye Yuan, Xin Luo, Mingsheng Shang, and Di Wu. A generalized and fast-converging non-negative latent factor model for predicting user preferences in recommender systems. In WWW , pages 498–507, 2020. [40] Wenqiang Li, Mingwei Lin, Xiuqin Xu, Ling Lin, Zeshui Xu, and Xin Luo. Neural nonnegative latent factorization of tensors model with acceleration and unconstraint. IEEE Trans. Syst. Man Cybern. Syst. , 56(1):164–178, 2026. [41] Xiuqin Xu, Mingwei Lin, Zeshui Xu, and Xin Luo. A sampling-neighborhood-regularized latent factorization of tensor for dynamic qos estimation. IEEE Trans. Netw. Serv. Manag. , 23:1707–1722, 2026. [42] Ruiyang Xu, Di Wu, and Xin Luo. Online sparse streaming feature selection via decision risk. In SMC , pages 4190–4195, 2023. [43] Di Wu, Xin Luo, Yi He, and MengChu Zhou. A prediction-sampling-based multilayer-structured latent factor model for accurate representation to high-dimensional and sparse data. IEEE Transactions on Neural Networks and Learning Systems , 35(3):3845–3858, 2024. [44] Liping Zhang, Di Wu, and Xin Luo. An error correction mid-term electricity load forecasting model based on seasonal decomposition. In SMC , pages 2415–2420, 2023. [45] Di Wu, Peng Zhang, Yi He, and Xin Luo. A double-space and double-norm ensembled latent factor model for highly accurate web service qos prediction. IEEE Transactions on Services Computing , 16(2):802–814, 2023. [46] Yaping He, Hao Wu, and Xin Luo. Adaptive tucker decomposition-based progressive model compression for convolutional neural networks. Expert Syst. Appl. , 308:131153, 2026. [47] Yaping He and Xin Luo. Tensor low-rank orthogonal compression for convolutional neural networks. IEEE CAA J. Autom. Sinica , 13(1):227–229, 2026. [48] Peng Tang and Xin Luo. Neural tucker factorization. IEEE CAA J. Autom. Sinica , 12(2):475–477, 2025. [49] Yikai Hou, Peng Tang, and Xin Luo. Multi-aspect self-attending neural tucker factorization for spatiotemporal representation learning. IEEE CAA J. Autom. Sinica , 13(4):986–988, 2026. [50] Peng Tang, Yikai Hou, and Xin Luo. Mpsant: A novel multi-projection self-attending neural tucker factorization model for high-dimensional and incomplete data representation learning. Inf. Fusion , 135:104449, 2026. [51] Longlong Lin and Xin Luo. Dual channel graph convolutional networks via personalized pagerank. IEEE CAA J. Autom. Sinica , 13(1):221–223, 2026. [52] Tiantian He, Zhixuan Duan, and Xin Luo. Modularized graph convolutional network. IEEE CAA J. Autom. Sinica ,13(3):737–739, 2026. [53] Ling Wang, Ye Yuan, and Xin Luo. Advanced high-order graph convolutional networks with assorted time-frequency transforms. IEEE CAA J. Autom. Sinica , 13(2):394–408, 2026. [54] Di Wu, Yi He, and Xin Luo. A graph-incorporated latent factor analysis model for high-dimensional and sparse data. IEEE Transactions on Emerging Topics in Computing , 11(4):907–917, 2023. [55] Ling Wang, Ye Yuan, and Xin Luo. Graph tensor convolutional network. IEEE Trans. Syst. Man Cybern. Syst. ,56(5):3008–3024, 2026. 8MKGR for Cold-Start PPI Prediction [56] Di Wu, Peng Zhang, Yi He, and Xin Luo. Mmlf: multi-metric latent feature analysis for high-dimensional and incomplete data. IEEE Transactions on Services Computing , 17(2):575–588, 2024. [57] Yaping He, Hao Wu, Weibo Liu, and Xin Luo. A survey of latent factorization of tensor-based model compression: Algorithms, toolboxes and future directions. Neurocomputing , 682:133455, 2026. [58] Xin Liao, Hao Wu, and Xin Luo. A novel tensor causal convolution network model for highly-accurate representa-tion to spatio-temporal data. IEEE Trans Autom. Sci. Eng. , 22:19525–19537, 2025. [59] Minzhi Chen, Li Tao, Jungang Lou, and Xin Luo. Latent-factorization-of-tensors-incorporated battery cycle life prediction. IEEE CAA J. Autom. Sinica , 12(3):633–635, 2025. [60] Libin Lan, Hongxing Li, Zunhui Xia, Juan Zhou, Xiaofei Zhu, Yongmei Li, Eugene Yu-Dong Zhang, and Xin Luo. Cm-cgns: Cross-modal clustering-guided negative sampling for self-supervised joint learning from medical images and reports. Expert Syst. Appl. , 325:132577, 2026. [61] Jianping Gou, Kaijie Chen, Cheng Chen, Weihua Ou, Xin Luo, and Zhang Yi. Layer-wise correlation and attention discrepancy distillation for semantic segmentation. Pattern Recognit. , 172:112438, 2026. [62] Jun Liu, Xiang Li, Mingwei Lin, and Xin Luo. A scalable multichannel sentiment analysis model with enhanced semantic understanding and redundancy reduction. IEEE Trans. Comput. Soc. Syst. , 13(2):1513–1528, 2026. [63] Xun Deng, Pengwei Hu, Thomas Herget, Feng Tan, Xiaobo Zhu, Jun Zhang, Yuan Huang, Lun Hu, Zhuhong You, and Xin Luo. Fuzzy mixture-of-experts aggregation for organoid identification with multiscale state space features. IEEE Trans. Fuzzy Syst. , 34(1):324–335, 2026. [64] Longlong Lin, Quanao Li, Miao Qiao, Zeli Wang, Jin Zhao, Rong-Hua Li, Xin Luo, and Tao Jia. Ncsac: Effective neural community search via attribute-augmented conductance. IEEE Trans. Knowl. Data Eng. , 38(2):1221–1235, 2026. [65] Weiyi Yang, Shuai Li, and Xin Luo. An intelligent optimization-based residual negative magnitude shaping scheme for vibration control. IEEE Trans. Ind. Electron. , 73(2):3349–3360, 2026. [66] Wen Qin, Yuting Ding, and Xin Luo. A robust approach to electricity theft detection via tensor representation-driven contrastive distillation. IEEE Trans. Ind. Informatics , 22(5):4561–4570, 2026. [67] Chentao Li, Pan Huang, Harry Qin, and Xin Luo. Knowledge-driven multiple instance learning with hierarchi-cal cluster-incorporated aware filtering for larynx pathological grading. IEEE J. Biomed. Health Informatics ,30(4):2973–2985, 2026. [68] Chao Lyu, Ziwen Ma, Xin Luo, and Yuhui Shi. Dynamic stochastic reorientation particle swarm optimization for adaptive latent factor analysis in high-dimensional sparse matrices. IEEE Trans. Knowl. Data Eng. , 38(1):222–234, 2026. [69] Chao Lyu, Jingna Cheng, Xin Luo, and Yuhui Shi. Genetic algorithm-based two-step optimization for precise latent factor analysis. IEEE Trans. Neural Networks Learn. Syst. , 37(5):2294–2306, 2026. [70] Jianping Gou, Youhui Cheng, Benteng Ma, Lan Du, Xin Luo, and Zhang Yi. Multi-scale collaborative distillation graph neural networks for session-based recommendation. IEEE Trans. Serv. Comput. , 19(1):504–517, 2026. [71] Ningning Han, Siyang Lu, Zaichao Lin, Bin Li, Nan Wang, and Xin Luo. Tracehg: An unsupervised dual-view framework for microservice anomaly detection. IEEE Trans. Serv. Comput. , 19(2):1633–1646, 2026. [72] Yafang Wei, Pengwei Hu, Xun Deng, Feng Tan, Thomas Herget, Mei Gao, Lun Hu, and Xin Luo. Clorg: A contrastive learning-based framework for morphological representation and classification of organoids. Array ,27:100446, 2025. [73] Yantong Qiao, Lun Hu, Jun Zhang, Pengwei Hu, and Xin Luo. Identifying novel therapeutic targets of natural compounds in traditional chinese medicine herbs with hypergraph representation learning. Briefings Bioinform. ,26(Supplement_1), 2025. [74] Xin Liao, Khoi Hoang, and Xin Luo. Local search-based anytime algorithms for continuous distributed constraint optimization problems. IEEE CAA J. Autom. Sinica , 12(1):288–290, 2025. [75] Zhenzhen Luo, Xiaolu Jin, Yong Luo, Qiangqiang Zhou, and Xin Luo. Analysis of students’ positive emotion and smile intensity using sequence-relative key-frame labeling and deep-asymmetric convolutional neural network. 
+
+IEEE CAA J. Autom. Sinica , 12(4):806–820, 2025. [76] Ye Yuan, Siyang Lu, and Xin Luo. A proportional integral controller-enhanced non-negative latent factor analysis model. IEEE CAA J. Autom. Sinica , 12(6):1246–1259, 2025. [77] Tinghui Chen, Weiyi Yang, Shuai Li, and Xin Luo. Data-driven calibration of industrial robots: A comprehensive survey. IEEE CAA J. Autom. Sinica , 12(8):1544–1567, 2025. 9MKGR for Cold-Start PPI Prediction [78] Mingwei Lin, Jiaqi Liu, Hong Chen, Xiuqin Xu, Xin Luo, and Zeshui Xu. A 3d convolution-incorporated dimension preserved decomposition model for traffic data prediction. IEEE Trans. Intell. Transp. Syst. , 26(1):673– 690, 2025. [79] Hengshuo Yang, Mingwei Lin, Hong Chen, Xin Luo, and Zeshui Xu. Latent factor analysis model with temporal regularized constraint for road traffic data imputation. IEEE Trans. Intell. Transp. Syst. , 26(1):724–741, 2025. [80] Bo-Wei Zhao, Xiao-Rui Su, Yue Yang, Dong-Xu Li, Guo-Dong Li, Peng-Wei Hu, Zhu-Hong You, Xin Luo, and Lun Hu. Regulation-aware graph learning for drug repositioning over heterogeneous biological network. Inf. Sci. ,686:121360, 2025. [81] Pan Huang and Xin Luo. Fdts: A feature disentangled transformer for interpretable squamous cell carcinoma grading. IEEE CAA J. Autom. Sinica , 12(11):2365–2367, 2025. [82] Zhenlin Hu, Zhizhi Peng, Zhen Bi, Qing Shen, Zhenfang Liu, Jungang Lou, and Xin Luo. Advancing healthcare with large language models: Techniques and application. IEEE CAA J. Autom. Sinica , 12(12):2371–2398, 2025. [83] Qicong Hu, Hao Wu, and Xin Luo. A comprehensive review of parallel optimization algorithms for high-dimensional and incomplete matrix factorization. IEEE CAA J. Autom. Sinica , 12(12):2399–2426, 2025. [84] Di Wu, Xin Luo, Mingsheng Shang, Yi He, Guoyin Wang, and MengChu Zhou. A deep latent factor model for high-dimensional and sparse matrices in recommender systems. IEEE Transactions on Systems, Man, and Cybernetics: Systems , 51(7):4285–4296, 2021. [85] Jiufang Chen, Xin Luo, Ye Yuan, and Zidong Wang. Enhancing graph convolutional networks with an efficient k-hop neighborhood approach. Inf. Fusion , 124:103297, 2025. [86] Zhibin Li, Xun Deng, Tinghui Chen, Yuhang Yang, Linlin Chen, Xiwen Yang, Zhenzhen Hu, Lun Hu, Pengwei Hu, Shuai Li, and Xin Luo. Searching for an accurate robot calibration via improved levenberg-marquardt and radial basis function system. J. Field Robotics , 42(6):2691–2700, 2025. [87] Di Wu, Qiang He, Xin Luo, Mingsheng Shang, Yi He, and Guoyin Wang. A posterior-neighborhood-regularized latent factor model for highly accurate web service qos prediction. IEEE Transactions on Services Computing ,15(2):793–805, 2022. [88] Jinli Li, Ye Yuan, and Xin Luo. Learning error refinement in stochastic gradient descent-based latent factor analysis via diversified pid controllers. IEEE Trans. Emerg. Top. Comput. Intell. , 9(5):3582–3597, 2025. [89] Di Wu, Shihui Li, Yi He, Xin Luo, and Xinbo Gao. Non-gradient hash factor learning for high-dimensional and incomplete data representation learning. IEEE Transactions on Pattern Analysis and Machine Intelligence ,48(5):5811–5826, 2026. [90] Yawen Sun, Rui Wang, Zeyu Luo, Lejia Tan, Junhao Liu, Ruimeng Li, Dongqing Wei, and Yu-Juan Zhang. Esm2_amp: an interpretable framework for protein–protein interactions prediction and biological mechanism discovery. Briefings in Bioinformatics , 26(4):bbaf434, 2025. 10
