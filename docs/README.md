@@ -6,28 +6,24 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-03
-- 运行时间：2026-07-03 21:46:38 UTC
+- 最新运行日期：2026-07-04
+- 运行时间：2026-07-04 20:57:57 UTC
 - 运行状态：成功
-- 本次总论文数：2
-- 精读区：1
+- 本次总论文数：1
+- 精读区：0
 - 速读区：1
 
 ### 今日简报（AI）
-今日精读多模态知识图谱预测冷启动蛋白质相互作用（评分8.0），速读集成LLM与专家策展的基因映射方法（评分6.0）。  
-最值得关注MKGR在冷启动PPI预测上的创新，以及语义检索+LLM精炼的AOP基因映射流程。  
-建议重点了解多模态知识图谱在生物信息学中的应用，以及如何将LLM落地到结构化知识构建中。
-- 详情：[/202607/03/README](/202607/03/README)
+今日阅读1篇速读论文，关注物理交互中的机制发现。值得关注的方向：通过统计模式揭示物理交互的潜在机制。建议关注语言模型如何从交互数据中提取规律。
+- 详情：[/202607/04/README](/202607/04/README)
 
 ### 精读区论文标签
-1. [MKGR: Multimodal Knowledge-Graph Representation Learning for Cold-Start Protein-Protein Interaction Prediction](/202607/03/2607.01627v1-mkgr-multimodal-knowledge-graph-representation-learning-for-cold-start-protein-protein-interaction-prediction)  
-   标签：评分：8.0/10、query:cold-ddi
-   evidence：使用多模态知识图谱进行冷启动相互作用预测
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Integrating Semantic Retrieval, LLM-based Refinement, and Structured Expert Curation for Scalable AOP Gene Mapping](/202607/03/biorxiv-10-64898-2026-06-25-734475-v1-integrating-semantic-retrieval-llm-based-refinement-and-structured-expert-curation-for-scalable-aop-gene-mapping)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：整合LLM细化和语义检索进行生物医学映射
+1. [An Interaction Language Model: Mechanism Discovery from Statistical Patterns of Physical Interactions](/202607/04/2606.30922v1-an-interaction-language-model-mechanism-discovery-from-statistical-patterns-of-physical-interactions)  
+   标签：评分：7.0/10、query:cold-ddi
+   evidence：交互语言模型可预测交互，适用于药物相互作用
 
 
 <div class="dpr-home-promo-card">

@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-04",
+  "date": "2026-07-04",
+  "generated_at": "2026-07-04T20:58:04",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/04/2606.30922v1-an-interaction-language-model-mechanism-discovery-from-statistical-patterns-of-physical-interactions",
+      "section": "quick",
+      "title_en": "An Interaction Language Model: Mechanism Discovery from Statistical Patterns of Physical Interactions",
+      "authors": "Triparna Ganguly, Hanqi Jiang, Xinliang Li, Yi Pan, Junhao Chen, Miyuki Karunathilaka, Tianming Liu, Yohannes Abate",
+      "date": "2026-06-29",
+      "pdf": "https://arxiv.org/pdf/2606.30922v1",
+      "score": "7.0",
+      "evidence": "交互语言模型可预测交互，适用于药物相互作用",
+      "tldr": "物理、化学、生物系统中的交互模式可视为一种可学习的语言。本文提出交互语言模型ILM，通过PhenoLink有向图和PhenoSeq序列模型学习统计依赖，推断交互路径并预测下一交互。应用于分子扩散，在172个查询测试中，ILM匹配零样本Claude Opus 4.7的分布内准确性，且能拒绝93.5%的无证据转换。该框架提供可审计的逐步骤支持，可扩展到分子、细胞等多组件系统。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Interactions among building blocks in physical, chemical, and biological systems follow structured patterns interpretable as a learnable language: just as language models learn which words tend to follow others, one can learn which physical phenomena follow others and under what conditions. We introduce an Interaction Language Model (ILM): a framework that treats interaction as a statistically structured, learnable language for design-to-function reasoning across fields. By learning statistical dependencies and ordering among components, ILMs infer interaction pathways, identify missing steps, and predict the next likely interaction. We demonstrate it through two complementary components, PhenoLink and PhenoSeq, applied to molecular diffusion, a ubiquitous mechanism for energy and particle transport. PhenoLink is a directed graph of interactions among diffusion-based events extracted from publications, where each edge aggregates paragraph-level evidence and carries a transition probability interpreted as an information cost. PhenoSeq complements this with a sequence model that proposes missing mechanistic steps under endpoint constraints. Together they form a generate-then-verify pipeline returning every explanation with a reproducible, per-step, corpus-grounded audit trail. Across four held-out suites of 172 queries, the pipeline matches a zero-shot Claude Opus 4.7 baseline on in-distribution accuracy, yet unlike the baseline, which fabricates a chain for every impossible query, it refuses up to 93.5% of transitions in corpus evidence by construction. ILM thus delivers what zero-shot generation structurally cannot: deterministic refusal of evidence-absent queries and auditable, per-step support. The framework extends to natural and engineered systems where function emerges from sequential and conditional interactions among molecules, cells, devices, or other components.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
