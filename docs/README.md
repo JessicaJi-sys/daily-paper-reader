@@ -6,24 +6,31 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-04
-- 运行时间：2026-07-04 20:57:57 UTC
+- 最新运行日期：2026-07-05
+- 运行时间：2026-07-05 21:15:43 UTC
 - 运行状态：成功
-- 本次总论文数：1
+- 本次总论文数：2
 - 精读区：0
-- 速读区：1
+- 速读区：2
 
 ### 今日简报（AI）
-今日阅读1篇速读论文，关注物理交互中的机制发现。值得关注的方向：通过统计模式揭示物理交互的潜在机制。建议关注语言模型如何从交互数据中提取规律。
-- 详情：[/202607/04/README](/202607/04/README)
+今日速读了两篇检索增强生成（RAG）相关论文，聚焦于基于Token共现图的效率优化与知识图谱多跳检索的查询激活方法。
+
+其中最值得关注的方向是：图结构在RAG中的应用，如利用token共现图简化检索流程，以及通过查询感知的扩散激活实现多跳知识推理。
+
+建议普通读者可进一步关注图增强检索如何平衡效率与准确性，并尝试将这类方法融入现有RAG系统以处理复杂查询。
+- 详情：[/202607/05/README](/202607/05/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [An Interaction Language Model: Mechanism Discovery from Statistical Patterns of Physical Interactions](/202607/04/2606.30922v1-an-interaction-language-model-mechanism-discovery-from-statistical-patterns-of-physical-interactions)  
-   标签：评分：7.0/10、query:cold-ddi
-   evidence：交互语言模型可预测交互，适用于药物相互作用
+1. [Efficient Retrieval-Augmented Generation via Token Co-occurrence Graphs](/202607/05/2606.30093v1-efficient-retrieval-augmented-generation-via-token-co-occurrence-graphs)  
+   标签：评分：6.0/10、query:cold-ddi
+   evidence：基于令牌共现知识图谱的图检索增强生成方法，可应用于药物相互作用预测
+2. [Query-Aware Spreading Activation for Multi-Hop Retrieval over Knowledge Graphs](/202607/05/2606.30133v1-query-aware-spreading-activation-for-multi-hop-retrieval-over-knowledge-graphs)  
+   标签：评分：6.0/10、query:cold-ddi
+   evidence：查询感知的知识图谱多跳检索方法，可应用于药物相互作用预测
 
 
 <div class="dpr-home-promo-card">
