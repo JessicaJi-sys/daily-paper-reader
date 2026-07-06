@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-06",
+  "date": "2026-07-06",
+  "generated_at": "2026-07-06T20:39:42",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/06/2606.30133v1-query-aware-spreading-activation-for-multi-hop-retrieval-over-knowledge-graphs",
+      "section": "quick",
+      "title_en": "Query-Aware Spreading Activation for Multi-Hop Retrieval over Knowledge Graphs",
+      "authors": "Illia Makarov, Mykola Glybovets",
+      "date": "2026-06-29",
+      "pdf": "https://arxiv.org/pdf/2606.30133v1",
+      "score": "6.0",
+      "evidence": "查询感知传播激活用于知识图谱多跳检索，可增强基于知识图谱的药物相互作用预测",
+      "tldr": "针对知识图谱多跳问答中检索增强生成在初始种子节点后变成查询盲目的问题，本文提出一种查询感知的传播激活方法。该方法在每一步用候选实体描述与问题的余弦相似度作为语义门控权重，并固定迭代次数，将整个检索过程封装为单个Cypher查询在Neo4j中执行，无需将图加载到内存。在MuSiQue数据集上，该方法精确匹配得分32.80，接近QAFD-RAG的33.50，且比HippoRAG高5.3 EM和3.4 F1。消融实验表明，语义门控带来了3.6至7.4点的F1提升，并将检索延迟降低了1.5至4.9倍。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Retrieval-augmented generation built on knowledge graphs (Graph RAG) outperforms flat passage retrieval on multi-hop question answering by leveraging graph structure. In most existing systems, however, the question only sets the seed nodes; the subsequent traversal becomes \"query-blind\", depending solely on the graph structure. The exception is QAFD-RAG, which implements query-aware traversal via a flow-diffusion solver with combined edge re-weighting. This architecture requires loading the full graph into Python memory and an iterative solver with a variable number of iterations complicating integration with the graph database. We propose a spreading-activation method that achieves the same query-aware traversal with a single per-step semantic gate: the step weight is the cosine similarity between the candidate entity's description and the question, and the number of iterations is fixed. The whole retrieval procedure - seed mapping, propagation, top-K selection and context assembly - is expressed as a single Cypher query executed in one round-trip to Neo4j; the graph never leaves the database. On MuSiQue our method matches QAFD-RAG by exact match (32.80 vs 33.50) and outperforms the strongest purely-structural baseline in our comparison, HippoRAG, by 5.3 EM and 3.4 F1; on 2WikiMultiHopQA HippoRAG and QAFD-RAG retain an advantage due to their phrase-node architectures. An ablation with the gate disabled confirms that the gate is the source of a simultaneous F1 gain of 3.6 to 7.4 points and a retrieval-latency reduction by a factor of 1.5 to 4.9.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

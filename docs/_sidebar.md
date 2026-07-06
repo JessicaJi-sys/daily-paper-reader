@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-07-06 <!--dpr-date:20260706-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/06/2606.30133v1-query-aware-spreading-activation-for-multi-hop-retrieval-over-knowledge-graphs" data-sidebar-item="{&quot;title&quot;: &quot;Query-Aware Spreading Activation for Multi-Hop Retrieval over Knowledge Graphs&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2606.30133v1-query-aware-spreading-activation-for-multi-hop-retrieval-over-knowledge-graphs&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;查询感知传播激活用于知识图谱多跳检索，可增强基于知识图谱的药物相互作用预测&quot;}">Query-Aware Spreading Activation for Multi-Hop Retrieval over Knowledge Graphs</a>
   * 2026-07-05 <!--dpr-date:20260705-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/05/2606.30093v1-efficient-retrieval-augmented-generation-via-token-co-occurrence-graphs" data-sidebar-item="{&quot;title&quot;: &quot;Efficient Retrieval-Augmented Generation via Token Co-occurrence Graphs&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2606.30093v1-efficient-retrieval-augmented-generation-via-token-co-occurrence-graphs&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;基于令牌共现知识图谱的图检索增强生成方法，可应用于药物相互作用预测&quot;}">Efficient Retrieval-Augmented Generation via Token Co-occurrence Graphs</a>
