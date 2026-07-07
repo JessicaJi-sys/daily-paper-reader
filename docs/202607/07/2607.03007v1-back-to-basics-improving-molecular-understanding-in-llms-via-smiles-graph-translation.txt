@@ -1,0 +1,587 @@
+Title: Back to Basics: Improving Molecular Understanding in LLMs via SMILES-Graph Translation
+
+URL Source: https://arxiv.org/pdf/2607.03007v1
+
+Published Time: Tue, 07 Jul 2026 00:42:22 GMT
+
+Number of Pages: 22
+
+Markdown Content:
+# Back to Basics: Improving Molecular Understanding in LLMs via SMILES–Graph Translation 
+
+Wenda Wang 
+
+Gaoling School of Artificial Intelligence Renmin University of China Beijing, China 
+
+wangwenda87@ruc.edu.cn 
+
+Jinjia Feng 
+
+Gaoling School of Artificial Intelligence Renmin University of China Beijing, China 
+
+jinjia_feng@ruc.edu.cn 
+
+Zhewei Wei 
+
+Gaoling School of Artificial Intelligence Renmin University of China Beijing, China 
+
+zhewei@ruc.edu.cn 
+
+Abstract 
+
+Recent advances in molecular large language models have led to strong performance on molecular understanding and generation tasks, yet these gains often come without reliable structural grounding. In particular, existing ap-proaches conflict with the chemistry principle that structure determines function: despite their downstream success, current molecular LLMs perform poorly on basic structure recognition, suggesting that they fail to capture molecular graphs from canonical SMILES. To remedy this, we propose MolBasic, a structure-first framework that strengthens structural compre-hension via SMILES–Graph translation. Mol-Basic is built around a multi-level structure perception benchmark, where bidirectional SMILES–Graph conversion serves as the core task to align sequential and topological repre-sentations. On top of this foundation, we em-ploy a progressive learning scheme with a stan-dardized Chain-of-Thought (CoT) to steer mod-els from structure acquisition toward higher-level molecular reasoning. Experiments show that MolBasic substantially improves struc-tural understanding and yields robust gains on downstream tasks, including property predic-tion and objective optimization, supporting our structure-first paradigm. 
+
+1 Introduction 
+
+Understanding molecular characteristics and prop-erties through structural analysis, and designing molecules for specific objectives, has long been a central focus of research in biochemistry. This effort is of fundamental importance for advancing drug mechanism studies and the design of novel drugs. With the continuous improvement of Large Language Models (LLMs) in learning and reason-ing, more studies are exploring how to leverage the domain knowledge embedded in these models for molecular understanding tasks. Compared to manual analysis, LLMs offer clear advantages in 
+
+Figure 1: Preliminary evaluation of generalist and molecular specialist LLMs on basic structure compre-hension tasks (atom counting and bond counting) us-ing a pilot dataset sampled from PubChem (Kim et al., 2023). Results reveal that current LLMs fail to capture fundamental graph structure information from SMILES. 
+
+terms of cost and efficiency, making them an ideal tool for this purpose. Therefore, developing an “AI chemist” capable of structural understanding and reasoning of molecular compounds is crucial. Generalist LLMs, such as GPT (Floridi and Chiriatti, 2020; OpenAI, 2023), Qwen (Bai et al., 2023), T5 (Raffel et al., 2020), InternLM (Team, 2023), Vicuna (Zheng et al., 2023), and Chat-GLM (GLM et al., 2024), acquire knowledge across diverse domains during pre-training and thus possess certain molecular understanding ca-pabilities. However, their knowledge is primar-ily derived from medical or biological texts re-lated to molecules, which grants them basic knowl-edge retrieval abilities, rather than genuine struc-tural comprehension. Of course, models with strong reasoning and mathematical capabilities, such as GPT-5 (Singh et al., 2025), can achieve molecular understanding through tool invocation and mathematical computation. Molecular spe-cialist LLMs, on the other hand, are the main-stream approach for LLM-based molecular under-standing. Existing research predominantly focuses on two directions: (i) designing molecular repre-sentations that facilitate model comprehension— for instance, HIGHT (Chen et al., 2024a) em-ploys multi-level molecular representations at atom 1
+
+> arXiv:2607.03007v1 [cs.LG] 3 Jul 2026 Figure 2: Comparison between the previous paradigm and our MolBasic framework for molecular understanding.
+
+and motif levels to highlight subgraph-level fea-tures, while InstructMol (Cao et al., 2025) and MoMu (Su et al., 2022) use graph encoders to embed molecular graphs into input tokens; (ii) designing domain-specific post-training tasks on base models—for instance, MolT5 (Edwards et al., 2022) replaces corrupted spans between SMILES and text, Atomas (Zhang et al., 2025) and MoleculeSTM (Liu et al., 2023b) align SMILES-text token representations, while GIMLET (Zhao et al., 2023) and ChemLLM (Zhang et al., 2024) focus on chemical question answering. Current molecular LLMs appear to have achieved substantial progress, demonstrating strong performance on common molecular un-derstanding tasks including molecular captioning, property prediction, reaction prediction, and (condi-tional) molecular generation. However, our prelim-inary experiments (shown in Figure 1) reveal that both generalist and specialist models perform sur-prisingly poorly on fundamental structural percep-tion tasks, such as heavy atom counting and bond counting. Although prior SMILES parsing meth-ods (Jang et al., 2025; Hao et al., 2026) attempt to improve chemical understanding by learning lo-cal syntactic patterns or substructure-level features, they still fall short of establishing explicit equiv-alence between sequential SMILES and the com-plete 2D molecular graph. This indicates that cur-rent LLMs fail to capture the graph structure infor-mation underlying canonical SMILES (Weininger, 1988)—information that is crucial for subsequent molecular reasoning and represents the most natu-ral and direct cognition that human chemists have of molecules. These findings suggest that the cur-rent understanding paradigm of molecular LLMs contradicts the widely accepted principle in chem-istry: structure determines function . We argue that molecular LLMs should not learn high-level tasks immediately after simple pre-training on chemical texts, as this approach lacks logical interpretability. Instead, they should first focus on establishing a clear understanding of molecular structure before proceeding to downstream reasoning tasks. Building on the progress and problems identi-fied above, we propose MolBasic ( Basic Structure 
+
+Identification and Comprehension), a back-to-basics framework that grounds molecular under-standing in fundamental structure comprehension. With SMILES–Graph mutual conversion as the core task, MolBasic enables LLMs to establish equivalence between sequential and topological molecular representations, building a solid founda-tion for higher-level reasoning. Our contributions can be summarized as follows: • Structure-first Reasoning : We construct a multi-level Molecular Structure Compre-hension benchmark (MSC) comprising eight tasks, with SMILES–Graph mutual conver-sion as the core task, evaluating LLMs’ fun-damental 2D graph perception capabilities for reliable downstream reasoning. • Progressive Framework : We propose a stair-case reasoning framework that mirrors the cognitive process of human chemists, progres-sively advancing from structure to property to optimization. For each stage, we design Chain-of-Thought protocols combining pow-erful LLMs with expert knowledge to enhance structure-based reasoning capabilities. • Enhanced Reasoning : Through sufficient experiments across structural property pre-diction, molecular objective optimization, and few-shot bioactivity prediction tasks, we demonstrate the superior performance and 2practical applicability of our structure-first rea-soning and stepwise framework. Figure 2 illustrates the comparison between our paradigm and previous methods in molecular un-derstanding, emphasizing key distinctions. 
+
+2 Related Work 
+
+2.1 Molecular Understanding 
+
+Early approaches employed task-specific architec-tures such as GNNs (Kipf, 2016; Veliˇ ckovi´ c et al., 2017; Ying et al., 2021) for property prediction and sequence models (Sutskever et al., 2014; Ir-win et al., 2022) for molecular optimization. More recently, molecular LLMs have emerged that gen-eralize across tasks through chemical pretraining (Zeng et al., 2022; Zhao et al., 2023), instruction tuning (Fang et al., 2023; Zhang et al., 2024; Xian et al., 2025), or multimodal integration (Li et al., 2025). In contrast, our work focuses on post-training LLMs to enhance their structure-aware rea-soning abilities, strengthening the internal under-standing of molecular structure as a foundation for downstream reasoning, rather than aligning chemi-cal text or augmenting retrieval capabilities. 
+
+2.2 Reasoning Enhancement for LLMs 
+
+Chain-of-Thought (CoT) reasoning has evolved from a prompting technique (Wei et al., 2022; Ko-jima et al., 2022) to a core capability of advanced LLMs. OpenAI o1/o3 (Jaech et al., 2024) and DeepSeek-R1 (Guo et al., 2025) incorporate long-chain CoT during training, while GPT-5 (Singh et al., 2025) further integrates an intelligent router that automatically invokes deep reasoning for com-plex queries. Progressive learning, drawing from curriculum learning (Bengio et al., 2009), enhances reasoning by organizing training according to task dependencies and difficulty (Xu et al., 2020), prov-ing effective in mathematical problem solving (Lightman et al., 2023) and multi-hop reasoning (Press et al., 2023). In our work, we combine CoT of strong reasoning models with expert knowledge, proposing the staircase progressive learning frame-work, starting from basic tasks and following the reasoning process of human chemists. 
+
+3 Method 
+
+The complete workflow of MolBasic is illustrated in Figure 3. In Section 3.1, we introduce the structure comprehension benchmark designed to enable LLMs to understand molecular structures. Section 3.2 presents our staircase learning frame-work for molecular understanding. Section 3.3 de-scribes the design of reasoning Chain-of-Thought for molecular understanding tasks. Section 3.4 de-tails the comprehensive training strategies. 
+
+3.1 Multi-level Structure Comprehension Benchmark 
+
+Canonical SMILES serves as the primary input for molecular LLMs due to its text-based format that facilitates tokenization. However, most exist-ing models treat SMILES as plain text sequences, performing global semantic alignment with textual inputs, or at best, matching at the motif or substruc-ture level. For human chemists, the more critical information encoded in SMILES representations is the molecular graph structure. Therefore, to en-able LLMs to understand and analyze molecular structures more precisely rather than superficially, models must first learn the equivalence between canonical SMILES and 2D molecular topology, and be able to correctly articulate the details of this graph structure, such as node and edge information, which are fundamental to chemical reasoning. Based on this motivation, we construct a Multi-level Structure Comprehension QA benchmark (MSC ) to equip molecular LLMs with the ability to parse SMILES and understand the SMILES-graph equivalence. Our benchmark comprises eight tasks 
+
+Tstruct = {T1, T 2, · · · , T 8} organized across three levels. At the node level, models are required to identify the number of heavy atoms and the count of specific atom types. At the edge level, we assess whether models understand molecular connectivity by querying the total number of bonds and counts of specific bond types. At the graph level, molecu-lar formula conversion serves as a comprehensive evaluation of node and edge understanding, as mod-els must count each atom type and infer the number of hydrogen atoms based on heavy atom connectiv-ity to satisfy chemical valence rules. Substructure recognition is also essential, as functional groups often serve as the fundamental units of molecular function. Most importantly, we design bidirectional conversion tasks between canonical SMILES and textual graph adjacency lists, enabling LLMs to di-rectly learn the equivalence between molecular rep-resentations and 2D graph structures. We process the PubChemSTM dataset (Kim et al., 2023; Liu et al., 2023b) and obtain 185,286 valid molecules. Detailed dataset splits are described in Section 4.1. 3Figure 3: Overview of the MolBasic framework. Left: The staircase learning path progresses through three stages: (1) structure comprehension at node, edge, and graph levels using the MSC benchmark; (2) Structural Property Prediction deriving molecular properties from structural features; (3) Objective Molecular Optimization modifying molecules toward desired properties. Right: The two-stage training strategy for each task, where Stage 1 (Answer Learning) establishes correct output anchors, and Stage 2 (Reasoning Learning) incorporates Chain-of-Thought supervision distilled from strong reasoning models. 
+
+3.2 Staircase Learning Framework 
+
+To ensure that higher-level molecular reasoning is built upon reliable structural understanding, we or-ganize molecular tasks into a staircase learning framework that explicitly models their depen-dency relationships. 
+
+We view the natural logic of molecular under-standing as a DAG-structured reasoning process rooted in structure comprehension. Formally, let 
+
+G = ( V, E) denote a directed acyclic graph (DAG) representing the logical relationships among all tasks, where each node v ∈ V represents a molec-ular understanding task, and each directed edge 
+
+(vi, v j ) ∈ E indicates that task vj depends on the relevant knowledge and reasoning capabilities ac-quired from vi. The root node v0 corresponds to structure comprehension, serving as the foundation for all downstream reasoning. Let C denote the reasoning capability of the model. For any task v with prerequisite tasks Pa (v) = {u ∈ V | (u, v ) ∈ E} , the model first acquires capability CPa (v) by learning the prerequi-site tasks, then subsequently obtains new capability through learning task v as follows: 
+
+Cv = fv(CPa (v), Dv) (1) where fv denotes the learning process on task v,and Dv is the knowledge data for task v. For the root node, Cv0 = fv0 (C0, DCoT struct ) represents the fundamental capability of structure comprehension, where C0 is the initial capability of the base model prior to fine-tuning. In this work, we study linear task sequences 
+
+P = ( v0, v 1, ..., v K ) where (vk−1, v k) ∈ E , mean-ing that the reasoning knowledge required by K
+
+tasks exhibits a linear progressive relationship: 
+
+T0 ≺ T 1 ≺ · · · ≺ T k−1 ≺ T k ≺ · · · ≺ T K (2) The k-th task is learned by an LLM that has inte-grated the reasoning capabilities from the preced-ing k − 1 tasks. In this paper, we demonstrate the learning and reasoning process of our staircase learning frame-work through the path P : vstruct → vprop → vopt ,which chains together a series of representative molecular understanding tasks: 
+
+Cstruct = fstruct (C0, Dstruct )
+
+Cprop = fprop (Cstruct , Dprop )
+
+Copt = fopt (Cprop , Dopt )
+
+(3) 4This path aligns with the cognitive process of hu-man chemists and reflects the fundamental chem-istry principle that structure determines function .
+
+3.3 Chain-of-Thought Construction 
+
+To improve the accuracy and interpretability of molecular reasoning, we introduce explicit Chain-of-Thought supervision that constrains intermedi-ate structural analysis during training. In tradi-tional molecular understanding task training, mod-els typically learn only the mapping from input molecule S to final prediction a, i.e., optimizing the probability Pθ(a | S). Although models can directly learn input-to-output mappings, in com-plex tasks, training without explicit reasoning su-pervision leads to reduced model accuracy and lack of interpretability. Therefore, we enhance the knowledge QA dataset by introducing Chain-of-Thought (CoT) distilled from strong reasoning models. Specifically, we distill reasoning trajecto-ries from GPT-5 (Singh et al., 2025) to construct the CoT supervision. By incorporating the reasoning trajectory z as a supervisory signal, we extend the training objective to jointly model the conditional distribution over molecular representation, reasoning process, and results: 
+
+Pθ(a, z | S, q ) = Pθ(z | S, q )·Pθ(a | S, z, q ) (4) Compared to supervision through final answers alone, this approach effectively constrains the hy-pothesis space and reduces ambiguity in the reason-ing process, thereby improving reasoning accuracy and stability. Joint supervision ensures that the loss function considers not only the final output but also the prediction error of the reasoning process. We construct CoTs by distilling reasoning trajec-tories from strong reasoning models and applying manual review to standardize reasoning steps and remove erroneous trajectories. This ensures reli-able, reproducible reasoning. We highlight two key aspects of the resulting CoT design: (i) Deterministic Intermediate Results for Re-gression Tasks. For structure comprehension and property prediction, we design CoTs with veri-fiable intermediate results. For instance, atom counting explicitly parses SMILES into atoms and records counts before aggregation; property predic-tion first identifies functional groups and structural features, then derives values from these interme-diates. This makes each step deterministic and checkable against ground truth. (ii) Explicit Analysis and Modification Explana-tion for Optimization Tasks. For molecular opti-mization, the CoT follows an “analysis–strategy– verification” pipeline: it analyzes the original struc-ture and properties, identifies groups affecting the target property and proposes modifications, and ver-ifies the optimized molecule achieves the desired improvement. This encourages learning transfer-able modification principles rather than memoriz-ing specific edits. After constructing the molecular reasoning CoT as described above, we merge it into the answer and use DCoT  
+
+> v
+
+as shown in Equation (5) as the knowl-edge dataset for training: 
+
+ˆa = ( z, a ), DCoT  
+
+> v
+
+= {(Sj , (qj , ˆaj )) }Nv 
+
+> j=1
+
+(5) By augmenting training labels with Chain-of-Thought explanations from strong reasoning mod-els, we transform molecular reasoning from a black-box mapping into a structured prediction problem with explicit supervision. 
+
+3.4 Training Strategy 
+
+We present the multi-stage training of MolBa-sic based on LoRA fine-tuning. First, following the staircase learning framework proposed in Sec-tion 3.2, we sequentially train each task along the task path P : vstruct → vprop → vopt on a base model (Qwen3-8B (Yang et al., 2025) in this work). For training each individual task, we follow the easy-to-hard curriculum learning principle and di-vide the training into two stages. Stage 1 focuses on learning the answer a only, dedicated to domain knowledge acquisition. Stage 2 learns the complete response containing CoT, dedicated to refining rea-soning capabilities. This two-stage training first establishes correct answer anchors to constrain the reasoning process towards the correct direction, then forms standardized and formalized reasoning processes that further enhance accuracy and inter-pretability through explicit and verifiable interme-diate steps. Both stages employ LoRA-based next token pre-diction with cross-entropy loss as shown in Equa-tion (6) and (7) . The training algorithm of MolBa-sic is presented in Appendix A. 
+
+Lstage1 = −
+
+> |a|
+
+X
+
+> t=1
+
+log Pθ(at | S, q, a <t ) (6) 
+
+Lstage2 = −
+
+> |ˆa|
+
+X
+
+> t=1
+
+log Pθ(ˆ at | S, q, ˆa<t ) (7) 5Table 1: Performance comparison on multi-level structure comprehension benchmark. For MAE, lower is better ( ↓); for ACC, higher is better ( ↑). Best and second best results are highlighted.                                                                                                                               
+
+> Level Tasks Metrics Vicuna ChatGLM T5 Qwen3-8B InternLM3 MolT5 ChemLLM MolBasic Node Heavy Atom Counting MAE ↓28.804 28.228 33.535 11.893 19.754 35.04 6.696 1.223
+> ACC ↑1.21% 0.73% 0.22% 6.09% 4.75% 0.4% 14.81% 42.44%
+> Element-specific Counting MAE ↓8.511 9.127 9.882 2.982 3.902 9.833 3.763 0.339
+> ACC ↑11.49% 12.22% 0.13% 51.86% 40.98% 2.5% 42.1% 73.01%
+> Edge Total Bond Counting MAE ↓29.85 26.506 35.19 18.352 30.265 35.755 10.581 1.158
+> ACC ↑1.08% 1.86% 0.09% 3.07% 1.12% 0.4% 3.41% 49%
+> Specific Bond Counting MAE ↓9.8 10.557 10.227 7.674 8.105 9.287 36.67 0.383
+> ACC ↑22.58% 14.12% 2.81% 45.81% 26.34% 3.3% 5.76% 82.9%
+> Graph Formula Convert ACC ↑0% 0% 0% 0% 0% 0% 0% 44.04%
+> Substructure Recognition ACC ↑48.75% 46.03% 0.13% 72.67% 66.23% 19.8% 10.71% 98.14%
+> SMILES to Graph ACC ↑0% 0% 0% 0% 0% 0% 0.04% 94.65%
+> Graph to SMILES ACC ↑0% 0% 0% 0% 0% 0% 0% 85.66%
+
+4 Experiments 
+
+In this section, we present experimental results of MolBasic. We first describe training and evaluation details on our Multi-level structure comprehension (MSC) benchmark in Section 4.1. Then in Sec-tion 4.2, we demonstrate how the acquired struc-tural perception capabilities transfer to downstream molecular understanding tasks through progressive reasoning, including structural property prediction (Section 4.2.1), objective molecular optimization (Section 4.2.2), and few-shot transfer to bioactivity prediction tasks (Section E). Training parameters and training/inference costs for each stage are listed in Table 7 (Section B). 
+
+4.1 Structure Comprehension Datasets and Baselines: As introduced in Sec-tion 3.1, our MSC benchmark uses the PubChem-STM dataset reported by MoleculeSTM (Liu et al., 2023b), following the same preprocessing pipeline with raw data sourced from PubChem (Kim et al., 2023). In Stage 1, weights are assigned based on task importance, with higher weights given to the two SMILES-graph conversion tasks. In Stage 2, weights are adjusted according to Stage 1 perfor-mance, increasing weights for underperforming tasks. Detailed training set construction strategies for both stages are provided in Appendix B. For efficient and unbiased evaluation, we sample 2,316 instances from the full test set to construct a bench-mark that preserves the original distribution. We compare against mainstream general-purpose and molecular LLMs with similar parameter scales, in-cluding Qwen3-8B (Yang et al., 2025), InternLM3-8B (Team, 2023), T5-Large (Raffel et al., 2020), Vicuna-7B (Zheng et al., 2023), ChatGLM3-6B (GLM et al., 2024), MolT5-Large (Edwards et al., 2022), and ChemLLM-7B (Zhang et al., 2024). 
+
+Results: Table 1 presents the performance of various models on multi-level structure compre-hension tasks. MolBasic achieves substantial im-provements across all tasks, with the most striking gains on bidirectional SMILES-graph conversion— a fundamental yet previously overlooked capabil-ity where all existing LLMs universally fail with near-zero accuracy. Since the graph adjacency list format is uncommon, we provide a simple example in the instruction as an output template (applied fairly to all models). Conversion accuracy is ver-ified using RDKit (Landrum, 2013) by checking exact molecular match against the ground truth. 
+
+4.2 Downstream Molecular Understanding 
+
+After establishing structure comprehension, we evaluate MolBasic on representative high-level molecular tasks. Beyond the progressive rela-tionship in Section 3.2, task selection prioritizes structure-based reasoning over memorization or knowledge retrieval. We focus on property pre-diction and molecular optimization, which require structural analysis rather than text generation tasks. 
+
+4.2.1 Structural Property Prediction 
+
+Structural properties refer to molecular attributes determined by the molecular structure. They can be predicted by analyzing key atoms, bonds, and functional groups, including MW, LogP, TPSA, HBD, HBA, RB, and QED. The detailed definitions of these properties are provided in Appendix C. We fine-tune and evaluate our model on 100K molecules sampled from the PubChem dataset. 6Table 2: Results on structural property prediction. Best and second best results are highlighted among LLM-based methods. “–” indicates unreasonable or invalid outputs, implying failure in property prediction.                                                                                                                                                   
+
+> Method MW LogP TPSA HBD HBA RB QED
+> Pear. ↑MAE ↓Pear. ↑MAE ↓Pear. ↑MAE ↓Pear. ↑MAE ↓Pear. ↑MAE ↓Pear. ↑MAE ↓Pear. ↑MAE ↓
+> Chemception (CNN) 0.87 44.75 0.62 1.23 0.84 14.45 0.81 0.58 0.84 0.93 0.73 1.91 -0.004 0.40 Chemprop (GNN) 0.99 1.63 0.98 0.16 0.99 0.91 0.99 0.03 0.99 0.11 0.99 0.15 0.89 0.07 Qwen-VL-7B 0.78 58.07 0.14 1.48 0.19 82.83 -0.02 1.42 0.05 4.91 0.19 6.87 ––InternVL-v1.5-20B 0.59 83.60 0.04 2.37 0.29 28.73 0.03 2.24 0.22 2.41 0.04 4.82 0.003 0.40 LLaVA-v1.5-7B 0.36 115.70 -0.003 1.61 0.01 99.14 0.004 3.74 0.04 2.93 0.03 3.85 ––ChemVLM-8B 0.84 56.94 0.38 1.68 0.26 53.66 0.49 1.35 0.32 4.58 0.10 5.56 -0.003 0.37 ChemMLLM-7B 0.97 16.17 0.92 0.52 0.97 6.06 0.94 0.13 0.94 0.44 0.94 1.62 0.91 0.06 ChemMLLM-34B 0.98 11.57 0.93 0.43 0.98 3.54 0.96 0.11 0.96 0.26 0.97 0.75 0.93 0.05
+> MolBasic 0.996 13.98 0.97 0.28 0.99 2.71 0.99 0.05 0.99 0.16 0.98 0.36 0.94 0.06
+
+Baseline methods include task-specific deep learn-ing models based on traditional architectures (Chemception (Goh et al., 2017), ChemProp (Heid et al., 2023)), as well as representative (multi-modal) large language models, including Qwen-VL (Bai et al., 2025), InternVL (Chen et al., 2024b), LLaVA (Liu et al., 2023a), and ChemVLM (Li et al., 2025). Table 2 reports the prediction errors and Pearson correlation coefficients between the predicted values and ground-truth labels for struc-tural property prediction tasks. As shown in Table 2, MolBasic consistently achieves the best performance across almost all properties, significantly outperforming other LLM-based methods, while achieving performance com-parable to task-specific models. These results demonstrate that once an LLM is equipped with strong structure comprehension ability, it can pre-dict structure-related molecular properties more accurately and reliably. 
+
+4.2.2 Objective Molecular Optimization 
+
+Based on the model’s understanding of structural properties learned in the previous stage, we equip MolBasic with the ability to optimize molecu-lar structures toward a desired objective, such as improving drug-likeness or enhancing solubility. Specifically, we take the task of increasing LogP as a representative example, and use 175K molecules from the TDC dataset (Jin et al., 2018). For baseline methods, we include traditional sequence-based models, Seq2Seq (Sutskever et al., 2014) and ChemFormer (Irwin et al., 2022), as well as representative LLM-based approaches, incorpo-rating GPT-4o (OpenAI, 2024) for comparison. Ta-ble 3 reports the performance of our MolBasic on the molecular optimization task with LogP increase as the objective, compared to other methods. As shown in Table 3, MolBasic achieves the 
+
+Table 3: Performance comparison on molecular opti-mization. For all 3 metrics, higher is better ( ↑). Best 
+
+and second best results are highlighted among LLM-based methods.                            
+
+> Model Increased LogP ( ↑)Diversity ( ↑)Validity ( ↑)Seq2Seq 1.95 0.79 80.5% ChemFormer 3.03 0.85 100% Qwen-VL-7B 1.50 0.95 4.0% InternVL-v1.5-20B 0.77 0.90 48.0% LLaVA-v1.5-7B 1.72 0.96 37.5% GPT-4o 1.97 0.86 99.0% ChemVLM-8B 0.67 0.87 92.5% MolBasic 2.27 0.86 98.7%
+
+best LogP improvement among LLM-based mod-els while maintaining high validity and diversity. As the highest-level task in our stepwise reasoning framework, we present example responses with ex-planation for the optimization task in Appendix L, demonstrating the interpretability of our approach. 
+
+4.3 Ablation Study 
+
+In this section, we validate the key design choices of MolBasic through ablation experiments orga-nized around three questions: (i) whether structure comprehension serves as a necessary foundation for downstream tasks, (ii) whether the staircase learn-ing order itself drives performance gains beyond simply increasing training data, and (iii) what role Chain-of-Thought supervision plays in the frame-work. All results are consolidated in Table 4. 
+
+(a) Is structure comprehension a necessary foundation? A central claim of MolBasic is that structural perception acquired in the first stage pro-vides essential capabilities for all subsequent tasks. To test this, we construct two settings that progres-sively strip away prerequisite stages: w/o Struct ,which skips structure comprehension and directly trains the base model on property prediction fol-lowed by optimization, and Direct Opt , which 7Table 4: Ablation studies. We examine four ablation settings against the full MolBasic pipeline to isolate the contribution of each design choice. “Skipped” indicates that the corresponding task stage is bypassed under that setting and thus not evaluated.                                                                       
+
+> Setting Structure Comprehension Property Prediction (MAE ↓)Molecular Optimization
+> Atom MAE ↓
+> Atom ACC ↑
+> Bond MAE ↓
+> Bond ACC ↑
+> Form. ACC ↑MW LogP TPSA HBD HBA RB QED ∆LogP ↑Div. ↑Val. ↑
+> MolBasic 1.22 42.4 1.16 49.0 44.0 13.98 0.28 2.71 0.05 0.16 0.36 0.06 2.27 0.86 98.7%
+> (a) Is structure comprehension a necessary foundation?
+> w/o Struct Skipped 42.29 0.64 14.42 0.62 1.19 0.64 0.10 1.80 0.86 97.6% Direct Opt Skipped Skipped 1.41 0.85 94.2%
+> (b) Does the staircase ordering matter, beyond total data volume?
+> Mixed SFT Skipped 122.87 1.85 35.49 0.89 1.87 2.82 0.25 0.98 0.87 95.3%
+> (c) What role does CoT supervision play?
+> w/o CoT 1.51 16.4 1.61 11.2 22.1 35.67 0.53 11.12 0.59 0.71 0.53 0.08 2.05 0.85 99.5%
+
+trains the base model on optimization alone with-out any prerequisite. As shown in Table 4(a), per-formance degrades monotonically as more stages are removed. The degradation from MolBasic to w/o Struct demonstrates that even when the model receives the same downstream fine-tuning, the ab-sence of prior structural understanding leads to clearly inferior property prediction. The further decline from w/o Struct to Direct Opt confirms that each stage in the staircase contributes foundational capabilities that cannot be compensated by task-specific training alone. 
+
+(b) Does the staircase ordering matter? Al-though the results in Table 4(a) already show that skipping prerequisite reasoning stages in the stair-case process negatively affects performance, we design the Mixed SFT setting to disentangle this ef-fect from the total training data volume. We merge the training sets of both downstream tasks (property prediction and molecular optimization) and apply the same two-stage curriculum learning strategy (answer learning followed by reasoning learning), ensuring that the total number of supervised signals is matched. The only difference is the removal of progressive task ordering. As Table 4(b) shows, Mixed SFT leads to reduced performance across metrics, confirming that staircase ordering is es-sential—when reasoning processes from different task levels are learned simultaneously, they inter-fere with each other, preventing the model from establishing the structured knowledge hierarchy. 
+
+(c) What role does CoT supervision play? Fi-nally, we examine the contribution of Chain-of-Thought reasoning supervision by comparing full MolBasic with a w/o CoT variant that preserves progressive training order but removes Stage 2 rea-soning learning at all stages, retaining only answer-level supervision from Stage 1. As Table 4(c) shows, removing CoT supervision leads to con-sistent performance drops across structure compre-hension and downstream tasks. Structure compre-hension tasks, such as atom counting and formula conversion, require multi-step reasoning, and CoT provides explicit guidance for these intermediate steps. Consequently, the absence of CoT reduces the model’s reasoning capabilities, since it lacks ex-plicit supervision on intermediate reasoning steps. This results in lower accuracy on property predic-tion tasks and decreased effectiveness in molecular optimization, highlighting the importance of CoT in guiding multi-step molecular reasoning. We note that GPT-5, serving as the source of CoT, was also evaluated directly on these tasks (see Appendix); results show that MolBasic becomes competitive with GPT-5 as the reasoning process unfolds. Additional evaluations and analyses, covering external benchmarks, GPT-5 comparisons, and sta-tistical analysis, are provided in Appendices D–H. 
+
+5 Conclusion 
+
+In this work, we revisit a fundamental but over-looked problem in molecular LLMs: the lack of ba-sic structure comprehension. We demonstrate that without accurately perceiving molecular graphs, higher-level reasoning tasks are inherently unreli-able. To address this, we equip LLMs with explicit structural comprehension ability, and then intro-duce Chain-of-Thought supervision and a progres-sive learning framework to transfer this capability to downstream tasks. Extensive experiments con-firm that restoring this basic structural understand-ing is the key to achieving accurate, interpretable, and generalizable molecular reasoning. 8Limitations 
+
+One limitation of the current MolBasic framework lies in its staircase reasoning design. In this work, molecular reasoning is modeled as a chain-like pro-cess that progresses from structure comprehension to property prediction and then to molecular op-timization. As downstream tasks become farther from the initial structure comprehension stage, the direct influence of structural perception may gradu-ally weaken. This is reflected in our results, where the improvement on molecular optimization is less pronounced than that on property prediction. A promising future direction is to design a more flex-ible reasoning process that more closely resembles how human chemists analyze molecules, allowing LLMs to explicitly use molecular structure as the foundation for each molecular understanding task. However, this is non-trivial: simply adding struc-ture comprehension data to every downstream task is unlikely to be sufficient, as our ablation study shows that directly mixing tasks can introduce inter-ference. Designing a principled structure-grounded reasoning framework for diverse molecular tasks remains an important direction for future work. 
+
+Ethical Considerations 
+
+This work focuses on AI-assisted molecular under-standing and beneficial molecular optimization. In our experiments, optimization objectives are lim-ited to standard drug-relevant properties, such as improving LogP, QED, and synthetic accessibility, which are commonly used to assess molecular qual-ity and developability. We do not optimize toward toxic, harmful, or unsafe molecular objectives. Dur-ing CoT post-training, we also observed that the base model retained safety-aware behavior for po-tentially hazardous molecules, sometimes refusing to provide related information. This suggests that the safety alignment of the base model can serve as an additional safeguard against unsafe molecu-lar generation. For future real-world applications, generated molecules should still be subject to stan-dard safety screening, toxicity filtering, and human expert review before deployment. 
+
+References 
+
+Jinze Bai, Shuai Bai, Yunfei Chu, Zeyu Cui, Kai Dang, Xiaodong Deng, Yang Fan, Wenbin Ge, Yu Han, Fei Huang, and 1 others. 2023. Qwen technical report. 
+
+arXiv preprint arXiv:2309.16609 .Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wen-bin Ge, Sibo Song, Kai Dang, Peng Wang, Shijie Wang, Jun Tang, and 1 others. 2025. Qwen2. 5-vl technical report. arXiv preprint arXiv:2502.13923 .Yoshua Bengio, Jérôme Louradour, Ronan Collobert, and Jason Weston. 2009. Curriculum learning. In 
+
+Proceedings of the 26th annual international confer-ence on machine learning , pages 41–48. He Cao, Zijing Liu, Xingyu Lu, Yuan Yao, and Yu Li. 2025. Instructmol: Multi-modal integration for build-ing a versatile and reliable molecular assistant in drug discovery. In Proceedings of the 31st International Conference on Computational Linguistics , pages 354– 379. Yongqiang Chen, Quanming Yao, Juzheng Zhang, James Cheng, and Yatao Bian. 2024a. Improving molecule-language alignment with hierarchical graph tokenization. Zhe Chen, Jiannan Wu, Wenhai Wang, Weijie Su, Guo Chen, Sen Xing, Muyan Zhong, Qinglong Zhang, Xizhou Zhu, Lewei Lu, and 1 others. 2024b. Internvl: Scaling up vision foundation models and aligning for generic visual-linguistic tasks. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 24185–24198. Carl Edwards, Tuan Lai, Kevin Ros, Garrett Honke, Kyunghyun Cho, and Heng Ji. 2022. Translation between molecules and natural language. arXiv preprint arXiv:2204.11817 .Yin Fang, Xiaozhuan Liang, Ningyu Zhang, Kangwei Liu, Rui Huang, Zhuo Chen, Xiaohui Fan, and Hua-jun Chen. 2023. Mol-instructions: A large-scale biomolecular instruction dataset for large language models. arXiv preprint arXiv:2306.08018 .Luciano Floridi and Massimo Chiriatti. 2020. Gpt-3: Its nature, scope, limits, and consequences. Minds and machines , 30(4):681–694. Team GLM, Aohan Zeng, Bin Xu, Bowen Wang, Chen-hui Zhang, Da Yin, Dan Zhang, Diego Rojas, Guanyu Feng, Hanlin Zhao, and 1 others. 2024. Chatglm: A family of large language models from glm-130b to glm-4 all tools. arXiv preprint arXiv:2406.12793 .Garrett B Goh, Charles Siegel, Abhinav Vishnu, Nathan O Hodas, and Nathan Baker. 2017. Chem-ception: a deep neural network with minimal chemistry knowledge matches the performance of expert-developed qsar/qspr models. arXiv preprint arXiv:1706.06689 .Daya Guo, Dejian Yang, Haowei Zhang, Junxiao Song, Ruoyu Zhang, Runxin Xu, Qihao Zhu, Shi-rong Ma, Peiyi Wang, Xiao Bi, and 1 others. 2025. Deepseek-r1: Incentivizing reasoning capability in llms via reinforcement learning. arXiv preprint arXiv:2501.12948 .
+
+9Li Hao, He Cao, Bin Feng, Daniel Shao, Robert Tang, Zhiyuan Yan, Yonghong Tian, Li Yuan, and Yu Li. 2026. Beyond chemical qa: Evaluating llm’s chemi-cal reasoning with modular chemical operations. Ad-vances in Neural Information Processing Systems ,38. Esther Heid, Kevin P Greenman, Yunsie Chung, Shih-Cheng Li, David E Graff, Florence H Vermeire, Haoyang Wu, William H Green, and Charles J McGill. 2023. Chemprop: a machine learning pack-age for chemical property prediction. Journal of Chemical Information and Modeling , 64(1):9–17. Ross Irwin, Spyridon Dimitriadis, Jiazhen He, and Esben Jannik Bjerrum. 2022. Chemformer: apre-trained transformer for computational chem-istry. Machine Learning: Science and Technology ,3(1):015022. Aaron Jaech, Adam Kalai, Adam Lerer, Adam Richard-son, Ahmed El-Kishky, Aiden Low, Alec Helyar, Aleksander Madry, Alex Beutel, Alex Carney, and 1 others. 2024. Openai o1 system card. arXiv preprint arXiv:2412.16720 .Yunhui Jang, Jaehyung Kim, and Sungsoo Ahn. 2025. Improving chemical understanding of llms via smiles parsing. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing ,pages 15694–15709. Wengong Jin, Kevin Yang, Regina Barzilay, and Tommi Jaakkola. 2018. Learning multimodal graph-to-graph translation for molecular optimization. arXiv preprint arXiv:1812.01070 .Sunghwan Kim, Jie Chen, Tiejun Cheng, Asta Gindu-lyte, Jia He, Siqian He, Qingliang Li, Benjamin A Shoemaker, Paul A Thiessen, Bo Yu, and 1 others. 2023. Pubchem 2023 update. Nucleic acids research ,51(D1):D1373–D1380. TN Kipf. 2016. Semi-supervised classification with graph convolutional networks. arXiv preprint arXiv:1609.02907 .Takeshi Kojima, Shixiang Shane Gu, Machel Reid, Yu-taka Matsuo, and Yusuke Iwasawa. 2022. Large lan-guage models are zero-shot reasoners. Advances in neural information processing systems , 35:22199– 22213. Greg Landrum. 2013. Rdkit documentation. Release ,1(1-79):4. Junxian Li, Di Zhang, Xunzhi Wang, Zeying Hao, Jingdi Lei, Qian Tan, Cai Zhou, Wei Liu, Yaotian Yang, Xin-rui Xiong, and 1 others. 2025. Chemvlm: Exploring the power of multimodal large language models in chemistry area. In Proceedings of the AAAI Con-ference on Artificial Intelligence , volume 39, pages 415–423. Hunter Lightman, Vineet Kosaraju, Yuri Burda, Harri-son Edwards, Bowen Baker, Teddy Lee, Jan Leike, John Schulman, Ilya Sutskever, and Karl Cobbe. 2023. Let’s verify step by step. In The Twelfth Inter-national Conference on Learning Representations .Haotian Liu, Chunyuan Li, Qingyang Wu, and Yong Jae Lee. 2023a. Visual instruction tuning. In NeurIPS .Shengchao Liu, Weili Nie, Chengpeng Wang, Jiarui Lu, Zhuoran Qiao, Ling Liu, Jian Tang, Chaowei Xiao, and Animashree Anandkumar. 2023b. Multi-modal molecule structure–text model for text-based retrieval and editing. Nature Machine Intelligence ,5(12):1447–1457. OpenAI. 2023. Gpt-4 technical report. arXiv preprint arXiv:2303.08774 .OpenAI. 2024. Introducing gpt-4o. Ofir Press, Muru Zhang, Sewon Min, Ludwig Schmidt, Noah A Smith, and Mike Lewis. 2023. Measuring and narrowing the compositionality gap in language models. In Findings of the Association for Computa-tional Linguistics: EMNLP 2023 , pages 5687–5711. Colin Raffel, Noam Shazeer, Adam Roberts, Kather-ine Lee, Sharan Narang, Michael Matena, Yanqi Zhou, Wei Li, and Peter J. Liu. 2020. Exploring the limits of transfer learning with a unified text-to-text transformer. Journal of Machine Learning Research ,21(140):1–67. Aaditya Singh, Adam Fry, Adam Perelman, Adam Tart, Adi Ganesh, Ahmed El-Kishky, Aidan McLaughlin, Aiden Low, AJ Ostrow, Akhila Ananthram, and 1 oth-ers. 2025. Openai gpt-5 system card. arXiv preprint arXiv:2601.03267 .Bing Su, Dazhao Du, Zhao Yang, Yujie Zhou, Jiang-meng Li, Anyi Rao, Hao Sun, Zhiwu Lu, and Ji-Rong Wen. 2022. A molecular multimodal founda-tion model associating molecule graphs with natural language. arXiv preprint arXiv:2209.05481 .Ilya Sutskever, Oriol Vinyals, and Quoc V Le. 2014. Sequence to sequence learning with neural networks. 
+
+Advances in neural information processing systems ,27. InternLM Team. 2023. Internlm: A multilingual lan-guage model with progressively enhanced capabili-ties. https://github.com/InternLM/InternLM .Petar Veliˇ ckovi´ c, Guillem Cucurull, Arantxa Casanova, Adriana Romero, Pietro Lio, and Yoshua Bengio. 2017. Graph attention networks. arXiv preprint arXiv:1710.10903 .Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Fei Xia, Ed Chi, Quoc V Le, Denny Zhou, and 1 others. 2022. Chain-of-thought prompting elic-its reasoning in large language models. Advances in neural information processing systems , 35:24824– 24837. 
+
+10 David Weininger. 1988. Smiles, a chemical language and information system. 1. introduction to methodol-ogy and encoding rules. Journal of chemical infor-mation and computer sciences , 28(1):31–36. Ziting Xian, Jiawei Gu, Lingbo Li, and Shangsong Liang. 2025. Molrag: unlocking the power of large language models for molecular property prediction. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 15513–15531. Benfeng Xu, Licheng Zhang, Zhendong Mao, Quan Wang, Hongtao Xie, and Yongdong Zhang. 2020. Curriculum learning for natural language understand-ing. In Proceedings of the 58th annual meeting of the association for computational linguistics , pages 6095–6104. An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, and 1 others. 2025. Qwen3 technical report. arXiv preprint arXiv:2505.09388 .Chengxuan Ying, Tianle Cai, Shengjie Luo, Shuxin Zheng, Guolin Ke, Di He, Yanming Shen, and Tie-Yan Liu. 2021. Do transformers really perform badly for graph representation? Advances in neural infor-mation processing systems , 34:28877–28888. Zheni Zeng, Yuan Yao, Zhiyuan Liu, and Maosong Sun. 2022. A deep-learning system bridging molecule structure and biomedical text with comprehension comparable to human professionals. Nature commu-nications , 13(1):862. Di Zhang, Wei Liu, Qian Tan, Jingdan Chen, Hang Yan, Yuliang Yan, Jiatong Li, Weiran Huang, Xiangyu Yue, Wanli Ouyang, and 1 others. 2024. Chemllm: A chemical large language model. arXiv preprint arXiv:2402.06852 .Yikun Zhang, Geyan Ye, Chaohao Yuan, Bo Han, Long-Kai Huang, Jianhua Yao, Wei Liu, and Yu Rong. 2025. Atomas: Hierarchical adaptive alignment on molecule-text for unified molecule understanding and generation. In The Thirteenth International Confer-ence on Learning Representations .Haiteng Zhao, Shengchao Liu, Ma Chang, Hannan Xu, Jie Fu, Zhihong Deng, Lingpeng Kong, and Qi Liu. 2023. Gimlet: A unified graph-text model for instruction-based molecule zero-shot learning. 
+
+Advances in neural information processing systems ,36:5850–5887. Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric P. Xing, Hao Zhang, Joseph E. Gonzalez, and Ion Stoica. 2023. Judging llm-as-a-judge with mt-bench and chatbot arena. 
+
+Appendices A Algorithm 
+
+Algorithm 1 summarizes the complete training pro-cedure of M OL BASIC , which follows the staircase learning framework and adopts a two-stage opti-mization strategy for each task. Starting from a base language model C0, the algorithm progres-sively equips the model with increasingly advanced molecular reasoning capabilities along a predefined task path P = ( vstruct , v prop , v opt ).
+
+Algorithm 1 MolBasic Training Algorithm 
+
+Require: Base model C0, task path P =(vstruct , v prop , v opt ), datasets {D v, DCoT  
+
+> v
+
+}v∈P 
+
+Ensure: Fine-tuned model with capability Copt  
+
+> 1:
+
+Initialize LoRA parameters θ 
+
+> 2:
+
+Cprev ← C 0 
+
+> 3:
+
+for each task vk in P do  
+
+> 4:
+
+// Stage 1: Answer Learning  
+
+> 5:
+
+for each (S, (q, a )) in Dvk do  
+
+> 6:
+
+Compute Lstage1 = − P|a| 
+
+> t=1
+
+log Pθ(at |
+
+S, q, a <t ) 
+
+> 7:
+
+Update θ via gradient descent  
+
+> 8:
+
+end for  
+
+> 9:
+
+// Stage 2: Reasoning Learning  
+
+> 10:
+
+for each (S, (q, ˆa)) in DCoT  
+
+> vk
+
+do  
+
+> 11:
+
+Compute Lstage2 = − P|ˆa| 
+
+> t=1
+
+log Pθ(ˆ at |
+
+S, q, ˆa<t ) 
+
+> 12:
+
+Update θ via gradient descent  
+
+> 13:
+
+end for  
+
+> 14:
+
+Cvk ← fvk (Cprev , DCoT  
+
+> vk
+
+) 
+
+> 15:
+
+Cprev ← C vk 
+
+> 16:
+
+end for  
+
+> 17:
+
+return Model with capability Copt 
+
+For each task vk ∈ P , training is performed in two consecutive stages. Stage 1 (Answer Learn-ing) focuses on acquiring task-specific domain knowledge by supervising only the final answers. In this stage, the model is optimized to correctly generate task outputs given the molecular input S
+
+and query q, establishing reliable output anchors and preventing early-stage reasoning drift. 
+
+Stage 2 (Reasoning Learning) further refines the model by incorporating Chain-of-Thought (CoT) supervision. Instead of predicting only the final answer, the model is trained to generate the complete reasoning trajectory ˆa = ( z, a ), where 
+
+z represents intermediate reasoning steps. This stage explicitly constrains the reasoning process, 11 reduces ambiguity in intermediate representations, and improves both accuracy and interpretability. After completing both stages for task vk, the up-dated model capability Cvk is obtained and passed as initialization to the next task in the staircase. In this manner, structural comprehension learned at earlier stages is preserved and reused when learning higher-level tasks such as structural property pre-diction and molecular optimization. After all tasks in P are completed, the algorithm returns a model with capability Copt , which integrates structure-aware reasoning across all stages. 
+
+B Data Preparation and Training Details 
+
+We prepare the training data from the PubChem-STM dataset (Liu et al., 2023b), covering all eight structure comprehension tasks (see Table 6): atom counting, total bond counting, specific bond count-ing, element counting, substructure recognition, SMILES to graph conversion, graph to SMILES conversion, and formula generation. For data clean-ing, we first remove duplicate samples across all tasks. For the two SMILES-Graph conversion tasks, we further filter out samples whose graph representation exceeds 16K characters, which em-pirically corresponds to exceeding the 2048-token context limit under our tokenizer. After prepro-cessing, the dataset contains 1,181,816 valid sam-ples expanded across eight tasks, corresponding to 185,286 unique molecules. The expanded samples are split into training, validation, and test sets. We summarize the dataset sources and sizes used for all molecular understanding tasks in Table 5. Stage 1 (Answer Learning): To emphasize the importance of SMILES-Graph mutual conversion as the core task, we apply a weighted sampling strategy. The two conversion tasks are assigned a weight of 2.0, while all other tasks have a weight of 1.0, resulting in approximately doubled sampling frequency for the conversion tasks. Stage 2 (Reasoning Learning): We construct a smaller-scale dataset by sampling 1/10 from the Stage 1 validation set. Task weights are ad-justed based on Stage 1 performance to prioritize underperforming tasks: atom counting (3.0), to-tal bond counting (3.0), formula generation (3.0), SMILES to graph (3.0), graph to SMILES (3.0), el-ement counting (1.5), specific bond counting (1.5), and substructure recognition (0.5). Importantly, Chain-of-Thought reasoning is only applied to the three tasks that showed suboptimal performance in Stage 1—atom counting, total bond counting, and formula generation—while other tasks retain the answer-only training format from Stage 1. The Stage 1 validation set is used exclusively for Stage 2 training and is not involved in model evaluation, ensuring no data leakage. We provide the detailed training configurations for each stage in Table 7. Our progressive training follows a sequential pipeline: Multi-level Structure Comprehension (MSC) → Structural Property Pre-diction (Prop) → Molecular Optimization (Optim), where each task consists of two stages—Stage 1 (Answer Learning) and Stage 2 (Reasoning Learn-ing). The LoRA adapter from each stage serves as the initialization for the subsequent stage, enabling knowledge accumulation throughout the training process. All stages share the same LoRA architec-ture (rank=64, alpha=128) and learning rate (1e-4) with cosine scheduling, while batch sizes and train-ing epochs are adjusted based on dataset sizes and task complexity. We also report training and inference efficiency. The MSC-S1 stage, which processes the largest dataset, requires approximately 6 days on 4 ×48 GB RTX 4090 GPUs. All subsequent stages are significantly more efficient, each completing within a few hours on 2 ×80 GB A800 GPUs. For in-ference, all inference times are measured with batch size 1, except Optim-S2. For Optim-S2, full CoT generation takes about 84s per sample with max_new_tokens=1024 at batch size 1; the reported 7.089s is obtained by batched inference. This demonstrates that our CoT reasoning approach incurs minimal additional computational cost in practical deployment scenarios. 
+
+Artifact use: We use publicly available datasets, models, and tools for research purposes and follow their original terms of use. 
+
+C Definitions of Molecular Properties 
+
+In this section, we provide concise definitions of the structural properties used in our experiments, all of which are directly derived from molecular structure. • Molecular Weight (MW): The sum of the atomic weights of all atoms in a molecule, reflecting its overall molecular size. • Octanol–Water Partition Coefficient (LogP): The logarithm of the ratio of a compound’s concentration in octanol to that in water, measuring its hydrophobicity. 12 Table 5: Dataset statistics for different molecular understanding tasks. Values in parentheses indicate the expanded sample counts after constructing MSC tasks. 
+
+Task Dataset Total Training Valid Test Structure comprehension (expand by MSC) PubChemSTM 185,286 (1,181,816) 129,699 (737,828) 37,059 (296,012) 18,528 Property prediction PubChem 100,000 95,000 – 5,000 Molecular optimization TDC 175,173 157,673 – 17,500 
+
+Table 6: Multi-level structure comprehension tasks.             
+
+> Level Task Task Type
+> Node Atom Counting Numerical Regression Element Counting Numerical Regression Edge Total Bond Counting Numerical Regression Specific Bond Counting Numerical Regression Graph Formula Conversion Sequence Generation Substructure Recognition Binary Classification Graph to SMILES Sequence Generation SMILES to Graph Sequence Generation
+
+• Topological Polar Surface Area (TPSA): 
+
+The surface area contributed by polar atoms (typically oxygen and nitrogen and their at-tached hydrogens), indicating a molecule’s polarity and permeability. • Hydrogen Bond Donors (HBD): The num-ber of functional groups in a molecule capable of donating a hydrogen atom to form a hydro-gen bond. • Hydrogen Bond Acceptors (HBA): The number of atoms in a molecule capable of accepting a hydrogen bond through lone pairs. • Number of Rotatable Bonds (RB): The count of non-ring, single bonds between heavy atoms that allow free rotation, characterizing molecular flexibility. • Quantitative Estimate of Drug-likeness (QED): A composite score that quantifies drug-likeness by integrating multiple physico-chemical properties using a desirability func-tion. 
+
+D Evaluation on External Benchmarks 
+
+To verify that the gains of MolBasic are not lim-ited to our proposed Molecular Structure Com-prehension benchmark, we further evaluate it on two external molecular understanding benchmarks for fair comparison. First, the CleanMol bench-mark (Jang et al., 2025) focuses on SMILES parsing tasks, including functional-group recog-nition, ring counting, chain-length prediction, and canonical SMILES generation. As shown in Ta-ble 8, MolBasic achieves the best accuracy on most tasks, substantially outperforming both few-shot general LLMs and most SFT baselines, demonstrat-ing strong general structural parsing ability. Second, ChemCoTBench (Hao et al., 2026) pro-vides a broader evaluation of molecular under-standing, including functional-group counting, ring counting, Murcko scaffold extraction, ring-system scaffold extraction, and SMILES equivalence judg-ment. As shown in Table 9, MolBasic achieves the best performance on most metrics and remains competitive on ring counting. These results further confirm that MolBasic learns transferable structural understanding beyond our proposed benchmark. 
+
+E Few-shot in Bioactivity Prediction Tasks 
+
+Beyond fine-tuning on downstream tasks, we con-duct few-shot experiments on tasks logically re-lated but not seen during training, to demonstrate the transferability of our framework to novel yet rel-evant tasks after acquiring fundamental capabilities. We select bioactivity property prediction, closely related to molecular structural properties, and com-pare with MolRAG, the current state-of-the-art few-shot method. As shown in Table 10, MolBasic achieves better performance on most properties and approaches the performance of pre-training methods. We provide descriptions of the baseline categorization used in Table 10 in Appendix F. 
+
+F Few-shot Baseline Settings 
+
+In this section, we describe the baseline methods used for few-shot bioactivity prediction and clarify the rationale behind their categorization. We group baseline methods into three categories according 13 Table 7: Training configurations across different stages. MSC: Multi-level Structure Comprehension, Prop: Structural Property Prediction, Optim: Molecular Optimization. S1: Answer Learning, S2: Reasoning Learning.                                                                    
+
+> Parameter MSC-S1 MSC-S2 Prop-S1 Prop-S2 Optim-S1 Optim-S2
+> Base Model Qwen3-8B +MSC-S1 +MSC-S2 +Prop-S1 +Prop-S2 +Optim-S1 LoRA Rank 64 LoRA Alpha 128 LoRA Dropout 0.05 Learning Rate 1e-4 Effective Batch Size 32 16 32 128 128 128 Epochs 152522LR Scheduler cosine Warmup Ratio 0.1 Max Seq Length 2048 DeepSpeed -ZeRO-2 ----Steps 5188 1850 1336 1665 1108 1108 FLOPs 2.32e19 2.86e18 3.39e18 2.06e19 3.20e18 1.00e19 Samples/sec 3.27 4.31 5.36 4.75 5.50 5.04 Steps/sec 0.026 0.067 0.042 0.018 0.021 0.020 Infer. Time (s) 0.301 0.311 5.139 4.977 6.863 7.089
+
+Table 8: SMILES parsing performance on CleanMol benchmark. All metrics are reported as accuracy.                                      
+
+> Task type Model FG Ring Chain Canonical 5-shot Deepseek-V3-chat 0.8912 0.6266 0.2976 0.1484 GPT-4o 0.8750 0.5955 0.2857 0.1078 Galactica-6.7B 0.5000 0.0732 0.1511 0.0000 SFT Llama3.1-8B (Single) 0.9414 0.8612 0.9859 0.9356 Llama3.1-8B (Multi) 0.9891 0.8707 0.9851 0.9463
+> Qwen2.5-7B (Single) 0.9891 0.8674 0.9907 0.7593 Qwen2.5-7B (Multi) 0.9901 0.8750 0.9902 0.9262 MolBasic 0.9956 0.9774 0.9946 0.8836
+
+Table 9: ChemCoTBench molecular understanding evaluation compared with molecular LLMs. The evaluation uses MAE for functional-group and ring counting, Tanimoto similarity for Murcko scaffold extraction, and Accuracy for ring-system, SMILES equivalence.                            
+
+> Models Func-Group Scaffold SMILES FG ↓Ring ↓Murcko ↑Ring-sys ↑Eq. ↑
+> Ether0 Failed 0.35 Failed Failed 0.63 BioMedGPT-7B 1.6 2.43 0.18 0.53 0.39 BioMistral-7B 1.0 1.85 0.04 0.33 0.50 MolBasic 0.73 0.65 0.43 0.65 0.67
+
+to their training paradigm and supervision regime: 
+
+few-shot methods , pre-training-based methods , and 
+
+graph-based networks .
+
+Few-shot Methods. Few-shot methods are eval-uated under the same data-scarce setting as Mol-Basic, where models are provided with only a lim-ited number of labeled examples per task at in-ference time. Specifically, we include MolRAG as a representative few-shot baseline, which en-hances large language models with retrieval over molecular databases. Both MolRAG and MolBa-sic are evaluated under identical k-shot settings (k ∈ { 0, 1, 2, 4}), ensuring a fair comparison in terms of supervision level and data availability. 
+
+Pre-training-based Methods. Pre-training-based methods leverage large-scale labeled or un-labeled molecular datasets to acquire task-relevant knowledge before evaluation. Models such as GIM-LET, KVPLM, MoMu, and Galactica-1.3B fall into this category, as they rely on extensive pre-training on molecular or molecule–text corpora. While these methods are not few-shot by design, we include them as reference points to contextual-ize the performance of few-shot approaches against 14 Table 10: Few-shot results on bioactivity prediction tasks. Best and second best results are highlighted among few-shot methods.                                                                          
+
+> Shot Method BACE HIV BBBP Tox21
+> Few-shot Methods
+> 0-shot MolRAG 0.504 0.514 0.546 0.534 MolBasic 0.500 0.499 0.514 0.563 1-shot MolRAG 0.594 0.543 0.546 0.545 MolBasic 0.619 0.664 0.550 0.561 2-shot MolRAG 0.615 0.568 0.564 0.55 MolBasic 0.649 0.654 0.611 0.579
+> 4-shot MolRAG 0.626 0.595 0.572 0.566 MolBasic 0.661 0.659 0.633 0.573
+> Pre-training Methods
+> GIMLET 0.696 0.662 0.594 0.612 KVPLM 0.513 0.612 0.602 0.492 MoMu 0.666 0.503 0.498 0.576 Galactica-1.3B 0.565 0.339 0.539 0.495
+> Graph-based Networks
+> GCN 0.736 0.757 0.649 0.749 GAT 0.697 0.729 0.665 0.754 GIN 0.701 0.753 0.658 0.74 Graphormer 0.776 0.745 0.702 0.759
+
+models with substantially more task-specific prior knowledge. 
+
+Graph-based Networks. Graph-based networks, including GCN, GAT, GIN, and Graphormer, represent task-specific models trained with full supervision on molecular graphs. These methods serve as upper-bound references, as they have direct access to explicit molecular graph structures and are optimized specifically for bioactivity prediction tasks. Overall, this categorization highlights the trade-off between supervision strength and model gener-ality, and situates MolBasic within the challenging few-shot regime, where strong structural reasoning must be achieved with minimal labeled data. 
+
+G GPT-5 Evaluation on Molecular Tasks 
+
+To further contextualize the contribution of Chain-of-Thought supervision, we evaluate GPT-5 di-rectly on structure comprehension, property predic-tion, and molecular optimization tasks. Tables 11– 13 summarize the direct evaluation of GPT-5 and its comparison with MolBasic. These results show that GPT-5 provides strong reasoning signals, particularly for numerical and additive properties, validating its use as a source of Chain-of-Thought supervision. MolBasic lever-ages these distilled signals through progressive, stage-wise learning and CoT supervision. As a re-sult, MolBasic progressively internalizes structural reasoning: it first acquires foundational structure comprehension, then transfers these capabilities to property prediction and molecular optimization tasks. This training pipeline enables MolBasic to achieve competitive performance relative to GPT-5 itself, especially for structure-dependent properties such as LogP and QED, while maintaining better performance in molecular optimization. 
+
+H Additional Analysis 
+
+H.1 Error Analysis 
+
+We analyze the sources of prediction errors in nu-merical regression tasks. As shown in Figure 4, prediction errors tend to increase as the ground-truth values become larger, especially for atom and bond counting tasks. This trend mainly arises from two factors. First, LLMs are generally less sen-sitive to precise numerical values, making exact counting difficult. Second, larger molecules usually correspond to longer and more structurally com-plex SMILES sequences, containing more rings, branches, and functional groups, which further in-creases parsing difficulty. These factors lead to prediction errors that scale with molecular size. 
+
+Figure 4: Error distribution across four regression tasks in the multi-level structure comprehension benchmark. Each panel shows the mean absolute error (MAE) as a function of ground-truth values for the correspond-ing task: (a) Heavy Atom Counting, (b) Total Bond Counting, (c) Element-specific Counting, and (d) Spe-cific Bond Counting. The shaded regions represent the standard deviation of errors within each bin. 
+
+We further analyze MolBasic’s prediction errors on molecular property prediction tasks. As shown in Figure 5, most absolute errors are concentrated 15 Table 11: Comparison of MolBasic and GPT-5 on structure comprehension tasks. Metrics are accuracy ( ↑). 
+
+Model Atom Elem. Total Bond Spec. Bond Formula Substruct. S→G G→SMolBasic 42.4% 73.01% 49% 82.9% 44.0% 98.1% 94.7% 85.7% GPT-5 95% 97.5% 71.5% 75.5% 80.7% 85.5% 0% 1.38% 
+
+> Table 12: Comparison of MolBasic and GPT-5 on property prediction tasks. Metrics are MAE ( ↓).
+
+Model MW LogP TPSA HBD HBA RB QED MolBasic 35.67 0.53 11.12 0.59 0.71 0.53 0.08 GPT-5 8.96 0.94 12.95 0.05 0.27 1.60 1.13  
+
+> Table 13: Comparison of MolBasic and GPT-5 on molecular optimization. Higher is better for all met-rics.
+
+Model ∆LogP Diversity Validity MolBasic 2.27 0.86 98.7% GPT-5 1.89 0.87 95.5% near zero, indicating generally accurate predictions, with only a small number of extreme predicted val-ues forming long-tail distributions. Figure 6 further shows that MolBasic remains stable on molecules of normal size across most properties, while per-formance degradation mainly appears for larger molecules, where longer SMILES strings and more complex structures make structural parsing and property reasoning more difficult. 
+
+H.2 Multi-objective Molecular Optimization 
+
+In Section 4.2.2, we use LogP improvement as the representative objective for molecular optimiza-tion. To examine whether optimizing a single property compromises other drug-relevant prop-erties, we further evaluate the changes in QED and synthetic accessibility (SA) under this single-objective setting. As shown in Table 14, although the model is only instructed to improve LogP, QED decreases only slightly, while SA improves substan-tially. This indicates that MolBasic, after acquir-ing molecular structure and property knowledge, can optimize molecules toward the target objective without severely damaging other important chemi-cal properties. We further conduct a multi-objective fine-tuning experiment, where the model is explicitly trained to increase LogP and QED while decreasing SA. The results show that all three objectives are im-proved simultaneously: LogP remains substantially increased, QED improves from 0.74 to 0.79 with the QED ≥ 0.8 ratio increasing from 36.3% to 57.3%, and SA decreases from 3.64 to 2.60 with the SA < 3 ratio increasing from 23.5% to 73.8%. 
+
+H.3 Out-of-distribution Analysis 
+
+We conduct Murcko scaffold overlap analysis on both downstream tasks to examine whether MolBa-sic relies on scaffold memorization. For property prediction, 55.3% of test scaffolds are unseen dur-ing training; for molecular optimization, 24.1% of test samples are OOD. Table 15 compares the performance on the full test set and scaffold-OOD subsets. The results show that MolBasic maintains stable performance on scaffold-OOD samples. Compared with the full test set, property prediction errors in-crease only mildly on OOD molecules, and the LogP improvement in molecular optimization de-creases slightly from 2.27 to 2.11. Importantly, neither downstream task exhibits performance col-lapse under scaffold shift, suggesting that MolBa-sic learns transferable structure-property reasoning rather than merely memorizing training scaffolds. 
+
+I Future Work 
+
+Regarding capability enhancement, further im-provements are needed in LLMs’ ability to com-prehensively comprehend fundamental molecular structures. As our current results indicate, the model still requires strengthening in complex re-gression tasks and interpretable graph structure conversion. Future work will focus on develop-ing more sophisticated training strategies to better address these challenging aspects of structural per-ception. Regarding scope expansion, our next direction aims to approximate the reasoning process of an 16 Figure 5: Distribution of sample-level absolute errors for seven molecular properties. Each subplot corresponds to one property. The solid curve shows the density distribution of absolute errors, and the shaded area indicates the filled density region. The vertical dashed line marks the mean absolute error (MAE) of the corresponding property. Table 14: Multi-objective molecular optimization results. Higher ∆LogP and QED indicate better performance, while lower SA indicates better synthetic accessibility. QED ≥ 0.8 denotes the percentage of generated molecules with high drug-likeness, and SA < 3 denotes the percentage of easy-to-synthesize molecules. 
+
+Setting ∆LogP ↑ QED ↑ QED ≥ 0.8 ↑ SA ↓ SA < 3 ↑
+
+Single-obj. (LogP only) +2.27 0.72 →0.71 39.3% →37.6% 3.49 →2.65 32.3% →73.9% Multi-obj. (LogP+QED+SA) +2.10 0.74 →0.79 36.3% →57.3% 3.64 →2.60 23.5% →73.8% 
+
+Table 15: Performance on the full test set and scaffold-OOD subsets. Property prediction metrics are MAE ( ↓), and molecular optimization is measured by ∆LogP ( ↑). 
+
+Subset MW LogP TPSA HBD HBA RB QED ∆LogP All 13.98 0.28 2.71 0.05 0.16 0.36 0.06 2.27 OOD 15.02 0.30 3.07 0.06 0.18 0.33 0.06 2.11 "AI chemist" by integrating LLMs’ structural un-derstanding with efficient retrieval of chemical lit-erature. This would establish a structure-reasoning-driven, knowledge-assisted paradigm for molecular understanding. We believe this combination of structural perception and domain knowledge re-trieval will further advance molecular LLMs to-ward more comprehensive and practical chemical reasoning capabilities. 
+
+J Chain-of-Thought Templates 
+
+In this section, we present the standardized Chain-of-Thought (CoT) templates used in MolBasic for different molecular understanding tasks. These 17 Figure 6: Property prediction errors with respect to molecular size. Each subplot shows the mean absolute error (MAE) of one property across bins of heavy atom counts. The line with markers represents the average MAE within each bin, and the shaded region denotes the standard deviation of errors in that bin. 
+
+templates guide the model through structured rea-soning processes, ensuring consistent and inter-pretable outputs. For structure comprehension tasks, we apply CoT only during Stage 2 (reason-ing training) for three tasks that showed subopti-mal performance in Stage 1: atom counting, total bond counting, and formula conversion. The CoT for these tasks primarily constrains the accuracy of intermediate calculation steps, as illustrated in Figure 7. For structural property prediction, the rea-soning follows a four-step protocol: atom counting, functional group identification, ring system analy-sis, and property-specific reasoning (Figure 8). For molecular optimization, the CoT systematically an-alyzes polar and lipophilic groups, proposes mod-ification strategies, and verifies property improve-ments (Figure 9). These standardized templates enable the model to develop robust structural un-derstanding while maintaining transparency in its reasoning process. 
+
+Task: Total Bond Counting             
+
+> Instruction: Count the total number of chemical bonds in the molecular structure.
+> Input: C=C(C(=O)O)C1CCC2(O)C=CC(=O)C(C)C2(C)C 1
+> Chain-of-Thought:
+> • Parsed the SMILES into atoms and bonds. •Identified two carbonyl groups and all substituent con-nections. • Enumerated all edges: total = 20. • Verification: V−1 + cycles = 19 −1 + 2 = 20 ✓.
+> Answer: 20
+
+Task: Heavy Atom Counting         
+
+> Instruction: Count the total number of heavy atoms (non-hydrogen) in the molecule.
+> Input: CC(C)=CCOc1c(C)c(C)c(C(=O)O)c(O)c1C
+> Chain-of-Thought:
+> •First aromatic ring c1ccc...c1 : 6 ring carbons = 6 atoms. • Aliphatic chain and branches: 9 C = 9 atoms. •Oxygen atoms, including carbonyl and ether groups: 4 O = 4 atoms. • Total = 6 + 9 + 4 = 19 heavy atoms.
+> Answer: 19
+
+18 Task: Formula Conversion 
+
+Instruction: Generate the standard molecular formula for the molecule. 
+
+Input: CC(C)=CCOc1cc(=O)oc2cccc(C)c12 
+
+Chain-of-Thought: 
+
+• Count carbons from SMILES: 15 total. • Count heteroatoms: O = 3. • Determine hydrogens from substitution and valence: 
+
+– Ring hydrogens: 4 H. 
+
+– Aliphatic groups: 12 H. 
+
+– Total H = 16. 
+
+Answer: C15 H16 O3
+
+Figure 7: Examples of standardized Chain-of-Thought reasoning for structure perception tasks. 
+
+Task: Structural Property Prediction (Ex-ample 1) 
+
+Input: CC1=CC(=C(C=C1)C)C(=O)CC2(C3=C(C=CC(=C 3)Cl)NC2=O)O 
+
+Chain-of-Thought: 
+
+1. Atoms and counts (Molecular formula: C18 H16 ClNO 3): • C: 18, H: 16, N: 1, O: 3, Cl: 1. • Heavy atoms: 23. 
+
+2. Functional groups identified :• Hydroxyl (–OH), ketone (C=O), amide (–C(=O)NH–), lactam (cyclic amide), and chlorine (–Cl). 
+
+3. Ring systems :• Total rings: 3, aromatic rings: 2, aliphatic rings: 1, heterocyclic rings: 1. 
+
+4. Property reasoning :• MW : Sum of atomic weights from C 18 H16 ClNO 3 =329.78 g/mol. • LogP : Moderately lipophilic due to aromatic rings, balanced by polar groups → 3.37. • TPSA : Contributions from N and O atoms → 66.4 Å 2.• HBD : 2, from NH/OH groups. • HBA : 3, from N/O atoms with lone pairs. • RB : 3, from non-ring single bonds excluding terminal bonds. • QED : Good drug-likeness → 0.85. 
+
+Answer: MW=329.78, LogP=3.37, TPSA=66.4, HBD=2, HBA=3, RB=3, QED=0.85 
+
+Task: Structural Property Prediction (Ex-ample 2) 
+
+Input: CCC1=C[N+](=C(C=C1)C)CC2=CC(=O)N3C=CSC 3=N2 
+
+Chain-of-Thought: 
+
+1. Atoms and counts (Molecular formula: C15 H16 N3OS +): C: 15, H: 16, N: 3, O: 1, S: 1. Heavy atoms: 20. 
+
+2. Functional groups : No common functional groups identified. 
+
+3. Ring systems : Total rings: 3, aromatic rings: 3, hetero-cyclic rings: 3. 
+
+4. Property reasoning :• MW : 286.38 g/mol LogP : 1.96, slightly lipophilic 
+
+TPSA : 38.25 Å 2.• HBD : 0 HBA : 4 RB : 3 QED : 0.69. 
+
+Answer: MW=286.38, LogP=1.96, TPSA=38.25, HBD=0, HBA=4, RB=3, QED=0.69 
+
+Figure 8: Examples of standardized Chain-of-Thought reasoning for structural property prediction. 
+
+Task: Molecular Optimization (Example 1) 
+
+Input: Cc1ccccc1/C=C1/Oc2c(ccc(O)c2C[NH+]2CCC [C@@H](C)C2)C1=O 
+
+Chain-of-Thought: 
+
+1. Original molecule analysis : C 23 H25 NO +3 , 4 rings, 2 aromatic rings, LogP: 3.13, HBD: 2, HBA: 3, charge: +1. 
+
+2. Polar groups that decrease LogP : quaternary ammo-nium [N+], hydroxyl –OH, ketone C=O, and ether –O–. 
+
+3. Lipophilic groups that increase LogP : 2 phenyl rings and a 23-carbon skeleton. 
+
+4. Optimization strategy :• Neutralize ionic charge, which is expected to provide a major LogP increase. • Reduce HBD: 2 → 1.• Add a piperazine ring with a phenyl substituent. 
+
+5. Verification : LogP: 3.13 → 4.64 (∆ = +1 .51 ) ✓.
+
+Output: Cc1ccccc1/C=C1\Oc2c(ccc(O)c2CN2CCN(c3 ccccc3)CC2)C1=O 
+
+Task: Molecular Optimization (Example 2) 
+
+Input: C[NH+](C)C(C)(C)CNC(=O)c1cnn(Cc2ccccc2 Cl)c1 
+
+Chain-of-Thought: 
+
+1. Original molecule analysis : C 17 H24 ClN 4O+, 2 aro-matic rings, LogP: 1.24, HBD: 2, HBA: 3, charge: +1. 
+
+2. Polar groups that decrease LogP : quaternary ammo-nium [N+], secondary amine –NH–, and amide –CONH– .
+
+3. Lipophilic groups that increase LogP : phenyl ring, chlorine, and 17-carbon skeleton. 
+
+4. Optimization strategy :• Remove charged quaternary N, which is expected to provide a major LogP increase. • Reduce HBD: 2 → 1.• Add trifluoromethyl –CF 3 and phenyl ring. 
+
+5. Verification : LogP: 1.24 → 4.86 (∆ = +3 .62 ) ✓.
+
+Output: O=C(Nc1ccccc1C(F)(F)F)c1cnn(Cc2ccccc2 Cl)c1 
+
+Figure 9: Examples of standardized Chain-of-Thought reasoning for molecular optimization (LogP improve-ment). 
+
+K Use of AI Assistants 
+
+We used AI assistants during the preparation of this work for limited auxiliary purposes, including code debugging and grammar-level writing assistance. All research ideas, experimental design, analysis, conclusions, and final manuscript decisions were made by the authors. In addition, some of the evaluated baseline sys-tems in our experiments are themselves AI assis-tants or general-purpose LLMs, such as GPT-series models and Qwen-series models. These models were used only as experimental subjects or base-lines for evaluating molecular understanding capa-19 bilities, following the experimental protocols de-scribed in the paper. 
+
+L Interpretable Molecular Optimization Examples 
+
+We present representative examples of MolBasic’s responses on the objective molecular optimization task in Section 4.2.2. Our framework generates op-timized molecules while simultaneously providing interpretable analysis of the optimization rationale, including structural feature identification, modifi-cation strategies, and property change verification. Figures 10 and 11 illustrate three such examples with detailed explanations. Note that the intermedi-ate property values in the explanations may not be perfectly accurate, as the model itself exhibits cer-tain prediction errors on property estimation tasks (as shown in Table 2). Nevertheless, the overall trends in property changes remain correct and the errors stay within acceptable ranges, which is suffi-cient for guiding effective molecular modifications. This demonstrates that MolBasic has developed genuine structural reasoning capabilities for molec-ular understanding. 20 Figure 10: Case study 1: Molecular optimization examples with CoT explanations. 
+
+21 Figure 11: Case study 2 and 3: Molecular optimization examples with CoT explanations. 
+
+22

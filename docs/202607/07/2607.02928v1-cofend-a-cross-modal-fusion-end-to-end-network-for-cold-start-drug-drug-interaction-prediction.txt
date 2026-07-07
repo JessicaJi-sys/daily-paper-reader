@@ -1,0 +1,558 @@
+Title: CoFEND: A Cross-Modal Fusion End-to-End Network for Cold-Start Drug-Drug Interaction Prediction
+
+URL Source: https://arxiv.org/pdf/2607.02928v1
+
+Published Time: Tue, 07 Jul 2026 00:59:22 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# CMF-ELN: A Cross-Modal-Fused End-to-end Learning Network for Cold-Start Drug-Drug Interaction Prediction 
+
+# Di Wu 
+
+College of Computer and Information Science, Southwest University Chongqing, China wudi1986@swu.edu.cn 
+
+# Hongyi Sun 
+
+College of Computer and Information Science, Southwest University Chongqing, China swulhx001@email.swu.edu.cn 
+
+# Haichao Xu ∗
+
+College of Computer and Information Science, Southwest University Chongqing, China popins@email.swu.edu.cn 
+
+# Jia Chen 
+
+Beihang University Beijing, China chenjia@buaa.edu.cn 
+
+# Zhong Chen 
+
+School of Computing, Southern Illinois University Carbondale Carbondale, IL, United States zhong.chen@siu.edu 
+
+# Jie Yang 
+
+School of Physics and Electronic Science, Zunyi Normal University Zunyi, Guizhou, China 2012009@zync.edu.com 
+
+## Abstract 
+
+Cold-start drug–drug interactions (DDIs) prediction of new drugs is critical for minimizing unexpected adverse drug reactions. The crux of cold-start DDI prediction is to capture the Similarity between new and known drugs. However, such similarity is closely associated with complex relationships and mechanisms among drugs, enzymes, transporters, molecular structures, etc. Existing methods have three limitations in capturing such similarity: (1) only partial relation-ships and mechanisms are considered, which overlooks cross-modal information and yields incomplete or biased similarity modeling; (2) similarity computation between new and known drugs is conducted separately across modalities and performed offline for cold-start DDI prediction, leading to an increasing misalignment between the similarity computation and the DDI prediction stages; (3) ex-isting interpretability analyses are typically single-modality and focus primarily on the key determinants of the perpetrator drug, while the underlying causes of susceptibility for the victim drug are seldom investigated. To address these issues, this paper pro-poses a novel Cross-Modal-Fused End-to-end Learning Network (CMF-ELN) with three components. First, diverse Multi-modal in-formation is leveraged to construct four types of drug-centered knowledge graphs, enabling comprehensive similarity modeling between new and known drugs under reconstruction based supervi-sion. Second, a four-channel graph autoencoder is designed to fuse cross-modal similarity within an end-to-end learning framework. Finally, a two-stage interpretability scheme is devised to precisely localize the key factors for both the perpetrator and the victim drugs. Extensive experiments on two real datasets demonstrate that CMF-ELN achieves significantly higher prediction accuracy and more comprehensive interpretability of mechanisms than its peers.  
+
+> ∗Corresponding author.
+> This work is licensed under a Creative Commons Attribution 4.0 International License.
+> KDD ’26, Jeju Island, Republic of Korea
+> ©2026 Copyright held by the owner/author(s). ACM ISBN 979-8-4007-2259-2/2026/08 https://doi.org/10.1145/3770855.3817946
+
+The source code and datasets are publicly available in our GitHub repository: https://github.com/lhx-cmd/CMF-ELN. 
+
+## CCS Concepts 
+
+• Computing methodologies → Machine learning ; • Applied computing → Life and medical sciences .
+
+## Keywords 
+
+Drug-Drug Interactions; Cold-start Prediction; Knowledge Graph; Cross-Modal Learning; Graph Autoencoder; Interpretability. 
+
+ACM Reference Format: 
+
+Di Wu, Hongyi Sun, Haichao Xu, Jia Chen, Zhong Chen, and Jie Yang. 2026. CMF-ELN: A Cross-Modal-Fused End-to-end Learning Network for Cold-Start Drug-Drug Interaction Prediction. In Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2 (KDD ’26), August 09–13, 2026, Jeju Island, Republic of Korea. ACM, New York, NY, USA, 11 pages. https://doi.org/10.1145/3770855.3817946 
+
+## 1 Introduction 
+
+In drug development, predicting DDIs is critical for ensuring thera-peutic safety, as co-administration can alter pharmacological prop-erties and lead to severe adverse reactions [ 52 , 57 , 71 ]. Since tra-ditional experimental assays are often cost-prohibitive and time-consuming to keep pace with new drug discovery, computational approaches have emerged as efficient alternatives [ 13 , 65 ]. Notably, recent deep learning models demonstrate significant scalability by integrating chemical and biological information to automatically uncover latent drug relationships [7, 15, 30, 54, 90, 96, 117]. Among various DDI prediction tasks, cold-start DDI prediction is particularly challenging [ 32 ]. This task aims to predict potential interactions between newly developed drugs and known drugs, where the new drugs usually lack any known DDI records and of-ten exhibit modality missing or sparsity (e.g., incomplete enzymes, transporters, or structural annotations). Therefore, the model must infer potential interactions based on structural and biological Sim-ilarities between drugs while adapting to incomplete multimodal evidence. This requirement is closely related to representation  
+
+> arXiv:2607.02928v1 [cs.LG] 3 Jul 2026 KDD ’26, August 09–13, 2026, Jeju Island, Republic of Korea Di Wu et al.
+
+learning under sparse, incomplete, and high-dimensional obser-vations, where latent factor, autoencoding, and tensor-learning models have been widely explored [ 76 , 78 , 80 , 81 , 93 ]. Achieving this goal requires leveraging heterogeneous and multimodal infor-mation sources which jointly form a complex multimodal knowl-edge network encoding multiple aspects of drug-related mecha-nisms [ 44 , 49 , 59 , 94 , 107 , 108 ]. Prior multimodal DDI frameworks highlight the benefit of integrating complementary signals [ 13 ]. Substructure-level interactions further enrich the structural per-spective [ 51 ]. Comprehensive drug knowledge bases also provide essential annotations and links across modalities [72]. Despite recent progress, existing methods still face three criti-cal challenges in capturing similarity between new and old drugs for cold-start DDI prediction. First, many approaches only con-sider partial relationships or mechanisms (e.g., a single molecu-lar [ 31 , 43 , 51 , 57 , 121 ] or biomedical view [ 42 , 58 , 97 ]), overlook-ing cross-modal correlations that are essential for faithful simi-larity modeling. Second, similarity between new and old drugs is frequently computed separately across modalities and offline [ 1, 18 , 43 , 44 , 56 , 64 ], and then treated as fixed inputs to a down-stream predictor. Third, interpretability analyses for DDI prediction are typically single-modality and focus primarily on determinants of the perpetrator drug, while the mechanistic causes underlying the victim drug’s susceptibility are seldom examined [62, 70, 118]. To address these challenges, we propose the Cross-Modal-Fused End-to-end Learning Network (CMF-ELN) for cold-start DDI pre-diction. CMF-ELN operates on a unified principle: maximizing the utilization of cross-modal biomedical evidence to enable robust similarity learning and mechanistic transparency. The specific con-tributions are organized as follows: First, to construct comprehen-sive feature representations, the framework systematically extracts information from proteins, Morgan fingerprints, MACCS keys, and structural motifs to build four distinct knowledge graph channels. Second, these channels are integrated into a graph autoencoder that unifies representation learning and DDI prediction within a single end-to-end pipeline, ensuring seamless fusion of cross-modal data. Finally, CMF-ELN transcends the limitations of traditional single-sided analysis by incorporating a bidirectional interpretabil-ity mechanism. By precisely localizing key risk factors for both the perpetrator and the victim drugs, our model provides a compre-hensive explanatory logic chain and actionable insights to assist medical personnel in proactive risk evaluation. We summarize our main contributions as follows: 
+
+• CMF-ELN Model. We propose CMF-ELN to achieve high-accuracy cold-start DDI prediction and provide comprehen-sive DDI mechanism explanations. 
+
+• Multi-Modal Drug Knowledge Graph Construction. We devise a multi-modal drug knowledge construction strategy that builds four distinct drug-centered knowledge graphs, leveraging diverse biomedical data to enable comprehensive similarity modeling for cold-start drugs. 
+
+• End-to-End Integrative Joint Optimization. We propose a four-channel graph autoencoder that jointly optimizes similarity learning and DDI prediction. By replacing offline computations with an end-to-end approach, the framework aligns multi-scale embeddings and enhances robustness against noisy or missing data in cold-start scenarios. 
+
+• Dual-End Interpretability. We introduce a two-stage scheme that identifies dominant biological modalities and attributes key features. This uniquely reveals the "perpetrator" aggres-sive factors and "victim" vulnerabilities, providing transpar-ent mechanistic insights for clinical safety and pharmaco-logical research. 
+
+## 2 Related Work 2.1 Molecular Structure-Based Methods 
+
+Motifs, defined as significant subgraph patterns frequently occur-ring within molecular structures [ 50 ], have emerged as a powerful paradigm for enhancing molecular representation learning. Recent studies have leveraged motif-based approaches to capture intri-cate structural and functional relationships in molecular graphs. For instance, Zhang et al. [ 115 ] propose a motif-based pre-training framework (MGSSL) to extract multiscale information from molec-ular graphs, improving the robustness of molecular representations. Similarly, SSI-DDI [ 51 ] decomposes the DDI prediction task into identifying pairwise interactions between substructures (motifs), enabling a more granular analysis of molecular interactions. Further advancing this paradigm, Yu and Gao [ 109 ] construct a heteroge-neous graph incorporating motif and molecular nodes to model motif-level relationships, enhancing the understanding of complex molecular interactions via their HM-GNN model. Additionally, Ye et al. [ 105 ] introduce a hierarchical cross-level graph contrastive learning framework that extracts semantic motifs and captures intricate connections within drug-motif interaction graphs. Despite these advancements, relying on a single structural modal-ity often results in limited generalizability for cold-start DDI predic-tion. These models struggle to capture the latent pharmacological properties of new drugs that are not fully captured by visible sub-graph patterns, leading to a lack of robust discriminative signals when encountering novel chemical entities. 
+
+## 2.2 Knowledge Graph-Based Methods 
+
+Knowledge Graphs (KGs) facilitate a comprehensive approach to DDI modeling by integrating diverse biological entities and their relationships, such as drugs, targets, enzymes, and transporters. Several methodologies leverage KGs to enhance DDI prediction through advanced graph-based neural architectures. For instance, KGNN [42] employs Graph Convolutional Networks (GCNs) com-bined with neighborhood sampling to effectively capture valuable relational information within the graph structure. Similarly, La-GAT [27 ] and HAN-DDI [ 63 ] utilize link-aware and heterogeneous graph attention mechanisms respectively, generating multiple attention pathways for drug entities based on the heterogeneous connections between drug pairs. Furthermore, KGE-NFM [ 104 ] introduces a unified framework combining knowledge graph embeddings with neural factorization machines to model explicit and implicit feature interactions among drugs and their biological neighbors. DDKG [58 ] advances these efforts by learning drug embeddings from their inherent attributes within KGs, simultaneously incorporating neigh-boring node embeddings and relational triples to enhance represen-tation quality. Emer-GNN [ 114 ] focuses on predicting interactions CMF-ELN: A Cross-Modal-Fused End-to-end Learning Network for Cold-Start Drug-Drug Interaction Prediction KDD ’26, August 09–13, 2026, Jeju Island, Republic of Korea 
+
+for emerging drugs by exploiting the rich contextual information embedded in biomedical networks. Additionally, KnowDDI [ 69 ]refines drug representations by adaptively leveraging extensive neighborhood information from large-scale biomedical KGs. However, the lack of cross-modal integration between molecular structures and KG relations often results in suboptimal performance for cold-start DDI prediction, as these independent information streams fail to provide a holistic biological representation. 
+
+## 2.3 Interpretation for DDI Mechanisms 
+
+Enhancing the interpretability of DDI prediction is pivotal for elu-cidating the pharmacological mechanisms underlying interactions. A prominent line of research has focused on refining structural attention to localize risk factors. For instance, MetDDI [ 118 ] uti-lized local-global self-attention to capture motif-level interactions. Most recently, Mrhgnn [ 9] advanced this direction by establish-ing a hierarchical framework that provides explanations at both molecular and network levels. Parallel to structural analysis, ad-dressing interpretability in out-of-distribution or cold-start sce-narios has gained significant traction. DSIL-DDI [ 62 ] proposed domain-invariant substructure learning to extract causal, generaliz-able interaction patterns across different distributions. Building on the need for robust generalization, ZeroDDI [ 70 ] further integrated semantic descriptions with molecular graphs, enabling logic-based zero-shot reasoning for unseen drugs. Despite providing local insights, these methods lack a multi-modal explanatory perspective, failing to identify the contributions of diverse biological views or characterize the interaction mecha-nisms from the dual perspectives of perpetrator and victim drugs. 
+
+## 2.4 Representation Learning for Incomplete and Heterogeneous Data 
+
+The cold-start setting in DDI prediction shares core challenges with broader studies on sparse, incomplete, and heterogeneous data rep-resentation. A series of latent factor and feature-selection models by Wu, Luo, and collaborators investigate robust representations for high-dimensional sparse matrices, online streams, and web-service quality prediction [ 45 , 73 –89 , 92 , 93 , 98 , 99 , 111 ]. Recent tensor, fed-erated, and autoencoding extensions further emphasize learning re-liable latent structure from dynamic, privacy-sensitive, and partially observed data [ 3, 8, 17 , 23 , 25 , 28 , 34 –36 , 39 , 46 , 48 , 59 –61 , 66 , 68 , 94 ,95 , 100 , 106 , 107 , 110 , 112 , 119 ]. In parallel, graph neural represen-tation learning has expanded from efficient neighborhood aggre-gation to high-order, dual-channel, dynamic, and message-passing formulations [ 2, 4– 6, 19 – 22 , 26 , 37 , 38 , 67 , 91 , 101 , 103 , 113 , 120 ]. These directions also connect to biomedical and healthcare network learning, including drug repositioning, miRNA–drug association prediction, lncRNA–miRNA interaction modeling, protein-complex identification, and pathological grading [ 33 , 54 , 96 , 102 , 116 , 117 ]. These studies motivate CMF-ELN’s focus on fusing complementary modalities while explicitly handling sparsity and missingness in cold-start DDI prediction. 
+
+## 3 Preliminaries 
+
+Drug Knowledge Graph. The drug knowledge graph, denoted as 𝐺 = (𝐷,𝑇 , 𝑅 ), is a specialized knowledge graph constructed for the purpose of predicting DDI. It comprises three primary compo-nents: 𝐷 , representing a subset of drug entities; 𝑇 , representing a subset of tail entities associated with drugs (e.g., drug-metabolizing enzymes); and 𝑅 , denoting the set of relations between drugs and tail entities. Formally, the drug knowledge graph is defined as a collection of triples (𝑑, 𝑡, 𝑟 𝑑𝑡 ), where each triple describes a connec-tion between a drug entity 𝑑 ∈ 𝐷 , a tail entity 𝑡 ∈ 𝑇 , and a relation 
+
+𝑟 𝑑𝑡 ∈ 𝑅 . Systematic analysis of 𝐺 yields valuable insights into the re-lationships between drugs and their associated tail entities, thereby facilitating more accurate prediction of DDI. 
+
+Cold-start DDI Prediction. Our primary objective is to predict specific DDI between a given pair of drugs 𝑑 𝑖 and 𝑑 𝑗 by leverag-ing both the DDI matrix Y and the drug knowledge graph 𝐺 . To this end, we define the prediction function ˆ𝑦 𝑖 𝑗 = Γ  𝑑 𝑖 , 𝑑 𝑗 Θ, Y, 𝐺 ,where Θ denotes the set of model parameters and Γ(·) integrates information from Y and 𝐺 to produce an estimate ˆ𝑦 𝑖 𝑗 represent-ing the likelihood or category of the interaction between 𝑑 𝑖 and 
+
+𝑑 𝑗 . By jointly considering heterogeneous sources of information and model parameters, this formulation aims to improve both the accuracy and robustness of DDI prediction. 
+
+## 4 Proposed Method 
+
+Overview. The overall framework of the proposed CMF-ELN is illustrated in Fig. 1. Specifically, Fig. 1(a) depicts the end-to-end learning pipeline for cross-modal fusion and DDI prediction, while Fig. 1(b) presents the bidirectional interpretability mechanism de-signed to localize key risk factors. The following subsections de-scribe these components in detail, outlining the specific method-ologies employed in each module. 
+
+## 4.1 Multi-Modal Drug Knowledge Graph Construction 
+
+To comprehensively capture the multifaceted characteristics of drugs, we construct four distinct modality-specific knowledge graphs, each encoding a specific type of biological or chemical information. Each graph comprises triples formatted as ⟨drug , entity , relation ⟩,wherein entity represents a distinct biological component or struc-tural attribute, and relation signifies the inclusion or interaction. The construction of each component graph is detailed below: 
+
+Drug-Protein. We utilize DrugBank[ 72 ] to extract proteins as-sociated with DDIs. Specifically, we focus on two critical categories: drug-metabolizing enzymes and drug transporters. Enzymes cat-alyze biotransformation, whereas transporters regulate drug up-take and efflux. Accordingly, we construct triples of the form ⟨drug ,
+
+protein , relation ⟩, indicating the specific interaction type (e.g., meta-bolic involvement or transporter-mediated binding). 
+
+Drug-Morgan. We generate Morgan fingerprints[ 55 ] to capture the local topological structures of drugs. Specifically, for each drug molecule, the algorithm iterates through each atom to encode its immediate neighborhood within a defined radius into a fixed-length binary vector. We then convert the activated fingerprint bits from their binary positions to decimal indices, which are utilized as discrete fingerprint-bit identifiers. Accordingly, we construct triples of the form ⟨drug , fingerprint-bit index , include ⟩, indicating that the drug contains the corresponding Morgan fingerprint bit. KDD ’26, August 09–13, 2026, Jeju Island, Republic of Korea Di Wu et al. 
+
+Drug-MACCS. The MACCS-key protocol follows the standard definition [ 14 ]. For each drug, we compute its MACCS fingerprint and convert activated bits to decimal indices as discrete identifiers. In this work, we retain 13 selected MACCS keys as drug-associated entities. Accordingly, we construct triples ⟨drug , index , include ⟩,indicating the presence of a MACCS key in the drug. 
+
+Drug-Motif. Motifs are drug molecular substructures obtained by fragmenting each molecule according to chemistry-informed reaction rules[ 11 ]. Accordingly, we construct triples of the form 
+
+⟨drug , motif , include ⟩, indicating that the motif is a fragmented substructure derived from the drug. By establishing these four parallel knowledge graphs, the sys-tem provides diverse drug-related views to support the subsequent cross-modal learning. This multi-view representation effectively compensates for the sparsity or absence of specific modality data in certain drugs, establishing a robust foundation for the feature extraction and DDI inference within the CMF-ELN framework. 
+
+## 4.2 End-to-End Integrative Joint Optimization 
+
+4.2.1 GCN-based Graph Autoencoder. To effectively capture the structural and semantic information within the cross-modal knowl-edge graph, we employ a Graph Autoencoder (GAE) architecture based on Graph Convolutional Networks (GCN), following the broader practice of using graph encoders and masked or autoen-coding objectives for robust representation learning [ 4 , 21 , 22 , 29 ]. Structurally, this framework is composed of two coupled modules: an Encoder and a Decoder. The Encoder is designed to project heterogeneous node features into a shared low-dimensional latent space via graph convolution operations. Conversely, the Decoder operates on these latent embeddings to reconstruct the topolog-ical relations between entities, thereby supervising the model to learn expressive and robust representations. The specific designs of these two components, the Encoder and the Decoder, are detailed as follows. 
+
+Encoder for Feature Representation. Serving as the encoding component, this module maps the heterogeneous graph data into a shared latent space. Specifically, to effectively capture both the se-mantic attributes and topological structure within the cross-modal knowledge graph, we employ a GCN-based architecture. This en-coder transforms high-dimensional node features into compact low-dimensional embeddings ( Z) while preserving local graph neigh-borhoods. The detailed framework involves feature projectors and stacked graph convolutional layers, as elaborated below: We differentiate between two node categories: drug nodes and tail-entity nodes. Let Xdrug and Xtail denote their initial feature representations with dimensions 𝑁 𝑑 × 𝐹 𝑑 and 𝑁 𝑡 × 𝐹 𝑡 , respectively. To align these heterogeneous feature spaces, we employ two type-specific feature transformation modules to map the drug and tail features into a shared latent space with dimension 𝐹 . Both modules share an identical architecture, parameterized as a two-layer MLP equipped with normalization, ReLU activation, and dropout. The transformed features are subsequently concatenated to form a uni-fied node feature matrix X ∈ R(𝑁 𝑑 +𝑁 𝑡 ) × 𝐹 for the subsequent graph convolution layers. Formally, the layer-wise propagation within these modules is defined as: 
+
+H(𝑙 +1) = 𝜎 
+
+
+
+Norm 
+
+
+
+H(𝑙 ) W(𝑙 ) + b(𝑙 )  
+
+, (1) where H(0) represents the input features (either Xdrug or Xtail ), and W(𝑙 ) and b(𝑙 ) are learnable parameters. The normalization strategy is layer-dependent: LayerNorm is applied after the first linear transformation, while BatchNorm is applied after the second, and 𝜎 (·) denotes the ReLU activation function. Then, the 𝑙 -th GCN layer updates node representations via neigh-borhood aggregation: 
+
+H(𝑙 +1) = 𝜎 
+
+ ˜D− 12 ˜A ˜D− 12 H(𝑙 ) W(𝑙 ) + b(𝑙 ) 
+
+. (2) Here, ˜A = A + I denotes the adjacency matrix with added self-connections, where A is the original adjacency matrix and I is the identity matrix. ˜D represents the diagonal degree matrix with entries ˜D𝑖𝑖 = Í𝑗 ˜A𝑖 𝑗 . 𝑙 ∈ { 0, 1} denotes the layer index in our two-layer GCN, and W(𝑙 ) , b(𝑙 ) are learnable parameters. In our implementation, the first GCN layer maps 𝐹 -dimensional inputs to 
+
+2𝐷 hidden dimensions, and the second GCN layer maps 2𝐷 to 2𝐷 :
+
+W(0) ∈ R𝐹 ×2𝐷 and W(1) ∈ R2𝐷 ×2𝐷 .Finally, a linear projection produces the 𝐷 -dimensional node embeddings: 
+
+Z = H(2) Wout + bout , (3) where Wout ∈ R2𝐷 ×𝐷 and Z ∈ R𝑁 ×𝐷 .
+
+Decoder for Relation Reconstruction. In the decoding phase, we seek to recover the original graph structure from the low-dimensional latent space. To achieve this, we employ a decoder module designed to reconstruct the semantic relations between nodes using the learned embeddings Z. Specifically, for edge-level tasks, we first construct the edge feature for each directed edge (𝑖, 𝑗 )
+
+by concatenating the embeddings of its incident nodes. Formally, 
+
+e𝑖 𝑗 =  z𝑖 ∥ z𝑗 
+
+, (4) where z𝑖 and z𝑗 denote the source and destination node embed-dings extracted by the encoder, and ∥ denotes vector concatenation. This edge feature is fed into a linear edge classifier, serving as the decoding function, to produce relation logits: 
+
+u𝑖 𝑗 = Wedge e𝑖 𝑗 + bedge . (5) Here, Wedge and bedge are learnable parameters, and u𝑖 𝑗 denotes the predicted relation scores for edge (𝑖, 𝑗 ), effectively mapping the latent representations back to the relation space. To explicitly guide the learning of relation semantics, we employ a reconstruction-based objective. Specifically, for the 𝑘 -th modality, the edge-level loss Ledge 𝑘 supervises the prediction of the ground-truth relation label between the drug and the tail entity. It is defined as the multi-class cross-entropy loss over the calculated logits: 
+
+Ledge 𝑘 = 1
+
+𝑁 (𝑘 )  
+
+> edge
+> 𝑁 (𝑘 )
+> edge
+
+∑︁ 
+
+> 𝑚 =1
+
+©«
+
+− log exp 
+
+
+
+𝑢 (𝑘 )  
+
+> 𝑚,𝑟 (𝑘 )
+> 𝑚
+
+Í𝐶 𝑘  
+
+> 𝑐 =1
+
+exp 
+
+
+
+𝑢 (𝑘 )
+
+> 𝑚,𝑐
+
+ª®®®®¬
+
+, (6) where 𝑁 (𝑘 ) 
+
+> edge
+
+denotes the number of supervised drug–tail edges in the 𝑘 -th modality and 𝐶 𝑘 is the number of relation types. The term 
+
+u(𝑘 ) = [𝑢 (𝑘 ) 
+
+> 𝑚,𝑐
+
+] ∈ R𝑁 (𝑘 )  
+
+> edge ×𝐶 𝑘
+
+represents the edge logits from Eq. (5) for the 𝑚 -th edge in this modality, while r(𝑘 ) = {𝑟 (𝑘 ) 
+
+> 𝑚
+
+} denotes the ground-truth relation labels. CMF-ELN: A Cross-Modal-Fused End-to-end Learning Network for Cold-Start Drug-Drug Interaction Prediction KDD ’26, August 09–13, 2026, Jeju Island, Republic of Korea 
+
+Figure 1: (a) The overall structure of the proposed CMF-ELN model. (b) Two-stage interpretability algorithm schematic for localizing key feature pairs. 
+
+In summary, the Encoder effectively integrates node feature information and graph topological structure through GCN opera-tions, producing informative node embeddings and edge features optimized via the aforementioned edge-level supervision. 
+
+4.2.2 Multilayer Perceptron Inference Network. To integrate the cross-modal embeddings generated by the graph autoencoder mod-ules and perform DDI prediction, we design a multilayer perceptron (MLP) inference network. This network fuses drug embeddings from multiple modalities and outputs the DDI prediction results. The architecture and inference procedure are described as follows: The MLP inference network comprises stacked fully connected layers with non-linear activation, batch normalization, and dropout regularization. Its primary function is to progressively reduce the dimensionality of fused features while preserving discriminative information for DDI prediction. The input to the MLP network is a fused feature vector con-structed from drug embeddings derived from multiple graph au-toencoders. For a drug pair (𝑖, 𝑗 ), the fusion process involves two stages: intra-drug fusion (combining embeddings of a single drug from multiple sources) and drug-pair fusion (combining the fused representations of the two drugs). (1) Embedding Extraction : For the drug pair (𝑖, 𝑗 ), embed-dings are extracted from four graph autoencoding modules (GAE 1 to GAE 4). Let z(𝑚 ) 
+
+> 𝑖
+
+∈ R𝐶 and z(𝑚 ) 
+
+> 𝑗
+
+∈ R𝐶 denote the embeddings of drug 𝑖 and drug 𝑗 from the 𝑚 -th GAE, where 
+
+𝐶 is the embedding dimension and 𝑚 ∈ { 1, 2, 3, 4}.KDD ’26, August 09–13, 2026, Jeju Island, Republic of Korea Di Wu et al. 
+
+(2) Intra-Drug Fusion : For each drug, embeddings from the four GAE modules are concatenated to form a unified node representation. For drug 𝑖 , this is defined as: 
+
+h𝑖 =  z(1) 
+
+> 𝑖
+
+∥ z(2) 
+
+> 𝑖
+
+∥ z(3) 
+
+> 𝑖
+
+∥ z(4)
+
+> 𝑖
+
+, (7) where h𝑖 ∈ R4𝐶 . Similarly, the fused representation of drug 
+
+𝑗 , denoted as h𝑗 ∈ R4𝐶 , is obtained, ensuring symmetric feature structures. (3) Drug-Pair Fusion : The fused representations of the two drugs are concatenated to form the final feature vector for the drug pair, i.e., v𝑖 𝑗 =  h𝑖 ∥ h𝑗 
+
+. Here, v𝑖 𝑗 ∈ R8𝐶 integrates the cross-modal information from both drugs. (4) Inference via MLP : The fused vector v𝑖 𝑗 is processed through three stacked linear layers, each applying a linear transfor-mation with bias, followed by ReLU activation and batch normalization. The operation of the (𝑙 +1)-th layer is defined as: 
+
+H(𝑙 +1) = 𝜎 
+
+
+
+H(𝑙 ) W(𝑙 ) + b(𝑙 ) 
+
+, (8) where 𝑙 ∈ { 0, 1, 2}, and the input is initialized as H(0) = v𝑖 𝑗 .The final layer outputs the prediction logits ˆy𝑖 𝑗 , where the output dimension corresponds to the total number of DDI types, denoted as 𝐾 .To optimize the model for accurate DDI event classification, we employ a supervised learning objective based on the model outputs. Specifically, the label-level loss, Llabel , is computed using the standard multi-class cross-entropy function. Considering a mini-batch of 𝑁 samples, let y𝑛 ∈ { 0, 1}𝐷 denote the one-hot encoded ground-truth vector for the 𝑛 -th drug pair, and ˆy𝑛 ∈ R𝐷 denote the predicted raw logits. The loss is defined as: 
+
+Llabel = − 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑛 =1
+> 𝐷
+
+∑︁ 
+
+> 𝑑 =1
+
+𝑦 𝑛,𝑑 log exp ( ˆ𝑦 𝑛,𝑑 )
+
+Í𝐷 𝑗 =1 exp ( ˆ𝑦 𝑛,𝑗 )
+
+!
+
+, (9) where 𝐷 represents the total number of DDI types, 𝑦 𝑛,𝑑 is the binary indicator ( 0 or 1) confirming if class 𝑑 is the correct label for sample 
+
+𝑛 , and ˆ𝑦 𝑛,𝑑 represents the output logit for the corresponding class. 
+
+4.2.3 Joint Supervision with Label Prediction and Edge Reconstruc-tion. To jointly optimize the GAE-based representation learning and the MLP-based inference, we formulate a total objective function by aggregating the previously defined loss terms. This composite loss balances the primary DDI classification task with the auxiliary edge reconstruction tasks, and is expressed as: 
+
+L = Llabel +
+
+> 4
+
+∑︁ 
+
+> 𝑘 =1
+
+𝜆 𝑘 Ledge 𝑘 , (10) where 𝜆 𝑘 are hyperparameters that control the relative contribution of the reconstruction loss Ledge 𝑘 for the 𝑘 -th modality. By minimizing this unified objective, the model performs end-to-end learning of embeddings that not only reconstruct modality-specific graph structures but also align with the DDI prediction goal. This coupling mechanism induces pair-specific, context-conditioned similarity between drugs, enabling the model to adapt to missing or noisy modalities while strengthening generalization performance. 
+
+## 4.3 Dual-End Interpretability 
+
+In line with MeT-DDI[ 118 ], we use the same interpretability eval-uation data constructed under its scenario definition. Specifically, MeT-DDI motivates explanations by a mechanistic chain in which drug 𝑗 inhibits the activity of the metabolic enzymes responsible for drug 𝑖 , thereby reducing drug 𝑖 ’s metabolic rate. Following this rationale, and given our multi-modal evidence space, we fix the victim-side evidence of drug 𝑖 to modality 1 (enzyme-related fea-tures), while allowing drug 𝑗 to select its most influential modality from {1, 2, 3, 4}.To interpret the mechanistic evidence underlying the model’s predictions, we employ a hierarchical perturbation-based attribu-tion scheme. By masking specific edges in the input relation matrix and quantifying the resulting shift in the fused representation, we identify critical evidence in a coarse-to-fine manner (Fig. 1(b)): Stage 1 determines the dominant modality for drug 𝑗 , which restricts the search space for Stage 2 to localize the decisive tail-entity pair. We quantify perturbation by the squared ℓ2 distance. Let Rfull 
+
+denote the complete relation matrix characterizing the connections between drugs and tail entities, and let 𝑓 (·) represent the trained fusion model that maps this relation matrix to the final fused repre-sentation. Let 𝑚 𝑖 and 𝑚 𝑗 denote the selected modalities for drug 𝑖 
+
+and drug 𝑗 , respectively. In Stage-1, we fix 𝑚 𝑖 = 1 and enumerate 𝑚 𝑗 ∈ { 1, 2, 3, 4}. For each (𝑚 𝑖 , 𝑚 𝑗 ), we mask the rows in Rfull corresponding to the tail features of (𝑚 𝑖 , drug 𝑖 ) and (𝑚 𝑗 , drug 𝑗 ) to form the perturbed matrix 
+
+R(𝑚 𝑖 ,𝑚 𝑗 ) 
+
+> mask
+
+, and define the modality-level perturbation as 
+
+𝑑 (𝑚 𝑖 , 𝑚 𝑗 ) = 𝑓 (Rfull ) − 𝑓 
+
+
+
+R(𝑚 𝑖 ,𝑚 𝑗 )
+
+> mask
+
+ 2
+
+. (11) Since larger masking scope tends to induce larger perturbations, we calibrate by the masking size, defined as 
+
+𝑛 𝑡 = tails (1) 
+
+> 𝑖
+
++ tails (𝑚 ) 
+
+> 𝑗
+
+. (12) Here, tails (1) 
+
+> 𝑖
+
+and tails (𝑚 ) 
+
+> 𝑗
+
+denote the numbers of tail features (i.e., tail entities) associated with drug 𝑖 in modality 1 and drug 𝑗 
+
+in modality 𝑚 , respectively; thus 𝑛 𝑡 measures the total number of masked entries under modality pair (𝑚 𝑖 =1, 𝑚 𝑗 =𝑚 ).We bucket 𝑛 𝑡 and compute a 𝑧 -score using bucket-wise sta-tistics (𝜇 𝑏 , 𝜎 𝑏 ) estimated from a calibration set (falling back to global/neighboring buckets if needed). We then determine 𝑚 ∗ 
+
+> 𝑗
+
+, the most influential modality for drug 𝑗 , by selecting the modality whose masking yields the largest size-calibrated perturbation: 
+
+𝑚 ∗ 
+
+> 𝑗
+
+= arg max 
+
+> 𝑚 𝑗
+
+𝑑 (𝑚 𝑖 , 𝑚 𝑗 ) − 𝜇 𝑏 (𝑛 𝑡 )
+
+𝜎 𝑏 (𝑛 𝑡 ) + 𝜀 . (13) Given 𝑚 ∗ 
+
+> 𝑗
+
+, we enumerate 𝑡 𝑖 ∈ tails (1) 
+
+> 𝑖
+
+and 𝑡 𝑗 ∈ tails (𝑚 ∗  
+
+> 𝑗 )
+> 𝑗
+
+, and per-form cell-level masking by occluding only the two entries (1, drug 𝑖 , 𝑡 𝑖 )
+
+and (𝑚 ∗ 
+
+> 𝑗
+
+, drug 𝑗 , 𝑡 𝑗 ) in the relation matrix Rfull (replaced with a ref-erence value, e.g., zero). The tail-pair importance is 
+
+𝑑 (𝑡 𝑖 , 𝑡 𝑗 ) = 𝑓 (Rfull ) − 𝑓 (R(𝑡 𝑖 ,𝑡 𝑗 ) 
+
+> mask
+
+) 2
+
+, (14) and we rank tail pairs by 𝑑 (𝑡 𝑖 , 𝑡 𝑗 ) and report Top-1.CMF-ELN: A Cross-Modal-Fused End-to-end Learning Network for Cold-Start Drug-Drug Interaction Prediction KDD ’26, August 09–13, 2026, Jeju Island, Republic of Korea 
+
+Table 1: The performance of CMF-ELN and its competitors on (known drug)–(new drug) of Dataset 1 and Dataset 2. 
+
+Dataset Metric MDDI-SCL MDF-SA-DDI MDNN MKG-FENN Know-DDI Emer-GNN MeT-DDI ImageDDI CMF-ELN 
+
+Dataset 1 
+
+ACC 0.7011 ±0.021 0.7029 ±0.018 0.6933 ±0.025 0.6625 ±0.014 0.6712 ±0.027 0.6828 ±0.016 0.6872 ±0.017 0.7049 ±0.018 0.7276 ±0.025 
+
+AUPR 0.7632 ±0.012 0.7437 ±0.022 0.7337 ±0.017 0.7359 ±0.020 0.6248 ±0.031 0.6129 ±0.029 0.7493 ±0.011 0.7523 ±0.007 0.7977 ±0.031 
+
+AUC 0.8995 ±0.009 0.8901 ±0.013 0.8809 ±0.020 0.8848 ±0.011 0.8971 ±0.019 0.8876 ±0.018 0.8875 ±0.031 0.8981 ±0.011 0.9169 ±0.019 
+
+F1 0.6939 ±0.020 0.5993 ±0.018 0.6848 ±0.016 0.6408 ±0.025 0.5209 ±0.023 0.5036 ±0.019 0.6684 ±0.011 0.6825 ±0.007 0.7267 ±0.024 
+
+Pre 0.7113 ±0.014 0.6873 ±0.027 0.7006 ±0.019 0.6728 ±0.031 0.6279 ±0.017 0.6421 ±0.022 0.6921 ±0.018 0.7022 ±0.012 0.7420 ±0.007 
+
+Rec 0.6796 ±0.023 0.5848 ±0.019 0.6718 ±0.020 0.6189 ±0.021 0.5628 ±0.013 0.6721 ±0.025 0.6537 ±0.022 0.6679 ±0.008 0.7138 ±0.015 Dataset 2 
+
+ACC 0.7122 ±0.017 0.7035 ±0.021 0.7146 ±0.020 0.6632 ±0.028 0.6972 ±0.015 0.6706 ±0.019 0.6659 ±0.011 0.6927 ±0.017 0.7323 ±0.023 
+
+AUPR 0.7123 ±0.022 0.7169 ±0.019 0.7326 ±0.025 0.6451 ±0.018 0.6837 ±0.023 0.6731 ±0.020 0.6945 ±0.021 0.6807 ±0.009 0.7716 ±0.021 
+
+AUC 0.9621 ±0.014 0.9760 ±0.016 0.9624 ±0.013 0.9289 ±0.020 0.9256 ±0.015 0.9353 ±0.017 0.9763 ±0.012 0.9233 ±0.011 0.9788 ±0.014 
+
+F1 0.6322 ±0.018 0.6121 ±0.015 0.6237 ±0.019 0.6106 ±0.016 0.5924 ±0.020 0.6004 ±0.021 0.4727 ±0.022 0.5898 ±0.021 0.6171 ±0.015 
+
+Pre 0.7122 ±0.022 0.7036 ±0.017 0.7178 ±0.020 0.6424 ±0.019 0.6781 ±0.021 0.6521 ±0.016 0.5285 ±0.008 0.6761 ±0.005 0.7022 ±0.026 
+
+Rec 0.5519 ±0.019 0.5601 ±0.015 0.5597 ±0.021 0.5379 ±0.017 0.5231 ±0.020 0.5279 ±0.019 0.4795 ±0.031 0.5325 ±0.016 0.5738 ±0.011 Statistic* 
+
+Win/Loss 10/2 11/1 10/2 12/0 12/0 12/0 12/0 12/0 91/5 
+
+p-value 0.0047 0.0029 0.0060 0.0022 0.0022 0.0022 0.0022 0.0022 -F-rank 2.75 4.42 3.83 7.17 7.08 6.92 6.25 5.17 1.42    
+
+> *Underlined: Best baseline value. Win/Loss : Comparison of CMF-ELN’s performance across metrics. P-value : Wilcoxon signed-rank test results.
+> F-rank : average Friedman rank across six metrics.
+
+Table 2: The performance of CMF-ELN and its competitors on (new drug)–(new drug) of Dataset 1 and Dataset 2. 
+
+Dataset Metric MDDI-SCL MDF-SA-DDI MDNN MKG-FENN Know-DDI Emer-GNN MeT-DDI ImageDDI CMF-ELN 
+
+Dataset 1 
+
+ACC 0.5533 ±0.021 0.5391 ±0.018 0.5316 ±0.027 0.4758 ±0.016 0.5172 ±0.020 0.5231 ±0.023 0.5581 ±0.025 0.5506 ±0.012 0.5827 ±0.031 
+
+AUPR 0.5404 ±0.014 0.5417 ±0.017 0.5378 ±0.019 0.4671 ±0.021 0.5721 ±0.013 0.5698 ±0.015 0.5563 ±0.022 0.5497 ±0.007 0.6194 ±0.015 
+
+AUC 0.8022 ±0.010 0.8137 ±0.015 0.7876 ±0.014 0.7511 ±0.009 0.8236 ±0.014 0.8189 ±0.014 0.7942 ±0.011 0.7896 ±0.018 0.8321 ±0.019 
+
+F1 0.5405 ±0.018 0.5213 ±0.014 0.5087 ±0.023 0.4102 ±0.020 0.5213 ±0.019 0.5509 ±0.017 0.5157 ±0.014 0.5134 ±0.007 0.5732 ±0.024 
+
+Pre 0.5584 ±0.022 0.6139 ±0.018 0.5394 ±0.017 0.4876 ±0.021 0.6039 ±0.015 0.6123 ±0.025 0.5521 ±0.011 0.5547 ±0.006 0.5997 ±0.015 
+
+Rec 0.5270 ±0.016 0.5231 ±0.020 0.4893 ±0.023 0.3888 ±0.018 0.5234 ±0.021 0.5190 ±0.013 0.4982 ±0.026 0.5182 ±0.013 0.5543 ±0.017 Dataset 2 
+
+ACC 0.5008 ±0.018 0.5105 ±0.021 0.5110 ±0.020 0.4143 ±0.022 0.4421 ±0.017 0.4674 ±0.019 0.4471 ±0.016 0.4925 ±0.012 0.5161 ±0.021 
+
+AUPR 0.4787 ±0.023 0.4926 ±0.019 0.4598 ±0.020 0.3722 ±0.021 0.4198 ±0.016 0.4134 ±0.018 0.4118 ±0.013 0.4633 ±0.009 0.4965 ±0.023 
+
+AUC 0.9406 ±0.015 0.9361 ±0.017 0.9049 ±0.023 0.9189 ±0.014 0.9327 ±0.018 0.9376 ±0.019 0.9355 ±0.016 0.9233 ±0.014 0.9382 ±0.018 
+
+F1 0.2752 ±0.017 0.2609 ±0.018 0.2789 ±0.019 0.1926 ±0.024 0.2203 ±0.017 0.2311 ±0.022 0.2722 ±0.024 0.2774 ±0.015 0.2830 ±0.014 
+
+Pre 0.3128 ±0.017 0.3124 ±0.020 0.2923 ±0.021 0.2231 ±0.018 0.3023 ±0.007 0.3101 ±0.016 0.3073 ±0.006 0.3031 ±0.021 0.3558 ±0.025 
+
+Rec 0.2483 ±0.022 0.2372 ±0.017 0.2662 ±0.018 0.1868 ±0.021 0.2159 ±0.019 0.2098 ±0.024 0.2871 ±0.006 0.2661 ±0.008 0.2569 ±0.024 Statistic* 
+
+Win/Loss 11/1 11/1 11/1 12/0 11/1 11/1 11/1 11/1 89/7 
+
+p-value 0.0029 0.0060 0.0047 0.0022 0.0028 0.0037 0.0060 0.0037 -F-rank 3.67 4.04 6.17 8.92 5.58 4.75 5.25 5.25 1.58 
+
+## 5 Experiments 
+
+In the subsequent experiments, we primarily focus on addressing the following three research questions: 
+
+• RQ.1: Does the proposed CMF-ELN model outperform the state-of-the-art models in predicting DDIs under two scenar-ios: between one known drug and one new drug (Task 1), and between two new drugs (Task 2)? 
+
+• RQ.2: What are the contributions of each modality in the proposed CMF-ELN model (ablation study)? 
+
+## 5.1 General Settings 
+
+Datasets. Two benchmark datasets from DrugBank are employed: Dataset 1 [ 118 ] (1,409 drugs; 343,036 pairs; 4 DDI types) and Dataset 2 [ 57 ] (1,710 drugs; 192,284 pairs; 86 DDI types). We further in-tegrated four data modalities for each drug, specifically protein, Morgan fingerprints, MACCS keys, and structural motifs. 
+
+Evaluate Metrics. For the purpose of assessing the proposed CMF-ELN model, we employ a collection of evaluation metrics suit-able for multi-class classification tasks. This set of metrics encom-passes accuracy (ACC), the area under the precision-recall curve (AUPR), the area under the receiver operating characteristic curve (AUC), F1 score, precision (Pre), and recall (Rec). 
+
+Baselines. We compare CMF-ELN against eight state-of-the-art baselines, including MKG-FENN [ 90 ], KnowDDI [ 69 ], Emer-GNN [ 114 ], MDF-SA-DDI [ 41 ], MDDI-SCL [ 40 ], MDNN [ 47 ], MetDDI [118], and ImageDDI [24]. 
+
+Implementation details. In the experimental configuration, the model was trained with an embedding size of 128, a learning rate of 1 × 10 −3, and a regularization weight of 10 −6.
+
+## 5.2 Comparative Performance with Baseline Approaches (RQ.1) 
+
+Tables 1 and 2 report the performance comparison between CMF-ELN and the baseline models under the two cold-start settings. Following a five-fold cross-validation protocol, we designate one-fifth of drug types as “new” for each fold and isolate all associated DDI pairs to form the test set. Overall, CMF-ELN outperforms the competitors in most cases and yields the best Friedman rank. Specifically, CMF-ELN achieves 91 wins and 5 losses in the known drug–new drug setting (Table 1), and 89 wins and 7 losses in the new drug–new drug setting (Table 2). Moreover, CMF-ELN achieves the superior Friedman ranks [ 16 ] of 1.42 and 1.58 in the two settings, re-spectively, demonstrating its consistently strong performance over the comparison methods. Furthermore, the calculated 𝑝 -values [ 12 ]KDD ’26, August 09–13, 2026, Jeju Island, Republic of Korea Di Wu et al. 
+
+across all datasets are less than 0.05, confirming that the perfor-mance improvements achieved by the proposed CMF-ELN model are statistically significant. 
+
+## 5.3 Ablation Analysis (RQ.2)                                                                                                                 
+
+> Modalities ACC AUPR AUC F1 PRF-rank
+> 1234 0.7276 0.7977 0.9169 0.7267 0.7420 0.7138 1.83 123 0.7246 0.7951 0.9161 0.7226 0.7418 0.7069 3.25 124 0.7232 0.7883 0.9137 0.7224 0.7414 0.7069 4.75 134 0.7197 0.8036 0.9188 0.7129 0.7468 0.6887 3.33 234 0.6905 0.7351 0.8853 0.6803 0.6977 0.6661 11.17 12 0.7211 0.7959 0.9155 0.7147 0.7538 0.6877 3.83 13 0.7192 0.7931 0.9148 0.7146 0.7517 0.6886 4.83 14 0.7141 0.7973 0.9147 0.7051 0.7356 0.6827 6.17 23 0.6872 0.7481 0.8914 0.6733 0.7141 0.6465 9.50 24 0.6851 0.7441 0.8882 0.6691 0.7084 0.6431 11.33 34 0.6792 0.7444 0.8895 0.6623 0.6965 0.6389 12.17 10.7011 0.7808 0.9084 0.6968 0.7295 0.6735 8.00 20.6843 0.7403 0.8867 0.6709 0.7068 0.6464 11.67 30.6759 0.7394 0.8885 0.6612 0.6886 0.6412 13.17 40.6516 0.7101 0.8734 0.6317 0.6624 0.6104 15.00
+
+Table 3: Ablation study of CMF-ELN cross-modal knowledge graph components on Dataset 1 under Task 1. 
+
+To systematically investigate the impact of various drug embed-ding combinations from distinct channels, comprehensive ablation studies were conducted to assess modality contributions. Specifi-cally, the numbers used to denote CMF-ELN variants correspond to the four modality-specific knowledge graph channels: 1 represents the Drug-Protein channel, 2 represents the Drug-Morgan chan-nel, 3 represents the Drug-MACCS channel, and 4 represents the Drug-Motif channel. Therefore, variants 1–4 denote single-channel settings, whereas combinations such as 12, 123, and 1234 denote multi-channel fusion settings. Multiple CMF-ELN variants were developed, with their predictive performance rigorously assessed via evaluation metrics. The representative results for Dataset 1 are summarized in Table 3. Our analysis indicates that synthesizing drug representations from integrated molecular and biological pro-files is a highly effective strategy. While single-channel models yielded satisfactory performance, implementing multi-channel fu-sion architectures led to progressive and significant improvements, with the complete CMF-ELN model achieving optimal results. This enhanced performance is attributed to the strategic integration of diverse channels, which facilitates the exploration of complemen-tary drug facets—ranging from molecular topology and functional groups to biological interactions. By capturing these multifaceted characteristics, the CMF-ELN model gains a more nuanced under-standing of complex drug mechanisms, ultimately resulting in the highest accuracy for DDI prediction. Figure 2 visualizes the fused and unimodal embeddings for Task 1 on Dataset 2. The t-SNE plots show that the fused embedding yields a more compact intra-class structure and clearer inter-class separation than any unimodal embedding. To quantify this gain, we report the Silhouette coefficient [ 53 ] and KNN accuracy [ 10 ] on the 2D embeddings, providing an objective assessment of clustering quality and label separability. 
+
+## 6 Conclusion 
+
+In this work, we introduce CMF-ELN, a cross-modal end-to-end framework for cold-start DDI prediction by fusing drug-centered knowledge graphs with multi-view molecular and biomedical evi-dence. Extensive experiments on two real-world datasets demon-strate that CMF-ELN consistently outperforms state-of-the-art base-lines and achieves strong performance in cold-start settings by uni-fying similarity learning and DDI prediction within a single pipeline. Importantly, the proposed two-stage interpretability scheme (modal-ity identification followed by feature attribution) provides mecha-nistically coherent evidence chains for both perpetrator and victim drugs, which enhances the practical utility of model outputs by supporting mechanism verification, risk assessment, and targeted experimental or clinical follow-up. 
+
+## Acknowledgments 
+
+This work was supported by the National Natural Science Foun-dation of China (62576289 and 62302030), the New Chongqing Youth Innovation Talent Project under grant CSTB2024NSCQQC-XMX0035, the Open Project of Key Laboratory of Knowledge En-gineering with Big Data at the Ministry of Education of China (BigKEOpen2025-03), and the Southwest University Graduate Stu-dent Research Innovation (SWUS26112). Thanks to the High Per-formance Computing (HPC) clusters at Southwest University. Yi He was not supported by any of the above funding. 
+
+## References 
+
+[1] E Amiri Souri, Roman Laddach, SN Karagiannis, Lazaros G Papageorgiou, and Sophia Tsoka. 2022. Novel drug-target interactions via link prediction and network embedding. BMC bioinformatics 23, 1 (2022), 121. [2] F. Bi, T. He, Y. S. Ong, and X. Luo. 2024. Graph Linear Convolution Pooling for Learning in Incomplete High-Dimensional Data. IEEE Transactions on Knowledge and Data Engineering 37, 4 (2024), 1838–1852. [3] J. Chen, K. Liu, X. Luo, Y. Yuan, K. Sedraoui, Y. Al-Turki, and M. C. Zhou. 2024. A State-Migration Particle Swarm Optimizer for Adaptive Latent Factor Analysis of High-Dimensional and Incomplete Data. IEEE/CAA Journal of Automatica Sinica 11, 11 (2024), 2220–2235. [4] J. Chen, X. Luo, Y. Yuan, and Z. Wang. 2025. Enhancing Graph Convolutional Networks with an Efficient k-Hop Neighborhood Approach. Information Fusion 
+
+124 (2025), 103297. [5] J. Chen, Y. Yuan, and X. Luo. 2024. SDGNN: Symmetry-Preserving Dual-Stream Graph Neural Networks. IEEE/CAA Journal of Automatica Sinica 11, 7 (2024), 1717–1719. [6] J. Chen, Y. Yuan, X. Luo, and X. Gao. 2025. An Adaptive Neighborhood-Resonated Graph Convolution Network for Undirected Weighted Graph Representation. 
+
+IEEE Transactions on Neural Networks and Learning Systems (2025). [7] Lifan Chen, Xiaoqin Tan, Dingyan Wang, Feisheng Zhong, Xiaohong Liu, Tian-biao Yang, Xiaomin Luo, Kaixian Chen, Hualiang Jiang, and Mingyue Zheng. 2020. TransformerCPI: improving compound–protein interaction prediction by sequence-based deep learning with self-attention mechanism and label reversal experiments. Bioinformatics 36, 16 (2020), 4406–4414. [8] M. Chen, R. Wang, Y. Qiao, and X. Luo. 2024. A Generalized Nesterov’s Accel-erated Gradient-Incorporated Non-Negative Latent-Factorization-of-Tensors Model for Efficient Representation to Dynamic QoS Data. IEEE Transactions on Emerging Topics in Computational Intelligence 8, 3 (2024). [9] M. Chen, M. Zhang, and C. Qu. 2025. Towards Interpretable Drug-Drug Interac-tion Prediction: A Graph-Based Approach with Molecular and Network-Level Explanations. In Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD ’25) . ACM, 203–214. [10] Thomas Cover and Peter Hart. 1967. Nearest neighbor pattern classification. 
+
+IEEE transactions on information theory 13, 1 (1967), 21–27. [11] Jorg Degen, Christof Wegscheid-Gerlach, Andrea Zaliani, and Matthias Rarey. 2008. On the art of compiling and using’drug-like’chemical fragment spaces. 
+
+ChemMedChem 3, 10 (2008), 1503. [12] Janez Demšar. 2006. Statistical comparisons of classifiers over multiple data sets. Journal of Machine learning research 7, Jan (2006), 1–30. CMF-ELN: A Cross-Modal-Fused End-to-end Learning Network for Cold-Start Drug-Drug Interaction Prediction KDD ’26, August 09–13, 2026, Jeju Island, Republic of Korea 
+
+Figure 2: Representation analysis of CMF-ELN. t-SNE visualization of drug-pair embeddings for Task 1 on Dataset 2, comparing four unimodal representations with the full-modality fused representation. 
+
+[13] Y. Deng, X. Xu, Y. Qiu, et al . 2020. A multimodal deep learning framework for predicting drug–drug interaction events. Bioinformatics 36, 15 (2020), 4316– 4322. [14] Joseph L Durant, Burton A Leland, Douglas R Henry, and James G Nourse. 2002. Reoptimization of MDL keys for use in drug discovery. Journal of chemical information and computer sciences 42, 6 (2002), 1273–1280. [15] Y. Feng, S.-W. Zhang, and J.-Y. Shi. 2020. DPDDI: A deep predictor for drug–drug interactions. BMC Bioinformatics 21, 1 (Sept. 2020), 419. [16] Milton Friedman. 1937. The use of ranks to avoid the assumption of normality implicit in the analysis of variance. Journal of the american statistical association 
+
+32, 200 (1937), 675–701. [17] J. X. Gao, D. Wu, J. Chen, M. Zhou, and X. Luo. 2025. Federated Deep Latent Factor Model for Privacy-Preserving Recommendation. In Proceedings of the IEEE International Conference on Systems, Man, and Cybernetics .[18] Assaf Gottlieb, Gideon Y Stein, Yoram Oron, Eytan Ruppin, and Roded Sharan. 2012. INDI: a computational framework for inferring drug interactions and their associated recommendations. Molecular systems biology 8, 1 (2012), 592. [19] J. Gou, Y. Cheng, B. Ma, L. Du, X. Luo, and Z. Yi. 2025. Multi-Scale Collaborative Distillation Graph Neural Networks for Session-Based Recommendation. IEEE Transactions on Services Computing (2025). [20] M. Han, L. Wang, Y. Yuan, and X. Luo. 2025. SGD-DYG: Self-Reliant Global Dependency Apprehending on Dynamic Graphs. In Proceedings of the ACM SIGKDD Conference on Knowledge Discovery and Data Mining .[21] T. He, Z. Duan, and X. Luo. 2026. Modularized Graph Convolutional Network. 
+
+IEEE/CAA Journal of Automatica Sinica 13, 3 (2026), 737–739. [22] T. He, Y. Liu, Y. S. Ong, X. Wu, and X. Luo. 2024. Polarized Message-Passing in Graph Neural Networks. Artificial Intelligence 331 (2024), 104129. [23] Y. He and X. Luo. 2026. Tensor Low-Rank Orthogonal Compression for Convo-lutional Neural Networks. IEEE/CAA Journal of Automatica Sinica 13, 1 (2026), 227–229. [24] Yi He, Tengfei Ma, Chen Li, et al . 2025. ImageDDI: Image-enhanced molecular motif sequence representation for drug-drug interaction prediction. Information Fusion 117 (2025), 103574. doi:10.1016/j.inffus.2024.103574 [25] Y. He, H. Wu, W. Liu, and X. Luo. 2026. A Survey of Latent Factorization of Tensor-Based Model Compression: Algorithms, Toolboxes and Future Directions. 
+
+Neurocomputing (2026), 133455. [26] Z. He, M. Lin, X. Luo, and Z. Xu. 2024. Structure-Preserved Self-Attention for Fusion Image Information in Multiple Color Spaces. IEEE Transactions on Neural Networks and Learning Systems 36, 7 (2024), 13021–13035. [27] Y. Hong, P. Luo, S. Jin, and X. Liu. 2022. LaGAT: link-aware graph attention network for drug–drug interaction prediction. Bioinformatics 38, 24 (2022), 5406–5412. [28] Y. Hou, P. Tang, and X. Luo. 2026. Multi-Aspect Self-Attending Neural Tucker Factorization for Spatiotemporal Representation Learning. IEEE/CAA Journal of Automatica Sinica 13, 4 (2026), 986–988. [29] Z. Hou, X. Liu, Y. Cen, et al . 2022. Graphmae: Self-supervised masked graph autoencoders. In Proceedings of the 28th ACM SIGKDD conference on knowledge discovery and data mining . 594–604. [30] Kexin Huang, Tianfan Fu, Lucas M Glass, Marinka Zitnik, Cao Xiao, and Jimeng Sun. 2020. DeepPurpose: a deep learning library for drug–target interaction prediction. Bioinformatics 36, 22-23 (2020), 5545–5547. [31] Kexin Huang, Cao Xiao, Lucas M. Glass, and Jimeng Sun. 2021. Molecular Interaction Transformer for drug–target interaction prediction. Bioinformatics 
+
+37, 6 (2021), 830–836. doi:10.1093/bioinformatics/btaa880 [32] Kexin Huang, Cao Xiao, Trong Hoang, Lucas Glass, and Jimeng Sun. 2020. Caster: Predicting drug interactions with chemical substructure representation. In Proceedings of the AAAI conference on artificial intelligence , Vol. 34. 702–709. [33] C. Li, P. Huang, J. Qin, and X. Luo. 2025. Knowledge-Driven Multiple Instance Learning with Hierarchical Cluster-Incorporated Aware Filtering for Larynx Pathological Grading. IEEE Journal of Biomedical and Health Informatics (2025). [34] J. Li, Y. Yuan, T. He, and X. Luo. 2026. Adaptive PID-Incorporated Nonnegative Latent Factor Analysis. IEEE Transactions on Systems, Man, and Cybernetics: Systems (2026). [35] X. Liao, H. Wu, T. He, and X. Luo. 2025. A Proximal-ADMM-Incorporated Nonnegative Latent-Factorization-of-Tensors Model for Representing Dynamic Cryptocurrency Transaction Network. IEEE Transactions on Systems, Man, and Cybernetics: Systems (2025). [36] X. Liao, H. Wu, and X. Luo. 2025. A Novel Tensor Causal Convolution Network Model for Highly-Accurate Representation to Spatio-Temporal Data. IEEE Transactions on Automation Science and Engineering (2025). [37] L. Lin, Q. Li, M. Qiao, Z. Wang, J. Zhao, R. H. Li, X. Luo, and T. Jia. 2025. NCSAC: Effective Neural Community Search via Attribute-Augmented Conductance. 
+
+IEEE Transactions on Knowledge and Data Engineering 38, 2 (2025), 1221–1235. [38] L. Lin and X. Luo. 2026. Dual Channel Graph Convolutional Networks via Personalized PageRank. IEEE/CAA Journal of Automatica Sinica 13, 1 (2026), 221–223. [39] M. Lin, X. Lin, X. Xu, Z. Xu, and X. Luo. 2025. Neural Networks-Incorporated Latent Factor Analysis for High-Dimensional and Incomplete Data. IEEE Trans-actions on Systems, Man, and Cybernetics: Systems (2025). [40] S. Lin, W. Chen, G. Chen, et al . 2022. MDDI-SCL: predicting multi-type drug-drug interactions via supervised contrastive learning. Journal of Cheminformatics 14, 1 (2022), 1–12. [41] S. Lin, Y. Wang, L. Zhang, et al . 2022. MDF-SA-DDI: Predicting drug–drug interaction events based on multi-source drug fusion, multi-source feature fusion and transformer self-attention mechanism. Briefings in Bioinformatics 
+
+23, 1 (2022), bbab421. doi:10.1093/bib/bbab421 [42] X. Lin, Z. Quan, Z.-J. Wang, T. Ma, and X. Zeng. 2020. KGNN: Knowledge Graph Neural Network for Drug-Drug Interaction Prediction. IJCAI 380 (2020), 2739–2745. [43] J. Liu, X. Shen, X. Zhang, and H. Chen. 2022. Predicting drug–drug interactions by graph convolutional network with multi-kernel. Briefings in Bioinformatics 
+
+23, 1 (Jan. 2022). [44] Z. Liu, X.-N. Wang, H. Yu, J.-Y. Shi, and W.-M. Dong. 2022. Predict multi-type drug–drug interactions in cold-start scenario. BMC Bioinformatics 23, 1 (Feb. 2022), 75. [45] Xin Luo, MengChu Zhou, Shuai Li, Di Wu, Zhigang Liu, and Mingsheng Shang. 2019. Algorithms of Unconstrained Non-Negative Latent Factor Analysis for Recommender Systems. IEEE Transactions on Big Data (2019). doi:10.1109/ TBDATA.2019.2916868 [46] C. Lyu, J. Cheng, X. Luo, and Y. Shi. 2025. Genetic Algorithm-Based Two-Step Optimization for Precise Latent Factor Analysis. IEEE Transactions on Neural Networks and Learning Systems (2025). [47] T. Lyu, J. Gao, L. Tian, et al . 2021. MDNN: A multimodal deep neural net-work for predicting drug-drug interaction events. In Proceedings of the Thirtieth International Joint Conference on Artificial Intelligence (IJCAI-21) . 3536–3542. doi:10.24963/ijcai.2021/487 [48] Q. Ma, D. Wu, and X. Luo. 2025. A Review of Deep Learning-Based Power Load Forecasting Methods. International Journal of Network Dynamics and Intelligence KDD ’26, August 09–13, 2026, Jeju Island, Republic of Korea Di Wu et al. 
+
+4, 4 (2025), 100027. [49] Tengfei Ma, Cao Xiao, Jiayu Zhou, and Fei Wang. 2018. Drug similarity in-tegration through attentive multi-view graph auto-encoders. arXiv preprint arXiv:1804.10850 (2018). [50] R. Milo et al . 2002. Network Motifs: Simple Building Blocks of Complex Net-works. Science 298, 5594 (2002), 824–827. [51] A. K. Nyamabo, H. Yu, and J.-Y. Shi. 2021. SSI–DDI: Substructure–substructure interactions for drug–drug interaction prediction. Briefings in Bioinformatics 
+
+22, 6 (2021), bbab133. doi:10.1093/bib/bbab133 [52] Bethany Percha and Russ B Altman. 2013. Informatics confronts drug–drug interactions. Trends in pharmacological sciences 34, 3 (2013), 178–184. [53] J Peter and Silhouettes Rousseeuw. 1987. A graphical aid to the interpretation and validation of cluster analysis. J. Comput. Appl. Math 20 (1987). [54] Y. Qiao, L. Hu, J. Zhang, P. Hu, and X. Luo. 2025. Identifying Novel Therapeutic Targets of Natural Compounds in Traditional Chinese Medicine Herbs with Hypergraph Representation Learning. Briefings in Bioinformatics 26, 4 (2025), bbaf399. [55] David Rogers and Mathew Hahn. 2010. Extended-connectivity fingerprints. 
+
+Journal of chemical information and modeling 50, 5 (2010), 742–754. [56] Narjes Rohani and Changiz Eslahchi. 2019. Drug-drug interaction predicting by neural network using integrated similarity. Scientific reports 9, 1 (2019), 13645. [57] J. Y. Ryu, H. U. Kim, and S. Y. Lee. 2018. Deep learning improves prediction of drug–drug and drug–food interactions. Proceedings of the National Academy of Sciences 115, 18 (2018), E4304–E4311. [58] X. Su, L. Hu, Z. You, P. Hu, and B. Zhao. 2022. Attention-based knowledge graph representation learning for predicting drug-drug interactions. Briefings in Bioinformatics 23, 3 (2022), bbac140. doi:10.1093/bib/bbac140 [59] P. Tang, Y. Hou, and X. Luo. 2026. MPSANT: A Novel Multi-Projection Self-Attending Neural Tucker Factorization Model for High-Dimensional and Incom-plete Data Representation Learning. Information Fusion (2026), 104449. [60] P. Tang, X. Luo, and J. Woodcock. 2025. Auto-Encoding Neural Tucker Factor-ization. IEEE Transactions on Knowledge and Data Engineering (2025). [61] P. Tang, T. Ruan, H. Wu, and X. Luo. 2024. Temporal Pattern-Aware QoS Predic-tion by Biased Non-Negative Tucker Factorization of Tensors. Neurocomputing 
+
+582 (2024), 127447. [62] Zhenchao Tang, Guanxing Chen, Hualin Yang, Weihe Zhong, and Calvin Yu-Chian Chen. 2023. DSIL-DDI: A domain-invariant substructure interaction learning for generalizable drug–drug interaction prediction. IEEE Transactions on Neural Networks and Learning Systems 35, 8 (2023), 10552–10560. [63] Farhan Tanvir, Khaled Mohammed Saifuddin, Muhammad Ifte Khairul Islam, and Esra Akbas. 2023. Predicting drug-drug interactions using heterogeneous graph attention networks. In Proceedings of the 14th ACM International Conference on Bioinformatics, Computational Biology, and Health Informatics . 1–6. [64] N. P. Tatonetti, P. P. Ye, R. Daneshjou, and R. B. Altman. 2012. Data-driven prediction of drug effects and interactions. Science Translational Medicine 4, 125 (Mar. 2012), 125. [65] Santiago Vilar, Eugenio Uriarte, Lourdes Santana, Tal Lorberbaum, George Hripcsak, Carol Friedman, and Nicholas P Tatonetti. 2014. Similarity-based modeling in large-scale prediction of drug-drug interactions. Nature protocols 9, 9 (2014), 2147–2163. [66] J. Wang, W. Li, and X. Luo. 2024. A Distributed Adaptive Second-Order Latent Factor Analysis Model. IEEE/CAA Journal of Automatica Sinica 11, 11 (2024), 2343–2345. [67] L. Wang, Y. Yuan, and X. Luo. 2026. Advanced High-Order Graph Convolutional Networks with Assorted Time-Frequency Transforms. IEEE/CAA Journal of Automatica Sinica 13, 2 (2026), 394–408. [68] Q. Wang, H. Wu, and X. Luo. 2025. A Convolution Bias-Incorporated Non-negative Latent Factorization of Tensors Model for Accurate Representation Learning to Dynamic Directed Graphs. IEEE Transactions on Systems, Man, and Cybernetics: Systems (2025). [69] Y. Wang, Z. Yang, and Q. Yao. 2024. Accurate and interpretable drug-drug inter-action prediction enabled by knowledge subgraph learning. Communications Medicine 4, 1 (2024), 59. doi:10.1038/s43856-024-00486-y [70] Ziyan Wang, Zhankun Xiong, Feng Huang, Xuan Liu, and Wen Zhang. 2024. ZeroDDI: a zero-shot drug-drug interaction event prediction method with se-mantic enhanced learning and dual-modal uniform alignment. arXiv preprint arXiv:2407.00891 (2024). [71] Larry C Wienkers and Timothy G Heath. 2005. Predicting in vivo drug inter-actions from in vitro drug discovery data. Nature reviews Drug discovery 4, 10 (2005), 825–833. [72] D. S. Wishart, Y. D. Feunang, A. C. Guo, E. J. Lo, A. Marcu, et al . 2018. DrugBank 5.0: A major update to the DrugBank database for 2018. Nucleic Acids Research 
+
+46, D1 (Jan. 2018), D1074–D1082. [73] Di Wu, Qiang He, Xin Luo, Mingsheng Shang, Yi He, and Guoyin Wang. 2022. A Posterior-Neighborhood-Regularized Latent Factor Model for Highly Accurate Web Service QoS Prediction. IEEE Transactions on Services Computing 15, 2 (2022), 793–805. [74] Di Wu, Yi He, and Xin Luo. 2023. A Graph-Incorporated Latent Factor Analysis Model for High-Dimensional and Sparse Data. IEEE Transactions on Emerging Topics in Computing 11, 4 (2023), 907–917. doi:10.1109/TETC.2023.3292866 [75] Di Wu, Yi He, Xin Luo, and MengChu Zhou. 2022. A Latent Factor Analysis-Based Approach to Online Sparse Streaming Feature Selection. IEEE Transactions on Systems, Man, and Cybernetics: Systems 52, 11 (2022), 6744–6758. doi:10.1109/ TSMC.2021.3096065 [76] Di Wu, Yuanpeng Hu, Kechen Liu, Jing Li, Xianmin Wang, Song Deng, Nenggan Zheng, and Xin Luo. 2025. An Outlier-Resilient Autoencoder for Representing High-Dimensional and Incomplete Data. IEEE Transactions on Emerging Topics in Computational Intelligence 9, 2 (2025), 1379–1391. doi:10.1109/TETCI.2024. 3437370 [77] Di Wu, Long Jin, and Xin Luo. 2020. PMLF: Prediction-Sampling-Based Multilayer-Structured Latent Factor Analysis. In Proceedings of the IEEE In-ternational Conference on Data Mining .[78] Di Wu, Shihui Li, Yi He, Xin Luo, and Xinbo Gao. 2026. Non-Gradient Hash Factor Learning for High-Dimensional and Incomplete Data Representation Learning. IEEE Transactions on Pattern Analysis and Machine Intelligence 48, 5 (2026), 5811–5826. doi:10.1109/TPAMI.2026.3653780 [79] Di Wu, Zechao Li, Zhikai Yu, Yi He, and Xin Luo. 2025. Robust Low-Rank Latent Feature Analysis for Spatiotemporal Signal Recovery. IEEE Transactions on Neural Networks and Learning Systems 36, 2 (2025), 2829–2842. doi:10.1109/ TNNLS.2023.3339786 [80] Di Wu, Cheng Liang, Yi He, Yan Qiao, and Xin Luo. 2026. Multimetric Au-toencoder for Representing High-Dimensional and Incomplete Data. IEEE Transactions on Systems, Man, and Cybernetics: Systems 56, 3 (2026), 1533–1546. doi:10.1109/TSMC.2025.3646863 [81] Di Wu and Xin Luo. 2021. Robust Latent Factor Analysis for Precise Represen-tation of High-Dimensional and Sparse Data. IEEE/CAA Journal of Automatica Sinica 8, 4 (2021). doi:10.1109/JAS.2020.1003533 [82] Di Wu, Xin Luo, Yi He, and MengChu Zhou. 2024. A Prediction-Sampling-Based Multilayer-Structured Latent Factor Model for Accurate Representation to High-Dimensional and Sparse Data. IEEE Transactions on Neural Networks and Learning Systems 35, 3 (2024), 3845–3858. doi:10.1109/TNNLS.2022.3200009 [83] Di Wu, Xin Luo, Mingsheng Shang, Yi He, Guoyin Wang, and Xindong Wu. 2019. A Data-Aware Latent Factor Model for Web Service QoS Prediction. In 
+
+Proceedings of the Pacific-Asia Conference on Knowledge Discovery and Data Mining .[84] Di Wu, Xin Luo, Mingsheng Shang, Yi He, Guoyin Wang, and Xindong Wu. 2019. Online Feature Selection with Capricious Streaming Features: A General Framework. In Proceedings of the IEEE International Conference on Big Data .[85] Di Wu, Xin Luo, Mingsheng Shang, Yi He, Guoyin Wang, and Xindong Wu. 2022. A Data-Characteristic-Aware Latent Factor Model for Web Service QoS Prediction. IEEE Transactions on Knowledge and Data Engineering 34, 6 (2022), 2525–2538. [86] Di Wu, Xin Luo, Mingsheng Shang, Yi He, Guoyin Wang, and MengChu Zhou. 2021. A Deep Latent Factor Model for High-Dimensional and Sparse Matrices in Recommender Systems. IEEE Transactions on Systems, Man, and Cybernetics: Systems 51, 7 (2021), 4285–4296. doi:10.1109/TSMC.2019.2931393 [87] Di Wu, Xin Luo, Guoyin Wang, Mingsheng Shang, Ye Yuan, and Huyong Yan. 2018. A Highly-Accurate Framework for Self-Labeled Semi-Supervised Classifi-cation in Industrial Applications. IEEE Transactions on Industrial Informatics 14, 3 (2018), 909–920. [88] Di Wu, Mingsheng Shang, Xin Luo, and Zidong Wang. 2022. An L1-and-L2-Norm-Oriented Latent Factor Model for Recommender Systems. IEEE Trans-actions on Neural Networks and Learning Systems 33, 10 (2022), 5775–5788. doi:10.1109/TNNLS.2021.3071392 [89] Di Wu, Mingsheng Shang, Xin Luo, Ji Xu, Huyong Yan, Weihui Deng, and Guoyin Wang. 2018. Self-Training Semi-Supervised Classification Based on Density Peaks of Data. Neurocomputing 275 (2018), 180–191. [90] D. Wu, W. Sun, Y. He, Z. Chen, and X. Luo. 2024. MKG-FENN: A Multimodal Knowledge Graph Fused End-to-End Neural Network for Accurate Drug–Drug Interaction Prediction. Proceedings of the AAAI Conference on Artificial Intelli-gence 38, 9 (2024), 10216–10224. doi:10.1609/aaai.v38i9.28887 [91] Di Wu, Zetong Tang, Yi He, and Xin Luo. 2026. SchemaRAG: A Schema-aware Retrieval-Augmented Generation Framework for Text-to-SQL. Proceedings of the ACM on Management of Data 4, 1 (2026), 82:1–82:26. doi:10.1145/3786696 [92] Di Wu, Peng Zhang, Yi He, and Xin Luo. 2023. A Double-Space and Double-Norm Ensembled Latent Factor Model for Highly Accurate Web Service QoS Prediction. IEEE Transactions on Services Computing 16, 2 (2023), 802–814. doi:10.1109/TSC.2022.3178543 [93] Di Wu, Peng Zhang, Yi He, and Xin Luo. 2024. MMLF: Multi-Metric Latent Feature Analysis for High-Dimensional and Incomplete Data. IEEE Transactions on Services Computing 17, 2 (2024), 575–588. doi:10.1109/TSC.2023.3331570 [94] Di Wu, Shuai Zhong, Yi He, Xin Luo, and Xinbo Gao. 2026. Federated La-tent Factorization of Tensors for Privacy-Preserving Representation Learning to Large-scale Dynamic Weighted Directed Network. IEEE Transactions on Dependable and Secure Computing (2026). doi:10.1109/TDSC.2026.3683950 CMF-ELN: A Cross-Modal-Fused End-to-end Learning Network for Cold-Start Drug-Drug Interaction Prediction KDD ’26, August 09–13, 2026, Jeju Island, Republic of Korea 
+
+[95] H. Wu, Q. Wang, X. Luo, and Z. Wang. 2025. Learning Accurate Representation to Nonstandard Tensors via a Mode-Aware Tucker Network. IEEE Transactions on Knowledge and Data Engineering (2025). [96] M. Y. Wu, P. W. Hu, Z. H. You, J. Zhang, L. Hu, and X. Luo. 2025. Graph-Based Prediction of miRNA-Drug Associations with Multisource Information and Metapath Enhancement Matrices. IEEE Journal of Biomedical and Health Informatics (2025). [97] Zhaoping Xiong, Dingyan Wang, Xiaohong Liu, Feisheng Zhong, Xiaozhe Wan, Xutong Li, Zhaojun Li, Xiaomin Luo, Kaixian Chen, Hualiang Jiang, et al . 2019. Pushing the boundaries of molecular representation for drug discovery with the graph attention mechanism. Journal of medicinal chemistry 63, 16 (2019), 8749–8760. [98] Ruiyang Xu, Di Wu, and Xin Luo. 2025. Recursion-and-Fuzziness Reinforced Online Sparse Streaming Feature Selection. IEEE Transactions on Fuzzy Systems 
+
+33, 8 (2025), 2574–2586. doi:10.1109/TFUZZ.2025.3569272 [99] Ruiyang Xu, Di Wu, Renfang Wang, and Xin Luo. 2025. A Highly-Accurate Three-Way Decision-Incorporated Online Sparse Streaming Features Selection Model. IEEE Transactions on Systems, Man, and Cybernetics: Systems 55, 6 (2025). [100] X. Xu, M. Lin, Z. Xu, and X. Luo. 2025. Attention-Mechanism-Based Neu-ral Latent-Factorization-of-Tensors Model. ACM Transactions on Knowledge Discovery from Data 19, 4 (2025), 1–27. [101] F. Yang, D. Wu, Y. He, L. Tao, and X. Luo. 2024. End-to-End Graph Learn-ing Approach for Cognitive Diagnosis of Student Tutorial. arXiv preprint arXiv:2411.00845 (2024). [102] Y. Yang, L. Hu, G. Li, D. Li, P. Hu, and X. Luo. 2025. FMvPCI: A Multiview Fusion Neural Network for Identifying Protein Complex via Fuzzy Clustering. IEEE Transactions on Systems, Man, and Cybernetics: Systems (2025). [103] Y. Yang, L. Hu, G. Li, D. Li, P. Hu, and X. Luo. 2025. Link-Based Attributed Graph Clustering via Approximate Generative Bayesian Learning. IEEE Transactions on Systems, Man, and Cybernetics: Systems (2025). [104] Qing Ye, Chang-Yu Hsieh, Ziyi Yang, Yu Kang, Jiming Chen, Dongsheng Cao, Shibo He, and Tingjun Hou. 2021. A unified drug–target interaction prediction framework based on knowledge graph and recommendation system. Nature communications 12, 1 (2021), 6775. [105] Y. Ye, J. Zhou, S. Li, C. Xiao, H. Ying, and H. Xiong. 2024. Hierarchical Cross-Level Graph Contrastive Learning for Drug-Drug Interaction Prediction. In 
+
+Database Systems for Advanced Applications (DASFAA 2024) . Springer Nature Singapore, Singapore, 232–242. doi:10.1007/978-981-97-5552-3_16 [106] C. Yu, D. Wu, J. Chen, M. Zhou, and X. Luo. 2025. Multi-Indicator Latent Factorization of Tensors for Spatio-Temporal Signal Recovery. In Proceedings of the IEEE International Conference on Parallel and Distributed Systems .[107] Chengjun Yu, Di Wu, Yi He, Jia Chen, and Xin Luo. 2026. Federated Latent Factor Learning for Privacy-Preserving Spatio-Temporal Signal Recovery. In 
+
+Proceedings of the ACM Web Conference . 2905–2916. doi:10.1145/3774904.3792353 [108] Yue Yu, Kexin Huang, Chao Zhang, Lucas M Glass, Jimeng Sun, and Cao Xiao. 2021. SumGNN: multi-typed drug interaction prediction via efficient knowledge graph summarization. Bioinformatics 37, 18 (2021), 2988–2995. [109] Zhaoning Yu and Hongyang Gao. 2022. Molecular Representation Learning via Heterogeneous Motif Graph Neural Networks. In Proceedings of the 39th International Conference on Machine Learning (ICML) (Proceedings of Machine Learning Research, Vol. 162) . PMLR, 25581–25594. [110] Y. Yuan, J. Li, and X. Luo. 2024. A Fuzzy PID-Incorporated Stochastic Gradi-ent Descent Algorithm for Fast and Accurate Latent Factor Analysis. IEEE Transactions on Fuzzy Systems 32, 7 (2024), 4049–4061. [111] Ye Yuan, Xin Luo, Mingsheng Shang, and Di Wu. 2020. A Generalized and Fast-Converging Nonnegative Latent Factor Model for Predicting User Preferences in Recommender Systems. In Proceedings of The Web Conference . 498–507. [112] Y. Yuan, S. Wang, H. Zhou, L. Wang, and X. Luo. 2026. A Novel Approach to Temporal QoS Estimation via Extended Kalman Filter-Incorporated Latent Feature Analysis. IEEE Transactions on Services Computing (2026). [113] Y. Yuan, Y. Wang, and X. Luo. 2024. A Node-Collaboration-Informed Graph Con-volutional Network for Highly Accurate Representation to Undirected Weighted Graph. IEEE Transactions on Neural Networks and Learning Systems 36, 6 (2024), 11507–11519. [114] Y. Zhang, Y. Ling, W. Xian, Z. Ziheng, L. Zhenxi, Z. Yefeng Yao, and Quanming. 2023. Emerging drug interaction prediction enabled by a flow-based graph neural network with biomedical network. Nature Computational Science 3, 12 (2023), 1023–1033. doi:10.1038/s43588-023-00558-4 [115] Zaixi Zhang, Qi Liu, Hao Wang, Chengqiang Lu, and Chee-Kong Lee. 2021. Motif-based graph self-supervised learning for molecular property prediction. In Advances in Neural Information Processing Systems (NeurIPS) , Vol. 34. 15870– 15882. [116] B. W. Zhao, X. R. Su, Y. Yang, D. X. Li, G. D. Li, P. W. Hu, X. Luo, and L. Hu. 2024. A Heterogeneous Information Network Learning Model with Neighborhood-Level Structural Representation for Predicting lncRNA-miRNA Interactions. 
+
+Computational and Structural Biotechnology Journal 23 (2024), 2924–2933. [117] B. W. Zhao, X. R. Su, Y. Yang, D. X. Li, G. D. Li, P. W. Hu, Z. H. You, X. Luo, and L. Hu. 2025. Regulation-Aware Graph Learning for Drug Repositioning over Heterogeneous Biological Network. Information Sciences 686 (2025), 121360. [118] Y. Zhong, G. Li, J. Yang, et al . 2024. Learning motif-based graphs for drug–drug interaction prediction via local–global self-attention. Nature Machine Intelligence 
+
+6 (2024), 1094–1105. doi:10.1038/s42256-024-00888-6 [119] Y. Zhong, K. Liu, S. Gao, and X. Luo. 2024. Alternating-Direction-Method of Multipliers-Based Adaptive Nonnegative Latent Factor Analysis. IEEE Transac-tions on Emerging Topics in Computational Intelligence 8, 5 (2024). [120] X. Zhu, L. Li, W. Liu, and X. Luo. 2024. Multi-Level Sequence Denoising with Cross-Signal Contrastive Learning for Sequential Recommendation. Neural Networks 179 (2024), 106480. [121] Marinka Zitnik, Monica Agrawal, and Jure Leskovec. 2018. Modeling polyphar-macy side effects with graph convolutional networks. Bioinformatics 34, 13 (2018), i457–i466.

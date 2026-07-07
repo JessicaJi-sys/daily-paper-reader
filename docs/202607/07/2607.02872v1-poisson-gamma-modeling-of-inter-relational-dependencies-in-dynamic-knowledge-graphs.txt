@@ -1,0 +1,1944 @@
+Title: Poisson-Gamma Modeling of Inter-Relational Dependencies in Dynamic Knowledge Graphs
+
+URL Source: https://arxiv.org/pdf/2607.02872v1
+
+Published Time: Tue, 07 Jul 2026 00:37:23 GMT
+
+Number of Pages: 20
+
+Markdown Content:
+# Poisson–Gamma Modeling of Inter-Relational Dependencies in Dynamic Knowledge Graphs 
+
+Nan Fang 1,2 Yijun Wang 1,3 Hao Liao 2 Sikun Yang *1,4 1School of Computing and Information Technology, Great Bay University, Dongguan, Guangdong, China 
+
+> 2
+
+College of Computer Science and Software Engineering, Shenzhen University, Shenzhen, Guangdong, China 
+
+> 3
+
+Tsinghua University, Shenzhen, Guangdong, China 
+
+> 4
+
+Guangdong Provincial Key Laboratory of Mathematical and Neural Dynamical Systems 
+
+## Abstract 
+
+Dynamic knowledge graphs are ubiquitous in to-day’s AI applications, as we represent molecular structures, social relationships, and language infor-mation using these graph models. As knowledge graphs evolve over time and are often noisy and incomplete, modeling their temporal and relational dependencies becomes crucial for downstream tasks. To address these challenges, this paper pro-poses PGRE (Poisson–Gamma Relational Evolu-tion), a probabilistic model for modeling inter-relational dependencies in dynamic knowledge graphs. PGRE represents multi-relational temporal links via a Poisson–Bernoulli formulation. It intro-duces Gamma-distributed latent variables to cap-ture entity–factor associations and cross-relation dependencies mediated by shared latent commu-nities. A Gamma Markov process further models the temporal evolution of these latent variables, enabling principled characterization of relational dynamics. Experiments on benchmark datasets show that PGRE achieves competitive performance in link prediction, particularly in sparse settings, while revealing meaningful relational evolution patterns in dynamic knowledge graphs. 
+
+## 1 INTRODUCTION 
+
+Knowledge graphs (KGs) [Ji et al., 2021] provide a fun-damental representation of structured knowledge about en-tities and relations, and support a wide range of applica-tions including question answering [Yasunaga et al., 2021, Chakraborty et al., 2021, Jia et al., 2021], recommender systems [Wang et al., 2019b, 2021, 2019a], and seman-tic search [Thingbaijam et al., 2024, Xiong et al., 2017, Ehrlinger and Wöß, 2016]. In practical settings, however, 
+
+> *Corresponding author: sikunyang@gbu.edu.cn
+
+knowledge is inherently dynamic: relations may emerge, evolve, or disappear over time. This motivates the study of dynamic knowledge graphs (DKGs) [Liang et al., 2024]. DKGs model multi-relational interactions as temporal event sequences to predict future or missing relations from histor-ical observations. Knowledge graph completion has been extensively studied over the past decade, with significant progress driven by representation learning methods based on neural architec-tures [Schlichtkrull et al., 2018, Trivedi et al., 2017, Rossi et al., 2020, Jin et al., 2019]. Despite their strong empirical performance, these approaches often rely on large amounts of training data and exhibit limited interpretability due to their black-box nature [Chen and Ying, 2023, Seo et al., 2024]. Such limitations become more pronounced in sparse or small-sample settings, which are common in real-world dynamic knowledge graphs [Huang et al., 2023, Zhou et al., 2022]. At the same time, relations in knowledge graphs are rarely independent. Different relation types may exhibit structured dependencies, and relational facts observed in the past can directly influence future interactions [Schlichtkrull et al., 2018, Trivedi et al., 2017]. As illustrated in Fig. 1, such dependencies often manifest as structured relation transi-tions over time, where the relation of an entity pair at time 
+
+t depends on its state at the previous time step t−1. Ignor-ing these inter-relational and temporal dependencies may result in an incomplete characterization of relational evolu-tion. Bayesian approaches provide a principled alternative by explicitly modeling uncertainty and structured depen-dencies [Acharya et al., 2015, Yang and Koeppl, 2018b,a, Schein et al., 2019, Yang and Koeppl, 2020, Yang and Zha, 2023, 2024], offering a natural framework for capturing relational dynamics while maintaining interpretability. In this paper, we propose PGRE (Poisson–Gamma Rela-tional Evolution), a probabilistic model for dynamic knowl-edge graph completion. PGRE represents multi-relational temporal links through a Poisson–Gamma latent-variable 
+
+> arXiv:2607.02872v1 [cs.LG] 3 Jul 2026
+
+Figure 1: Illustration of a relation transition prior and its manifestation in dynamic knowledge graphs. The top panel shows an illustrative prior over relation transitions, where directed edges encode assumed transition probabilities be-tween relation types. The bottom panel provides an example of how the relation between an entity pair may change from time t − 1 to t, depending on its previous relation (e.g., 
+
+Pr( yuv,t = r2 | yuv,t −1 = r3)). formulation and introduces a relation transition matrix within Gamma-Markov dynamics to explicitly capture inter-relational temporal dependencies. By jointly modeling entity–factor associations and relation-to-relation evolution in a unified generative framework, PGRE provides inter-pretable latent representations and supports tractable poste-rior inference for dynamic link prediction. The main contributions of this paper are summarized as follows: 1. PGRE, a probabilistic model for dynamic knowledge graph completion, is proposed to jointly model entity– factor associations and inter-relational temporal dy-namics. 2. Single-relation probabilistic modeling is extended to a multi-relational setting, enabling structured character-ization of relational evolution in dynamic knowledge graphs. 3. An efficient Gibbs sampling algorithm based on negative-binomial–logarithmic data augmentation is developed for tractable posterior inference. 4. Extensive experiments on benchmark datasets are con-ducted, demonstrating that PGRE achieves competitive or superior link prediction performance, particularly in sparse and small-sample regimes, while revealing meaningful relational evolution patterns. 
+
+## 2 RELATED WORK 
+
+Dynamic knowledge graph completion has been extensively studied using neural representation learning methods. Early approaches extend static embedding models by incorporat-ing temporal information, including TTransE [García-Durán et al., 2018], TA-TransE and TA-DistMult [Leblay and Chekol, 2018], HyTE [Dasgupta et al., 2018], DacKGR [Lv et al., 2020], and DKGE [Wu et al., 2022], which intro-duce time-aware embeddings or temporal constraints to model relation evolution. Subsequent work combines graph neural networks with sequence modeling to capture both structural context and temporal dynamics. Representative models include DyRep [Trivedi et al., 2019], RE-NET [Jin et al., 2019], and RE-GCN [Li et al., 2021], which leverage attention mechanisms, recurrent units, or evolutionary ag-gregation to predict future relations. More recently, large language models have been leveraged for temporal knowl-edge graph forecasting to improve cross-scenario general-ization [Bai et al., 2025, Tang et al., 2025]. While these neural approaches achieve strong empirical performance on large datasets, they typically rely on extensive training data, offer limited interpretability and face challenges in sparse or small-sample regimes. Probabilistic modeling provides a principled alternative for dynamic network analysis by explicitly characterizing un-certainty and temporal evolution.Early work builds on the stochastic block model (SBM) [Holland et al., 1983, Now-icki and Snijders, 2001] and its nonparametric extensions such as IRM [Kemp et al., 2006] and GP-EPM [Zhou, 2015]. Dynamic extensions include the dynamic stochastic block model of Matias and Miele [2017], D-NGPPF [Acharya et al., 2015], which models smoothly evolving communities via gamma-Markov chains, and DPGM [Yang and Koeppl, 2018b], which allows time-varying community member-ships. A recent extension, G-HSEPM [Yu et al., 2025], in-troduces hierarchical transition structures to characterize latent community evolution in dynamic networks. However, these models typically focus on single undirected networks and do not explicitly address multi-relational dynamics. An-other line of research studies temporal interaction data by reshaping dynamic knowledge graphs into event–time count matrices, leading to models such as PGDS [Schein et al., 2016], PRGDS [Schein et al., 2019], and NBRGDS [Huang et al., 2024]. Although effective for modeling temporal in-tensities, these approaches capture multi-relational structure indirectly through data transformation rather than directly modeling relation interactions. As a result, Bayesian model-ing of dynamic multi-relational knowledge graphs remains relatively underexplored. 
+
+## 3 THE PROPOSED DYNAMIC KNOWLEDGE GRAPH MODEL 
+
+This section begins by defining the problem setting, fol-lowed by a detailed description of the proposed Pois-son–Gamma model for modeling and tracking relational evolution in dynamic knowledge graphs. 3.1 NOTATION AND PROBLEM DEFINITION 
+
+A temporal knowledge graph (TKG) represents time-evolving relational facts as a set of time-stamped quadruples 
+
+(s, r, o, t ), where s and o denote entities, r denotes a relation type, and t is a discrete timestamp. The collection of events at time t forms a snapshot Gt, and a TKG over T time steps is represented as a sequence G = {G1, . . . , G T }.For modeling convenience, we represent the TKG as a bi-nary tensor M ∈ { 0, 1}T ×R×N ×N , where M[t][ r][ s][ o] = 1 indicates the presence of relation r from s to o at time 
+
+t. Temporal knowledge graph completion then amounts to predicting missing entries of M. In this work, we focus on the forecasting setting, where the objective is to infer future relations based on historical observations. Given historical snapshots up to time tq − 1, the goal is to infer whether a relation (s, r, o ) holds at a query time tq .
+
+3.2 POISSON–GAMMA RELATIONAL EVOLUTION 
+
+We first describe how to represent the structure of latent communities at a single time step, and then explain how the influence of these latent communities on relation types evolves over time. Throughout the paper, we use Gam , Pois ,
+
+Dir , Bern , and NB to denote the Gamma, Poisson, Dirichlet, Bernoulli, and negative binomial distributions, respectively. To characterize the community structure of knowledge graphs, we associate each entity with two nonnegative entity– community factor vectors, corresponding to its roles as a subject and as an object. These vectors capture role-specific soft affiliations with multiple latent communities, while their absolute scales are not interpreted in isolation. Instead, their relative patterns, together with the relation- and time-specific community weights, determine the strength of multi-relational interactions. Intuitively, entities may participate in multiple types of interactions simultaneously. For example, a researcher may collaborate with some peers while advis-ing others. Such overlapping and role-dependent patterns can be represented through different subject- and object-side affiliations with multiple latent communities. Specifically, we assume that the dynamic knowledge graph contains K
+
+latent communities. The subject-side factor loading of en-tity i on community k and the object-side factor loading of entity j on community k are assigned Gamma priors as 
+
+ϕik ∼ Gam( a0, 1/c i) and ψjk ∼ Gam( a1, 1/c j ), respec-tively, where Gam( α, θ ) denotes a Gamma distribution with shape α and scale θ. The hyperparameters a0 and a1 control the prior shapes, while ci and cj regulate the magnitudes of the subject- and object-side community factor loadings, respectively. We assume that latent communities evolve over time and are influenced by relation types. Therefore, we introduce a time- and relation-dependent variable δ(t,r ) 
+
+> k
+
+to represent the state of community k under relation r at time t. Intu-itively, different relation types in a knowledge graph are not independent, and their dynamics can influence each other through shared latent community structures. Entities sharing similar semantic contexts often exhibit correlated relational behaviors over time. For example, the emergence of a “collaborates with” relation between two researchers may increase the likelihood of a subsequent “publishes with” relation within the same community. To capture such depen-dencies, we model the state of community k under relation 
+
+r at time t as δ(t,r ) 
+
+> k
+
+∼ Gam 
+
+PRr′=1 πrr ′ δ(t−1,r ′) 
+
+> k
+
+, 1/τ 
+
+
+
+,which indicates that the weight of community k under re-lation r at time t may be influenced by the weights of the same community across all relations at the previous time step t − 1. The strength of this influence is determined by the coefficient vector Πr = [ πr1, π r2, . . . , π rR ]T . In partic-ular, we draw the initial community weight under relation 
+
+r from a Gamma prior as δ(1 ,r ) 
+
+> k
+
+∼ Gam( νr /K, 1/τ ). We impose a Dirichlet prior on the transition kernel as πr ∼
+
+Dir( ν1νr , · · · , ξν r , · · · , ν Rνr ), and draw the hyperparam-eter νr from a Gamma prior as νr ∼ Gam( γ0/R, 1/β ),where γ0 is the concentration parameter and β is the hyper-parameter. It is worth noting that as the number of latent communities 
+
+K approaches infinity, the hierarchical Gamma prior ex-hibits an inherent shrinkage property that drives the weights of redundant communities toward zero. This property en-ables the model to automatically infer an appropriate num-ber of active communities from data, rather than relying on a manually fixed K, thereby improving flexibility and interpretability in modeling real-world dynamic knowledge graphs. Given the subject- and object-side community factor load-ings ϕi and ψj , together with the relation- and time-dependent community weights δ(t,r ) 
+
+> k
+
+, we model the proba-bility of a link of type r from subject entity i to object entity 
+
+j at time t using the Bernoulli–Poisson link function as 
+
+M[t][ r][ i][ j] ∼ Bern 1 − exp −
+
+> K
+
+X
+
+> k=1
+
+δ(t,r ) 
+
+> k
+
+ϕik ψjk 
+
+!! 
+
+.
+
+(1) Equivalently, this formulation can be expressed as 
+
+M(t,r ) 
+
+> ij
+
+= 1 x(t,r ) 
+
+> ij
+
+≥ 1, (2) 
+
+x(t,r ) 
+
+> ij
+
+∼ Pois 
+
+ KX
+
+> k=1
+
+δ(t,r ) 
+
+> k
+
+ϕik ψjk 
+
+
+
+, (3) where M(t,r ) 
+
+> ij
+
+, equivalent to M[t][ r][ i][ j] in the tensor repre-sentation, indicates whether the event (i, r, j ) occurs at time 
+
+t. This Bernoulli–Poisson formulation effectively captures the discrete and sparse nature of temporal multi-relational data and enables tractable posterior inference. Figure 2: The overall structure of the proposed PGRE model. The upper part illustrates the hierarchical Gamma–Dirichlet process governing the temporal and relational evolution of community weights δ(t,r ) 
+
+> k
+
+, while the lower part shows the Poisson–Bernoulli generative process for multi-relational links over time. The full generative Poisson-Gamma relational model is spec-ified as follows. 
+
+M(t,r ) 
+
+> ij
+
+= 1 x(t,r ) 
+
+> ij
+
+≥ 1, (4) 
+
+x(t,r ) 
+
+> ij
+
+∼ Pois 
+
+ KX
+
+> k=1
+
+δ(t,r ) 
+
+> k
+
+ϕik ψjk 
+
+
+
+, (5) 
+
+ϕik ∼ Gam( a0, 1/c i), ψjk ∼ Gam( a1, 1/c j ),
+
+(6) 
+
+δ(t,r ) 
+
+> k
+
+∼ Gam 
+
+ RX
+
+> r′=1
+
+πrr ′ δ(t−1,r ′) 
+
+> k
+
+, 1/τ 
+
+
+
+, t = 2 , . . . , T, 
+
+(7) 
+
+δ(1 ,r ) 
+
+> k
+
+∼ Gam( νr /K, 1/τ ), (8) 
+
+πr ∼ Dir( ν1νr , . . . , ξν r , . . . , ν Rνr ), (9) 
+
+νr ∼ Gam( γ0/R, 1/β ). (10) Here, ci, cj , ξ, and β are assigned Gamma priors, while hy-perparameters such as a0, a1, and γ0 are themselves drawn from Gamma distributions. The overall structure of the pro-posed PGRE model is illustrated in Fig. 2. 
+
+## 4 INFERENCE 
+
+This section outlines the Gibbs sampling procedure for PGRE by presenting the posterior updates of key model parameters, with full derivations deferred to the supplemen-tary material. The following standard results are recalled for completeness and are not claimed as new theoretical contributions [Zhou, 2015]. 
+
+Theorem 1 Let λ ∼ Gam 
+
+
+
+r, p
+
+> 1−p
+
+
+
+and y | λ ∼ Pois( λ).Then the marginal distribution of y is NB( r, p ). Equiv-alently, a negative binomial random variable admits a gamma–Poisson mixture representation. 
+
+Theorem 2 The Poisson–logarithmic bivariate representa-tion links the negative binomial distribution to the Poisson– CRT construction. If y ∼ NB( r, p ) and l ∼ CRT( y, r ),then y = Pls=1 us with us ∼ Logarithmic( p) and l ∼
+
+Pois( −r log(1 − p)) .Theorem 3 Let y = PNn=1 yn, where yn ∼ Pois( λn)
+
+are independent Poisson random variables with rates λn.Then, according to the Poisson–multinomial equivalence, 
+
+(y1, . . . , y N ) | y ∼ Mult 
+
+
+
+y; λ1P  
+
+> nλn
+
+, . . . , λNP 
+
+> nλn
+
+
+
+and 
+
+y ∼ Pois 
+
+PNn=1 λn
+
+
+
+.
+
+Sampling latent counts x(t,r ) 
+
+> ijk
+
+. By Theorem 3, the latent counts are allocated across communities as 
+
+(x(t,r ) 
+
+> ijk
+
+| − ) ∼ Mult x(t,r ) 
+
+> ij
+
+, δ(t,r ) 
+
+> k
+
+ϕik ψjk 
+
+PKk′=1 δ(t,r ) 
+
+> k′
+
+ϕik ′ ψjk ′
+
+!
+
+.
+
+(11) 
+
+Sampling community factor loadings ϕik and ψjk . By Gamma–Poisson conjugacy, both subject- and object-side factor loadings admit closed-form Gamma updates: 
+
+(ϕik | − ) ∼ Gam a0 + X
+
+> t,r,j
+
+x(t,r ) 
+
+> ijk
+
+, ci + X
+
+> t,r,j
+
+δ(t,r ) 
+
+> k
+
+ψjk 
+
+!−1!
+
+,
+
+(12) 
+
+(ψjk | − ) ∼ Gam a1 + X
+
+> t,r,i
+
+x(t,r ) 
+
+> ijk
+
+, cj + X
+
+> t,r,i
+
+δ(t,r ) 
+
+> k
+
+ϕik 
+
+!−1!
+
+.
+
+(13) 
+
+Sampling community weights δ(t,r ) 
+
+> k
+
+. For the final time step 
+
+t = T , applying the Gamma–Poisson conjugacy yields the following posterior update for δ(T,r ) 
+
+> k
+
+.
+
+(δ(T,r ) 
+
+> k
+
+| − ) ∼ Gam x(T,r ) 
+
+> ·· k
+
++
+
+> R
+
+X
+
+> r′=1
+
+πrr ′ δ(T −1,r ′) 
+
+> k
+
+, (τ + sk )−1
+
+!
+
+.
+
+(14) 
+
+To incorporate forward information, we marginalize δ(t+1 ,r )
+
+> k
+
+via Theorem 1 and introduce auxiliary variables 
+
+l(t, ·r) 
+
+> k
+
+∼ CRT x(t,r ) 
+
+> ·· k
+
++ l(t+1 ,·r) 
+
+> k
+
+,
+
+> R
+
+X
+
+> r′=1
+
+πrr ′ δ(t−1,r ′)
+
+> k
+
+!
+
+,
+
+(15) which propagate forward information across time. Combining backward counts and forward augmentation, the conditional posterior of δ(t,r ) 
+
+> k
+
+is 
+
+(δ(t,r ) 
+
+> k
+
+|− ) ∼ Gam x(t,r ) 
+
+> ·· k
+
++ l(t+1 ,·r) 
+
+> k
+
++
+
+> R
+
+X
+
+> r′
+
+πrr ′ δ(t−1,r ′) 
+
+> k
+
+,
+
+1/(τ + sk − ln(1 − ρ(t+1)  
+
+> k
+
+)) 
+
+
+
+,
+
+(16) The auxiliary parameter ρ(t) 
+
+> k
+
+follows the recursion 
+
+ρ(t) 
+
+> k
+
+= sk − ln(1 − ρ(t+1)  
+
+> k
+
+)
+
+τ + sk − ln(1 − ρ(t+1)  
+
+> k
+
+) . (17) 
+
+Sampling the transition matrix πr . After marginalizing out δ, the auxiliary counts follow a multinomial distribu-tion (l(t, 1r) 
+
+> k
+
+, . . . , l (t,Rr ) 
+
+> k
+
+) ∼ Mult 
+
+
+
+l(t, ·r) 
+
+> k
+
+, (π1r , . . . , π Rr )
+
+
+
+.By the Dirichlet–multinomial conjugacy, the posterior dis-tribution of πr is given by 
+
+(πr |− ) ∼ Dir 
+
+
+
+ν1νr +
+
+> T
+
+X
+
+> t=2
+> K
+
+X
+
+> k=1
+
+l(t, 1r) 
+
+> k
+
+, . . . , ξν r +
+
+> T
+
+X
+
+> t=2
+> K
+
+X
+
+> k=1
+
+l(t,rr ) 
+
+> k
+
+, . . . , νRνr +
+
+> T
+
+X
+
+> t=2
+> K
+
+X
+
+> k=1
+
+l(t,Rr )
+
+> k
+
+
+
+.
+
+(18) 
+
+Sampling νr and ξ. We marginalize over Π to obtain a Dirichlet–multinomial distribution 
+
+(l(·,1r) 
+
+> ·
+
+, . . . , l (·,Rr ) 
+
+> ·
+
+)
+
+∼ DirMult 
+
+
+
+l(·,·r) 
+
+> ·
+
+, (ν1νr , . . . , ξν r , . . . , ν Rνr )
+
+
+
+, (19) where l(·,·r) 
+
+> ·
+
+= PTt=1 
+
+PKk=1 
+
+PKr1=1 l(t,r 1r) 
+
+> k
+
+.By introducing a beta-distributed auxiliary variable qr , the Dirichlet–multinomial distribution can be rewritten as a negative binomial distribution: 
+
+qr ∼ Beta 
+
+l(·,·r) 
+
+> ·
+
+, ν r
+
+ξ + X 
+
+> r′̸=r
+
+νr′
+
+ . (20) Then, l(·,rr ) 
+
+> ·
+
+and l(·,rr ′) 
+
+> ·
+
+follow negative binomial distribu-tions as l(·,rr ) 
+
+> ·
+
+∼ NB( ξν r , q r ) and l(·,rr ′) 
+
+> ·
+
+∼ NB( νr νr′ , q r ).To further facilitate posterior inference, we introduce auxil-iary count variables hrr and hrr ′ via the Chinese Restaurant Table (CRT) distribution: 
+
+hrr ∼ CRT 
+
+
+
+l(·,rr ) 
+
+> ·
+
+, ξν r
+
+
+
+,hrr ′ ∼ CRT 
+
+
+
+l(·,rr ′) 
+
+> ·
+
+, ν r νr′
+
+
+
+.
+
+(21) Using the gamma–Poisson conjugacy, ξ is then sampled as 
+
+(ξ|− ) ∼ Gam b0 +
+
+> R
+
+X
+
+> r=1
+
+hrr , 1
+
+e0 − PRr=1 νr ln(1 − qr )
+
+!
+
+.
+
+(22) Next, we define 
+
+nr = hrr + X 
+
+> r1̸=r
+
+hr1r + X 
+
+> r2̸=r
+
+hrr 2 +
+
+> K
+
+X
+
+> k=1
+
+l(1 ,r ·) 
+
+> k
+
+,Table 1: Performance comparison on three dynamic knowledge graph datasets, evaluated using AUC-PR and AUC-ROC. Best results for each metric are shown in bold .Model ICEWS18 GDELT WIKI AUC-PR AUC-ROC AUC-PR AUC-ROC AUC-PR AUC-ROC PGDS 0.082 ± 0.004 0.863 ± 0.001 0.124 ± 0.014 0.836 ± 0.008 0.126 ± 0.006 0.854 ± 0.004 
+
+PRGDS 0.079 ± 0.003 0.865 ± 0.002 0.136 ± 0.016 0.843 ± 0.010 0.134 ± 0.006 0.889 ± 0.002 
+
+NBRGDS 0.071 ± 0.005 0.876 ± 0.004 0.102 ± 0.019 0.851 ± 0.009 0.437 ± 0.007 0.949 ± 0.003 
+
+Know-Evolve 0.072 ± 0.005 0.907 ± 0.002 0.105 ± 0.017 0.805 ± 0.012 0.554 ± 0.014 0.976 ± 0.007 
+
+DyRep 0.075 ± 0.006 0.914 ± 0.003 0.114 ± 0.012 0.824 ± 0.011 0.598 ± 0.015 0.984 ± 0.008 
+
+RENet 0.080 ± 0.005 0.916 ± 0.004 0.108 ± 0.019 0.837 ± 0.011 0.727 ± 0.005 0 .998 ± 0.001 
+
+D-NGPPF 0.127 ± 0.004 0.930 ± 0.004 0.121 ± 0.012 0.880 ± 0.011 0.582 ± 0.003 0.987 ± 0.003 
+
+DPGM 0.105 ± 0.004 0.922 ± 0.003 0.108 ± 0.015 0.874 ± 0.008 0.498 ± 0.006 0.989 ± 0.002 
+
+G-HSEPM 0.120 ± 0.002 0.930 ± 0.002 0.119 ± 0.016 0.878 ± 0.005 0.556 ± 0.006 0.987 ± 0.004 
+
+PGRE 0.198 ± 0.004 0.936 ± 0.003 0.277 ± 0.015 0 .902 ± 0.004 0.607 ± 0.003 0.998 ± 0.002 
+
+where l(1 ,r ) 
+
+> k
+
+∼ Pois (−τ ν r ln (1 − ρ(1)  
+
+> k
+
+)) . Using the Poisson additive property and gamma–Poisson conjugacy, we have 
+
+(νr |− ) ∼ Gam ( γ0
+
+R + nr , 1/(β + tr )) , (23) where tr = − ln(1 −qr )
+
+
+
+ξ + P  
+
+> r1̸=r
+
+νr1
+
+
+
+−P  
+
+> r2̸=r
+
+ln(1 −
+
+qr2 )νr2 − PKk=1 1 
+
+> K
+
+ln(1 − ρ(1)  
+
+> k
+
+).
+
+## 5 EXPERIMENTS 
+
+This section evaluates PGRE through comparative perfor-mance analysis, ablation studies, and parameter visualiza-tions to assess both effectiveness and interpretability. 
+
+5.1 RELATION PREDICTION Datasets. We evaluated PGRE on three widely used temporal knowledge graph datasets: ICEWS18 [Boschee et al., 2015], GDELT [Leetaru and Schrodt, 2013], and WIKI [Leblay and Chekol, 2018]. To construct moderate-scale subgraphs with sufficient relational–temporal support, we first ranked relation types according to their total num-bers of observed events and retained the most frequent rela-tions, resulting in 10 relations for ICEWS18, 8 for GDELT, and 15 for WIKI. Within each relation-filtered subgraph, entity activity was measured by the total number of events in which an entity appeared as either a subject or an object. We then retained the 500 most active entities and removed events whose subject or object was not included in the se-lected entity set. This preprocessing strategy keeps Gibbs inference computationally manageable while ensuring suffi-cient observations for estimating inter-relational temporal dependencies. 
+
+Baselines. We compared PGRE with representative meth-ods from three categories: probabilistic models for dy-namic networks (DPGM [Yang and Koeppl, 2018b], D-NGPPF [Acharya et al., 2015], G-HSEPM [Yu et al., 2025]), probabilistic models for dynamic count data (PGDS [Schein et al., 2016], PRGDS [Schein et al., 2019], NBRGDS [Huang et al., 2024]), and neural models for tem-poral knowledge graphs (Know-Evolve [Trivedi et al., 2017], DyRep [Trivedi et al., 2019], RENet [Jin et al., 2019]). 
+
+Experimental Settings. Each dataset was divided into three temporal segments: train (t = 1, . . . , T − 2) ,valid (t = T − 1) , and test (t = T ), where the predic-tion query time is tq = T . Given historical events up to time 
+
+tq − 1, models predict the probabilities of events occurring at time tq . Performance is evaluated using AUC-ROC and AUC-PR. More experimental details are provided in the supplementary material. 
+
+Results on Relation Prediction. Table 1 summarizes the relation prediction performance on ICEWS18, GDELT, and WIKI. PGRE consistently achieves competitive results across all datasets, with particularly large improvements in AUC-PR on ICEWS18 and GDELT, both of which exhibit sparse and highly multi-relational structures. Even on WIKI, where relational dependencies are weaker, PGRE attains the second-best AUC-PR, indicating robust generalization across varying relational densities. The superior AUC-PR performance of PGRE primarily stems from two modeling choices. First, PGRE captures latent transition dependencies among relations through the transition matrix Πrr ′ , enabling the model to represent how different relations evolve and interact over time. Second, the explicit modeling of directed head–tail entity roles allows PGRE to capture asymmetric temporal dynamics that are ignored by conventional single-relation models. (a) AUC-ROC: PGRE vs. PGE (b) AUC-PR: PGRE vs. PGE  
+
+> (c) AUC-ROC: PGRE vs. D-NGPPF and RENet (d) AUC-PR: PGRE vs. D-NGPPF and RENet
+
+Figure 3: Comparison of AUC-ROC and AUC-PR under different relation counts R ∈ { 10 , 25 , 50 , 75 , 100 }. The first row compares PGRE with its variant PGE (without the relation transition matrix), while the second row compares PGRE with two strong baselines, D-NGPPF and RENet. Table 2: Average time per iteration (seconds) on different datasets. Model ICEWS18 GDELT WIKI PGDS 73.28 135.52 51.91 PRGDS 75.07 117.54 54.85 NBRGDS 72.11 79.06 46.55 D-NGPPF 140.70 329.81 81.50 DPGM 172.78 459.88 88.86 G-HSEPM 204.01 339.26 145.98 PGRE 71.70 185.16 16.19 
+
+Compared with both count-based probabilistic methods and neural temporal models, PGRE is more robust under sparse multi-relational settings. While neural models often achieve higher AUC-ROC by focusing on frequent patterns, PGRE maintains substantially better AUC-PR by leveraging struc-tured Bayesian priors that couple relations and entities, re-sulting in improved recall and interpretability. Table 2 reports the average time per iteration on three bench-marks. PGRE achieves the lowest runtime on the sparsest dataset (WIKI) and remains competitive on denser datasets such as ICEWS18 and GDELT. Overall, PGRE provides a favorable trade-off between computational efficiency and modeling expressiveness in multi-relational temporal set-tings. 
+
+5.2 ABLATION AND INTERPRETABILITY ANALYSIS 
+
+We conduct a mechanism-oriented relation-cardinality abla-tion on ICEWS18 to examine how relation coupling behaves as the number of retained relation types increases. D-NGPPF and RENet are selected as the strongest probabilistic and neural baselines, respectively, in the main comparison. Fig. 3 reports the performance under varying numbers of relations 
+
+R. The AUC-PR of PGRE initially increases, reaches its maximum at R = 25 , and then gradually decreases, while remaining consistently higher than those of the competing methods. Its AUC-ROC exhibits an overall upward trend, with a slight fluctuation at R = 75 . In contrast, the AUC-PR values of the competing methods generally decline as R in-creases, suggesting that they benefit less from the additional cross-relation structure. Figure 4: Temporal evolution of latent factors for six representative relations: Demand , Praise or endorse , Express intent to engage in diplomatic cooperation , Sign formal agreement , Express intent to cooperate , and Make optimistic comment ,
+
+δt,r k /(PKk=1 δt,r k ). The y-axis represents latent factor indices (150–199) and the x-axis represents time steps t. Redder colors indicate higher activity levels. 
+
+Figure 5: Transition probabilities among the 25 most ac-tive relations in the R = 25 relation-cardinality setting of ICEWS18. The ablation variant PGE, which removes the relation tran-sition matrix, exhibits a substantial reduction in AUC-PR across all settings, demonstrating the contribution of ex-plicit relation coupling. Similarly, the AUC-PR values of D-NGPPF and RENet decrease as R grows, whereas their AUC-ROC improvements are less pronounced than those of PGRE. These results indicate that the proposed relation-transition mechanism helps PGRE maintain more robust predictive performance as relation diversity increases. To further examine the learned structure, we visualize the temporal evolution of latent factors and the relation transi-tion matrix Πr,r ′ . Fig. 4 illustrates the temporal evolution of latent factors for representative positive interaction types. Certain latent factors remain consistently active across mul-tiple relations, suggesting the presence of shared latent com-munities that drive their temporal dynamics. Fig. 5 shows the transition probabilities in the R = 25 setting. The matrix displays a dominant diagonal pattern, reflecting strong tem-poral self-dependence of relations across adjacent time steps. In addition, several off-diagonal bands reveal structured tran-sitions between semantically related relations, indicating dy-namic coupling beyond self-persistence. These observations demonstrate that PGRE captures both interpretable latent evolution and structured inter-relational interactions, which jointly contribute to its robustness in sparse multi-relational settings. 
+
+## 6 CONCLUSION 
+
+We have proposed a probabilistic network model for cap-turing temporal evolution and relational interactions in dy-namic knowledge graphs. In contrast to existing Bayesian network models, the proposed framework is directly appli-cable to dynamic knowledge graph completion. The model has introduced a structured relation transition kernel to char-acterize inter-relational dynamics within latent communi-ties and has supported efficient closed-form posterior infer-ence via Gibbs sampling. Experimental results on multiple temporal knowledge graph benchmarks have demonstrated competitive relation prediction performance, with substan-tial AUC-PR improvements on ICEWS18 and GDELT, to-gether with interpretable relational and temporal structures revealed through ablation and visualization analyses. Future work includes extending the model to settings with rapidly evolving event streams and learning time-varying relation transition dynamics. Another promising direction is adapting the framework to heterogeneous temporal networks with irregular or partially overlapping node sets. 
+
+Acknowledgements 
+
+This work was partially supported by the National Natural Science Foundation of China (NSFC) (Grant Nos. 62476047 and 62276171), the Peking University Mathematics Challenge Funding Program (Grant No. 2024SRMC10), the Shenzhen Science and Technology Program (Grant Nos. ZDCY20250901110940006 and JCYJ20240813141503005), the Dongguan Key Laboratory for AI and Dynamical Systems, the Dongguan Key Lab-oratory for Intelligence and Information Technology, the Dongguan Key Laboratory for Data Science and Intelli-gent Medicine, the Guangdong Research Team for Commu-nication and Sensing Integrated with Intelligent Comput-ing (Project No. 2024KCXTD047), and the Guangdong Multidisciplinary Innovation Research Group for New-Generation Intelligent Systems and Diagnostic-Therapeutic Applications (Grant No. 2025KCXTD031). 
+
+References 
+
+Ayan Acharya, Avijit Saha, Mingyuan Zhou, Dean Teffer, and Joydeep Ghosh. Nonparametric dynamic network modeling. In KDD Workshop on Mining and Learning from Time Series , 2015. Long Bai, Zixuan Li, Xiaolong Jin, Jiafeng Guo, Xueqi Cheng, and Tat-Seng Chua. G2s: A general-to-specific learning framework for temporal knowledge graph fore-casting with large language models. In Findings of the Association for Computational Linguistics: ACL 2025 ,pages 20927–20938, 2025. Elizabeth Boschee, Jennifer Lautenschlager, Sean O’Brien, Steve Shellman, James Starz, and Michael Ward. ICEWS Coded Event Data. https://dataverse. harvard.edu/dataverse/icews , 2015. Harvard Dataverse, accessed October 19, 2025. Nilesh Chakraborty, Denis Lukovnikov, Gaurav Mahesh-wari, Priyansh Trivedi, Jens Lehmann, and Asja Fischer. Introduction to neural network-based question answering over knowledge graphs. Wiley Interdisciplinary Reviews: Data Mining and Knowledge Discovery , 11(3):e1389, 2021. Jialin Chen and Rex Ying. Tempme: Towards the explain-ability of temporal graph neural networks via motif dis-covery. Advances in Neural Information Processing Sys-tems , 36:29005–29028, 2023. Shib Sankar Dasgupta, Swayambhu Nath Ray, and Partha Talukdar. Hyte: Hyperplane-based temporally aware knowledge graph embedding. In Proceedings of the 2018 conference on empirical methods in natural language processing , pages 2001–2011, 2018. Lisa Ehrlinger and Wolfram Wöß. Towards a definition of knowledge graphs. SEMANTiCS (Posters, Demos, SuC-CESS) , 48(1-4):2, 2016. Alberto García-Durán, Sebastijan Dumanˇ ci´ c, and Mathias Niepert. Learning sequence encoders for temporal knowl-edge graph completion. arXiv preprint arXiv:1809.03202 ,2018. Paul W Holland, Kathryn Blackmond Laskey, and Samuel Leinhardt. Stochastic blockmodels: First steps. Social networks , 5(2):109–137, 1983. Rui Huang, Sikun Yang, and Heinz Koeppl. Negative-binomial randomized gamma markov processes for het-erogeneous overdispersed count time series. arXiv preprint arXiv:2402.18995 , 2024. Shenyang Huang, Farimah Poursafaei, Jacob Danovitch, Matthias Fey, Weihua Hu, Emanuele Rossi, Jure Leskovec, Michael Bronstein, Guillaume Rabusseau, and Reihaneh Rabbany. Temporal graph benchmark for ma-chine learning on temporal graphs. Advances in Neural Information Processing Systems , 36:2056–2073, 2023. Shaoxiong Ji, Shirui Pan, Erik Cambria, Pekka Marttinen, and Philip S Yu. A survey on knowledge graphs: Rep-resentation, acquisition, and applications. IEEE trans-actions on neural networks and learning systems , 33(2): 494–514, 2021. Zhen Jia, Soumajit Pramanik, Rishiraj Saha Roy, and Ger-hard Weikum. Complex temporal question answering on knowledge graphs. In Proceedings of the 30th ACM international conference on information & knowledge management , pages 792–802, 2021. Woojeong Jin, Meng Qu, Xisen Jin, and Xiang Ren. Re-current event network: Autoregressive structure infer-ence over temporal knowledge graphs. arXiv preprint arXiv:1904.05530 , 2019. Charles Kemp, Joshua B Tenenbaum, Thomas L Griffiths, Takeshi Yamada, and Naonori Ueda. Learning systems of concepts with an infinite relational model. In AAAI ,volume 3, page 5, 2006. Julien Leblay and Melisachew Wudage Chekol. Deriving validity time in knowledge graph. In Companion pro-ceedings of the web conference 2018 , pages 1771–1776, 2018. Kalev Leetaru and Philip A. Schrodt. Gdelt: Global data on events, location, and tone, 1979–2012. In Proceedings of the International Studies Association Annual Convention ,pages 1–49. Citeseer, 2013. Zixuan Li, Xiaolong Jin, Wei Li, Saiping Guan, Jiafeng Guo, Huawei Shen, Yuanzhuo Wang, and Xueqi Cheng. Temporal knowledge graph reasoning based on evolu-tional representation learning. In Proceedings of the 44th international ACM SIGIR conference on research and de-velopment in information retrieval , pages 408–417, 2021. Ke Liang, Lingyuan Meng, Meng Liu, Yue Liu, Wenxuan Tu, Siwei Wang, Sihang Zhou, Xinwang Liu, Fuchun Sun, and Kunlun He. A survey of knowledge graph reasoning on graph types: Static, dynamic, and multi-modal. IEEE Transactions on Pattern Analysis and Machine Intelli-gence , 46(12):9456–9478, 2024. Xin Lv, Xu Han, Lei Hou, Juanzi Li, Zhiyuan Liu, Wei Zhang, Yichi Zhang, Hao Kong, and Suhui Wu. Dy-namic anticipation and completion for multi-hop rea-soning over sparse knowledge graph. arXiv preprint arXiv:2010.01899 , 2020. Catherine Matias and Vincent Miele. Statistical clustering of temporal networks through a dynamic stochastic block model. Journal of the Royal Statistical Society Series B: Statistical Methodology , 79(4):1119–1141, 2017. Krzysztof Nowicki and Tom A B Snijders. Estimation and prediction for stochastic blockstructures. Journal of the American statistical association , 96(455):1077–1087, 2001. Emanuele Rossi, Ben Chamberlain, Fabrizio Frasca, Davide Eynard, Federico Monti, and Michael Bronstein. Tempo-ral graph networks for deep learning on dynamic graphs. 
+
+arXiv preprint arXiv:2006.10637 , 2020. Aaron Schein, Hanna Wallach, and Mingyuan Zhou. Poisson-gamma dynamical systems. Advances in Neural Information Processing Systems , 29, 2016. Aaron Schein, Scott Linderman, Mingyuan Zhou, David Blei, and Hanna Wallach. Poisson-randomized gamma dynamical systems. Advances in Neural Information Processing Systems , 32, 2019. Michael Schlichtkrull, Thomas N Kipf, Peter Bloem, Ri-anne Van Den Berg, Ivan Titov, and Max Welling. Mod-eling relational data with graph convolutional networks. In European semantic web conference , pages 593–607. Springer, 2018. Sangwoo Seo, Sungwon Kim, Jihyeong Jung, Yoonho Lee, and Chanyoung Park. Self-explainable temporal graph networks based on graph information bottleneck. In Pro-ceedings of the 30th ACM SIGKDD conference on knowl-edge discovery and data mining , pages 2572–2583, 2024. Guo Tang, Zheng Chu, Wenxiang Zheng, Junjia Xiang, Yizhuo Li, Weihao Zhang, Ming Liu, and Bing Qin. Anre: Analogical replay for temporal knowledge graph forecast-ing. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 4632–4650, 2025. Lenin Thingbaijam, Kowstubha Palle, P Venkata Prasad, Balasubbareddy Mallala, Shrishailappa Patil, et al. Incor-porating knowledge graphs in semantic search. In 2024 15th International Conference on Computing Communi-cation and Networking Technologies (ICCCNT) , pages 1–6. IEEE, 2024. Rakshit Trivedi, Hanjun Dai, Yichen Wang, and Le Song. Know-evolve: Deep temporal reasoning for dynamic knowledge graphs. In international conference on ma-chine learning , pages 3462–3471. PMLR, 2017. Rakshit Trivedi, Mehrdad Farajtabar, Prasenjeet Biswal, and Hongyuan Zha. Dyrep: Learning representations over dynamic graphs. In International conference on learning representations , 2019. Xiang Wang, Xiangnan He, Yixin Cao, Meng Liu, and Tat-Seng Chua. Kgat: Knowledge graph attention network for recommendation. In Proceedings of the 25th ACM SIGKDD international conference on knowledge discov-ery & data mining , pages 950–958, 2019a. Xiang Wang, Dingxian Wang, Canran Xu, Xiangnan He, Yixin Cao, and Tat-Seng Chua. Explainable reasoning over knowledge graphs for recommendation. In Proceed-ings of the AAAI conference on artificial intelligence ,volume 33, pages 5329–5336, 2019b. Xiang Wang, Tinglin Huang, Dingxian Wang, Yancheng Yuan, Zhenguang Liu, Xiangnan He, and Tat-Seng Chua. Learning intents behind interactions with knowledge graph for recommendation. In Proceedings of the web conference 2021 , pages 878–887, 2021. Tianxing Wu, Arijit Khan, Melvin Yong, Guilin Qi, and Meng Wang. Efficiently embedding dynamic knowledge graphs. Knowledge-based systems , 250:109124, 2022. Chenyan Xiong, Russell Power, and Jamie Callan. Explicit semantic ranking for academic search via knowledge graph embedding. In Proceedings of the 26th interna-tional conference on world wide web , pages 1271–1279, 2017. Sikun Yang and Heinz Koeppl. Dependent relational gamma process models for longitudinal networks. In Proceed-ings of the 35th International Conference on Machine Learning , volume 80 of Proceedings of Machine Learn-ing Research , pages 5551–5560. PMLR, 10–15 Jul 2018a. Sikun Yang and Heinz Koeppl. A poisson gamma probabilis-tic model for latent node-group memberships in dynamic networks. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 32, 2018b. Sikun Yang and Heinz Koeppl. The hawkes edge parti-tion model for continuous-time event-based temporal networks. In Proceedings of the 36th Conference on Uncertainty in Artificial Intelligence (UAI) , volume 124 of Proceedings of Machine Learning Research , pages 460–469, 03–06 Aug 2020. Sikun Yang and Hongyuan Zha. Estimating latent popu-lation flows from aggregated data via inversing multi-marginal optimal transport. In Proceedings of the 2023 SIAM International Conference on Data Mining, SDM ,pages 181–189, 2023. Sikun Yang and Hongyuan Zha. A variational autoencoder for neural temporal point processes with dynamic latent graphs. In Thirty-Eighth AAAI Conference on Artificial Intelligence , pages 16343–16351, 2024. Michihiro Yasunaga, Hongyu Ren, Antoine Bosselut, Percy Liang, and Jure Leskovec. Qa-gnn: Reasoning with lan-guage models and knowledge graphs for question answer-ing. arXiv preprint arXiv:2104.06378 , 2021. Xincan Yu, Nan Fang, Hao Liao, and Sikun Yang. Tracking latent communities evolution with hierarchical edge par-tition models. In 2025 IEEE International Conference on Data Mining (ICDM) , pages 1672–1681. IEEE, 2025. Hongkuan Zhou, Da Zheng, Israt Nisa, Vasileios Ioannidis, Xiang Song, and George Karypis. Tgl: A general frame-work for temporal gnn training on billion-scale graphs. 
+
+arXiv preprint arXiv:2203.14883 , 2022. Mingyuan Zhou. Infinite edge partition models for over-lapping community detection and link prediction. In 
+
+Artificial intelligence and statistics , pages 1135–1143. PMLR, 2015. Poisson–Gamma Modeling of Inter-Relational Dependencies in Dynamic Knowledge Graphs (Supplementary Material) 
+
+Nan Fang 1,2 Yijun Wang 1,3 Hao Liao 2 Sikun Yang *1,4 1School of Computing and Information Technology, Great Bay University, Dongguan, Guangdong, China 
+
+> 2
+
+College of Computer Science and Software Engineering, Shenzhen University, Shenzhen, Guangdong, China 
+
+> 3
+
+Tsinghua University, Shenzhen, Guangdong, China 
+
+> 4
+
+Guangdong Provincial Key Laboratory of Mathematical and Neural Dynamical Systems 
+
+## 7 SUPPLEMENTARY MATERIAL 
+
+7.1 BASELINE IMPLEMENTATIONS 
+
+We provide additional details on the baseline models used in the experiments. 
+
+Probabilistic Models for Dynamic Networks. DPGM, D-NGPPF, and G-HSEPM are designed for dynamic single-relation networks. Following standard practice, we train one independent model for each relation. For directed relations, each relational graph is converted into an undirected bipartite graph by separating entities into source and target roles, resulting in a (2 N × 2N ) adjacency matrix per relation. 
+
+Probabilistic Models for Dynamic Count Data. PGDS, PRGDS, and NBRGDS operate on temporal count tensors. We reshape the original R × T × N × N temporal knowledge graph into an event–time matrix, where each event corresponds to a triple (s, r, o ). Model inference is conducted following the settings described in the original papers. 
+
+Neural Models for Temporal Knowledge Graphs. Know-Evolve, DyRep, and RENet are neural temporal knowledge graph models that output real-valued scores for candidate events. We use the official implementations when available and follow the default hyperparameter configurations recommended by the authors. For models that do not directly produce probabilities, a sigmoid function is applied to convert scores into probabilistic predictions. 
+
+7.2 ADDITIONAL EXPERIMENTAL SETTINGS 
+
+All probabilistic generative models, including PGRE and count-based baselines, are trained using Gibbs sampling. For all datasets, the number of latent communities is fixed to K = 200 . To ensure fair comparison, the remaining hyperparameters for each probabilistic model follow the recommendations in the original papers or official implementations. Model inference is performed with 2000 Gibbs sampling iterations, where the first 1000 iterations are discarded as burn-in and the remaining 1000 iterations are used for posterior estimation. For neural network-based methods, we use the authors’ publicly released code and follow their recommended experimental settings. All neural models are trained in a supervised learning setting using the binary cross-entropy loss. Training is conducted for up to 1000 epochs with early stopping based on validation performance, using a patience of 20. The model checkpoint achieving the best validation performance is selected for testing. Unless otherwise specified, the learning rate and batch size are set to 0.0001 and 200, respectively. To reduce the effect of randomness, each experiment was repeated five times with different random seeds, and the reported results correspond to average performance. All experiments are implemented in Python 3.9.12 with PyTorch 2.1.0 and 
+
+> *Corresponding author: sikunyang@gbu.edu.cn
+
+Table 3: Post-burn-in effective sample sizes for selected representative model parameters. Parameter ESS 
+
+π00 49.97 
+
+π20 336.70 
+
+π70 246.59 
+
+eδ(4 ,0) 61 23.63 
+
+eδ(4 ,0) 24 12.99 Table 4: Sensitivity of PGRE to the temporal scale parameter τ . The results correspond to a single-run sensitivity analysis. 
+
+τ AUC-ROC AUC-PR 0.5 0.9324 0.2067 
+
+1.0 0.9327 0.1991 1.5 0.9329 0.2002 2.0 0.9316 0.2008 CUDA 12.1, and are conducted on a Dell Precision 7920 workstation running Ubuntu Linux (kernel 6.11.0-25-generic). The implementation code and experimental scripts are publicly available at https://github.com/ffffkgh/PGRE .
+
+7.3 SAMPLING DIAGNOSTICS 
+
+We assessed the sampling behavior of the Gibbs sampler using effective sample sizes (ESSs) and trace plots for a subset of representative model parameters. The sampler was run for 2,000 iterations, with the first 1,000 iterations discarded as burn-in and the remaining 1,000 iterations retained for posterior estimation. Because the model contains a large number of latent variables, we report diagnostics for selected entries of the relation transition matrix and selected normalized temporal community weights on a representative dataset and temporal–relation slice. For the relation transition parameters, the post-burn-in ESS values were 49.97 for π00 , 336.70 for π20 , and 246.59 for π70 .We additionally monitored two representative normalized temporal community weights, 
+
+eδ(t,r ) 
+
+> k
+
+= δ(t,r )
+
+> k
+
+PKk′=1 δ(t,r )
+
+> k′
+
+,
+
+whose post-burn-in ESS values were 23.63 for eδ(4 ,0) 61 and 12.99 for eδ(4 ,0) 24 . The corresponding results are summarized in Table 3. Figs. 6 and 7 show the corresponding trace plots over all 2,000 iterations. The representative transition parameters exhibit an initial adaptation period followed by comparatively more stable trajectories in the retained sampling period. Their ESS values also indicate more effective mixing for π20 and π70 , while π00 exhibits stronger serial dependence. The normalized temporal community-weight summaries display slower variation and stronger autocorrelation, consistent with their lower ESS values. Nevertheless, their trajectories become comparatively more stable after the initial adaptation period. Taken together, the trace plots and ESS values provide complementary evidence that the adopted sampling design captures a more stable posterior regime after burn-in. These diagnostics therefore support the use of 1,000 burn-in iterations followed by 1,000 retained iterations for posterior estimation, while also indicating that some latent community-weight summaries remain more strongly autocorrelated than the transition parameters. 
+
+7.4 SENSITIVITY ANALYSIS OF THE TEMPORAL SCALE PARAMETER 
+
+We examined the sensitivity of PGRE to the temporal scale parameter τ , which controls the scale of the Gamma–Markov evolution. We varied τ over {0.5, 1.0, 1.5, 2.0} while keeping all other experimental settings unchanged. The results are reported in Table 4. Figure 6: Trace plots of selected representative relation transition parameters over 2,000 Gibbs sampling iterations. The first 1,000 iterations are treated as burn-in, and the remaining 1,000 iterations are retained for posterior estimation. The trajectories exhibit an initial adaptation period followed by comparatively more stable post-burn-in behavior. 
+
+Figure 7: Trace plots of selected normalized temporal community weights at (t, r ) = (4 , 0) over 2,000 Gibbs sampling iterations. Compared with the transition parameters, these summaries exhibit stronger serial dependence and slower variation, consistent with their lower post-burn-in ESS values. The performance remains stable across the tested values of τ . Specifically, the AUC-ROC values vary only from 0.9316 to 0.9329, while the AUC-PR values range from 0.1991 to 0.2067. Although τ = 0 .5 achieves the highest AUC-PR and 
+
+τ = 1 .5 gives the highest AUC-ROC, the differences are modest. These results indicate that PGRE is reasonably robust to moderate variations in the temporal scale parameter and does not rely on a narrowly tuned value of τ . We therefore use 
+
+τ = 1 .0 as the default setting in the main experiments. 
+
+7.5 MARKOV CHAIN MONTE CARLO INFERENCE 
+
+Here we present the Gibbs sampling for the PGRE model. 
+
+Sampling latent counts x(t,r ) 
+
+> ij
+
+. We sample the latent count associated with each observed event M(t,r ) 
+
+> ij
+
+as 
+
+(x(t,r ) 
+
+> ij
+
+|− ) ∼ M (t,r ) 
+
+> ij
+
+Po +(
+
+> K
+
+X
+
+> k=1
+
+δ(t,r ) 
+
+> k
+
+ϕik ψjk ). (24) where Pois +(·) denotes a zero-truncated Poisson distribution. Since x(t,r ) 
+
+> ij
+
+= PKk=1 x(t,r ) 
+
+> ijk
+
+, by the additive property of the Poisson distribution we have x(t,r ) 
+
+> ijk
+
+∼ Pois (δ(t,r ) 
+
+> k
+
+ϕik ψjk ). According to the Poisson–multinomial equivalence (Theorem 3), the latent count x(t,r ) 
+
+> ijk
+
+can be sampled as 
+
+(x(t,r ) 
+
+> ijk
+
+|− ) ∼ Mult (x(t,r ) 
+
+> ij
+
+, ( δ(t,r ) 
+
+> k
+
+ϕik ψjk 
+
+PKk=1 δ(t,r ) 
+
+> k
+
+ϕik ψjk 
+
+)) . (25) 
+
+Sampling community factor loadings ϕik and ψjk . By the Gamma–Poisson conjugacy, the posterior distributions of the subject- and object-side memberships are given by 
+
+(ϕik | − ) ∼ Gam a0 +
+
+> T
+
+X
+
+> t=1
+> R
+
+X
+
+> r=1
+> N
+
+X 
+
+> j=1
+> j̸=i
+
+x(t,r ) 
+
+> ijk
+
+,
+
+1/
+
+
+
+ci +
+
+> T
+
+X
+
+> t=1
+> R
+
+X
+
+> r=1
+> N
+
+X 
+
+> j=1
+> j̸=i
+
+δ(t,r ) 
+
+> k
+
+ψjk 
+
+!
+
+,
+
+(26) 
+
+(ψjk | − ) ∼ Gam a1 +
+
+> T
+
+X
+
+> t=1
+> R
+
+X
+
+> r=1
+> N
+
+X
+
+> i=1
+> i̸=j
+
+x(t,r ) 
+
+> ijk
+
+,
+
+1/
+
+
+
+cj +
+
+> T
+
+X
+
+> t=1
+> R
+
+X
+
+> r=1
+> N
+
+X
+
+> i=1
+> i̸=j
+
+δ(t,r ) 
+
+> k
+
+ϕik 
+
+!
+
+.
+
+(27) 
+
+Sampling entity-specific scaling parameters ci and cj . We place Gamma priors over the entity-specific scaling parameters as ci ∼ Gam( f0, 1/g 0) and cj ∼ Gam( z0, 1/k 0). Using the Gamma–Gamma conjugacy, the posterior distributions can be derived in closed form as: 
+
+(ci|− ) ∼ Gam (f0 + Ka 0, 1/(g0 +
+
+> K
+
+X
+
+> k=1
+
+ϕik )) , (28) 
+
+(cj |− ) ∼ Gam (z0 + Ka 1, 1/(k0 +
+
+> K
+
+X
+
+> k=1
+
+ψjk )) , (29) where K denotes the number of latent communities. 
+
+Sampling community weights δ(t,r ) 
+
+> k
+
+. The community weights δ(t,r ) 
+
+> k
+
+evolve under a Markovian structure, so both backward and forward information must be incorporated into the posterior updates. For the last time step t = T , we define the aggregated latent count as x(T,r ) 
+
+> ·· k
+
+= PNi=1 
+
+PNj=1  
+
+> j̸=i
+
+x(T,r ) 
+
+> ijk
+
+, which follows a Poisson distribution x(T,r ) 
+
+> ·· k
+
+∼ Pois (δ(T,r ) 
+
+> k
+
+sk), where sk = PNi=1 
+
+PNj=1  
+
+> j̸=i
+
+ϕik ψjk . By applying the gamma–Poisson conjugacy, the posterior of δ(T,r ) 
+
+> k
+
+is given by 
+
+(δ(T,r ) 
+
+> k
+
+|− ) ∼ Gam x(T,r ) 
+
+> ·· k
+
++
+
+> R
+
+X
+
+> r′=1
+
+πrr ′ δ(T −1,r ′) 
+
+> k
+
+, 1/(τ + sk)
+
+!
+
+. (30) For t = T − 1, to incorporate forward information, we marginalize out δ(T,r ) 
+
+> k
+
+using Theorem 1, which leads to 
+
+x(T,r ) 
+
+> ·· k
+
+∼ NB 
+
+> R
+
+X
+
+> r′=1
+
+πrr ′ δ(T −1,r ′) 
+
+> k
+
+, s k/(τ + sk)
+
+!
+
+. (31) According to Theorem 2, the negative binomial distribution can be augmented with an auxiliary variable as 
+
+l(T,r ) 
+
+> k
+
+∼ CRT x(T,r ) 
+
+> ·· k
+
+,
+
+> R
+
+X
+
+> r′=1
+
+πrr ′ δ(T −1,r ′)
+
+> k
+
+!
+
+. (32) The joint distribution of x(T,r ) 
+
+> ·· k
+
+and l(T,r ) 
+
+> k
+
+can then be written as 
+
+x(T,r ) 
+
+> ·· k
+
+∼ SumLog (l(T,r ) 
+
+> k
+
+, ρ (T,r ) 
+
+> k
+
+), (33) 
+
+l(T,r ) 
+
+> k
+
+∼ Pois −
+
+> R
+
+X
+
+> r′=1
+
+πrr ′ δ(T −1,r ′) 
+
+> k
+
+ln(1 − ρ(T ) 
+
+> k
+
+)
+
+!
+
+, (34) where ρ(T ) 
+
+> k
+
+= sk  
+
+> τ+sk
+
+. Since l(T,r ) 
+
+> k
+
+= l(T,r ·) 
+
+> k
+
+= PRr2=1 l(T,rr 2) 
+
+> k
+
+, the distribution of l(T,rr ′) 
+
+> k
+
+is 
+
+l(T,rr ′) 
+
+> k
+
+∼ Pois 
+
+
+
+−πrr ′ δ(T −1,r ′) 
+
+> k
+
+ln(1 − ρ(T ) 
+
+> k
+
+)
+
+
+
+. (35) Using the additive property of the Poisson distribution and PRr1=1 πr1r = 1 , we have 
+
+l(T, ·r) 
+
+> k
+
+∼ Pois 
+
+
+
+−δ(T −1,r ) 
+
+> k
+
+ln(1 − ρ(T ) 
+
+> k
+
+)
+
+
+
+. (36) Given x(T −1,r ) 
+
+> ·· k
+
+∼ Pois (δ(T −1,r ) 
+
+> k
+
+sk), the Poisson additive property leads to 
+
+x(T −1,r ) 
+
+> ·· k
+
++ l(T, ·r) 
+
+> k
+
+∼ Pois 
+
+
+
+δ(T −1,r ) 
+
+> k
+
+(sk − ln(1 − ρ(T ) 
+
+> k
+
+)) 
+
+
+
+. (37) This combines backward and forward information at t = T − 1. With the gamma prior on δ(T −1,r ) 
+
+> k
+
+, its conditional posterior is 
+
+(δ(T −1,r ) 
+
+> k
+
+|− ) ∼ Gam x(T −1,r ) 
+
+> ·· k
+
++ l(T, ·r) 
+
+> k
+
++
+
+> R
+
+X
+
+> r′
+
+πrr ′ δ(T −2,r ′) 
+
+> k
+
+,
+
+1/(τ + sk − ln(1 − ρ(T ) 
+
+> k
+
+)) 
+
+
+
+.
+
+(38) For intermediate steps t = T − 2, . . . , 2, we introduce 
+
+l(t, ·r) 
+
+> k
+
+∼ CRT x(t,r ) 
+
+> ·· k
+
++ l(t+1 ,·r) 
+
+> k
+
+,
+
+> R
+
+X
+
+> r′=1
+
+πrr ′ δ(t−1,r ′)
+
+> k
+
+!
+
+, (39) and apply the same augmentation–sampling procedure: 
+
+(δ(t,r ) 
+
+> k
+
+|− ) ∼ Gam x(t,r ) 
+
+> ·· k
+
++ l(t+1 ,·r) 
+
+> k
+
++
+
+> R
+
+X
+
+> r′
+
+πrr ′ δ(t−1,r ′) 
+
+> k
+
+,
+
+1/(τ + sk − ln(1 − ρ(t+1)  
+
+> k
+
+)) 
+
+
+
+,
+
+(40) where 
+
+ρ(t+1)  
+
+> k
+
+= sk − ln(1 − ρ(t+2)  
+
+> k
+
+)
+
+τ + sk − ln(1 − ρ(t+2)  
+
+> k
+
+) . (41) Finally, for t = 1 , we augment 
+
+l(1 ,r ) 
+
+> k
+
+∼ CRT 
+
+
+
+x(1 ,r ) 
+
+> ·· k
+
++ l(2 ,·r) 
+
+> k
+
+, ν r /K 
+
+
+
+, (42) and sample 
+
+(δ(1 ,r ) 
+
+> k
+
+|− ) ∼ Gam 
+
+
+
+x(1 ,r ) 
+
+> ·· k
+
++ l(2 ,·r) 
+
+> k
+
++ νr /K, 
+
+1/(τ + sk − ln(1 − ρ(2)  
+
+> k
+
+)) 
+
+
+
+.
+
+(43) 
+
+Sampling the transition matrix πr . After marginalizing out δ, the auxiliary counts follow a multinomial distribution 
+
+(l(t, 1r) 
+
+> k
+
+, . . . , l (t,Rr ) 
+
+> k
+
+) ∼ Mult 
+
+
+
+l(t, ·r) 
+
+> k
+
+, (π1r , . . . , π Rr )
+
+
+
+. By the Dirichlet–multinomial conjugacy, the posterior distribution of 
+
+πr is given by 
+
+(πr |− ) ∼ Dir 
+
+
+
+ν1νr +
+
+> T
+
+X
+
+> t=2
+> K
+
+X
+
+> k=1
+
+l(t, 1r) 
+
+> k
+
+, . . . , ξν r +
+
+> T
+
+X
+
+> t=2
+> K
+
+X
+
+> k=1
+
+l(t,rr ) 
+
+> k
+
+, . . . , νRνr +
+
+> T
+
+X
+
+> t=2
+> K
+
+X
+
+> k=1
+
+l(t,Rr )
+
+> k
+
+
+
+.
+
+(44) 
+
+Sampling νr and ξ. We marginalize over Π to obtain a Dirichlet–multinomial distribution 
+
+(l(·,1r) 
+
+> ·
+
+, . . . , l (·,Rr ) 
+
+> ·
+
+)
+
+∼ DirMult 
+
+
+
+l(·,·r) 
+
+> ·
+
+, (ν1νr , . . . , ξν r , . . . , ν Rνr )
+
+
+
+, (45) where l(·,·r) 
+
+> ·
+
+= PTt=1 
+
+PKk=1 
+
+PKr1=1 l(t,r 1r) 
+
+> k
+
+.By introducing a beta-distributed auxiliary variable qr , the Dirichlet–multinomial distribution can be rewritten as a negative binomial distribution: 
+
+qr ∼ Beta 
+
+l(·,·r) 
+
+> ·
+
+, ν r
+
+ξ + X 
+
+> r′̸=r
+
+νr′
+
+ . (46) Then, l(·,rr ) 
+
+> ·
+
+and l(·,rr ′) 
+
+> ·
+
+follow negative binomial distributions as l(·,rr ) 
+
+> ·
+
+∼ NB( ξν r , q r ) and l(·,rr ′) 
+
+> ·
+
+∼ NB( νr νr′ , q r ). To further facilitate posterior inference, we introduce auxiliary count variables hrr and hrr ′ via the Chinese Restaurant Table (CRT) distribution: 
+
+hrr ∼ CRT 
+
+
+
+l(·,rr ) 
+
+> ·
+
+, ξν r
+
+
+
+,hrr ′ ∼ CRT 
+
+
+
+l(·,rr ′) 
+
+> ·
+
+, ν r νr′
+
+
+
+.
+
+(47) Using the gamma–Poisson conjugacy, ξ is then sampled as 
+
+(ξ|− ) ∼ Gam b0 +
+
+> R
+
+X
+
+> r=1
+
+hrr , 1
+
+e0 − PRr=1 νr ln(1 − qr )
+
+!
+
+. (48) Next, we define 
+
+nr = hrr + X 
+
+> r1̸=r
+
+hr1r + X 
+
+> r2̸=r
+
+hrr 2 +
+
+> K
+
+X
+
+> k=1
+
+l(1 ,r ·) 
+
+> k
+
+,
+
+where l(1 ,r ) 
+
+> k
+
+∼ Pois (τ ν r ln (1 − ρ(1)  
+
+> k
+
+)) . Using the Poisson additive property and gamma–Poisson conjugacy, we have 
+
+(νr |− ) ∼ Gam ( γ0
+
+R + nr , 1/(β + tr )) , (49) where tr = − ln(1 − qr )
+
+
+
+ξ + P  
+
+> r1̸=r
+
+νr1
+
+
+
+− P  
+
+> r2̸=r
+
+ln(1 − qr2 )νr2 − PKk=1 1 
+
+> K
+
+ln(1 − ρ(1)  
+
+> k
+
+).
+
+Sampling β. Finally, by gamma–gamma conjugacy, the posterior of β is derived as 
+
+(β|− ) ∼ Gam (d0 + γ0, 1/(h0 +
+
+> R
+
+X
+
+> r=1
+
+νr )) . (50) Algorithm 1 summarises the full sampling procedure of PGRE. 
+
+7.6 FULL PROBABILISTIC GRAPHICAL MODEL 
+
+Fig. 8 presents the full probabilistic graphical model of PGRE, which illustrates the complete generative process including entity-level latent factors, relation-level temporal evolution, and observed interactions. Algorithm 1 Gibbs sampling algorithm for PGRE 
+
+Require: Dynamic relational data G(1) , · · · , G (T ).
+
+1: Initialise the number of communities K and other parameters; 
+
+2: repeat 
+
+3: Sample x(t,r ) 
+
+> ij
+
+(Eq. 24) and update x(t,r ) 
+
+> ijk
+
+(Eq. 25) 
+
+4: Sample ϕik (Eq. 26) and ψjk (Eq. 27) 
+
+5: update ci (Eq. 28) and cj (Eq. 29) 
+
+6: for t = T, · · · , 1 do 
+
+7: if t = T then 
+
+8: Sample l(T,r ) 
+
+> k
+
+(Eq. 32) 
+
+9: else if t = T − 1, · · · , 2 then 
+
+10: Sample l(t,r ) 
+
+> k
+
+(Eq. 39) 
+
+11: else if t = 1 then 
+
+12: Sample l(1 ,r ) 
+
+> k
+
+(Eq. 42) 
+
+13: end if 
+
+14: Update ρ(t) 
+
+> k
+
+(Eq. 41) 
+
+15: end for 
+
+16: for t = 1 , · · · , T do 
+
+17: if t = 1 then 
+
+18: Sample δ(1 ,r ) 
+
+> k
+
+(Eq. 43) 
+
+19: else if t = 2 , · · · , T − 1 then 
+
+20: Sample δ(t,r ) 
+
+> k
+
+(Eq. 40) 
+
+21: else if t = T then 
+
+22: Sample δ(T,r ) 
+
+> k
+
+(Eq. 30) 
+
+23: end if 
+
+24: end for 
+
+25: Sample πr (Eq. 44), update qr (Eq. 46) and hrr (Eq. 47) 
+
+26: Sample ξ (Eq. 48) and νr (Eq. 49) 
+
+27: Sample β (Eq. 50) 
+
+28: until convergence 
+
+Ensure: Posterior mean of ϕik , ψjk and δ(t,r )
+
+> k
+
+Figure 8: Full probabilistic graphical model of PGRE.

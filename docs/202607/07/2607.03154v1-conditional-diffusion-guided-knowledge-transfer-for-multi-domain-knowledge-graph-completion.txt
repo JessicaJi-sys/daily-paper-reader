@@ -1,0 +1,957 @@
+Title: Conditional Diffusion Guided Knowledge Transfer for Multi-Domain Knowledge Graph Completion
+
+URL Source: https://arxiv.org/pdf/2607.03154v1
+
+Published Time: Tue, 07 Jul 2026 00:46:47 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# Conditional Diffusion Guided Knowledge Transfer for Multi-Domain Knowledge Graph Completion 
+
+# Jiawei Sheng 
+
+Institute of Information Engineering, Chinese Academy of Sciences Beijing, China shengjiawei@iie.ac.cn 
+
+# Taoyu Su ∗
+
+Institute of Information Engineering, Chinese Academy of Sciences Beijing, China sutaoyu@iie.ac.cn 
+
+# Xixun Lin 
+
+Institute of Information Engineering, Chinese Academy of Sciences Beijing, China linxixun@iie.ac.cn 
+
+# Xiaodong Li 
+
+Institute of Information Engineering, Chinese Academy of Sciences School of Cyber Security, UCAS Beijing, China lixiaodong@iie.ac.cn 
+
+# Tingwen Liu 
+
+Institute of Information Engineering, Chinese Academy of Sciences School of Cyber Security, UCAS Beijing, China liutingwen@iie.ac.cn 
+
+## Abstract 
+
+Multi-domain knowledge graph completion (MKGC) aims to im-prove missing triple prediction in a target KG by transferring knowl-edge from other support KGs. Existing methods typically enforce consistency constraints on equivalent entities across KGs to trans-fer knowledge, which risks suppressing domain-specific contextual information of entities. This design can also compromise entity representation information from all KG domains, impeding perfor-mance improvements, especially in low-resource data scenarios. To address this, we pioneer a generation-based paradigm for MKGC and propose DMKGC, a conditional diffusion-guided knowledge transfer framework. Our key insight is to treat each KG as a partial view of the entity entire information, and generate informative domain-general entity embeddings through diffusion models con-ditioned on support KGs. Particularly, we first initialize domain-agnostic entity embeddings as prior entity embeddings, and then encode them within individual KGs. Afterward, we fuse equivalent entities from support KGs as the conditional diffusion generation guidance. We leverage the prior entity embeddings as the proxy generation objective, which ensures this conditional generation to be unbiased towards any conditioned KGs. Simultaneously, we also train the generated embeddings to be predictive across KGs, thus preserving domain-specific information. Extensive experiments on 14 KGs in 3 benchmarks demonstrate a 4.3% average MRR improve-ment in tail entity prediction over state-of-the-art methods, with sustained gains in low-resource data settings. 
+
+## CCS Concepts 
+
+• Computing methodologies → Knowledge representation and reasoning ; Semantic networks . 
+
+> ∗Corresponding author.
+> This work is licensed under a Creative Commons Attribution 4.0 International License.
+> WWW ’26, Dubai, United Arab Emirates
+> ©2026 Copyright held by the owner/author(s). ACM ISBN 979-8-4007-2307-0/2026/04 https://doi.org/10.1145/3774904.3792252
+
+## Keywords 
+
+Knowledge Graph Completion, Multi-Domain Learning, Diffusion Models, Representation Learning, Knowledge Transfer 
+
+ACM Reference Format: 
+
+Jiawei Sheng, Taoyu Su, Xixun Lin, Xiaodong Li, and Tingwen Liu. 2026. Conditional Diffusion Guided Knowledge Transfer for Multi-Domain Knowl-edge Graph Completion. In Proceedings of the ACM Web Conference 2026 (WWW ’26), April 13–17, 2026, Dubai, United Arab Emirates. ACM, New York, NY, USA, 11 pages. https://doi.org/10.1145/3774904.3792252 
+
+## 1 Introduction 
+
+Knowledge graphs (KGs), which structure knowledge as (head, relation, tail) triples, serve as a critical backbone for numerous web applications [ 25 , 27 , 60 ]. However, their practical utility is often hampered by inherent incompleteness, prompting the task of KG completion (KGC) [ 33 , 49 ]. In general, KGC aims to infer missing elements within triples, typically predicting a missing tail entity given a head entity and a relation. This task can be challenging in scenarios with scarce data, where the limited observed triples severely hinder predictive performance [32, 40]. In recent years, numerous KGs have been constructed in differ-ent domains, which provide complementary knowledge and are promising for improving KGC. To this end, this paper focuses on 
+
+multi-domain KG completion (MKGC) 1, a practical task that aims to predict missing triples in a target KG by using other related sup-port KGs . As shown in Figure 1, the task is to predict ( Microsoft ,
+
+Founder , ?) in the target KG (EL), but the contextual triples of 
+
+BillGates are sparse for prediction. With the related triples in the support KG-1 (EN), the queried triple can be correctly inferred. Here, the entities that appear simultaneously among multiple KGs (e.g. BillGates ) are called equivalent entities , which are previously aligned and connect across these KGs [18, 47]. Although the MKGC task is practical, it remains underexplored. A core challenge lies in designing effective knowledge transfer mod-ules to transfer valuable knowledge from support KGs to a target            
+
+> 1Here, we use the term domain to generally denote a KG constructed from various sources, such as different languages or platforms [3, 46, 55, 63].
+> arXiv:2607.03154v1 [cs.CL] 3 Jul 2026 WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Jiawei Sheng et al. AppleInc .
+> StevenJobs
+> FoundedBy ?
+> AppleInc .
+> Αμερικανός (America)
+> Children
+> BirthPlace
+> StevenJobs
+> America
+> Nationality
+> SteveWozniak
+> Partner
+> CoFounder Chairman
+> Pixa r
+> スティーブ・ジョブズ
+> (StevenJobs )
+> Nationality
+> Industry
+> Electronic s
+> DeathPlace
+> アメリカ (America)
+> カリフォルニア 州
+> (California)
+> Occupation
+> 企業家
+> (Entrepreneur)
+> ReedJobs
+> KG -2(EL) KG -1(EN) KG -3(JA)
+
+Figure 1: A toy example of the MKGC task, which predicts missing triples in the target KG with support KGs. 
+
+KG. Most existing studies [ 6, 13 , 18 , 42 , 47 , 64 ] follow a consistency-based paradigm for solutions. They learn entity embeddings within individual KGs, and then enforce consistency constraints [ 3, 13 , 18 ]between equivalent entities to ensure semantic alignment of KGs (shown in Figure 2(a)). Despite their success, they mostly focus on the consistent information between KGs, neglecting entities’ diverse contextual information. This enforcement can potentially overshadow unique domain-specific information in each KG, which can overly regularize entity embeddings and limit predictability, especially in low-resource scenarios (shown in Section 4.3). To overcome this limitation, we propose a generation-based knowl-edge transfer paradigm (Figure 2(b)). The core idea is to learn to generate domain-general entity embeddings that effectively preserve rich domain-specific information while remaining unbiased across domains. To achieve this, we employ diffusion models (DMs) [ 14 ], which generate such embeddings conditioned on the entity infor-mation from the support KGs. Here, each KG can be seen as a partial observational view of the entire underlying entity. This can be anal-ogous to text-conditioned image generation, where different texts can guide the generation of the same entire visual concept [ 15 , 35 ]. In contrast to existing consistency-based methods [ 3, 13 , 18 , 47 ], our method generates a unified general-purpose embedding for each entity across domains, thereby avoiding overly rigid consistency constraints and yielding a more informative representation. However, a pivotal challenge still remains: there are no real domain-general entity embeddings available to supervise the gen-eration process. To address this, we instead propose using domain-agnostic prior entity embeddings as a proxy generation objective during training. Since these priors are independent of any specific KG domains, they serve as an unbiased reference to guide the gen-eration, ensuring that the resulting embeddings do not favor any particular conditioned KG. Furthermore, to retain domain-specific information, we explicitly encourage the generated embeddings to be predictively effective within each KG, thereby preserving the domain-specific information presented in individual KGs. Following the above idea, we propose DMKGC, a conditional D iffusion guided knowledge transfer framework for MKGC . Specif-ically, given a target KG and multiple support KGs, we first share the initial entity embeddings as the prior entity embeddings, which are then independently encoded within the contextual structure of each individual KG. Subsequently, we introduce a conditional diffusion model to generate domain-general entity embeddings, conditioned on the encoded representations from the support KGs. These prior entity embeddings (prior to KG encoding) are reused to ensure unbiased generation, and the generated embeddings are also (a) Consistency -based Transfer (b) Generation (Diffusion) -based Transfer      
+
+> Encoder 𝑧 !
+> Encoder 𝑧 "
+> 𝒬
+> Consistency
+> Constraint
+> 𝒯
+> 𝒮 𝑐
+> Encoder 𝒮
+> 𝑥 &#𝑥 &$𝑥 &%𝑥 &&
+> 𝑧 "
+> Encoder 𝑧 !𝒯
+> Domain -general
+> Embedding
+> 𝒬
+
+Figure 2: Paradigm of consistency-based and our generation-based knowledge transfer. Here, S, T are the support and target KG, Q is the query to predict new triples. 
+
+trained to remain KGC task-predictive in the target KG. To realize the diffusion process, we design an attentive conditional denoiser that adaptively fuses the support KGs according to the target KG. In addition, we further devise a single-domain conditional regular-ization to enhance the generation stability, which treats each KG as an independent conditional guidance to generate a consistent objective. Our major contributions can be summarized as follows: 
+
+• We pioneerly formulate MKGC in a generation-based manner, producing more informative domain-general representations. 
+
+• We propose a novel DMKGC 2 framework with DMs. It leverages support KGs as a condition, and simultaneously achieves task-predictive and domain-general information with constraints. 
+
+• Extensive experiments with 14 KGs in 3 benchmarks indicate significant 4.3% averaged MRR improvements and show sustained improvements in low-resource data scenarios. 
+
+## 2 Preliminaries 
+
+In this section, we introduce the MKGC problem setup and the background of diffusion models. 
+
+## 2.1 Problem Formulation 
+
+Formally, let D = {G 𝑖 }𝑁 𝑖 =1 be a set of KGs, where each KG G𝑖 =
+
+(E 𝑖 , R𝑖 , F𝑖 ) involves entities E𝑖 , relations R𝑖 and factual triples F𝑖 .For any two KGs G𝑖 and G𝑗 , a small set of equivalent entity pairs is given: A𝑖 𝑗 = {( 𝑒 𝑖 , 𝑒 𝑗 ) | 𝑒 𝑖 ≡ 𝑒 𝑗 , 𝑒 𝑖 ∈ E 𝑖 , 𝑒 𝑗 ∈ E 𝑗 }. Additionally, all KGs adhere to a unified relation schema R, meaning each R𝑖 ⊆ R .The task is to predict query triples Q = {( ℎ, 𝑟, ?)} for a target KG 
+
+T = G𝑡 , G𝑡 ∈ D , leveraging existing triples from both the target KG T and all other support KGs S = {G 𝑠 |G 𝑠 ∈ D , 𝑠 ≠ 𝑡 }.
+
+## 2.2 Diffusion Model 
+
+In this paper, we leverage diffusion models (DMs) [ 14 , 43 ] to transfer knowledge, which contains a forward and a reverse process. 
+
+2.2.1 Forward Process. Given an input data sample 𝒙 0 ∼ 𝑞 (𝑥 0), the forward process constructs a series of latent variables 𝒙 1: 𝑇 through a Markov chain by gradually adding Gaussian noise across 𝑇 steps. Specifically, the transition at each time step 𝑘 is defined by: 
+
+𝑞 (𝑥 𝑘 |𝒙 𝑘 −1) = N ( 𝒙 𝑘 ;√︁ 1 − 𝛽 𝑘 𝒙 𝑘 −1, 𝛽 𝑘 𝑰 ), (1) where 𝑘 ∈ { 1, 2, ...,𝑇 }, N denotes a Gaussian distribution, and factor 𝛽 𝑘 ∈ ( 0, 1) controls the scale of noise added at step 𝑘 . The  
+
+> 2Our code is available at https://github.com/JiaweiSheng/DMKGC. Conditional Diffusion Guided Knowledge Transfer for Multi-Domain Knowledge Graph Completion WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates
+
+Encoder 𝒢 !
+
+𝒢 " Encoder 
+
+𝒢 # Encoder 
+
+Prediction 
+
+> Conditional
+> Denoiser
+
+(a) Multi -domain Entity Encoder 
+
+> Fusion  𝑧 $̅
+
+𝑒 ̃
+
+𝒯 
+
+𝒮 
+
+Share 
+
+Share 
+
+𝑧 !
+
+𝑧 "
+
+𝑧 #
+
+𝑥 (&
+
+𝑘 
+
+𝑥 (&'!
+
+𝑐 
+
+𝑥 ((
+
+𝑒 ̃
+
+iteration 
+
+(b) Conditional Diffusion Transfer (c) Joint Training and Inference 
+
+ℒ)*$& 
+
+ℒ+,-
+
+ℒ.,+ 
+
+⋯
+
+⋯
+
+⋯
+
+𝑥 (= 𝑒 ̃ 𝑥 ! 𝑥 " 𝑥 /'! 𝑥 /
+
+𝑥 (( 𝑥 (! 𝑥 (" 𝑥 (/'! 𝑥 (/
+
+𝑥 (( 
+
+> 0
+
+𝑥 (! 
+
+> 0
+
+𝑥 (" 
+
+> 0
+
+𝑥 (/'!
+
+> 0
+
+𝑧 $̅ 𝑧 $̅ 𝑧 $̅
+
+𝑧 1 𝑧 1 𝑧 1
+
+=
+
+𝑥 (/
+
+> 0
+
+=    
+
+> Forward
+> Reverse
+> Reverse
+> 𝑘 =0
+> 𝑘 ≠0
+
+Figure 3: The overview of our proposed framework, DMKGC. It contains (a) multi-domain entity encoder to extract KG features, (b) conditional diffusion transfer to generate entity embeddings, and (c) joint training and inference to achieve the task. 
+
+factors ensure that, when 𝑇 → ∞ , the variable 𝒙 𝑘 converges to a standard Gaussian, allowing sampling from a Gaussian noise to generate real samples in the reverse process. 
+
+2.2.2 Reverse Process. DMs learn to iteratively reconstruct data by reversing the forward process trajectory. Formally, starting from an initial state 𝒙 𝑇 ∼ N ( 0, 1), DMs parameterize a Markov chain that transitions from 𝒙 𝑘 to 𝒙 𝑘 −1 via: 
+
+𝑝 𝜃 (𝒙 𝑘 −1 |𝒙 𝑘 ) = N ( 𝒙 𝑘 −1; 𝝁 𝜃 (𝒙 𝑘 , 𝑘 ), Σ𝜃 (𝒙 𝑘 , 𝑘 )) , (2) where 𝑘 ∈ { 𝑇 ,𝑇 − 1, ..., 1} denotes the reversed time step, 𝝁 𝜃 (𝒙 𝑘 , 𝑘 )
+
+and 𝚺 𝜃 (𝒙 𝑘 , 𝑘 ) are the mean and covariance of the Gaussian distri-bution generated by a neural network 𝜃 . For simplicity and training stability, Σ𝜃 (𝒙 𝑘 , 𝑘 ) is usually set to constants 𝜎 2 (𝑘 )𝑰 varying over time steps [ 14 ]. In this way, the reverse process can be seen as a step-by-step denoising process capturing minor changes. 
+
+2.2.3 Training. The objective function is optimized by maximizing the Evidence Lower Bound (ELBO) of the likelihood of the observed data 𝒙 0 to enable data generation [14], which is: 
+
+log 𝑝 (𝒙 0) = log 
+
+∫
+
+𝑝 (𝒙 0: 𝑇 )d𝒙 1: 𝑇 = log E𝒒 (𝒙 1: 𝑇 |𝒙 0 ) [ 𝑝 (𝒙 0: 𝑇 )
+
+𝑞 (𝒙 1: 𝑇 |𝒙 0) ]≥ E𝒒 (𝒙 1 |𝒙 0 ) [log 𝑝 𝜃 (𝒙 0 |𝒙 1)] 
+
+| {z } 
+
+> reconstruction term L0
+
+− 𝐷 KL (𝑞 (𝒙 𝑇 |𝒙 0)∥ 𝑝 (𝒙 𝑇 )) 
+
+| {z } 
+
+> prior matching term L𝑇
+
+−
+
+> 𝑇
+
+∑︁ 
+
+> 𝑘 =2
+
+E𝒒 (𝒙 𝑘 |𝒙 0 ) [𝐷 KL (𝑞 (𝒙 𝑘 −1 |𝒙 𝑘 , 𝒙 0)∥ 𝑝 𝜃 (𝒙 𝑘 −1 |𝒙 𝑘 ))] 
+
+| {z }  
+
+> denoising matching term L𝑘 −1
+
+,
+
+(3) where there are three terms to resolve: 
+
+• Reconstruction term : Measures fidelity of 𝒙 0 given state 𝒙 1, which can be achieved by mean square error (MSE). 
+
+• Prior matching term : Ensures 𝑞 (𝒙 𝑇 |𝒙 0) converges to the Gauss-ian prior 𝑝 (𝒙 𝑇 ) ∼ N ( 0, 𝑰 ), which is constant with no trainable parameters and usually omitted in optimization. 
+
+• Denoising matching terms : Minimizes the Kullback-Leibler (KL) divergence between the true probability 𝑞 (𝒙 𝑘 −1 |𝒙 𝑘 , 𝒙 0) (analyti-cally tractable) and the learned probability 𝑝 𝜃 (𝒙 𝑘 −1 |𝒙 𝑘 ), allow-ing iterative generation of 𝒙 𝑘 −1 from 𝒙 𝑘 . By simplification [ 14 ], this term can be achieved by Í𝑇 𝑘 =2 E𝑘, 𝝐 [∥ 𝝐 − 𝝐 𝜃 (𝒙 𝑘 , 𝑘 )∥ 22], where 
+
+𝝐 𝜃 (𝒙 𝑘 , 𝑘 ) is a neural denoiser (e.g., U-Net [ 14 ], MLP [ 50 ]) that predicts the added noise 𝝐 at time step 𝑘 .
+
+2.2.4 Inference & Sampling. With the trained neural denoiser 𝜃 , the DMs can sample 𝒙 𝑇 ∼ N ( 0, 𝑰 ) and iteratively leverage 𝑝 𝜃 (𝒙 𝑘 −1 |𝒙 𝑘 )
+
+to generate the predicted sample ˆ𝒙 0. Note that all above procedures can be achieved by embeddings for efficiency [37]. 
+
+## 3 Methodology 
+
+Our core idea is to generate domain-general entity embeddings that transfer knowledge from support KGs to enhance the target KG in KGC prediction. The framework is presented in Figure 3. 
+
+## 3.1 Multi-domain Entity Encoder 
+
+3.1.1 Prior Entity Embedding. Prior to KG domain encoding, we obtain entity embeddings via a randomly initialized layer as: 
+
+˜𝒆 = Embedding (𝑒 ), 𝑒 ∈ E , (4) where we call ˜𝒆 ∈ R𝑑 the prior entity embedding . Here, we share the embeddings for all KGs, where E denotes the unified set of entities. Note that these embeddings are domain-independent and obtained prior to domain-specific encoding, making them inherently unbi-ased toward any domains. 
+
+3.1.2 Domain Entity Embedding. To encode KG domain informa-tion, we leverage an effective KG encoder [ 47 ] . Given a KG G (omit subscript for simplicity), it encodes an entity 𝑒 with its relational neighborhood N ( 𝑒 ) from G as: 
+
+Encoder 𝑙 (𝒆 , G) = 𝒆 + 𝛿 (∑︁     
+
+> {𝑟 𝑗 ,𝑒 𝑗 } ∈ N ( 𝑒 )
+
+𝛼 𝑙 (𝒆 , 𝒓 𝑗 , 𝒆 𝑗 ) · 𝑾 𝑙  
+
+> 3
+
+[𝒆 𝑗 ⊕ 𝒓 𝑗 ]) ,𝛼 𝑙 (𝒆 , 𝒓 𝑗 , 𝒆 𝑗 ) = softmax (score 𝑙 (𝒆 , 𝒓 𝑗 , 𝒆 𝑗 )) ,
+
+score 𝑙 (𝒆 , 𝒓 𝑗 , 𝒆 𝑗 ) = 𝛽 𝑟 𝑗 · 1
+
+√𝑑 (𝑾 𝑙  
+
+> 1
+
+𝒆 · 𝑾 𝑙  
+
+> 2
+
+[𝒆 𝑗 ⊕ 𝒓 𝑗 ]) ,
+
+(5) where 𝛿 is the ReLU activation, ⊕ is the vector concatenation, 𝑙 is the layer, 𝑾 𝑙  
+
+> 1
+
+∈ R𝑑 ×𝑑 , 𝑾 𝑙 
+
+> 2
+
+, 𝑾 𝑙  
+
+> 3
+
+∈ R𝑑 ×2𝑑 are learnable layer weights. The relation embedding 𝒓 ∈ R𝑑 is randomly initialized, and the input 𝒆 is the prior entity embedding ˜𝒆 from Eq. (4). Here, the WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Jiawei Sheng et al. 
+
+score considers both the learnable prior weight 𝛽 𝑟 ∈ R of relation 
+
+𝑟 , and also captures the contextual attentive relational relevance. The encoder output is denoted as 𝒛 , which we call domain entity embeddings as they contain domain-specific information. In the following sections, we use 𝒛 𝑡 to denote an involved entity 
+
+𝑒 from the target KG T = G𝑡 , and {𝒛 𝑠 }𝑠 denotes its equivalent entities 3 from the corresponding support KGs S = {G 𝑠 }𝑠 .
+
+## 3.2 Conditional Diffusion Transfer 
+
+Unlike existing consistency-based methods [ 3, 13 , 18 ], we transfer knowledge through conditional diffusion. To this end, we leverage support KGs as conditional guidance and use the prior entity em-beddings as the proxy generation objective to ensure an unbiased generation. The training will be detailed in Section 3.3. 
+
+3.2.1 Forward Process. Given an entity 𝑒 and its domain entity embeddings, we expect to generate a domain-general entity embed-ding. To this end, we use the prior embedding ˜𝒆 as the initial state, i.e., 𝒙 0 = ˜𝒆 . As introduced in section 2.2, the forward process is 
+
+𝑞 (𝑥 𝑘 |𝒙 𝑘 −1) = N ( 𝒙 𝑘 ;√︁ 1 − 𝛽 𝑘 𝒙 𝑘 −1, 𝛽 𝑘 𝑰 ), where 𝛽 𝑘 is the noise scale factor. Using the reparameterization trick [ 14 , 21 ], we can efficiently obtain 𝒙 𝑘 from 𝒙 0 as: 
+
+𝑞 (𝒙 𝑘 |𝒙 0) = N ( 𝒙 𝑘 ; √ ¯𝛼 𝑘 𝒙 0, (1 − ¯𝛼 𝑘 )𝑰 ), (6) where 𝛼 𝑘 = 1 − 𝛽 𝑘 , ¯𝛼 𝑘 = Π𝑘 𝑘 ′=1𝛼 𝑘 . Hence, we can directly obtain the embedding 𝒙 𝑘 = √ ¯𝛼 𝑘 𝒙 0 + √1 − ¯𝛼 𝑘 𝜖, 𝜖 ∼ N ( 0, 𝑰 ) at any step 𝑘 . The last state of the noisy embedding is denoted as 𝒙 𝑇 .
+
+3.2.2 Reverse Process. The reverse process gradually denoises 𝒙 𝑇 
+
+to reconstruct the initial state 𝒙 0. Believing that each KG describes a partial view of the domain-general entity, we leverage the equiva-lent entities as condition information for reconstruction. Thereafter, the reverse process with conditions [15] is as follows: 
+
+𝑝 𝜃 (𝒙 𝑘 −1 |𝒙 𝑘 , 𝒄 ) = N ( 𝒙 𝑘 −1; 𝝁 𝜃 (𝒙 𝑘 , 𝒄 , 𝑘 ), 𝜎 2 (𝑘 )𝑰 ), (7) where 𝝁 𝜃 (𝒙 𝑘 , 𝒄 , 𝑘 ) is learned by a conditional denoiser (detailed later). Here, 𝒄 ∈ R𝑑 is the embedding of one or more equivalent entities to guide the generation (i.e., noise prediction). 
+
+3.2.3 Conditional Denoiser. The conditional denoiser learns to predict the added noise at each time step 𝑘 . To keep it simple, we employ an effective multilayer perceptron (MLP) as the denoiser: 
+
+ˆ𝒙 𝜃 (𝒙 𝑘 , 𝒄 , 𝑘 ) := MLP (𝒙 𝑘 ⊕ 𝒄 ⊕ 𝒌 ; 𝜃 ), (8) where we use a two-layer MLP with dimensions as 3𝑑 → 2𝑑 → 𝑑 ,and 𝒌 ∈ R𝑑 is the time-step embedding [ 14 ]. Here, as the condition information can be different, we consider three types of condition 
+
+𝒄 : (i) when the condition is not given, we set 𝒄 = 𝜙 where 𝜙 ∈ R𝑑 
+
+is an initialized null embedding in training. (ii) when an equivalent entity embedding from an arbitrary KG G𝑖 is given, the condition is 
+
+𝒄 = 𝒛 𝑖 . (iii) when equivalent entities {𝒛 𝑠 }𝑠 from support KGs S are  
+
+> 3Following Tang et al . [47] , for simplicity of implementation, we also add virtual isolated entities in the KGs where the equivalent entity doesn’t exist.
+
+given, we fuse them according to their relevance to the entity 𝒛 𝑡 as 
+
+𝒄 = 𝒛 ¯𝑠 =∑︁   
+
+> 𝒛 𝑠 ∈ { 𝒛 𝑠 }𝑠
+
+𝛼 (𝒛 𝑡 , 𝒛 𝑠 ) · 𝒛 𝑠 ,𝛼 (𝒛 𝑡 , 𝒛 𝑠 ) = softmax (score (𝒛 𝑡 , 𝒛 𝑠 )) ,
+
+score (𝒛 𝑡 , 𝒛 𝑠 ) = 𝛽 𝑡𝑠 · 1
+
+√𝑑 (𝑼 1𝒛 𝑡 · 𝑼 2𝒛 𝑠 ]) ,
+
+(9) where 𝑼 1, 𝑼 2 ∈ R𝑑 ×𝑑 are learnable weights. In particular, 𝛽 𝑡𝑠 ∈ R
+
+is a learnable factor to reflect the prior relevance between G𝑡 and 
+
+G𝑠 . This design captures both the prior and contextual relevance of equivalent entities between KGs, aggregating conditions adaptive to the target KG to benefit generation. 
+
+## 3.3 Joint Training and Inference 
+
+3.3.1 Training. Conventional DMs train the denoiser to predict the added noise at each time step [ 14 ]. However, it is costly to perform a reverse process in training to obtain the generated domain-general embedding. Hence, we look back on ELBO in Eq. (3). Consider the denoising matching term L𝑘 −1, which matches 
+
+𝑝 𝜃 (𝒙 𝑘 −1 |𝒙 𝑘 ) with 𝑞 (𝒙 𝑘 −1 |𝒙 𝑘 , 𝒙 0) by KL divergence. By Bayes rules, 
+
+𝑞 (𝒙 𝑘 −1 |𝒙 𝑘 , 𝒙 0) ∼ N ( 𝒙 𝑘 −1; ˜𝝁 (𝒙 𝑘 , 𝒙 0, 𝑘 ), 𝜎 2 (𝑘 )𝑰 ) can be written as: 
+
+˜𝝁 (𝒙 𝑘 , 𝒙 0, 𝑘 ) =
+
+√𝛼 𝑘 (1 − ¯𝛼 𝑘 −1)
+
+1 − ¯𝛼 𝑘 
+
+𝒙 𝑘 +√ ¯𝛼 𝑘 −1 (1 − 𝛼 𝑘 )
+
+1 − ¯𝛼 𝑘 
+
+𝒙 0,𝜎 2 (𝑘 )𝑰 = (1 − 𝛼 𝑘 )( 1 − ¯𝛼 𝑘 −1)
+
+1 − ¯𝛼 𝑘 
+
+𝑰 .
+
+(10) where ˜𝜇 (𝒙 𝑘 , 𝒙 0, 𝑘 ) and 𝜎 2 (𝑘 )𝑰 are mean and covariance. As sug-gested [ 50 , 57 ], instead of learning the added noise 𝝐 by parameter-izing 𝝐 𝜃 (𝒙 𝑘 , 𝑘 ), we directly parameterize 𝒙 0, which is: 
+
+𝝁 𝜃 (𝒙 𝑘 , 𝑘 ) =
+
+√𝛼 𝑘 (1 − ¯𝛼 𝑘 −1)
+
+1 − ¯𝛼 𝑘 
+
+𝒙 𝑘 +√ ¯𝛼 𝑘 −1 (1 − 𝛼 𝑘 )
+
+1 − ¯𝛼 𝑘 
+
+ˆ𝒙 𝜃 (𝒙 𝑘 , 𝑘 ), (11) where ˆ𝒙 𝜃 (𝒙 𝑘 , 𝑘 ) is an approximation of the given true data 𝒙 0, based on the situation at the time step 𝑘 . This is proven to be equal to the vanilla ELBO in DDPM [ 57 ]. Using the above parameterization, the 
+
+denoising matching term (𝑘 ≥ 2) can be derived as: 
+
+L𝑘 −1 := E𝑞 (𝒙 𝑘 |𝒙 0 ) [𝐷 KL (𝑞 (𝒙 𝑘 −1 |𝒙 𝑘 , 𝒙 0)∥ 𝑝 𝜃 (𝒙 𝑘 −1 |𝒙 𝑘 ))] 
+
+= E𝑞 (𝒙 𝑘 |𝒙 0 ) [ 12𝜎 2 (𝑘 ) ∥𝝁 𝜃 (𝒙 𝑘 , 𝑘 ) − ˜𝝁 (𝒙 𝑘 , 𝒙 0, 𝑘 )∥ 22]
+
+= E𝑞 (𝒙 𝑘 |𝒙 0 ) [ 12 ( ¯𝛼 𝑘 −1
+
+1 − ¯𝛼 𝑘 −1
+
+− ¯𝛼 𝑘 
+
+1 − ¯𝛼 𝑘 
+
+)∥ ˆ𝒙 𝜃 (𝒙 𝑘 , 𝑘 ) − 𝒙 0 ∥22].
+
+(12) This form is similar to the reconstruction term (𝑘 = 0) with Gaussian log-likelihood [ 24 ] as L0 := E𝑞 (𝒙 1 |𝒙 0 )∥ ˆ𝒙 𝜃 (𝒙 1, 1) − 𝒙 0 ∥22. Thereafter, we combine them into a unified training term (𝑘 ≥ 1) as: 
+
+L𝑘 −1 := E𝑞 (𝒙 𝑘 |𝒙 0 ) ∥ ˆ𝒙 𝜃 (𝒙 𝑘 , 𝑘 ) − 𝒙 0 ∥22. (13) In this way, the denoiser actually seeks to predict the initial em-bedding (i.e., the generation objective) at each step. Based on this design, it provides a direct way to impose constraints to manipulate the generated embeddings. Here, we propose three constraints: 
+
+(i) Domain-General Embedding Generation. To generate domain-general entity embeddings, we leverage all equivalent entities from support KGs to guide generation, which is 
+
+Lgen :=
+
+> 𝑇
+
+∑︁ 
+
+> 𝑘 =1
+
+E𝑞 (𝒙 𝑘 | ˜𝒆 ) ∥ ˆ𝒙 𝜃 (𝒙 𝑘 , 𝒛 ¯𝑠 , 𝑘 ) − ˜𝒆 ∥22, (14) Conditional Diffusion Guided Knowledge Transfer for Multi-Domain Knowledge Graph Completion WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+where ˆ𝒙 𝜃 (𝒙 𝑘 , 𝒛 ¯𝑠 , 𝑘 ) comes from Eq. (9). This constraint encourages the generated embeddings to approximate the prior embeddings, ensuring unbiased generation towards conditioned support KGs. Here, we adopt the classifier-free guidance (CFG) strategy [ 15 ], which retains a ratio 𝑝 𝑢 of generation cases without conditions (i.e., 
+
+𝜙 ), improving the unconditional generation ability. 
+
+(ii) Target-Domain Task Prediction. This constraint ensures the generated domain-general embedding to be task-predictive in the KG target G𝑡 . To enrich the entity information, we fuse the gener-ated ˆ𝒙 𝜃 , the prior ˜𝒆 , and the target-domain embedding 𝒛 𝑡 as: 
+
+¯𝒛 𝑡 = ˆ𝒙 𝜃 + ˜𝒆 + 𝒛 𝑡 , (15) where ˆ𝒙 𝜃 = ˆ𝒙 𝜃 (𝒙 𝑘 , 𝒛 ¯𝑠 , 𝑘 ). For a triple (ℎ, 𝑟, 𝑜 ) sampled 4 in G𝑡 , we use the classical triple scoring function [1] to predict plausibility: 
+
+𝜓 (ℎ, 𝑟, 𝑜 ) = −∥ ¯𝒛 𝑡,ℎ + 𝒓 − ¯𝒛 𝑡,𝑜 ∥2, (16) 
+
+Ltask :=∑︁  
+
+> (ℎ,𝑟,𝑜 ) ∈ F 𝑡
+
+∑︁ (ℎ,𝑟,𝑜 ′ )∉F𝑡 
+
+[𝜆 − 𝜓 (ℎ, 𝑟, 𝑜 ) + 𝜓 (ℎ, 𝑟, 𝑜 ′)] +, (17) where we adopt the margin loss, [·] + := max (· , 0), 𝜆 is the margin factor, and 𝑜 ′ ∈ E 𝑡 is a negative entity randomly selected. In this way, the generated embedding ˆ𝒙 𝜃 is refined, and together with other embeddings to enhance KGC in the target KG. 
+
+(iii) Single-Domain Conditional Regularization. This constraint further emphasizes the unbiased and consistent generation with par-tial conditions. Specifically, it seeks to generate consistent domain-general embedding conditioned on each KG: 
+
+Lreg :=
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+> 𝑇
+
+∑︁ 
+
+> 𝑘 =1
+
+E𝑞 (𝒙 𝑘 | ˜𝒆 ) ∥ ˆ𝒙 𝜃 (𝒙 𝑘 , 𝒛 𝑖 , 𝑘 ) − ˜𝒆 ∥22, (18) where 𝒛 𝑖 is a domain entity embedding of equivalent entities from all KGs. This further ensures generation consistency in practice. Based upon the aforementioned constraints, the overall training objective is formulated as: 
+
+L = Ltask + 𝜔 1 Lgen + 𝜔 2 Lreg , (19) where 𝜔 1, 𝜔 2 ∈ R are harmonic factors to balance training. The algorithm 1 presents the overall training procedure, where we adopt sampling strategies [14] to accelerate training for efficiency. 
+
+3.3.2 Inference. In inference, we use the domain-general entity embedding ˆ𝒙 0 from ˆ𝒙 𝜃 (𝒙 𝑘 , 𝒛 ¯𝑠 , 𝑘 ) to transfer knowledge from the support KGs. Following the CFG strategy [ 15 ] to enable conditional generation, we adjust the generation by interpolating the generated conditional and unconditional embedding as: 
+
+˜𝒙 𝜃 (𝒙 𝑘 , 𝒛 ¯𝑠 , 𝑘 ) = ˆ𝒙 𝜃 (𝒙 𝑘 , 𝜙, 𝑘 ) + 𝑠 [ ˆ𝒙 𝜃 (𝒙 𝑘 , 𝒛 ¯𝑠 , 𝑘 ) − ˆ𝒙 𝜃 (𝒙 𝑘 , 𝜙, 𝑘 )] , (20) where 𝑠 ∈ R is a factor in controlling the strength of the condition. Subsequently, in inference, given 𝒙 0 = ˜𝒆 , we first perform the for-ward process to derive 𝒙 𝑇 , and then set ˆ𝒙 𝑇 = 𝒙 𝑇 to start the reverse process. This process holds for both head and tail entities involved (as in Eq. (16)). For a query (ℎ, 𝑟, ?) in G𝑡 , we treat all entities in E𝑡 
+
+as candidates. The entity with the highest score is returned as the result. The algorithm 2 presents the inference procedure.     
+
+> 4Here, we use 𝑜 to denote the tail entity, since 𝑡 is used to denote the target KG.
+
+Algorithm 1 Training procedure 
+
+Input : Training data D = { G 𝑖 }𝑖 and equivalent entity sets { A 𝑖 𝑗 }𝑖 ≠𝑗 .
+
+Output : Model parameters Θ. 
+
+> 1:
+
+Initialize all model parameters.  
+
+> 2:
+
+while not convergence do  
+
+> 3:
+
+Sample a target KG G𝑡 and support KGs S = { G 𝑠 |𝑠 ≠ 𝑡 }. 
+
+> 4:
+
+Sample a triple (ℎ, 𝑟, 𝑜 ) from G𝑡 , and a negative entity 𝑜 ′ from E𝑡 . 
+
+> 5:
+
+for 𝑒 ∈ { ℎ, 𝑜, 𝑜 ′ } do  
+
+> 6:
+
+Obtain prior embedding ˜𝒆 , and let 𝒙 0 = ˜𝒆 ; 
+
+> 7:
+
+for all G𝑖 ∈ D do  
+
+> 8:
+
+Obtain 𝒛 𝑖 = Encoder ( ˜𝒆 , G𝑖 ) by Eq. (5);  
+
+> 9:
+
+end for  
+
+> 10:
+
+Sample 𝑘 ∼ U ( 1,𝑇 ), 𝜖 ∼ N ( 0, 𝐼 ), and obtain 𝒙 𝑘 by Eq. (6);  
+
+> 11:
+
+Estimate ˆ𝒙 𝜃 (𝒙 𝑘 , 𝒛 ¯𝑠 , 𝑘 ) with CFG, obtain Lgen by Eq. (14);  
+
+> 12:
+
+Estimate ˆ𝒙 𝜃 (𝒙 𝑘 , 𝒛 𝑖 , 𝑘 ) with CFG, obtain Lreg by Eq. (18);  
+
+> 13:
+
+Obtain mixed embedding ¯𝒛 𝑡,𝑒 = ˆ𝒙 𝜃 + ˜𝒆 + 𝒛 𝑡,𝑒 ; 
+
+> 14:
+
+end for  
+
+> 15:
+
+Obtain Ltask by Eq. (17);  
+
+> 16:
+
+Obtain overall loss L by Eq. (19) to optimize Θ; 
+
+> 17:
+
+end while 
+
+Algorithm 2 Inference procedure 
+
+Input : Θ, query (ℎ, 𝑟, ?) in target T = G𝑡 , support S = { G 𝑠 }𝑠 ≠𝑡 .
+
+Output : Score 𝜓 (ℎ, 𝑟, 𝑜 ′ ) of all candidate entities 𝑜 ′ ∈ E 𝑡 . 
+
+> 1:
+
+for 𝑒 ∈ { ℎ} ∪ E 𝑡 do  
+
+> 2:
+
+Obtain prior embedding ˜𝒆 . 
+
+> 3:
+
+for all G𝑖 ∈ T ∪ S do  
+
+> 4:
+
+Obtain 𝒛 𝑖 = Encoder ( ˜𝒆 , G𝑖 ) by Eq. (5).  
+
+> 5:
+
+end for  
+
+> 6:
+
+Sample 𝜖 ∼ N ( 0, 𝐼 ), and obtain ˆ𝒙 𝑇 by Eq. (6);  
+
+> 7:
+
+for 𝑘 = 𝑇 , · · · , 1 do  
+
+> 8:
+
+Estimate ˆ𝒙 𝜃 ( ˆ𝒙 𝑘 , 𝒛 ¯𝑠 , 𝑘 ) and ˆ𝒙 𝜃 ( ˆ𝒙 𝑘 , 𝜙, 𝑘 ) by Eq. (8);  
+
+> 9:
+
+Obtain ˜𝒙 𝜃 ( ˆ𝒙 𝑘 , 𝒛 ¯𝑠 , 𝑘 ) by Eq. (20);  
+
+> 10:
+
+Obtain ˆ𝒙 𝑘 −1 = 𝜇 𝜃 ( ˆ𝒙 𝑘 , 𝑘 ) with ˆ𝒙 𝑘 and ˜𝒙 𝜃 ( ˆ𝒙 𝑘 , 𝒛 ¯𝑠 , 𝑘 ) by Eq. (11);  
+
+> 11:
+
+end for  
+
+> 12:
+
+Obtain mixed embedding ¯𝒛 𝑡 = ˆ𝒙 0 + ˜𝒆 + 𝒛 𝑡 ; 
+
+> 13:
+
+Calculate score 𝜓 (ℎ, 𝑟, 𝑜 ′ ) with ¯𝒛 𝑡,ℎ and ¯𝒛 𝑡,𝑜 ′ by Eq. (16);  
+
+> 14:
+
+end for 
+
+## 4 Experiments 
+
+In this section, we address the following research questions: (Q1) 
+
+How effectively does DMKGC perform across diverse benchmark datasets? (Q2) Is the proposed knowledge transfer robust to low-resource data scenarios? For analyzes of parameter sensitivity and computational efficiency, please refer to the Appendix (Q3) .
+
+## 4.1 Evaluation Settings 
+
+4.1.1 Datasets. For evaluation, we use three benchmarks compris-ing 14 KGs: the multilingual DBP-5L [ 3] and E-PKG [18 ], and a constructed multi-domain DWY [ 45 ] dataset. DBP-5L contains five DBpedia-based KGs in Greek (EL), English (EN), Spanish (ES), French (FR), and Japanese (JA). Besides, E-PKG includes industrial e-commerce mobile phone data in six languages: German (DE), English (EN), Spanish (ES), French (FR), Italian (IT), and Japanese (JA). In addition, DWY integrates DBpedia (DB), YAGO (YG), and Wiki (WK), where we adopt the original aligned entities between each two KGs [ 45 ], and take 80%, 10%, 10% triples in each KG for training, validation and testing. All datasets provide aligned entity WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Jiawei Sheng et al. 
+
+Table 1: Results (%) on DBP-5L. † indicates re-produced results. The best result is bold-faced and the runner-up is underlined .
+
+Method EL EN ES FR JA AVG 
+
+H@1 H@10 MRR H@1 H@10 MRR H@1 H@10 MRR H@1 H@10 MRR H@1 H@10 MRR MRR TransE 13.1 43.7 24.3 7.3 29.3 16.9 13.5 45.0 24.4 17.5 48.8 27.6 21.1 48.5 25.3 23.7 DistMult 8.9 11.3 9.8 8.8 30.0 18.3 7.4 22.4 13.2 6.1 23.8 14.5 9.3 27.5 15.8 14.3 RotatE 14.5 36.2 26.2 12.3 30.4 20.7 21.2 53.9 33.8 23.2 55.5 35.1 26.4 60.2 39.8 31.1 KG-BERT 17.3 40.1 27.3 12.9 31.9 21.0 21.9 54.1 34.0 23.5 55.9 35.4 26.9 59.8 38.7 31.3 KEnS 28.1 56.9 - 15.1 39.8 - 23.6 60.1 - 25.5 62.9 - 32.1 65.3 - -CG-MuA 21.5 44.8 32.8 13.1 33.5 22.2 22.3 55.4 34.3 24.2 57.1 36.1 27.3 61.1 40.1 33.1 AlignKGC 27.6 56.3 33.8 15.5 39.2 22.3 24.2 60.9 35.1 24.1 62.3 37.4 31.6 64.3 41.6 34.0 SS-AGA 30.8 58.6 35.3 16.3 41.3 23.1 25.5 61.9 36.6 27.1 65.5 38.3 34.6 66.9 42.9 35.2 LSMGA 33.1 89.9 54.5 16.8 61.7 32.4 25.6 74.8 42.8 31.2 81.3 48.6 33.5 79.1 49.8 45.6 GLKGC † 36.6 86.5 53.0 17.1 60.2 32.9 28.3 74.4 43.6 31.5 78.4 47.9 36.5 77.6 50.9 45.7 DMKGC 41.9 91.0 61.0 20.9 64.2 36.3 33.0 77.7 49.1 38.6 82.3 54.2 42.0 82.4 56.3 51.4 
+
+Table 2: Results (%) on E-PKG. † indicates re-produced results. The best result is bold-faced and the runner-up is underlined. 
+
+Method DE EN ES FR IT JA AVG 
+
+H@1 H@10 MRR H@1 H@10 MRR H@1 H@10 MRR H@1 H@10 MRR H@1 H@10 MRR H@1 H@10 MRR MRR TransE 21.2 65.5 37.4 23.2 67.5 39.4 17.2 58.4 33.0 20.8 66.9 37.5 22.0 63.8 37.8 25.1 72.7 43.6 38.1 DistMult 21.4 54.5 35.4 23.8 60.1 37.2 17.9 46.2 30.9 20.7 53.5 35.1 22.8 51.8 34.8 25.9 62.6 38.0 35.2 RotatE 22.3 64.3 38.2 24.2 66.8 40.0 18.3 58.9 33.7 22.1 64.3 38.2 22.5 64.0 38.1 26.3 71.9 41.8 38.3 KG-BERT 21.8 64.7 38.4 24.3 66.4 39.6 18.7 58.8 33.2 22.3 67.2 38.3 22.9 63.7 37.2 26.9 72.4 44.1 38.5 KEnS 24.3 65.8 - 26.2 69.5 - 21.3 59.5 - 25.4 68.2 - 25.1 64.6 - 33.5 73.6 - -CG-MuA 22.9 64.9 38.7 24.8 67.9 40.2 19.2 58.8 33.8 23.0 67.5 39.1 23.9 63.8 37.6 30.4 72.9 45.9 39.2 AlignKGC 22.1 65.1 38.5 25.6 68.3 40.5 19.4 59.1 34.2 22.8 67.2 38.8 24.2 63.4 37.3 31.2 72.3 46.2 39.3 SS-AGA 24.6 66.3 39.4 26.7 69.8 41.5 21.0 60.1 36.3 25.9 68.7 40.2 24.9 63.8 38.4 33.9 74.1 48.3 40.7 LSMGA 30.7 68.5 44.8 31.9 70.2 45.9 23.1 61.1 36.5 23.7 63.5 38.2 26.8 64.5 41.0 43.7 78.4 57.1 43.9 GLKGC † 24.1 63.6 37.7 27.1 58.4 39.4 24.6 61.0 36.8 22.1 62.3 36.4 27.0 63.7 40.4 44.1 76.4 57.5 41.4 DMKGC 30.9 69.1 45.0 33.3 70.3 46.8 26.7 63.7 39.7 26.0 68.8 40.7 31.2 66.3 44.6 50.1 79.1 61.8 46.4 
+
+Table 3: Results (%) on DWY. † indicates re-produced results. The best result is bold-faced and the runner-up is underlined .
+
+Method DB WK YG AVG 
+
+H@1 H@10 MRR H@1 H@10 MRR H@1 H@10 MRR MRR TransE † 4.3 52.9 20.3 3.0 48.6 17.3 2.2 42.2 13.1 16.9 DistMult † 8.6 36.5 17.6 8.4 41.7 18.4 4.6 32.5 12.7 16.2 RotatE † 13.2 57.4 27.9 9.9 52.5 26.4 3.5 42.7 13.8 22.7 SS-AGA † 5.8 61.8 22.6 6.6 52.2 18.5 9.0 52.3 22.9 21.3 LSGMA † 14.0 64.3 30.9 9.5 54.6 23.9 11.4 48.6 23.5 26.1 GLKGC † 13.4 66.9 32.3 9.3 55.0 24.3 16.5 52.8 28.7 28.4 DMKGC 15.7 68.9 34.5 11.4 59.3 26.7 23.6 66.7 37.9 33.1 
+
+pairs between KGs, with unified and shared relations across all KGs [3, 47]. The statistics are shown in Appendix .
+
+4.1.2 Baselines. To evaluate our model, we select the following state-of-the-art methods as baselines: (i) Single-domain methods ,which perform inference within individual KGs without knowl-edge transfer between KGs, including TransE [1], DisMult [ 54 ], 
+
+RotatE [44 ], KG-BERT [58 ]. (ii) Multi-domain methods , which mostly attempt consistency-based modules to transfer knowledge from support KGs for target KG predictions, including KEnS [ 6], 
+
+CG-MuA [ 64 ], AlignKGC [ 42 ], SS-AGA [ 18 ], LSMGA [47 ] and 
+
+GLKGC [13]. For details, please refer to Appendix .
+
+4.1.3 Evaluation Protocol. Following previous studies [ 3 , 47 ], we evaluate models in the task of tail entity prediction . During training, we combine all the training data from the multiple KGs. In testing, we rank all candidate entities of the target KG to predict 𝑡 given 
+
+ℎ and 𝑟 for each triple (ℎ, 𝑟, ?) in the test data. Three metrics are reported, including Hits@10 (H@10 for short), Hits@1 (H@1) and mean reciprocal ranks (MRR). Following Tang et al . [47] , the optimal model is selected according to the average MRR of all KGs. 
+
+4.1.4 Implementation Details. Most hyperparameters are shared for all datasets. The entity and relation embeddings are randomly initialized with dimension 256. The learning rate is set to 0.001, and the margin 𝜆 is set to 0.5 for all datasets. The KG encoder has 2 layers. The diffusion step 𝑇 is selected in {2, 4, · · · , 64 }, and the strength 𝑠 in {1, 2, · · · , 5}, 𝜔 1, 𝜔 2 are tuned in {1, 3, 5}× 10 −{ 4,3,2,1} .For baselines, most results on DBP-5L and E-PKG are obtained from original literature. On DWY, we re-implement baselines with the Conditional Diffusion Guided Knowledge Transfer for Multi-Domain Knowledge Graph Completion WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+Table 4: Variant analysis on DBP-5L, where AVG-H@1, AVG-H@10 and AVG-MRR denote the average metrics (%). 
+
+Variant AVG-H@1 AVG-H@10 AVG-MRR ΔAVG-MRR 
+
+Entire 35.3 79.5 51.4 -repl. GCN 23.2 69.8 39.7 ↓ 11.7 w/o cond 27.0 76.3 44.9 ↓ 6.5 repl. mean 32.6 71.6 46.4 ↓ 5.0 w/o DM 31.6 68.9 44.4 ↓ 7.0 w/o reg 32.9 77.8 49.2 ↓ 2.2 repl. 𝜖 -ELBO 18.8 70.8 37.3 ↓ 14.1 repl. 𝜖 -init 28.1 77.2 45.9 ↓ 5.5 repl. cosine 25.7 74.2 43.0 ↓ 8.4 
+
+Table 5: Comparison with general knowledge transfer meth-ods. The results (%) are reported on DBP-5L. 
+
+Method AVG-H@1 AVG-H@10 AVG-MRR 
+
+InfoNCE † 31.5 71.4 45.3 DA-DIFF † 32.6 71.4 46.3 MMD † 34.6 74.3 48.4 DMKGC 35.3 79.5 51.4 
+
+best hyperparameters reported. We employ a grid search with three trials, and the optimal hyperparameters are reported in Appendix .
+
+## 4.2 Main Results (RQ1) 
+
+4.2.1 Method Comparison. We present the comparison between our model and existing baselines in Table 1, 2 and 3. We find that: 
+
+First , multi-domain KGC methods outperform single-domain meth-ods. This ensures the effectiveness of using support KGs for target KG prediction, which can help improve inference on entities with limited triples. Second , our model outperforms all existing methods. 
+
+Specifically, our model achieves average improvements in MRR of 5.7%, 2.5%, and 4.7% on DBP-5L, E-PKG, and DWY, respectively. This reflects the effectiveness of using conditional diffusion to achieve knowledge transfer, which produces more informative embeddings than existing multi-domain KGC methods, such as SS-AGA, LSGMA and GLKGC. Third , our model obtains consistent improvements in three datasets with 14 KGs, with an overall 4.3% MRR improvement .The results on multilingual DBP-5L, industrial E-PKG, and multi-domain DWY broadly demonstrate the generality of our model. 
+
+4.2.2 In-depth Variant Analysis. To evaluate the unity of the compo-nents, we perform variant analysis in Table 4. We find that: First , repl. GCN replaces the attentive KG encoder with non-relational GCN [ 22 ],indicating the fundamental role of a capable encoder. Second , w/o cond removes the condition in diffusion, and repl. mean replaces the attentive condition fuser with simple vector mean . The results re-flect the crucial unity of the condition information. Third , w/o DM removes the diffusion knowledge transfer and w/o reg removes the regularization Lreg . This reflects the vital role of learning domain-general entity embeddings with unbiased generation. Forth , repl. 
+
+𝜖 -ELBO achieves ELBO with DDPM [ 14 ], repl. 𝜖 -init starts the reverse 20% 50% 80%      
+
+> Proportion of Equivalent Entities
+> 20
+> 30
+> 40
+> 50
+> AVG-MRR (%)
+> 24.8
+> 32.9
+> 41.1
+> 28.2
+> 35.7
+> 42.4
+> 31.1
+> 36.9
+> 43.2
+> 31.8
+> 37.4
+> 43.4
+> 34.9
+> 38.1
+> 45.3
+> 37.0
+> 41.0
+> 48.8
+> LSGMA GLKGC InfoNCE DA-DIFF MMD DMKGC
+
+Figure 4: Results (%) with a limited number of equivalent entities, randomly selected at 20%, 50% and 80% on DBP-5L. 2 3 4 5     
+
+> Number of Support KGs for Target KG (EL)
+> 30
+> 40
+> 50
+> 60
+> 70
+> AVG-MRR (%)
+> LSGMA GLKGC InfoNCE DA-DIFF MMD DMKGC
+
+Figure 5: Results (%) with a limited number of support KGs for target KG prediction (EL) on DBP-5L. 
+
+process with a random noise, and repl. cosine replaces L2-norm with cosine score in Eq. (13). The results reflect that direct parameterizing 
+
+𝒙 0 by ˆ𝒙 𝜃 can be helpful in learning the general entity embedding, the initial 𝒙 𝑇 achieves a better initialization, and cosine depicts rela-tive embedding similarity but can hardly reconstruct the embedding details. All results indicate the effectiveness of components .
+
+4.2.3 Analysis on Knowledge Transfer. To evaluate the impact of conditional diffusion transfer, we adapt three general knowledge transfer methods to our KG encoder backbone, and fuse the re-fined embeddings with mean fusion: (i) InfoNCE [ 5 ] leverages contrastive loss to enhance the consistency between equivalent entities from various KGs. (ii) DA-DIFF [34 ] uses the fused sup-port KG embedding as the initial embedding, adds noise to it, and learns to approximate the also noised target KG embedding step by step. (iii) MMD [9 ] adopts the classical maximum mean dis-crepancy, which measures the distributional relevance between equivalent entities. The results are shown in Table 5. We find that our model outperforms the three methods. Actually, the three meth-ods commonly capture the consistency between equivalent entities in different aspects. We believe that our conditional diffusion transfer learns to generate a domain-general entity embedding, thus allowing more informative embeddings for task prediction in various KGs. 
+
+## 4.3 Results in Low-resource Scenarios (RQ2) 
+
+4.3.1 Analysis on Limited Equivalent Entities. To investigate robust-ness, we performed experiments with limited equivalent entities (20%, 50%, 80%), shown in Figure 4. We find that our model consis-tently outperforms existing methods. With fewer equivalent entities, the methods have less supervision to learn knowledge transfer. In contrast to consistency-based methods that rely on the given equivalent entities, our model uses prior entity embeddings as the WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Jiawei Sheng et al. 
+
+Table 6: Results (%) on unseen entity settings conducted on DBP-5L, where head entities in queries are unseen in training.                                                                                                                      
+
+> Methods EL EN ES FR JA AVG
+> H@1 H@10 MRR H@1 H@10 MRR H@1 H@10 MRR H@1 H@10 MRR H@1 H@10 MRR MRR LSGMA †7.1 48.8 21.7 4.5 26.0 12.0 7.5 37.5 17.6 7.8 42.3 20.2 7.0 33.8 16.7 17.7 GLKGC †15.9 57.6 31.5 5.3 29.9 14.0 9.7 42.2 21.3 13.6 47.3 26.0 10.0 40.1 21.2 22.8 InfoNCE †21.6 57.8 34.0 9.3 28.6 15.8 13.4 39.5 22.4 19.8 46.3 29.2 17.2 39.5 25.1 25.3 DA-DIFF †12.2 54.8 27.5 5.9 31.3 14.8 11.0 45.7 22.6 15.9 50.2 29.5 9.4 43.0 22.0 23.3 MMD †22.1 55.3 33.9 9.6 28.1 16.1 13.8 39.1 22.5 20.7 46.1 30.0 17.3 39.3 25.2 25.5 DMKGC 24.9 61.8 39.0 12.4 32.1 19.4 19.0 46.2 28.8 23.4 50.4 33.4 19.3 43.3 27.6 29.6
+
+supervision, which learns domain-general information for generation using all entities in domains, enriching knowledge transfer. 
+
+4.3.2 Analysis on Fewer Support KGs. For investigation, we also explored experiments with various numbers of support KGs, shown in Figure 5. We find that: First , more support KGs lead to better re-sults in the target KG. This indicates the significance of the MKGC task in improving low-resource KGC. Second , our model achieves better results for all numbers. We believe that our method learns domain-general entity information, which produces more informa-tive embeddings than the existing consistency-based methods. 
+
+4.3.3 Analysis on Unseen Entities. To further investigate generaliz-ability, we conducted experiments on unseen entities in an extrapo-lation setting [ 4]. Specifically, for a query (ℎ, 𝑟, ?), we suppose that ℎ
+
+is unseen in the target KG, but it has triples in other support KGs. This setting is useful for new-coming entities to build connections in the current KG. To implement it, for head entities in the testing data, we remove their triples in the training data of the located KG, thus, the prediction has to rely on the related triples from other KGs. The results are shown in Table 6. We find that our model derives the best results and significantly exceeds the previous baselines LSGMA and GLKGC. We believe that the diffusion generation module learns general information about entities, which is representative for unseen entities. We leave further studies in future works. 
+
+## 5 Related Works 5.1 Knowledge Graph Completion 
+
+Knowledge graph completion (KGC) aims to predict missing triples based on existing triples in a single KG. Classical studies propose 
+
+triple-based methods [ 1 , 8, 44 , 48 , 54 ] with translation-based [ 1 , 44 ]or semantic matching-based score functions [ 8, 54 ]. Later stud-ies propose GNN-based methods [ 26 , 38 , 39 ] to capture relational graph structures. Recent studies also explore entity textual informa-tion [ 53 , 59 ] with PLMs [ 51 , 58 ] or LLMs [ 11 , 23 , 28 , 52 , 59 , 59 , 62 ], which are not designed in our task setting. Overall, these studies at-tempt to achieve KGC in an individual KG, which cannot be directly used for multi-domain and low-resource scenarios. 
+
+## 5.2 Multi-domain KG Completion 
+
+Multi-domain KG completion (MKGC) aims to fully utilize multiple KG triples to improve KGC. Early studies explore it exclusively in multilingual scenarios, namely multilingual KGC [18 , 47 ]. For gen-erality, we term it as multi-domain KGC beyond languages. For the methods, MTransE [ 3] first extends the KG embeddings from one to multiple KGs. Later studies [ 46 , 56 , 61 , 65 ] focus mainly on entity alignment (EA) for knowledge fusion. Further studies [ 13 , 18 , 41 ,42 , 64 ] explore KGC with the other related KGs. They encode KGs with relational GNNs, and leverage EA for consistency to transfer knowledge for the target KGC. However, consistency-based meth-ods can limit entity representation in knowledge transfer, impeding domain-specific information. To our knowledge, few studies have explored generation-based transfer for MKGC. 
+
+## 5.3 Diffusion Models 
+
+Diffusion models (DMs) have achieved remarkable success in gener-ative tasks such as image [ 14 , 35 ] and text generation [ 10 , 31 ], and also reflect potential in discriminative tasks [ 19 , 36 , 50 , 57 ]. Recent KGC studies attempt DMs to model the generative distribution of triples [ 17 , 29 , 30 ] and graph structures [ 2] for triple prediction. Our paper explores knowledge transfer for multi-domain KGC , which has a different research focus. For knowledge transfer, existing studies explore DMs for knowledge distillation [ 12 , 16 ] or domain adapta-tion [ 34 ], which transfer knowledge mainly through a denoising process using the diffusion path as a bridge. Unlike them, our paper leverages diffusion models to pioneer the unbiased generation from support domains and simultaneously allows target information for prediction, making a more informative knowledge transfer. 
+
+## 6 Conclusion 
+
+This paper addresses MKGC, which transfers knowledge from support KGs to improve KGC in a target KG. Existing studies mainly leverage consistency-based methods, potentially surpassing domain-specific KG information. To address this, we propose a novel generation-based paradigm. Our framework, DMKGC, uses conditional diffusion models to generate domain-general entity embeddings, effectively integrating support KG knowledge while preserving domain-specific information. By treating each KG as a partial view of entities and using domain-agnostic embeddings as unbiased generation targets, DMKGC learns rich generalizable rep-resentations. Experiments on 14 KGs show that DMKGC achieves significant gains and consistently excels in low-resource scenarios. 
+
+## Acknowledgments 
+
+The authors thank the reviewers for their helpful feedback. This work was supported by the National Natural Science Foundation of China (No. 62406319). Conditional Diffusion Guided Knowledge Transfer for Multi-Domain Knowledge Graph Completion WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+## References 
+
+[1] Antoine Bordes, Nicolas Usunier, Alberto Garcia-Durán, Jason Weston, and Ok-sana Yakhnenko. 2013. Translating Embeddings for Modeling Multi-Relational Data. In Proceedings of NeurIPS . 2787–2795. [2] Zongsheng Cao, Jing Li, Zigan Wang, and Jinliang Li. 2024. DiffusionE: Reasoning on Knowledge Graphs via Diffusion-based Graph Neural Networks. In Proceedings of KDD . ACM, 222–230. doi:10.1145/3637528.3671997 [3] Muhao Chen, Yingtao Tian, Mohan Yang, and Carlo Zaniolo. 2017. Multilin-gual Knowledge Graph Embeddings for Cross-lingual Knowledge Alignment. In 
+
+Proceedings of IJCAI .[4] Mingyang Chen, Wen Zhang, Yuxia Geng, Zezhong Xu, Jeff Z. Pan, and Hua-jun Chen. 2023. Generalizing to Unseen Elements: A Survey on Knowl-edge Extrapolation for Knowledge Graphs. In Proceedings of IJCAI . 6574–6582. doi:10.24963/IJCAI.2023/737 [5] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geoffrey E. Hinton. 2020. A Simple Framework for Contrastive Learning of Visual Representations. In 
+
+Proceedings of ICML , Vol. 119. PMLR, 1597–1607. http://proceedings.mlr.press/ v119/chen20j.html [6] Xuelu Chen, Muhao Chen, Changjun Fan, Ankith Uppunda, Yizhou Sun, and Carlo Zaniolo. 2020. Multilingual Knowledge Graph Completion via Ensemble Knowledge Transfer. In Findings of EMNLP . 3227–3238. [7] Xuelu Chen, Muhao Chen, Changjun Fan, Ankith Uppunda, Yizhou Sun, and Carlo Zaniolo. 2020. Multilingual Knowledge Graph Completion via Ensemble Knowledge Transfer. In Findings of EMNLP . 3227–3238. [8] Tim Dettmers, Minervini Pasquale, Stenetorp Pontus, and Sebastian Riedel. 2018. Convolutional 2D Knowledge Graph Embeddings. In Proceedings of AAAI . 1811– 1818. [9] Arthur Gretton, Karsten M. Borgwardt, Malte J. Rasch, Bernhard Schölkopf, and Alexander J. Smola. 2012. A Kernel Two-Sample Test. J. Mach. Learn. Res. 13 (2012), 723–773. doi:10.5555/2503308.2188410 [10] Ishaan Gulrajani and Tatsunori B. Hashimoto. 2023. Likelihood-Based Diffusion Language Models. In Proceedings of NeurIPS , Alice Oh, Tristan Naumann, Amir Globerson, Kate Saenko, Moritz Hardt, and Sergey Levine (Eds.). [11] Lingbing Guo, Zhongpu Bo, Zhuo Chen, Yichi Zhang, Jiaoyan Chen, Yarong Lan, Mengshu Sun, Zhiqiang Zhang, Yangyifei Luo, Qian Li, Qiang Zhang, Wen Zhang, and Huajun Chen. 2024. MKGL: Mastery of a Three-Word Language. In Proceedings of NeurIPS . http://papers.nips.cc/paper_files/paper/2024/hash/ fe03053bd2cf5b5c56de1e463bc53e1a-Abstract-Conference.html [12] Boyong He, Yuxiang Ji, Zhuoyue Tan, and Liaoni Wu. 2025. Diffusion Do-main Teacher: Diffusion Guided Domain Adaptive Object Detector. CoRR 
+
+abs/2506.04211 (2025). arXiv:2506.04211 doi:10.48550/ARXIV.2506.04211 [13] Jinyan He and Haitong Yang. 2024. Multilingual Knowledge Graph Completion based on Global-Local Structure Encoding. In Proceedings of ISCTIS . 647–650. doi:10.1109/ISCTIS63324.2024.10699111 [14] Jonathan Ho, Ajay Jain, and Pieter Abbeel. 2020. Denoising Diffusion Probabilistic Models. In Proceedings of NeurIPS .[15] Jonathan Ho and Tim Salimans. 2022. Classifier-Free Diffusion Guidance. CoRR 
+
+abs/2207.12598 (2022). arXiv:2207.12598 doi:10.48550/ARXIV.2207.12598 [16] Tao Huang, Yuan Zhang, Mingkai Zheng, Shan You, Fei Wang, Chen Qian, and Chang Xu. 2023. Knowledge Diffusion for Distillation. In 
+
+Proceedings of NeurIPS . http://papers.nips.cc/paper_files/paper/2023/hash/ cdddf13f06182063c4dbde8cbd5a5c21-Abstract-Conference.html [17] Wei Huang, Meiyu Liang, Peining Li, Xu Hou, Yawen Li, Junping Du, Zhe Xue, and Zeli Guan. 2025. DiffusionCom: Structure-Aware Multimodal Diffusion Model for Multimodal Knowledge Graph Completion. CoRR abs/2504.06543 (2025). arXiv:2504.06543 doi:10.48550/ARXIV.2504.06543 [18] Zijie Huang, Zheng Li, Haoming Jiang, Tianyu Cao, Hanqing Lu, Bing Yin, Karthik Subbian, Yizhou Sun, and Wei Wang. 2022. Multilingual Knowledge Graph Completion with Self-Supervised Adaptive Graph Alignment. In Proceedings of ACL . 474–485. doi:10.18653/V1/2022.ACL-LONG.36 [19] Yangqin Jiang, Yuhao Yang, Lianghao Xia, and Chao Huang. 2024. DiffKG: Knowledge Graph Diffusion Model for Recommendation. In Proceedings of ACM WSDM . ACM, 313–321. doi:10.1145/3616855.3635850 [20] Diederik P Kingma and Jimmy Ba. 2014. Adam: A method for stochastic opti-mization.. In International Conference on Learning Representations .[21] Diederik P Kingma and Max Welling. 2014. Auto-Encoding Variational Bayes. In 
+
+Proceedings of ICLR .[22] Thomas N. Kipf and Max Welling. 2017. Semi-Supervised Classification with Graph Convolutional Networks. In International Conference on Learning Repre-sentations .[23] Dawei Li, Zhen Tan, Tianlong Chen, and Huan Liu. 2024. Contextualization Distillation from Large Language Model for Knowledge Graph Completion, Yvette Graham and Matthew Purver (Eds.). 458–477. https://aclanthology.org/2024. findings-eacl.32 [24] Dawen Liang, Rahul G. Krishnan, Matthew D. Hoffman, and Tony Jebara. 2018. Variational Autoencoders for Collaborative Filtering. In Proceedings of WWW .ACM, 689–698. doi:10.1145/3178876.3186150 [25] Lei Liang, Zhongpu Bo, Zhengke Gui, Zhongshu Zhu, Ling Zhong, Peilong Zhao, Mengshu Sun, Zhiqiang Zhang, Jun Zhou, Wenguang Chen, Wen Zhang, and Huajun Chen. 2025. KAG: Boosting LLMs in Professional Domains via Knowledge Augmented Generation. In Companion Proceedings of Web Conference . ACM, 334– 343. doi:10.1145/3701716.3715240 [26] Junnan Liu, Qianren Mao, Weifeng Jiang, and Jianxin Li. 2024. KNOWFORMER: revisiting transformers for knowledge graph reasoning. In Proceedings of ICML 
+
+(Vienna, Austria) (ICML’24) . Article 1280, 22 pages. [27] Lihui Liu, Yuzhong Chen, Mahashweta Das, Hao Yang, and Hanghang Tong. 2023. Knowledge Graph Question Answering with Ambiguous Query. In Proceedings of Web Conference . ACM, 2477–2486. doi:10.1145/3543507.3583316 [28] Yang Liu, Xiaobin Tian, Zequn Sun, and Wei Hu. 2024. Finetuning Generative Large Language Models with Discrimination Instructions for Knowledge Graph Completion. In Proceedings of ISWC . 199–217. [29] Xiao Long, Liansheng Zhuang, Aodi Li, Houqiang Li, and Shafei Wang. 2024. Fact Embedding through Diffusion Model for Knowledge Graph Completion. In 
+
+Proceedings of WWW . ACM, 2020–2029. doi:10.1145/3589334.3645451 [30] Xiao Long, Liansheng Zhuang, Aodi Li, Jiuchang Wei, Houqiang Li, and Shafei Wang. 2024. KGDM: A Diffusion Model to Capture Multiple Relation Semantics for Knowledge Graph Embedding. In Proceedings of AAAI . AAAI Press, 8850–8858. doi:10.1609/AAAI.V38I8.28732 [31] Justin Lovelace, Varsha Kishore, Chao Wan, Eliot Shekhtman, and Kilian Q. Weinberger. 2023. Latent Diffusion for Language Generation. In Proceedings of NeurIPS .[32] Pengfei Luo, Xi Zhu, Tong Xu, Yi Zheng, and Enhong Chen. 2024. Semantic Interaction Matching Network for Few-Shot Knowledge Graph Completion. ACM Trans. Web 18, 2 (2024), 20:1–20:19. doi:10.1145/3589557 [33] Shirui Pan, Linhao Luo, Yufei Wang, Chen Chen, Jiapu Wang, and Xindong Wu. 2024. Unifying Large Language Models and Knowledge Graphs: A Roadmap. 
+
+IEEE Transactions on Knowledge and Data Engineering 36, 7 (2024), 3580–3599. doi:10.1109/TKDE.2024.3352100 [34] Duo Peng, Qiuhong Ke, Arulmurugan Ambikapathi, Yasin Yazici, Yinjie Lei, and Jun Liu. 2024. Unsupervised Domain Adaptation via Domain-Adaptive Diffusion. 
+
+IEEE Trans. Image Process. 33 (2024), 4245–4260. doi:10.1109/TIP.2024.3424985 [35] Dustin Podell, Zion English, Kyle Lacey, Andreas Blattmann, Tim Dockhorn, Jonas Müller, Joe Penna, and Robin Rombach. 2024. SDXL: Improving Latent Diffusion Models for High-Resolution Image Synthesis. In Proceedings of ICLR .[36] Aimon Rahman, Jeya Maria Jose Valanarasu, Ilker Hacihaliloglu, and Vishal M. Patel. 2023. Ambiguous Medical Image Segmentation Using Diffusion Models. In 
+
+Proceedings of CVPR . IEEE, 11536–11546. doi:10.1109/CVPR52729.2023.01110 [37] Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer. 2022. High-Resolution Image Synthesis with Latent Diffusion Models. In Proceedings of CVPR . 10674–10685. doi:10.1109/CVPR52688.2022.01042 [38] Michael Schlichtkrull, Thomas N Kipf, Peter Bloem, Rianne Van Den Berg, Ivan Titov, and Max Welling. 2018. Modeling relational data with graph convolutional networks. In European semantic web conference . Springer, 593–607. [39] Chao Shang, Yun Tang, Jing Huang, Jinbo Bi, Xiaodong He, and Bowen Zhou. 2019. End-to-end structure-aware convolutional networks for knowledge base completion. In Proceedings of AAAI , Vol. 33. 3060–3067. [40] Jiawei Sheng, Shu Guo, Zhenyu Chen, Juwei Yue, Lihong Wang, Tingwen Liu, and Hongbo Xu. 2020. Adaptive Attentional Network for Few-Shot Knowledge Graph Completion. In Proceedings of EMNLP . Association for Computational Linguistics, 1681–1691. doi:10.18653/V1/2020.EMNLP-MAIN.131 [41] Jiawei Sheng, Taoyu Su, Weiyi Yang, Linghui Wang, Yongxiu Xu, and Tingwen Liu. 2026. Information-Theoretic Minimal Sufficient Representation for Multi-Domain Knowledge Graph Completion. In Proceedings of AAAI .[42] Harkanwar Singh, Prachi Jain, Soumen Chakrabarti, et al . 2021. Multilingual Knowledge Graph Completion with Joint Relation and Entity Alignment. arXiv preprint arXiv:2104.08804 (2021). [43] Jascha Sohl-Dickstein, Eric A. Weiss, Niru Maheswaranathan, and Surya Ganguli. 2015. Deep Unsupervised Learning using Nonequilibrium Thermodynamics. In 
+
+Proceedings of ICML , Vol. 37. 2256–2265. [44] Zhiqing Sun, Zhi-Hong Deng, Jian-Yun Nie, and Jian Tang. 2019. RotatE: Knowl-edge Graph Embedding by Relational Rotation in Complex Space. In Proceedings of ICLR .[45] Zequn Sun, Wei Hu, Qingheng Zhang, and Yuzhong Qu. 2018. Bootstrapping Entity Alignment with Knowledge Graph Embedding. In Proceedings of IJCAI .4396–4402. doi:10.24963/IJCAI.2018/611 [46] Zequn Sun, Jiacheng Huang, Xiaozhou Xu, Qijin Chen, Weijun Ren, and Wei Hu. 2023. What Makes Entities Similar? A Similarity Flooding Perspective for Multi-sourced Knowledge Graph Embeddings. In Proceedings of IMCL . 32875–32885. https://proceedings.mlr.press/v202/sun23d.html [47] Rongchuan Tang, Yang Zhao, Chengqing Zong, and Yu Zhou. 2023. Multilingual Knowledge Graph Completion with Language-Sensitive Multi-Graph Attention. In Proceedings of ACL . 10508–10519. doi:10.18653/V1/2023.ACL-LONG.586 [48] Théo Trouillon, Johannes Welbl, Sebastian Riedel, Éric Gaussier, and Guillaume Bouchard. 2016. Complex embeddings for simple link prediction. In Proceedings WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Jiawei Sheng et al. 
+
+of ICML . PMLR, 2071–2080. [49] Quan Wang, Zhendong Mao, Bin Wang, and Li Guo. 2017. Knowledge Graph Embedding: A Survey of Approaches and Applications. IEEE Transactions on Knowledge and Data Engineering 29, 12 (2017), 2724–2743. doi:10.1109/TKDE. 2017.2754499 [50] Wenjie Wang, Yiyan Xu, Fuli Feng, Xinyu Lin, Xiangnan He, and Tat-Seng Chua. 2023. Diffusion Recommender Model. In Proceedings of SIGIR . ACM, 832–841. [51] Xiaozhi Wang, Tianyu Gao, Zhaocheng Zhu, Zhengyan Zhang, Zhiyuan Liu, Juanzi Li, and Jian Tang. 2021. KEPLER: A Unified Model for Knowledge Em-bedding and Pre-trained Language Representation. TACL 9 (2021), 176–194. doi:10.1162/TACL_A_00360 [52] Yanbin Wei, Qiushi Huang, Yu Zhang, and James T. Kwok. 2023. KICGPT: Large Language Model with Knowledge in Context for Knowledge Graph Completion. In Findings of EMNLP . 8667–8683. doi:10.18653/V1/2023.FINDINGS-EMNLP.580 [53] Ruobing Xie, Zhiyuan Liu, Jia Jia, Huanbo Luan, and Maosong Sun. 2016. Rep-resentation Learning of Knowledge Graphs with Entity Descriptions. In Pro-ceedings of AAAI , Dale Schuurmans and Michael P. Wellman (Eds.). 2659–2665. doi:10.1609/AAAI.V30I1.10329 [54] Bishan Yang, Wen-tau Yih, Xiaodong He, Jianfeng Gao, and Li Deng. 2015. Em-bedding entities and relations for learning and inference in knowledge bases. In 
+
+Proceedings of ICLR .[55] Linyan Yang, Shiqiao Zhou, Jingwei Cheng, Fu Zhang, Jizheng Wan, Shuo Wang, and Mark Lee. 2025. DAEA: Enhancing Entity Alignment in Real-World Knowl-edge Graphs Through Multi-Source Domain Adaptation. In Proceedings of COL-ING . 5890–5901. https://aclanthology.org/2025.coling-main.393/ [56] Yaming Yang, Zhuofeng Luo, Zhe Wang, Weigang Lu, Yiheng Lu, Ziyu Guan, Wei Zhao, and Yuanhai Lv. 2025. A Translation-Based Heterogeneous Graph Neural Network for Multiple Knowledge Graphs Alignment. In Proceedings of ICDE . 2215–2226. [57] Zhengyi Yang, Jiancan Wu, Zhicai Wang, Xiang Wang, Yancheng Yuan, and Xiangnan He. 2023. Generate What You Prefer: Reshap-ing Sequential Recommendation via Guided Diffusion. In Proceed-ings of NeurIPS . http://papers.nips.cc/paper_files/paper/2023/hash/ 4c5e2bcbf21bdf40d75fddad0bd43dc9-Abstract-Conference.html [58] Liang Yao, Chengsheng Mao, and Yuan Luo. 2020. KG-BERT: BERT for Knowledge Graph Completion. Proceedings of AAAI (2020). [59] Liang Yao, Jiazhen Peng, Chengsheng Mao, and Yuan Luo. 2025. Exploring Large Language Models for Knowledge Graph Completion. In Proceedings of IEEE ICASSP . IEEE, 1–5. doi:10.1109/ICASSP49660.2025.10889242 [60] Huanyu Zhang, Xiaoxuan Shen, Baolin Yi, Jianfang Liu, and Yinao Xie. 2025. A Plug-in Critiquing Approach for Knowledge Graph Recommendation Systems via Representative Sampling. In Proceedings of Web Conference . ACM, 322–333. doi:10.1145/3696410.3714808 [61] Qingheng Zhang, Zequn Sun, Wei Hu, Muhao Chen, Lingbing Guo, and Yuzhong Qu. 2019. Multi-view Knowledge Graph Embedding for Entity Alignment. In 
+
+Proceedings of IJCAI , Sarit Kraus (Ed.). 5429–5435. doi:10.24963/IJCAI.2019/754 [62] Yichi Zhang, Zhuo Chen, Lingbing Guo, Yajing Xu, Wen Zhang, and Huajun Chen. 2024. Making Large Language Models Perform Better in Knowledge Graph Completion. In Proceedings of ACM MM . 233–242. doi:10.1145/3664647.3681327 [63] Yichi Zhang, Binbin Hu, Zhuo Chen, Lingbing Guo, Ziqi Liu, Zhiqiang Zhang, Lei Liang, Huajun Chen, and Wen Zhang. 2024. Multi-domain Knowledge Graph Collaborative Pre-training and Prompt Tuning for Diverse Downstream Tasks. 
+
+CoRR abs/2405.13085 (2024). arXiv:2405.13085 doi:10.48550/ARXIV.2405.13085 [64] Qi Zhu, Hao Wei, Bunyamin Sisman, Da Zheng, Christos Faloutsos, Xin Luna Dong, and Jiawei Han. 2020. Collective Multi-Type Entity Alignment Between Knowledge Graphs. In Proceedings of Web Conference .[65] Yao Zhu, Hongzhi Liu, Zhonghai Wu, and Yingpeng Du. 2021. Relation-Aware Neighborhood Matching Model for Entity Alignment. In Proceedings of AAAI .4749–4756. doi:10.1609/AAAI.V35I5.16606 
+
+## A Appendix 
+
+In this appendix, we provide: (i) the dataset details, (ii) baselines, (iii) the evaluation protocol, and (iv) optimal hyper-parameters. 
+
+## A.1 Dataset Details 
+
+For evaluation, we adopt three benchmarks with 14 KGs in our experiments: two multilingual datasets DBP-5L [ 3], E-PKG [ 18 ], and a constructed multi-domain dataset DWY [45]. 
+
+• The DBP-5L dataset consists of 5 KGs extracted from DBpedia constructed in Greek (EL), English (EN), Spanish (ES), French (FR) and Japanese (JA). 
+
+Table 7: Statistics of DBP-5L [3], E-PKG [18] and DWY [45]. 
+
+Dataset KG # Ent. # Rel. # Tra. # Val. # Tes. DBP-5L 
+
+EL 5,231 111 8,670 4,152 1,017 EN 13,996 831 48,652 24,051 7,464 ES 12,382 144 33,036 16,220 4,810 FR 13,176 178 30,139 14,705 4,171 JA 11,805 128 17,979 8,633 2,162 
+
+E-PKG 
+
+DE 17,223 21 45,515 22,753 7,602 EN 16,544 21 60,310 39,150 10,071 ES 9,595 21 18,090 9,039 3,034 FR 17,068 21 47,999 23,994 8022 IT 15,670 21 42,767 21,377 7,148 JA 2,642 21 10,013 5,002 1,688 
+
+DYW 
+
+DB 23,315 180 85,506 10,688 10,780 YG 13,864 27 91,179 11,398 11,410 WK 17,743 90 82,047 10,255 10,296 
+
+• The E-PKG dataset is an e-commerce dataset about the mobile phone-related product information in 6 languages, including German (DE), English (EN), Spanish (ES), French (FR), Italian (IT) and Japanese (JA). 
+
+• The DWY dataset is a multi-domain dataset constructed in this paper based on Sun et al . [45] , which includes DBpedia (DB), YAGO (YG) and Wiki (WK). We select 80%, 10%, 10% triples of each KG as training, validation, testing data, respectively. To connect different KGs in the MKGC setting, we adopt the original aligned entities between paired KGs, and prepare equivalent entities between DB-YG, DB-WK and YG-WK. We will release this dataset for future public research. For all datasets, the equivalent entities are given to connect each of two KGs. The relations are unified in a scheme across all KGs [ 3, 47 ]. Detailed statistics of all datasets are shown in Table 7. 
+
+## A.2 Baselines 
+
+To evaluate our model, we select the following state-of-the-art methods as baselines: (i) Single-domain methods , which learn and perform KGC independently on each KG: 
+
+• TransE [1] models relations as translation in Euclidean space. 
+
+• DisMult [54] uses a bilinear function for semantic matching. 
+
+• RotatE [44] represents relations as rotations in complex space. 
+
+• KG-BERT [58 ] leverages pre-trained language models for KGC using textual descriptions of entities and relations. These methods perform inference within individual KGs without knowledge transfer between KGs. (ii) Multi-domain methods , which jointly leverage multiple KGs to enhance KGC through knowledge transfer: 
+
+• KEnS [7] learns a unified embedding space across KGs and em-ploys ensemble-based knowledge transfer. 
+
+• CG-MuA [ 64 ] aligns KGs through a GNN with collective aggre-gation and adapts loss functions for multi-domain KGC. 
+
+• AlignKGC [42 ] jointly performs KGC, entity alignment, and relation alignment across KGs. Conditional Diffusion Guided Knowledge Transfer for Multi-Domain Knowledge Graph Completion WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+• SS-AGA [18 ] enhances multi-domain KGC by dynamically gen-erating potential entity alignments. 
+
+• LSMGA [47 ] encodes KGs with an attentive relational graph encoder and fuses equivalent entities via attention mechanisms. 
+
+• GLKGC [ 13 ] uses a transformer-based GNN for encoding, trained with KGC and entity alignment losses. These models mostly attempt consistency-based modules to align equivalent entities, and thus transfer knowledge from support KGs to benefit target KG predictions. 
+
+## A.3 Evaluation Protocol 
+
+For generality, we evaluate the KGC model with the task of pre-dicting tail entities. For a query (ℎ, 𝑟, ?), we place all candidate tail entities in the query to form triples and measure the plausibility scores of the triples. The tail entity in the triple with the highest score is treated as the final prediction of the tail entity. Note that the entity set of a target KG serves as the corresponding candidate tail entities. The testing data of all KGs are used to test the model, and we use the averaged metrics of all KGs to measure the overall performance [47]. In detail, the following metrics are used: 
+
+• Hits@N : Hits@N (H@N for short) is the proportion of true entities that appear in the first 𝑁 entities of the sorted rank list. Hits@N can be defined as: 
+
+Hits@N = 1
+
+|Q| ∑︁ 𝑞 𝑖 ∈ Q 
+
+I[rank (𝑖 ) ≤ 𝑁 ], (21) where Q denotes all query triples (ℎ, 𝑟, ?) in the testing data, rank 𝑖 
+
+denotes the rank position of the correct entity in the candidates for the 𝑖 -th query, and I[rank (𝑖 ) ≤ 𝑁 ] yields 1 if 𝑖 is ranked within top-𝑁 , and 0 otherwise. This metric is bounded in the range [0, 1], where the higher, the better. Note that Hits@1 is equivalent to the precision in conventional classification tasks. 
+
+• MRR : Mean reciprocal rank (MRR) measures the overall per-formance of the ranking, which is the average of the reciprocal ranks of results for all queries as: 
+
+MRR = 1
+
+|Q| ∑︁ 𝑞 𝑖 ∈ Q 
+
+1rank (𝑖 ) , (22) where Q also refers to the query triples (ℎ, 𝑟, ?). MRR is a use-ful metric since it reflects the overall ranks of all query triples. Higher MRR values indicate better performance, with 1 being the maximum achievable value. 
+
+## A.4 Optimal Hyper-parameters 
+
+We implement our model with Pytorch 5 based on the PyG 6 ar-chitecture. Experiments are conducted on a server with Tesla T4 GPUs. The optimal model is selected according to the average MRR of all KGs on their validation sets by grid-search with three tri-als [ 47 ]. We use Adam [ 20 ] to learn the model. The tuning ranges of hyper-parameters are reported in the main text. Here, we report the hyper-parameters used in Table 8 for re-implementation.                                                                  
+
+> Hyper-parameters DBP-5L E-PKG DWY
+> batch size 300 300 300 learning rate 1×10 −31×10 −31×10 −3
+> margin 𝜆 0.5 0.5 0.5 epoch 30 50 30 embedding size 𝑑 256 256 256 hidden dimension 256 256 256 encoder layer number 𝐿 222ratio 𝑝 𝑢 0.1 0.1 0.1 strength 𝑠 212diffusion step 𝑇 16 32 16 factor 𝜔 11×10 −21×10 −21×10 −2
+> factor 𝜔 21×10 −31×10 −31×10 −3
+
+Table 8: Detailed hyper-parameters of our DMKGC model. 4 8 16 32 64                         
+
+> Tvalue
+> 20
+> 40
+> 60
+> AVG-MRR (%) 01234
+> svalue
+> 0
+> 25
+> 50
+> 75
+> AVG-MRR (%) 10 410 310 210 11
+> 1value
+> 20
+> 40
+> 60
+> AVG-MRR (%) 10 410 310 210 11
+> 2value
+> 20
+> 40
+> 60
+> AVG-MRR (%)
+
+Figure 6: Impact of timestep number 𝑇 , condition strength 𝑠 ,and harmonic factors 𝜔 1, 𝜔 2. Averaged MRR (%) is reported with ± std of the 5 KGs on DBP-5L. 
+
+## A.5 Further Analysis (RQ3) 
+
+A.5.1 Impact on Hyper-parameters. We show the impact of diffu-sion time step 𝑇 , conditional strength factor 𝑠 , and training balance factors 𝜔 1 and 𝜔 2, in Figure 6. We find that too large 𝑇 may not be helpful for relatively simplistic embedding generation. A lower strength 𝑠 is better, in agreement with the expectation that the generation is unbiased towards the conditions. Factors 𝜔 1 and 𝜔 2
+
+require the taking of trade-off values to balance unbiased genera-tion/regularization and the target task prediction. 
+
+A.5.2 Comparison on Time Consuming. To evaluate efficiency, we analyze the running time on DBP-5L. In training, LSGMA, GLKGC and DMKGC (w/ 16 diffusion steps) spend 3.80, 4.87 and 4.71ms per triple, and achieve the best results at 49, 47, 16 training rounds, respectively. This reflects that our diffusion-based model is still training-efficient, but can also accelerate convergence . In test time, LSGMA, GLKGC and DMKGC cost 5.80, 6.19, 6.64ms per triple, respectively. We believe the few reverse steps are controllable and acceptable considering remarkable accuracy improvements .
