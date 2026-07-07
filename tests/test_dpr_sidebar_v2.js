@@ -141,6 +141,21 @@ const unorderedSidebar = `
       * <a class="dpr-sidebar-item-link" href="#/202606/25/new" data-sidebar-item="{&quot;title&quot;:&quot;New Daily&quot;,&quot;published&quot;:&quot;2026-06-25T02:00:00Z&quot;}">New Daily</a>
 `;
 
+const rangeDailySidebar = `
+* Daily Papers
+  * 2026-07-06 <!--dpr-date:20260706-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link" href="#/202607/06/today" data-sidebar-item="{&quot;title&quot;:&quot;Today Paper&quot;,&quot;tags&quot;:[{&quot;kind&quot;:&quot;query&quot;,&quot;label&quot;:&quot;data&quot;}]}">Today Paper</a>
+  * 2026-06-27 ~ 2026-07-06 <!--dpr-date:20260627-20260706-->
+    * 精读区
+      * <a class="dpr-sidebar-item-link" href="#/20260627-20260706/range-data" data-sidebar-item="{&quot;title&quot;:&quot;Range Data Paper&quot;,&quot;tags&quot;:[{&quot;kind&quot;:&quot;query&quot;,&quot;label&quot;:&quot;data&quot;}]}">Range Data Paper</a>
+    * 速读区
+      * <a class="dpr-sidebar-item-link" href="#/20260627-20260706/range-robot" data-sidebar-item="{&quot;title&quot;:&quot;Range Robot Paper&quot;,&quot;tags&quot;:[{&quot;kind&quot;:&quot;query&quot;,&quot;label&quot;:&quot;robot&quot;}]}">Range Robot Paper</a>
+  * 2017-06-12
+    * 精读区
+      * <a class="dpr-sidebar-item-link" href="#/201706/12/attention" data-sidebar-item="{&quot;title&quot;:&quot;Attention Paper&quot;}">Attention Paper</a>
+`;
+
 function testSidebarNavigationContract() {
   const sidebar = loadSidebarForTest('#/202606/24/paper-b?from=test');
   const tools = sidebar.__test;
@@ -366,6 +381,52 @@ function testDailyCalendarTagViewFiltersActiveDateByKeyword() {
   const fallbackView = tools.buildDailyCalendarTagView(model, '20260624', 'missing-tag', {}, '202606');
   assert.equal(fallbackView.activeKey, '__all__');
   assert.deepEqual(fallbackView.groups[0].papers.map((paper) => paper.title), ['Paper A', 'Paper B']);
+}
+
+function testDailyRangeReportsStayReachableFromCalendarEndDate() {
+  const sidebar = loadSidebarForTest('#/20260627-20260706/range-data');
+  const tools = sidebar.__test;
+  const model = tools.parseSidebar(rangeDailySidebar);
+
+  assert.deepEqual(model.daily.map((day) => day.dateKey), [
+    '20260706',
+    '20260627-20260706',
+    '20170612',
+  ]);
+  assert.deepEqual(tools.collectReportHrefsFromModel(model), [
+    '#/202607/06/README',
+    '#/20260627-20260706/README',
+    '#/201706/12/README',
+  ]);
+
+  const view = tools.buildDailyCalendarTagView(model, '', '__all__', {}, '');
+  assert.equal(view.activeDateKey, '20260706');
+  assert.deepEqual(view.groups.map((group) => [group.key, group.label, group.papers.length]), [
+    ['20260706:__all__', '2026-07-06', 1],
+    ['20260627-20260706:__all__', '2026-06-27 ~ 2026-07-06', 2],
+  ]);
+  const activeCalendarDay = view.calendar.days.find((day) => day.dateKey === '20260706');
+  assert.equal(activeCalendarDay.totalCount, 3);
+  assert.equal(activeCalendarDay.unreadCount, 3);
+  assert.equal(activeCalendarDay.isActive, true);
+
+  const tagView = tools.buildDailyCalendarTagView(model, '20260706', 'data', {}, '202607');
+  assert.deepEqual(tagView.groups.map((group) => [group.key, group.papers.map((paper) => paper.title)]), [
+    ['20260706:data', ['Today Paper']],
+    ['20260627-20260706:data', ['Range Data Paper']],
+  ]);
+  assert.equal(tagView.calendar.days.find((day) => day.dateKey === '20260706').totalCount, 2);
+
+  const html = tools.renderBodyHtml(model, {
+    expandedGroups: { conference: false, daily: true },
+    dailyViewMode: 'date',
+    activeDailyDate: '',
+    activeDailyMonth: '',
+    readMap: {},
+  });
+  assert.ok(html.includes('Range Data Paper'));
+  assert.ok(html.includes('Range Robot Paper'));
+  assert.ok(html.includes('data-axis-section="20260627-20260706:__all__"'));
 }
 
 function testDailyCalendarPlacementToggleKeepsControlRowFixedAboveLayers() {
@@ -1477,6 +1538,7 @@ testHyphenatedConferenceMarkerParsing();
 testAxisTabsRenderUnreadCounts();
 testDailyCalendarViewUsesMonthGridAndActiveDateOnly();
 testDailyCalendarTagViewFiltersActiveDateByKeyword();
+testDailyRangeReportsStayReachableFromCalendarEndDate();
 testDailyCalendarPlacementToggleKeepsControlRowFixedAboveLayers();
 testConferenceAndDailyAxisTogglesRenderBesidePanelTitles();
 testDailyCalendarInPlaceRefreshUsesActiveDailyTag();
