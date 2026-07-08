@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-07-08 <!--dpr-date:20260708-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/08/2607.03166v1-karma-knowledge-graph-based-automated-reasoning-materialization-and-alignment" data-sidebar-item="{&quot;title&quot;: &quot;KARMA: Knowledge graph-based Automated Reasoning Materialization and Alignment&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.03166v1-karma-knowledge-graph-based-automated-reasoning-materialization-and-alignment&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;生物医学知识图谱结合LLM的对比学习方法，可迁移至冷启动药物相互作用预测&quot;}">KARMA: Knowledge graph-based Automated Reasoning Materialization and Alignment</a>
   * 2026-07-07 <!--dpr-date:20260707-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/07/2607.02928v1-cofend-a-cross-modal-fusion-end-to-end-network-for-cold-start-drug-drug-interaction-prediction" data-sidebar-item="{&quot;title&quot;: &quot;CoFEND: A Cross-Modal Fusion End-to-End Network for Cold-Start Drug-Drug Interaction Prediction&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.02928v1-cofend-a-cross-modal-fusion-end-to-end-network-for-cold-start-drug-drug-interaction-prediction&quot;, &quot;score&quot;: &quot;10.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;明确处理冷启动药物-药物相互作用预测并采用跨模态融合&quot;}">CoFEND: A Cross-Modal Fusion End-to-End Network for Cold-Start Drug-Drug Interaction Prediction</a>
