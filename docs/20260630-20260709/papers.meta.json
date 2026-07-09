@@ -1,0 +1,39 @@
+{
+  "label": "2026-06-30 ~ 2026-07-09",
+  "date": "2026-06-30 ~ 2026-07-09",
+  "generated_at": "2026-07-09T12:30:27",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "20260630-20260709/2607.02944v1-a-precedent-guided-co-scientist-for-side-effect-aware-drug-redesign",
+      "section": "quick",
+      "title_en": "A Precedent-Guided Co-Scientist for Side-Effect-Aware Drug Redesign",
+      "authors": "Yujin Kim, Charmgil Hong",
+      "date": "2026-07-03",
+      "pdf": "https://arxiv.org/pdf/2607.02944v1",
+      "score": "7.0",
+      "evidence": "利用LLM和生物医学知识图谱进行药物-副作用推理",
+      "tldr": "药物重设计需要缓解副作用并保留疗效，但现有方法常孤立生成分子，忽略药理学知识。PRECEDE提出一种基于先例的协同框架，将重设计转化为证据推理，利用药物-副作用关联、生物医学知识图谱和安全性优化先例，由LLM协调并引入人类审核。该方法保证假设可审计、可证伪，最终实现副作用感知的分子优化，提升了药物重设计的科学性和可靠性。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "We propose PRECEDE, a precedent-guided co-scientist for side-effect-aware drug redesign that revises a parent compound to mitigate a specified side effect while preserving therapeutic function. Rather than isolated molecular generation, PRECEDE frames redesign as evidence-grounded reasoning over drug--side-effect associations, biomedical knowledge graphs, and precedents of safety-driven optimization, coordinated by an LLM orchestrator with explicit policies and human-review checkpoints. We position PRECEDE as a human-supervised AI-for-science workflow in which hypotheses remain auditable, falsifiable, and bounded by prior pharmacology.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "20260630-20260709/2607.07611v1-asymmetric-focal-loss-improves-graph-neural-network-prediction-of-drug-drug-interactions",
+      "section": "quick",
+      "title_en": "Asymmetric Focal Loss Improves Graph Neural Network Prediction of Drug-Drug Interactions",
+      "authors": "Faranak Hatami, Mousa Moradi",
+      "date": "2026-07-08",
+      "pdf": "https://arxiv.org/pdf/2607.07611v1",
+      "score": "6.0",
+      "evidence": "使用非对称焦点损失改进图神经网络的药物-药物相互作用预测",
+      "tldr": "标准二元交叉熵训练图神经网络时对所有样本一视同仁，可能忽略临床重要的药物相互作用。本文提出一种不对称焦点损失函数，集成到关系感知图卷积网络中，强调难以分类的正样本。在TWOSIDES数据集上，该方法将准确率从0.699提升至0.892，F1从0.700提升至0.894，AUROC从0.766提升至0.914，总体错误率降低64.1%。结果表明，仅通过改进损失函数设计就能显著提升药物相互作用预测性能，无需修改网络架构。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Background: Graph neural networks improve computational prediction of polypharmacy side effects, but standard binary cross-entropy training allocates equal capacity to well-classified and difficult examples, potentially missing clinically significant interactions. We evaluated whether an asymmetric focal objective could improve multi-relational drug-drug interaction (DDI) prediction by emphasizing difficult positive interactions. Methods: ClinicalFocal loss was integrated into a relation-aware graph convolutional network using molecular fingerprints, physicochemical descriptors, and learned embeddings. The model was evaluated on TWOSIDES using five-fold cross-validation with identical experimental conditions (architecture, features, data partitions, hyperparameters, and random seeds) for ClinicalFocal loss and binary cross-entropy baseline. Results: ClinicalFocal loss increased accuracy from 0.699 to 0.892 (+19.3 percentage points) and F1 score from 0.700 to 0.894 (+19.4 percentage points). AUROC increased from 0.766 to 0.914, and AUCPR increased from 0.714 to 0.860. The false-negative rate decreased from 29.8% to 9.1%, while specificity increased from 69.6% to 87.5%. Overall classification error decreased from 30.1% to 10.8%, corresponding to a 64.1% relative reduction. Improvements were consistent across all five folds. Conclusions: Asymmetric focal optimization improved classification and ranking performance while achieving 90.9% recall for observed interaction triples, without modifying the underlying architecture. Loss-function design is a direct, tunable lever for improving graph-based DDI prediction.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
