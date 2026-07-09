@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-07-09 <!--dpr-date:20260709-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/09/2607.07422v1-inductwave-inductive-multi-hop-logical-query-answering-on-knowledge-graphs" data-sidebar-item="{&quot;title&quot;: &quot;InductWave: Inductive Multi-Hop Logical Query Answering on Knowledge Graphs&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.07422v1-inductwave-inductive-multi-hop-logical-query-answering-on-knowledge-graphs&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;归纳式知识图谱查询方法，可处理未见实体，适用于冷启动药物相互作用&quot;}">InductWave: Inductive Multi-Hop Logical Query Answering on Knowledge Graphs</a>
   * 2026-06-30 ~ 2026-07-09 <!--dpr-date:20260630-20260709-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/20260630-20260709/2607.02944v1-a-precedent-guided-co-scientist-for-side-effect-aware-drug-redesign" data-sidebar-item="{&quot;title&quot;: &quot;A Precedent-Guided Co-Scientist for Side-Effect-Aware Drug Redesign&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.02944v1-a-precedent-guided-co-scientist-for-side-effect-aware-drug-redesign&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;利用LLM和生物医学知识图谱进行药物-副作用推理&quot;}">A Precedent-Guided Co-Scientist for Side-Effect-Aware Drug Redesign</a>
