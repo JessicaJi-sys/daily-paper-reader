@@ -1,0 +1,54 @@
+{
+  "label": "2026-07-10",
+  "date": "2026-07-10",
+  "generated_at": "2026-07-10T21:28:15",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202607/10/biorxiv-10-64898-2026-07-01-735807-v1-a-control-validated-pan-proteome-deep-learning-pipeline-nominates-gpr35-as-a-candidate-target-of-the-orphan-bacterial-metabolite-ligiamycin-a",
+      "section": "quick",
+      "title_en": "A control-validated pan-proteome deep-learning pipeline nominates GPR35 as a candidate target of the orphan bacterial metabolite ligiamycin A",
+      "authors": "Martin, J.",
+      "date": "2026-07-06",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.07.01.735807v1.full.pdf",
+      "score": "7.0",
+      "evidence": "图神经网络和蛋白质语言模型用于药物-靶标相互作用预测，可迁移至DDI",
+      "tldr": "大多数微生物天然产物缺乏已知分子靶点，制约其开发。本文提出一个经对照验证的计算流程，结合全蛋白质组深度学习药物-靶点相互作用模型（图神经网络+ESM-2+双向交叉注意力）与偏差校正排名及对照锚定分子对接。应用于新发现的天然产物ligiamycin A，预测其靶点集中于类A GPCR，经校正后孤儿受体GPR35脱颖而出，分子对接进一步证实。该流程可作为开源工具，为天然产物靶点发现提供假设。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Most microbial natural products with documented bioactivity lack an identified molecular target, which limits their development. We present an open, control-validated computational pipeline for natural-product target hypothesis generation. It combines a pan-proteome deep-learning drug-target interaction (DTI) model (a graph neural-network ligand encoder, an ESM-2 protein language-model encoder, and bidirectional cross-attention) with bias-corrected ranking and control-anchored molecular docking. Applying it to ligiamycin A, a 2022-described Streptomyces/Achromobacter co-culture decalin-amino-maleimide with no reported target, we find that the predicted interactions of the compound are dominated by class-A G-protein-coupled receptors. Using a drug with a known target (losartan) we identify and correct a frequent-hitter bias in the raw model; after correction the standout candidates are uniformly class-A GPCRs, led by the orphan receptor GPR35. Structure-based docking with matched positive and negative controls across three candidates corroborates GPR35 specifically: ligiamycin A scores comparably to the known GPR35 agonist zaprinast at the agonist pocket (-8.1 vs -8.3 kcal/mol; non-binder floor -5.5), whereas FFAR1 is excluded and histamine H2 is inconclusive. We propose GPR35 as a prioritized, experimentally testable target and release the workflow as a reusable tool. The result is a computational hypothesis that requires experimental validation.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/10/2607.03166v1-karma-knowledge-graph-based-automated-reasoning-materialization-and-alignment",
+      "section": "quick",
+      "title_en": "KARMA: Knowledge graph-based Automated Reasoning Materialization and Alignment",
+      "authors": "Jinkyeong Choi, Chaebin Jeong, Donghyeon Park",
+      "date": "2026-07-03",
+      "pdf": "https://arxiv.org/pdf/2607.03166v1",
+      "score": "6.0",
+      "evidence": "利用知识图谱路径生成对比样本，可迁移至基于知识图谱的药物相互作用预测",
+      "tldr": "模板对比合成的候选仅在少数实体槽上不同，但序列级优化将监督扩散到共享模板上，导致分辨率不匹配问题。KARMA通过枚举领域知识图谱上的模式约束路径并转为槽对齐对比候选，再使用解耦槽级目标（SPA）将偏好监督引导至判别性实体槽。在生物医学、计算机科学和化学基准上，KARMA超越基础LLM和SFT基线，并与序列及token级偏好方法相当。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Template-based contrastive synthesis is scalable, but its candidates often differ only in a few entity-slots while sequence-level optimization spreads supervision over mostly shared templates. We formalize this as the Resolution Mismatch Problem and propose KARMA, which enumerates schema-constrained paths over domain knowledge graphs and verbalizes them into slot-aligned contrastive candidates. Slot-Parallel Alignment (SPA) then applies a decoupled slot-level objective to route preference supervision to discriminative entity-slots, with slot-aware masked attention serving as an optional packed-evaluation implementation. Across biomedical, computer-science, and chemistry benchmarks, KARMA outperforms base LLM and same-data SFT baselines, and compares favorably with sequence and token-level preference methods.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/10/2607.06527v1-rsf-gllm-bridging-the-semantic-gap-in-multi-hop-knowledge-graph-qa-via-recurrent-soft-flow-and-decoupled-llm-generation",
+      "section": "quick",
+      "title_en": "RSF-GLLM: Bridging the Semantic Gap in Multi-Hop Knowledge Graph QA via Recurrent Soft-Flow and Decoupled LLM Generation",
+      "authors": "Sambaran Bandyopadhyay, Ananth Muppidi",
+      "date": "2026-07-07",
+      "pdf": "https://arxiv.org/pdf/2607.06527v1",
+      "score": "6.0",
+      "evidence": "知识图谱推理与LLM生成相结合，可迁移至知识图谱增强的DDI预测",
+      "tldr": "针对多跳知识图谱问答中传统检索-读取流水线不可微导致语义鸿沟的问题，提出RSF-GLLM框架，包含循环软流模块实现可微图推理，利用GRU更新查询并动态门控遍历中间节点，通过流稀疏正则化收敛到离散路径，再文本化微调LLM。在WebQSP和CWQ上性能与昂贵LLM方法相当，但推理效率更高。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Multi-hop Question Answering over Knowledge Graphs faces a critical challenge: traditional retrieve-then-read pipelines break differentiability, preventing the retriever from learning to bridge the semantic gap where intermediate nodes lack lexical overlap with the query. To address this, we propose RSF-GLLM, a framework decoupling differentiable graph reasoning from answer generation. Our Recurrent Soft-Flow (RSF) module employs a GRU-guided query updater to propagate continuous relevance scores, utilizing a dynamic gating mechanism to traverse semantically dissimilar bridge nodes via structural cues. We introduce flow sparsity regularization to theoretically guarantee convergence from soft probabilities to discrete reasoning paths. These paths are extracted and textualized to fine-tune a Large Language Model (LLM), ensuring generation is grounded in factual topology. Experiments on WebQSP and CWQ demonstrate that RSF-GLLM achieves competitive performance with superior inference efficiency compared to LLM based computationally expensive approaches.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
