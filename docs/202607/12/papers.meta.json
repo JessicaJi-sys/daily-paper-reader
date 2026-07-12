@@ -1,0 +1,39 @@
+{
+  "label": "2026-07-12",
+  "date": "2026-07-12",
+  "generated_at": "2026-07-12T21:03:41",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202607/12/biorxiv-10-64898-2026-07-01-735807-v1-a-control-validated-pan-proteome-deep-learning-pipeline-nominates-gpr35-as-a-candidate-target-of-the-orphan-bacterial-metabolite-ligiamycin-a",
+      "section": "quick",
+      "title_en": "A control-validated pan-proteome deep-learning pipeline nominates GPR35 as a candidate target of the orphan bacterial metabolite ligiamycin A",
+      "authors": "Martin, J.",
+      "date": "2026-07-06",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.07.01.735807v1.full.pdf",
+      "score": "6.0",
+      "evidence": "使用蛋白质语言模型和深度学习进行药物-靶标相互作用预测",
+      "tldr": "多数天然产物活性已知但靶点不明。本文提出控制验证的深度学习流程：采用图神经网络编码配体、ESM-2编码蛋白质，通过双向交叉注意力学习相互作用，结合偏差校正排名和分子对接，预测2022年发现的ligiamycin A靶点。原始模型显示候选主要是A类GPCR；用losartan校正频繁命中偏差后，孤儿受体GPR35排名最高。分子对接证实ligiamycin A与GPR35激动剂口袋结合（得分-8.1 kcal/mol，与已知激动剂zaprinast相当），而FFAR1被排除，组胺H2不明确。因此提出GPR35是优先实验验证靶点，并发布可重用计算工作流。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Most microbial natural products with documented bioactivity lack an identified molecular target, which limits their development. We present an open, control-validated computational pipeline for natural-product target hypothesis generation. It combines a pan-proteome deep-learning drug-target interaction (DTI) model (a graph neural-network ligand encoder, an ESM-2 protein language-model encoder, and bidirectional cross-attention) with bias-corrected ranking and control-anchored molecular docking. Applying it to ligiamycin A, a 2022-described Streptomyces/Achromobacter co-culture decalin-amino-maleimide with no reported target, we find that the predicted interactions of the compound are dominated by class-A G-protein-coupled receptors. Using a drug with a known target (losartan) we identify and correct a frequent-hitter bias in the raw model; after correction the standout candidates are uniformly class-A GPCRs, led by the orphan receptor GPR35. Structure-based docking with matched positive and negative controls across three candidates corroborates GPR35 specifically: ligiamycin A scores comparably to the known GPR35 agonist zaprinast at the agonist pocket (-8.1 vs -8.3 kcal/mol; non-binder floor -5.5), whereas FFAR1 is excluded and histamine H2 is inconclusive. We propose GPR35 as a prioritized, experimentally testable target and release the workflow as a reusable tool. The result is a computational hypothesis that requires experimental validation.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/12/biorxiv-10-64898-2026-07-07-736901-v1-interaction-finder-automated-literature-based-discovery-of-biological-entity-associations-with-quote-level-provenance",
+      "section": "quick",
+      "title_en": "Interaction-finder: automated literature-based discovery of biological entity associations with quote-level provenance",
+      "authors": "Chapman, T. E., Lassmann, T.",
+      "date": "2026-07-10",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.07.07.736901v1.full.pdf",
+      "score": "6.0",
+      "evidence": "利用大语言模型引导文献发现生物实体关联，可用于药物相互作用提取",
+      "tldr": "从文献中手工收集生物学实体关联效率低下且易遗漏。Interaction-finder利用大语言模型引导迭代搜索，从全文提取候选关联并附带原文引证。在细胞类型-标记物、疾病-基因、配体-受体三个领域，它比单次提示和现成框架多召回1.2-4.3倍已知关联，未验证候选与基准关联得分相近。该工具生成交互式HTML报告，支持快速筛选，以MIT许可证开源。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Identifying interactions between biological entities is a cornerstone of molecular research, but assembling such lists from the literature is slow and tedious. For many research questions, no curated database exists, leaving researchers to survey the relevant literature themselves. We present interaction-finder, a tool that automates this process: given a topic string and user-defined entity types, it discovers relevant literature through LLM-guided iterative search, extracts candidate associations from full-text articles, and produces a ranked list where every association is backed by quoted passages verified against the source text. A self-contained interactive HTML report enables rapid triage of the results. Evaluated across 60 topics in three domains (celltype-cellmarker, disease-gene, and ligand-receptor), interaction-finder recalls 1.2-4.3x as many known associations as single-shot prompting and an off-the-shelf deep-research framework, with all extracted quotes verified against source text. To assess candidates unrecognised from the gold-standard databases, we scored each candidate using an independent LLM judge blind to the tool's reasoning. Across the three domains, unverified candidates score similarly to gold-standard associations. We find the gold-standard associations are enriched at the top of our ranked candidates, with an overall recall@20 of 0.61. Interaction-finder is freely available at https://github.com/tecosaur/interaction_finder under an MIT licence.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

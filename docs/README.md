@@ -6,24 +6,29 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-11
-- 运行时间：2026-07-11 21:18:15 UTC
+- 最新运行日期：2026-07-12
+- 运行时间：2026-07-12 21:03:34 UTC
 - 运行状态：成功
-- 本次总论文数：1
+- 本次总论文数：2
 - 精读区：0
-- 速读区：1
+- 速读区：2
 
 ### 今日简报（AI）
-今日精读《HetNetEX》，聚焦异质生物医学知识图谱的精确渐进推断方法。该方法在异质图结构下实现了统计推断的严格性与计算可行性，值得关注其理论基础。建议后续结合具体生物医学数据集，验证其与现有推理工具的互补性。
-- 详情：[/202607/11/README](/202607/11/README)
+1) 今日速读两篇论文，分别聚焦细菌代谢物靶点发现与自动化文献挖掘工具。  
+2) 值得关注：GPR35被提名作为孤儿代谢物ligiamycin A的候选靶点；Interaction-finder提供带引用来源的生物实体关联自动发现。  
+3) 可深入探讨GPR35在微生物-宿主互作中的功能，或试用Interaction-finder辅助文献调研。
+- 详情：[/202607/12/README](/202607/12/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [HetNetEX: Exact Asymptotic Inference in Heterogeneous Biomedical Knowledge Graphs](/202607/11/biorxiv-10-64898-2026-07-05-736581-v1-hetnetex-exact-asymptotic-inference-in-heterogeneous-biomedical-knowledge-graphs)  
+1. [A control-validated pan-proteome deep-learning pipeline nominates GPR35 as a candidate target of the orphan bacterial metabolite ligiamycin A](/202607/12/biorxiv-10-64898-2026-07-01-735807-v1-a-control-validated-pan-proteome-deep-learning-pipeline-nominates-gpr35-as-a-candidate-target-of-the-orphan-bacterial-metabolite-ligiamycin-a)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：异质生物医学知识图谱精确推断，支持药物-基因-疾病连接
+   evidence：使用蛋白质语言模型和深度学习进行药物-靶标相互作用预测
+2. [Interaction-finder: automated literature-based discovery of biological entity associations with quote-level provenance](/202607/12/biorxiv-10-64898-2026-07-07-736901-v1-interaction-finder-automated-literature-based-discovery-of-biological-entity-associations-with-quote-level-provenance)  
+   标签：评分：6.0/10、query:cold-ddi
+   evidence：利用大语言模型引导文献发现生物实体关联，可用于药物相互作用提取
 
 
 <div class="dpr-home-promo-card">
