@@ -6,29 +6,27 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-12
-- 运行时间：2026-07-12 21:03:34 UTC
+- 最新运行日期：2026-07-13
+- 运行时间：2026-07-13 21:17:23 UTC
 - 运行状态：成功
 - 本次总论文数：2
 - 精读区：0
 - 速读区：2
 
 ### 今日简报（AI）
-1) 今日速读两篇论文，分别聚焦细菌代谢物靶点发现与自动化文献挖掘工具。  
-2) 值得关注：GPR35被提名作为孤儿代谢物ligiamycin A的候选靶点；Interaction-finder提供带引用来源的生物实体关联自动发现。  
-3) 可深入探讨GPR35在微生物-宿主互作中的功能，或试用Interaction-finder辅助文献调研。
-- 详情：[/202607/12/README](/202607/12/README)
+今日筛选两篇关于知识图谱与基因/药物关联的高分论文，均聚焦精准医学。最值得关注的是患者特异性知识图谱预测疗效，以及整合网络医学的ALS药物重定位方向。建议普通读者可关注知识图谱融合基因数据的临床转化潜力，尤其罕见病领域。
+- 详情：[/202607/13/README](/202607/13/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [A control-validated pan-proteome deep-learning pipeline nominates GPR35 as a candidate target of the orphan bacterial metabolite ligiamycin A](/202607/12/biorxiv-10-64898-2026-07-01-735807-v1-a-control-validated-pan-proteome-deep-learning-pipeline-nominates-gpr35-as-a-candidate-target-of-the-orphan-bacterial-metabolite-ligiamycin-a)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：使用蛋白质语言模型和深度学习进行药物-靶标相互作用预测
-2. [Interaction-finder: automated literature-based discovery of biological entity associations with quote-level provenance](/202607/12/biorxiv-10-64898-2026-07-07-736901-v1-interaction-finder-automated-literature-based-discovery-of-biological-entity-associations-with-quote-level-provenance)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：利用大语言模型引导文献发现生物实体关联，可用于药物相互作用提取
+1. [Predicting Therapeutic Outcome via Aligning Patient-Specific Knowledge Graph and Gene-Level Perturbation Representations](/202607/13/2607.04557v1-predicting-therapeutic-outcome-via-aligning-patient-specific-knowledge-graph-and-gene-level-perturbation-representations)  
+   标签：评分：7.0/10、query:cold-ddi
+   evidence：使用知识图谱预测药物反应，与基于知识图谱的药物相互作用相关
+2. [An Integrated Knowledge Graph and Network Medicine Pipeline for Drug Repurposing: Benchmarking Across Human Diseases and Application to Amyotrophic Lateral Sclerosis](/202607/13/biorxiv-10-64898-2026-07-03-736387-v1-an-integrated-knowledge-graph-and-network-medicine-pipeline-for-drug-repurposing-benchmarking-across-human-diseases-and-application-to-amyotrophic-lateral-sclerosis)  
+   标签：评分：7.0/10、query:cold-ddi
+   evidence：基于知识图谱的药物重定位管线
 
 
 <div class="dpr-home-promo-card">

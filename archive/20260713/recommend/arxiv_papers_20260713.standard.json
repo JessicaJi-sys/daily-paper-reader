@@ -1,0 +1,98 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-13T21:15:42.633267+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.04557v1",
+      "source": "arxiv",
+      "title": "Predicting Therapeutic Outcome via Aligning Patient-Specific Knowledge Graph and Gene-Level Perturbation Representations",
+      "abstract": "Accurate prediction of patient-specific therapeutic response from pre-treatment transcriptomes is hindered by the scarcity of matched clinical response labels and post-treatment molecular profiles. Preclinical transfer-learning models can simulate drug-induced expression changes but are often hard to interpret and unstable, whereas knowledge-graph methods provide mechanistic context yet remain static and fail to capture drug-induced transcriptomic perturbation dynamics. We propose PREDIKTOR, a patient-centered multi-view framework that aligns a personalized network view with a transferable transcriptomic perturbation view to predict clinical drug response. For each patient, we construct an individualized gene regulatory network from tumor expression using DysRegNet and augment it with drug-target links from DrugBank; a graph neural encoder yields a drug-centric, mechanistically grounded embedding. In parallel, a frozen condition-specific gene-gene attention model pretrained on LINCS L1000 generates a simulated post-perturbation transcriptomic profile for the same patient-drug pair. We align the two views in a shared latent space via a CLIP-style contrastive objective with drug-context hard negatives, then concatenate the representations for end-to-end response classification. On TCGA, PREDIKTOR consistently outperforms state-of-the-art baselines under patient-, drug-, and tissue-split evaluations, and transfers zero-shot to the I-SPY2 trial, improving AUROC by 5.6% over competing methods. The aligned embeddings yield stable gene and pathway attributions that recover known mechanisms, supporting actionable and interpretable precision oncology.",
+      "authors": [
+        "Dongmin Bang",
+        "Sugyun An",
+        "Inyoung Sung",
+        "Ilho Yun",
+        "Sun Kim",
+        "Sangseon Lee"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "q-bio.QM"
+      ],
+      "published": "2026-07-06T00:10:31+00:00",
+      "link": "https://arxiv.org/pdf/2607.04557v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "uses knowledge graph for drug response prediction, relevant to DDI with KG",
+      "llm_evidence_cn": "使用知识图谱预测药物反应，与基于知识图谱的药物相互作用相关",
+      "llm_evidence": "使用知识图谱预测药物反应，与基于知识图谱的药物相互作用相关",
+      "canonical_evidence": "使用知识图谱预测药物反应，与基于知识图谱的药物相互作用相关",
+      "llm_tldr_en": "Proposes PREDIKTOR, a multi-view framework aligning patient-specific knowledge graph with gene perturbation representations to predict therapeutic outcomes, relevant to drug interaction prediction using knowledge graphs.",
+      "llm_tldr_cn": "该论文针对临床药物反应预测中标记数据稀缺和知识图谱静态的问题，提出了PREDIKTOR框架，通过将患者特异性知识图谱与转录组扰动视图对齐来预测药物疗效。方法整合了个体化网络和药物诱导的基因表达变化，在多个数据集上验证了预测准确性。该工作为利用知识图谱和扰动数据进行药物相互作用预测提供了可借鉴的方法论。",
+      "llm_tldr": "该论文针对临床药物反应预测中标记数据稀缺和知识图谱静态的问题，提出了PREDIKTOR框架，通过将患者特异性知识图谱与转录组扰动视图对齐来预测药物疗效。方法整合了个体化网络和药物诱导的基因表达变化，在多个数据集上验证了预测准确性。该工作为利用知识图谱和扰动数据进行药物相互作用预测提供了可借鉴的方法论。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-07-03-736387-v1",
+      "source": "biorxiv",
+      "title": "An Integrated Knowledge Graph and Network Medicine Pipeline for Drug Repurposing: Benchmarking Across Human Diseases and Application to Amyotrophic Lateral Sclerosis",
+      "abstract": "Drug repurposing offers a practical strategy to identify new therapeutic uses for approved drugs, potentially reducing the time and cost associated with conventional drug development. We present a novel three-stage drug repurposing pipeline that integrates knowledge graph-based gene prediction, network-based drug-disease association analysis, and systematic classification of candidate drugs by therapeutic class. The pipeline integrates DGLinker to predict novel disease-associated genes, SAveRUNNER to identify drug repurposing candidates, and ATC Category Enrichment Analysis (ATCEA) to prioritise candidates by pharmacological class.\n\nWe benchmarked the pipeline across twelve diseases using DrugBank and MEDI2-HPS as validation resources. Utilising DGLinker-expanded disease-gene sets as input increased the number of predicted repurposed drugs, while overall discriminative performance remained stable across diseases (AUROC 0.71-0.77). Application of ATCEA consistently improved precision, F1-score, and specificity, while reducing recall, reflecting a conservative prioritisation strategy that contracts the candidate space while retaining pharmacologically coherent drug-disease candidates.\n\nWe further applied the pipeline to amyotrophic lateral sclerosis (ALS), a neurodegenerative disease with limited therapeutic options and performed a deeper literature-based validation of the results. Incorporation of DGLinker-predicted genes substantially increased the number of significant candidate drugs and uncovered enriched ATC categories not identified using known ALS genes alone, including antidepressants and antipsychotics. Moreover, several drugs with supporting evidence available in literature were identified only when DGLinker-predicted genes were used. Overall, 77 candidate drugs were prioritised within significantly enriched ATC categories, several of which are supported by previously published studies. To provide exploratory real-world support for these findings, we further evaluated candidate drugs in a longitudinal electronic health record (EHR) dataset of 2361 patients with ALS from Kings College Hospital. Although the number of evaluable drugs was limited due to sample size, the EHR analysis provided additional clinically relevant context for selected prioritised drugs and pharmacological classes.\n\nOur pipeline demonstrates potential to accelerate drug repurposing by integrating complementary computational approaches to each step of the process, providing an end-to-end framework that showed robust performance across benchmarking experiments and use cases.\n\nGraphical abstract\n\nO_FIG O_LINKSMALLFIG WIDTH=200 HEIGHT=80 SRC=\"FIGDIR/small/736387v1_ufig1.gif\" ALT=\"Figure 1\">\nView larger version (34K):\norg.highwire.dtl.DTLVardef@8f390borg.highwire.dtl.DTLVardef@ea14f4org.highwire.dtl.DTLVardef@5a1b1org.highwire.dtl.DTLVardef@1ba7df0_HPS_FORMAT_FIGEXP  M_FIG C_FIG",
+      "authors": [
+        "Jiang, A.",
+        "Hu, J.",
+        "Abdulle, Y.",
+        "Pain, O.",
+        "Iacoangeli, A."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-07-08T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.07.03.736387v1.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "knowledge graph based drug repurposing pipeline",
+      "llm_evidence_cn": "基于知识图谱的药物重定位管线",
+      "llm_evidence": "基于知识图谱的药物重定位管线",
+      "canonical_evidence": "基于知识图谱的药物重定位管线",
+      "llm_tldr_en": "Integrates KG-based gene prediction and network-based drug-disease analysis for repurposing, benchmarked across diseases and applied to ALS.",
+      "llm_tldr_cn": "针对传统药物开发周期长成本高的问题，提出一个集成知识图谱基因预测、网络药物-疾病关联分析和ATC分类富集分析的三阶段药物重定位管线。在多种疾病上基准测试并应用于肌萎缩侧索硬化症，证明该管线能有效识别新的药物-疾病关联，为药物相互作用预测提供了可迁移的知识图谱方法。",
+      "llm_tldr": "针对传统药物开发周期长成本高的问题，提出一个集成知识图谱基因预测、网络药物-疾病关联分析和ATC分类富集分析的三阶段药物重定位管线。在多种疾病上基准测试并应用于肌萎缩侧索硬化症，证明该管线能有效识别新的药物-疾病关联，为药物相互作用预测提供了可迁移的知识图谱方法。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug interaction prediction with knowledge graph",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

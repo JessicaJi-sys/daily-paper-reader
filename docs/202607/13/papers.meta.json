@@ -1,0 +1,39 @@
+{
+  "label": "2026-07-13",
+  "date": "2026-07-13",
+  "generated_at": "2026-07-13T21:17:30",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202607/13/2607.04557v1-predicting-therapeutic-outcome-via-aligning-patient-specific-knowledge-graph-and-gene-level-perturbation-representations",
+      "section": "quick",
+      "title_en": "Predicting Therapeutic Outcome via Aligning Patient-Specific Knowledge Graph and Gene-Level Perturbation Representations",
+      "authors": "Dongmin Bang, Sugyun An, Inyoung Sung, Ilho Yun, Sun Kim, Sangseon Lee",
+      "date": "2026-07-06",
+      "pdf": "https://arxiv.org/pdf/2607.04557v1",
+      "score": "7.0",
+      "evidence": "使用知识图谱预测药物反应，与基于知识图谱的药物相互作用相关",
+      "tldr": "预测患者药物反应面临临床标签稀缺和转录组动态难以捕捉的问题。PREDIKTOR构建个性化基因调控网络并模拟药物扰动，通过对比学习对齐两种视角。在TCGA多任务评测中表现最优，零样本迁移至I-SPY2试验提升AUROC 5.6%。该框架整合先验知识与动态变化，提供可解释的基因和通路归因，助力精准肿瘤学。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Accurate prediction of patient-specific therapeutic response from pre-treatment transcriptomes is hindered by the scarcity of matched clinical response labels and post-treatment molecular profiles. Preclinical transfer-learning models can simulate drug-induced expression changes but are often hard to interpret and unstable, whereas knowledge-graph methods provide mechanistic context yet remain static and fail to capture drug-induced transcriptomic perturbation dynamics. We propose PREDIKTOR, a patient-centered multi-view framework that aligns a personalized network view with a transferable transcriptomic perturbation view to predict clinical drug response. For each patient, we construct an individualized gene regulatory network from tumor expression using DysRegNet and augment it with drug-target links from DrugBank; a graph neural encoder yields a drug-centric, mechanistically grounded embedding. In parallel, a frozen condition-specific gene-gene attention model pretrained on LINCS L1000 generates a simulated post-perturbation transcriptomic profile for the same patient-drug pair. We align the two views in a shared latent space via a CLIP-style contrastive objective with drug-context hard negatives, then concatenate the representations for end-to-end response classification. On TCGA, PREDIKTOR consistently outperforms state-of-the-art baselines under patient-, drug-, and tissue-split evaluations, and transfers zero-shot to the I-SPY2 trial, improving AUROC by 5.6% over competing methods. The aligned embeddings yield stable gene and pathway attributions that recover known mechanisms, supporting actionable and interpretable precision oncology.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/13/biorxiv-10-64898-2026-07-03-736387-v1-an-integrated-knowledge-graph-and-network-medicine-pipeline-for-drug-repurposing-benchmarking-across-human-diseases-and-application-to-amyotrophic-lateral-sclerosis",
+      "section": "quick",
+      "title_en": "An Integrated Knowledge Graph and Network Medicine Pipeline for Drug Repurposing: Benchmarking Across Human Diseases and Application to Amyotrophic Lateral Sclerosis",
+      "authors": "Jiang, A., Hu, J., Abdulle, Y., Pain, O., Iacoangeli, A.",
+      "date": "2026-07-08",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.07.03.736387v1.full.pdf",
+      "score": "7.0",
+      "evidence": "基于知识图谱的药物重定位管线",
+      "tldr": "药物重定位是降低研发成本的有效策略。本研究提出集成知识图谱（DGLinker预测疾病基因）、网络医学（SAveRUNNER识别候选药物）和ATC类别富集分析（ATCEA）的三阶段管线。跨12种疾病基准测试显示AUROC稳定在0.71–0.77，ATCEA显著提升精确率和F1分数。应用于肌萎缩侧索硬化症（ALS）时，新发现77种优先候选药物，包括抗抑郁药和抗精神病药，部分经电子健康记录验证。该端到端框架为加速药物重定位提供稳健、可推广的工具。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Drug repurposing offers a practical strategy to identify new therapeutic uses for approved drugs, potentially reducing the time and cost associated with conventional drug development. We present a novel three-stage drug repurposing pipeline that integrates knowledge graph-based gene prediction, network-based drug-disease association analysis, and systematic classification of candidate drugs by therapeutic class. The pipeline integrates DGLinker to predict novel disease-associated genes, SAveRUNNER to identify drug repurposing candidates, and ATC Category Enrichment Analysis (ATCEA) to prioritise candidates by pharmacological class.\n\nWe benchmarked the pipeline across twelve diseases using DrugBank and MEDI2-HPS as validation resources. Utilising DGLinker-expanded disease-gene sets as input increased the number of predicted repurposed drugs, while overall discriminative performance remained stable across diseases (AUROC 0.71-0.77). Application of ATCEA consistently improved precision, F1-score, and specificity, while reducing recall, reflecting a conservative prioritisation strategy that contracts the candidate space while retaining pharmacologically coherent drug-disease candidates.\n\nWe further applied the pipeline to amyotrophic lateral sclerosis (ALS), a neurodegenerative disease with limited therapeutic options and performed a deeper literature-based validation of the results. Incorporation of DGLinker-predicted genes substantially increased the number of significant candidate drugs and uncovered enriched ATC categories not identified using known ALS genes alone, including antidepressants and antipsychotics. Moreover, several drugs with supporting evidence available in literature were identified only when DGLinker-predicted genes were used. Overall, 77 candidate drugs were prioritised within significantly enriched ATC categories, several of which are supported by previously published studies. To provide exploratory real-world support for these findings, we further evaluated candidate drugs in a longitudinal electronic health record (EHR) dataset of 2361 patients with ALS from Kings College Hospital. Although the number of evaluable drugs was limited due to sample size, the EHR analysis provided additional clinically relevant context for selected prioritised drugs and pharmacological classes.\n\nOur pipeline demonstrates potential to accelerate drug repurposing by integrating complementary computational approaches to each step of the process, providing an end-to-end framework that showed robust performance across benchmarking experiments and use cases.\n\nGraphical abstract\n\nO_FIG O_LINKSMALLFIG WIDTH=200 HEIGHT=80 SRC=\"FIGDIR/small/736387v1_ufig1.gif\" ALT=\"Figure 1\">\nView larger version (34K):\norg.highwire.dtl.DTLVardef@8f390borg.highwire.dtl.DTLVardef@ea14f4org.highwire.dtl.DTLVardef@5a1b1org.highwire.dtl.DTLVardef@1ba7df0_HPS_FORMAT_FIGEXP  M_FIG C_FIG",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
