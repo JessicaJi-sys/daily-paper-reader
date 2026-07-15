@@ -1,0 +1,52 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-15T21:28:18.326643+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "biorxiv-10-64898-2026-07-11-737987-v1",
+      "source": "biorxiv",
+      "title": "MolMAE: A Surface-Centric Multimodal Masked Autoencoder for Molecular Representation Learning",
+      "abstract": "Molecular representation learning has become a central component of modern computational drug discovery. Existing molecular foundation models mainly rely on SMILES strings, two-dimensional molecular graphs, or three-dimensional atomic coordinates. However, many molecular properties are ultimately governed by the molecular surface, where intermolecular recognition, solvation, electrostatic complementarity, and ligand-protein interactions occur. In this work, we propose MolMAE, a surface-guided multimodal masked autoencoder for molecular representation learning. MolMAE takes molecular surface point clouds, three-dimensional molecular graphs, and SMILES-derived fragment and functional-group tokens as complementary input modalities, and learns a unified multimodal molecular embedding through functional-group-aligned masked autoencoding. During pretraining, chemically corresponding local regions are jointly masked across surface, graph, fragment, and functional-group views, forcing the model to reconstruct missing geometric, physicochemical, structural, and semantic information from the remaining context. While molecular surface reconstruction serves as the primary pretraining objective, graph-, fragment-, and functional-group-level reconstruction tasks provide complementary supervision that encourages the model to capture molecular topology, bonding patterns, stereochemistry, local chemical environments, and substructure organization. In addition to reconstructing surface geometry, MolMAE reconstructs surface-associated physicochemical fields, including electrostatic potential and Fukui-related descriptors, enabling the model to learn chemically meaningful surface representations. Pretrained on approximately 261K lead-like bioactive molecules, MolMAE achieves strong performance on the ESOL benchmark under scaffold splitting and competitive performance across multiple molecular property prediction tasks. These results suggest that molecular surface-guided pretraining can complement conventional graph-, sequence-, and atom-coordinate-based molecular representations, especially for property prediction tasks influenced by exposed surface geometry and surface-associated physicochemical patterns.",
+      "authors": [
+        "Li, J."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-07-14T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.07.11.737987v1.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "molecular representation learning method applicable to DDI prediction",
+      "llm_evidence_cn": "分子表示学习方法，可迁移至药物相互作用预测任务",
+      "llm_evidence": "分子表示学习方法，可迁移至药物相互作用预测任务",
+      "canonical_evidence": "分子表示学习方法，可迁移至药物相互作用预测任务",
+      "llm_tldr_en": "MolMAE proposes a surface-centric multimodal masked autoencoder that integrates surface point clouds, 3D graphs, and SMILES tokens for improved molecular representations, benefiting downstream tasks like DDI.",
+      "llm_tldr_cn": "现有分子表示模型多基于SMILES、二维图或三维坐标，忽略了分子表面在识别和相互作用中的关键作用。MolMAE 提出以分子表面为中心的多模态掩码自编码器，联合表面点云、三维图结构和SMILES片段进行自监督学习。该方法在分子性质预测任务上取得优异效果，其学习到的分子表示可直接用于药物-药物相互作用预测，为冷启动DDI提供强大的特征基础。",
+      "llm_tldr": "现有分子表示模型多基于SMILES、二维图或三维坐标，忽略了分子表面在识别和相互作用中的关键作用。MolMAE 提出以分子表面为中心的多模态掩码自编码器，联合表面点云、三维图结构和SMILES片段进行自监督学习。该方法在分子性质预测任务上取得优异效果，其学习到的分子表示可直接用于药物-药物相互作用预测，为冷启动DDI提供强大的特征基础。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 请帮我查找ColdDDI：利用大型语言模型和生物医学知识图谱进行冷启动药物相互作用预测该方向有关的论文, especially work that connects or combines: Large Language Model + Drug-Drug Interaction Prediction; cold-start drug-drug interaction prediction; large language model for drug interaction; drug interaction prediction with knowledge graph; knowledge graph completion for drug discovery; cold start prediction in drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; Leveraging knowledge graphs for cold start drug interaction with large language models; Biomedical knowledge graph enhanced drug interaction prediction for new drugs.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

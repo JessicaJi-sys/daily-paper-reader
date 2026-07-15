@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-15",
+  "date": "2026-07-15",
+  "generated_at": "2026-07-15T21:29:27",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/15/biorxiv-10-64898-2026-07-11-737987-v1-molmae-a-surface-centric-multimodal-masked-autoencoder-for-molecular-representation-learning",
+      "section": "quick",
+      "title_en": "MolMAE: A Surface-Centric Multimodal Masked Autoencoder for Molecular Representation Learning",
+      "authors": "Li, J.",
+      "date": "2026-07-14",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.07.11.737987v1.full.pdf",
+      "score": "6.0",
+      "evidence": "分子表示学习方法，可迁移至药物相互作用预测任务",
+      "tldr": "分子性质由分子表面决定，现有模型多依赖SMILES、2D图或3D坐标。MolMAE提出以分子表面点云、3D图、SMILES片段和官能团为多模态输入，通过功能团对齐掩码自编码预训练，联合重建表面几何、物理场、图结构和语义信息。在26万分子上预训练后，ESOL等任务表现优异，表明表面引导预训练可补充传统表示。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Molecular representation learning has become a central component of modern computational drug discovery. Existing molecular foundation models mainly rely on SMILES strings, two-dimensional molecular graphs, or three-dimensional atomic coordinates. However, many molecular properties are ultimately governed by the molecular surface, where intermolecular recognition, solvation, electrostatic complementarity, and ligand-protein interactions occur. In this work, we propose MolMAE, a surface-guided multimodal masked autoencoder for molecular representation learning. MolMAE takes molecular surface point clouds, three-dimensional molecular graphs, and SMILES-derived fragment and functional-group tokens as complementary input modalities, and learns a unified multimodal molecular embedding through functional-group-aligned masked autoencoding. During pretraining, chemically corresponding local regions are jointly masked across surface, graph, fragment, and functional-group views, forcing the model to reconstruct missing geometric, physicochemical, structural, and semantic information from the remaining context. While molecular surface reconstruction serves as the primary pretraining objective, graph-, fragment-, and functional-group-level reconstruction tasks provide complementary supervision that encourages the model to capture molecular topology, bonding patterns, stereochemistry, local chemical environments, and substructure organization. In addition to reconstructing surface geometry, MolMAE reconstructs surface-associated physicochemical fields, including electrostatic potential and Fukui-related descriptors, enabling the model to learn chemically meaningful surface representations. Pretrained on approximately 261K lead-like bioactive molecules, MolMAE achieves strong performance on the ESOL benchmark under scaffold splitting and competitive performance across multiple molecular property prediction tasks. These results suggest that molecular surface-guided pretraining can complement conventional graph-, sequence-, and atom-coordinate-based molecular representations, especially for property prediction tasks influenced by exposed surface geometry and surface-associated physicochemical patterns.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
