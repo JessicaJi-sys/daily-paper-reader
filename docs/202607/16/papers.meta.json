@@ -1,0 +1,24 @@
+{
+  "label": "2026-07-16",
+  "date": "2026-07-16",
+  "generated_at": "2026-07-16T19:57:48",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202607/16/2607.10197v1-grate-temporal-extensions-for-inductive-kg-foundation-models-via-gated-rotary-attention",
+      "section": "quick",
+      "title_en": "GRATE: Temporal Extensions for Inductive KG Foundation Models via Gated Rotary Attention",
+      "authors": "Jiaxin Pan, Osama Mohammed, Daniel Hernández, Steffen Staab",
+      "date": "2026-07-11",
+      "pdf": "https://arxiv.org/pdf/2607.10197v1",
+      "score": "6.0",
+      "evidence": "归纳知识图谱基础模型的时间扩展",
+      "tldr": "现有时序知识图谱模型参数与特定实体、关系或时间戳绑定，无法跨数据集转移。提出GRATE，一种无额外可学习参数的实体侧消息函数，通过旋转边消息编码相对时间差并应用查询条件门控选择时间相关信号。在构建的跨数据集时序转移基准GDELTIndT和WIKIIndT上，单预训练GRATE检查点在多数设置中优于静态基础模型。该工作首次实现时序知识图谱基础模型的归纳转移，支持插值和外推场景。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Knowledge graph foundation models such as Ultra and Trix achieve strong inductive transfer by learning relation-graph representations that generalise to unseen entities and relations. Extending this transferability to temporal knowledge graphs (TKGs) remains challenging: existing temporal models tie their parameters to dataset-specific entities, relations, or timestamps and are not designed to transfer to TKGs with disjoint vocabularies. We propose GRATE (Gated Rotary Attention for Temporal Encoding), an entity-side message function that adds no learnable parameters and encodes time through relative time differences by rotating each edge message according to its time gap to the query and applying a query-conditioned gate to select temporally relevant signals. GRATE integrates into NBFNet-style KG foundation models while preserving structural transferability. Existing TKG benchmarks evaluate within shared train/test vocabularies and cannot directly test cross-dataset temporal transfer; we therefore construct GDELTIndT and WIKIIndT, inductive transfer benchmark suites with disjoint entities, relations, and timestamps spanning both interpolation and extrapolation. Across these benchmarks and held-out forecasting datasets, a single jointly pretrained GRATE checkpoint improves over the static base model in most settings.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

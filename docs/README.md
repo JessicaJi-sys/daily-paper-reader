@@ -6,28 +6,26 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-15
-- 运行时间：2026-07-15 21:29:18 UTC
+- 最新运行日期：2026-07-16
+- 运行时间：2026-07-16 19:57:44 UTC
 - 运行状态：成功
 - 本次总论文数：1
 - 精读区：0
 - 速读区：1
 
 ### 今日简报（AI）
-今日仅速读一篇论文，聚焦分子表面与多模态掩码自编码器结合的表示学习新方法。
-
-该方向创新性地将分子表面几何特征融入多模态编码，为提升分子属性预测准确性提供了新视角。
-
-建议关注其方法论细节，并思考如何将表面中心建模应用到药物分子筛选等实际任务中。
-- 详情：[/202607/15/README](/202607/15/README)
+今日聚焦一篇时序知识图谱论文，探讨通过门控旋转注意力扩展归纳式KG基础模型。  
+值得关注：时序扩展与门控旋转注意力的结合，为动态知识图谱推理提供新思路。  
+建议追踪该方向后续实验与开源代码，验证其在长序列任务中的通用性。
+- 详情：[/202607/16/README](/202607/16/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [MolMAE: A Surface-Centric Multimodal Masked Autoencoder for Molecular Representation Learning](/202607/15/biorxiv-10-64898-2026-07-11-737987-v1-molmae-a-surface-centric-multimodal-masked-autoencoder-for-molecular-representation-learning)  
+1. [GRATE: Temporal Extensions for Inductive KG Foundation Models via Gated Rotary Attention](/202607/16/2607.10197v1-grate-temporal-extensions-for-inductive-kg-foundation-models-via-gated-rotary-attention)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：分子表示学习方法，可迁移至药物相互作用预测任务
+   evidence：归纳知识图谱基础模型的时间扩展
 
 
 <div class="dpr-home-promo-card">

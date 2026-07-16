@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-07-16 <!--dpr-date:20260716-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/16/2607.10197v1-grate-temporal-extensions-for-inductive-kg-foundation-models-via-gated-rotary-attention" data-sidebar-item="{&quot;title&quot;: &quot;GRATE: Temporal Extensions for Inductive KG Foundation Models via Gated Rotary Attention&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.10197v1-grate-temporal-extensions-for-inductive-kg-foundation-models-via-gated-rotary-attention&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;归纳知识图谱基础模型的时间扩展&quot;}">GRATE: Temporal Extensions for Inductive KG Foundation Models via Gated Rotary Attention</a>
   * 2026-07-15 <!--dpr-date:20260715-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/15/biorxiv-10-64898-2026-07-11-737987-v1-molmae-a-surface-centric-multimodal-masked-autoencoder-for-molecular-representation-learning" data-sidebar-item="{&quot;title&quot;: &quot;MolMAE: A Surface-Centric Multimodal Masked Autoencoder for Molecular Representation Learning&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/biorxiv-10-64898-2026-07-11-737987-v1-molmae-a-surface-centric-multimodal-masked-autoencoder-for-molecular-representation-learning&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;分子表示学习方法，可迁移至药物相互作用预测任务&quot;}">MolMAE: A Surface-Centric Multimodal Masked Autoencoder for Molecular Representation Learning</a>
