@@ -6,26 +6,24 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-16
-- 运行时间：2026-07-16 19:57:44 UTC
+- 最新运行日期：2026-07-17
+- 运行时间：2026-07-17 20:30:04 UTC
 - 运行状态：成功
 - 本次总论文数：1
 - 精读区：0
 - 速读区：1
 
 ### 今日简报（AI）
-今日聚焦一篇时序知识图谱论文，探讨通过门控旋转注意力扩展归纳式KG基础模型。  
-值得关注：时序扩展与门控旋转注意力的结合，为动态知识图谱推理提供新思路。  
-建议追踪该方向后续实验与开源代码，验证其在长序列任务中的通用性。
-- 详情：[/202607/16/README](/202607/16/README)
+今日速读1篇论文，聚焦药物适应症预测中的单细胞增强知识图谱方法。值得关注的方向是利用单细胞数据提升图神经网络（GNN）在药物重定位中的性能，结论表明该模型优于传统方法。建议进一步阅读全文，了解单细胞特征集成策略及其在真实数据集上的评估结果。
+- 详情：[/202607/17/README](/202607/17/README)
 
 ### 精读区论文标签
 - 本次无精读推荐。
 
 ### 速读区论文标签
-1. [GRATE: Temporal Extensions for Inductive KG Foundation Models via Gated Rotary Attention](/202607/16/2607.10197v1-grate-temporal-extensions-for-inductive-kg-foundation-models-via-gated-rotary-attention)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：归纳知识图谱基础模型的时间扩展
+1. [CellAwareGNN: Single-Cell Enhanced Knowledge Graph Foundation Model for Drug Indication Prediction](/202607/17/biorxiv-10-64898-2026-02-20-707076-v2-cellawaregnn-single-cell-enhanced-knowledge-graph-foundation-model-for-drug-indication-prediction)  
+   标签：评分：7.0/10、query:cold-ddi
+   evidence：使用图基础模型进行知识图谱补全以促进药物发现
 
 
 <div class="dpr-home-promo-card">

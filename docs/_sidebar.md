@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-07-17 <!--dpr-date:20260717-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/17/biorxiv-10-64898-2026-02-20-707076-v2-cellawaregnn-single-cell-enhanced-knowledge-graph-foundation-model-for-drug-indication-prediction" data-sidebar-item="{&quot;title&quot;: &quot;CellAwareGNN: Single-Cell Enhanced Knowledge Graph Foundation Model for Drug Indication Prediction&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/biorxiv-10-64898-2026-02-20-707076-v2-cellawaregnn-single-cell-enhanced-knowledge-graph-foundation-model-for-drug-indication-prediction&quot;, &quot;score&quot;: &quot;7.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;使用图基础模型进行知识图谱补全以促进药物发现&quot;}">CellAwareGNN: Single-Cell Enhanced Knowledge Graph Foundation Model for Drug Indication Prediction</a>
   * 2026-07-16 <!--dpr-date:20260716-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202607/16/2607.10197v1-grate-temporal-extensions-for-inductive-kg-foundation-models-via-gated-rotary-attention" data-sidebar-item="{&quot;title&quot;: &quot;GRATE: Temporal Extensions for Inductive KG Foundation Models via Gated Rotary Attention&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2607.10197v1-grate-temporal-extensions-for-inductive-kg-foundation-models-via-gated-rotary-attention&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;归纳知识图谱基础模型的时间扩展&quot;}">GRATE: Temporal Extensions for Inductive KG Foundation Models via Gated Rotary Attention</a>
