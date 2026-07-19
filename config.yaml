@@ -89,6 +89,113 @@ subscriptions:
           source: generated
           note: ''
       updated_at: '2026-07-19T08:38:01.032Z'
+    - tag: Agent-ddi
+      description: >-
+        请帮我查找将 AI Agent / 多智能体系统应用于药物-药物相互作用预测（Drug-Drug Interaction Prediction, DDI）及相关生物医学推理任务的论文，重点关注以下方向：1.
+        基于大型语言模型智能体（LLM Agent）的 DDI prediction、drug reasoning 和 biomedical reasoning；2.
+        结合生物医学知识图谱、药物文本知识和分子结构信息的智能体框架；3. 面向新药或严格冷启动场景的知识迁移、证据检索、工具调用和动态知识组织方法；4.
+        Agent-based、multi-agent、retrieval-augmented、tool-using agent、knowledge orchestration 等方法在
+        DDI、药物推荐、药物重定位和药物安全分析中的应用；5. 智能体根据药物机制动态选择知识来源、检索相似药物、调用外部工具并生成可解释预测的相关研究。请优先返回近3年的高质量论文，并重点标注与 strict
+        cold-start DDI prediction、new drug interaction prediction、agentic knowledge transfer 最接近的工作。同时请区分：① 普通 LLM-DDI
+        方法；② 多智能体 DDI 推理方法；③ 面向冷启动新药的 Agent 增强预测方法。
+      enabled: true
+      paper_sources:
+        - arxiv
+        - biorxiv
+      keywords:
+        - keyword: large language model agent
+          keyword_cn: 大型语言模型智能体
+          query: LLM agent for drug interaction prediction
+        - keyword: multi-agent system
+          keyword_cn: 多智能体系统
+          query: multi-agent system for drug-drug interaction prediction
+        - keyword: biomedical knowledge graph
+          keyword_cn: 生物医学知识图谱
+          query: biomedical knowledge graph for drug reasoning
+        - keyword: cold start prediction
+          keyword_cn: 冷启动预测
+          query: cold start drug interaction prediction with agent
+        - keyword: drug reasoning
+          keyword_cn: 药物推理
+          query: drug reasoning with multi-agent
+        - keyword: knowledge orchestration
+          keyword_cn: 知识编排
+          query: knowledge orchestration in multi-agent DDI
+      intent_queries:
+        - query: >-
+            Find research on agentic knowledge transfer and evidence retrieval for predicting interactions involving
+            unseen drugs.
+          query_cn: 查找利用智能体知识迁移和证据检索预测未知新药相互作用的相关研究。
+          enabled: true
+          source: manual
+          note: ''
+        - query: Find papers on LLM agents for drug drug interaction prediction that integrate biomedical knowledge graphs.
+          query_cn: 查找将生物医学知识图谱集成到大型语言模型智能体中，用于药物 药物相互作用预测的论文。
+          enabled: true
+          source: manual
+          note: ''
+        - query: Search for multi agent systems that perform drug reasoning and cold start interaction prediction
+          query_cn: 搜索执行药物推理和冷启动相互作用预测的多智能体系统
+          enabled: true
+          source: manual
+          note: ''
+        - query: >-
+            Retrieve studies on retrieval augmented generation and tool using agents for drug discovery and safety
+            analysis
+          query_cn: 检索关于检索增强生成和使用工具的智能体在药物发现和安全分析中的研究
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-07-19T08:45:27.937Z'
+    - tag: ddi-agent
+      description: AI Agent/多智能体在药物-药物相互作用预测中的应用，包括LLM Agent、知识图谱、冷启动、工具调用等方法
+      enabled: true
+      paper_sources:
+        - arxiv
+        - biorxiv
+      keywords:
+        - keyword: drug drug interaction prediction
+          keyword_cn: 药物-药物相互作用预测
+          query: drug drug interaction prediction using large language model agents
+        - keyword: multi agent system
+          keyword_cn: 多智能体系统
+          query: multi agent system for drug interaction reasoning
+        - keyword: cold start prediction
+          keyword_cn: 冷启动预测
+          query: cold start drug interaction prediction with knowledge transfer
+        - keyword: knowledge retrieval
+          keyword_cn: 知识检索
+          query: knowledge retrieval for drug drug interaction prediction
+        - keyword: tool using agent
+          keyword_cn: 工具使用智能体
+          query: tool using agent for biomedical reasoning
+        - keyword: drug repositioning
+          keyword_cn: 药物重定位
+          query: drug repositioning using multi agent frameworks
+      intent_queries:
+        - query: How can large language model agents predict drug drug interactions in cold start scenarios?
+          query_cn: 大型语言模型智能体如何在冷启动场景下预测药物 药物相互作用？
+          enabled: true
+          source: manual
+          note: ''
+        - query: What multi agent methods combine knowledge graph and molecular data for drug safety analysis?
+          query_cn: 哪些多智能体方法结合知识图谱和分子数据进行药物安全分析？
+          enabled: true
+          source: manual
+          note: ''
+        - query: How do agent based frameworks use knowledge retrieval and tool use for drug interaction reasoning?
+          query_cn: 基于智能体的框架如何利用知识检索和工具调用进行药物相互作用推理？
+          enabled: true
+          source: manual
+          note: ''
+        - query: >-
+            What is the latest progress on strict cold start drug interaction prediction using agentic knowledge
+            transfer?
+          query_cn: 使用智能体知识迁移的严格冷启动药物相互作用预测有何最新进展？
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-07-19T08:46:40.195Z'
 source_backends:
   arxiv:
     papers_table: arxiv_papers
