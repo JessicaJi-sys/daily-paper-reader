@@ -27,6 +27,15 @@ O_FIG O_LINKSMALLFIG WIDTH=200 HEIGHT=83 SRC="FIGDIR/small/723319v3_ufig1.gif" A
 查看更大版本（19K）：
 org.highwire.dtl.DTLVardef@3d1482org.highwire.dtl.DTLVardef@d9531org.highwire.dtl.DTLVardef@1bdd04dorg.highwire.dtl.DTLVardef@b68190_HPS_FORMAT_FIGEXP  M_FIG C_FIG
 
+## 速览
+**TLDR**：LLM智能体在科学推理中可能产生流畅但不可靠的叙述。本文提出MechAInistic，一种LLM引导的多智能体系统，通过Reviewer智能体监督Architect智能体，确保推理基于COBRApy约束性代谢模型的可执行分析。系统在类风湿关节炎与多发性硬化症的免疫细胞治疗假设生成任务中，识别出线粒体代谢重编程及多个靶点候选药物。相比通用LLM系统，MechAInistic提供了从问题到模型结果的完整可审计路径，提升了假设生成的可信度。 \
+**Motivation**：现有LLM智能体在科学推理中输出可能偏离可验证计算证据，限制了其在生物医学假设生成中的可靠性。 \
+**Method**：提出MechAInistic多智能体系统，包含Reviewer和Architect智能体，所有推理基于COBRApy约束性代谢模型分析，实现可审计推理。 \
+**Result**：在类风湿关节炎B细胞模型上识别线粒体代谢重编程并提名Devimistat；在多发性硬化症Th17模型上发现IDH靶点并建议ivosidenib。 \
+**Conclusion**：MechAInistic确保从自然语言问题到模型证据的完整可审计推理链，避免纯文本虚构，显著提升了科学推理的可靠性。
+
+---
+
 ## Abstract
 LLM agents are increasingly used for scientific reasoning, but their fluent-sounding outputs can diverge from verifiable computational evidence, limiting their reliability for biomedical hypothesis generation. We developed MechAInistic, a multi-agent system in which an independently configured Reviewer agent supervises a planning Architect agent at each stage of the workflow, with all reasoning grounded in executable mechanistic-model analyses rather than language-model text alone. The Reviewer scores plans and intermediate results against pre-specified rubrics and triggers re-planning or re-execution when scores fall below threshold, producing an auditable chain from a natural-language question to model-derived evidence and cited literature. We instantiate the system over paired constraint-based metabolic models using COBRApy, supporting pathway comparison, perturbation analysis, drug-target exploration, and literature interpretation across healthy and disease states. We evaluated MechAInistic on two immune-cell therapeutic hypothesis-generation tasks. For rheumatoid arthritis versus healthy naive B-cell models, it identified mitochondrial metabolic rewiring and nominated Devimistat/CPI-613 as an investigational OGDH-centered hypothesis. For multiple sclerosis CD4+ Th17 versus healthy models, it identified NADP-dependent isocitrate dehydrogenase as a candidate target and proposed ivosidenib, with vorasidenib as a mechanistically complementary alternative. Comparator analyses against general-purpose LLM systems showed that plausible biological narratives can lack auditable model grounding, whereas MechAInistic preserves the computational reasoning path from prompt to result.
 

@@ -1,18 +1,17 @@
 {
   "mode": "standard",
-  "generated_at": "2026-07-19T08:45:06.617372+00:00",
+  "generated_at": "2026-07-19T08:55:39.119025+00:00",
   "stats": {
     "mode": "standard",
     "tag_count": 1,
-    "deep_divecandidates": 0,
+    "deep_divecandidates": 2,
     "deep_cap": 6,
-    "deep_selected": 0,
-    "quick_candidates": 6,
+    "deep_selected": 2,
+    "quick_candidates": 7,
     "quick_skim_target": 11,
-    "quick_selected": 6
+    "quick_selected": 7
   },
-  "deep_dive": [],
-  "quick_skim": [
+  "deep_dive": [
     {
       "id": "biorxiv-10-64898-2026-01-16-696667-v3",
       "source": "biorxiv",
@@ -42,60 +41,63 @@
         "keyword:cold-DDI",
         "query:cold-DDI"
       ],
-      "llm_score": 7.0,
-      "llm_evidence_en": "AI agent for therapeutic reasoning across biological contexts",
-      "llm_evidence_cn": "AI智能体进行跨生物背景的治疗推理",
-      "llm_evidence": "AI智能体进行跨生物背景的治疗推理",
-      "canonical_evidence": "AI智能体进行跨生物背景的治疗推理",
-      "llm_tldr_en": "Medea is an AI agent that performs therapeutic reasoning across biological contexts, enabling hypothesis transfer while preserving context, applicable to drug-drug interaction reasoning.",
-      "llm_tldr_cn": "针对现有AI系统在长时间工作流中难以保持生物上下文和验证中间步骤的问题，本文提出Medea，一个用于跨生物背景治疗推理的AI智能体。Medea能够执行多步骤推理，并在不同疾病和生物环境中测试证据的可迁移性。该方法为冷启动药物相互作用推理提供了可迁移的框架，尽管未直接应用于DDI预测，但其上下文保持和证据整合能力极具参考价值。进一步的实验表明，Medea可以推广到多种治疗场景，未来可结合知识图谱增强药物推理能力。",
-      "llm_tldr": "针对现有AI系统在长时间工作流中难以保持生物上下文和验证中间步骤的问题，本文提出Medea，一个用于跨生物背景治疗推理的AI智能体。Medea能够执行多步骤推理，并在不同疾病和生物环境中测试证据的可迁移性。该方法为冷启动药物相互作用推理提供了可迁移的框架，尽管未直接应用于DDI预测，但其上下文保持和证据整合能力极具参考价值。进一步的实验表明，Medea可以推广到多种治疗场景，未来可结合知识图谱增强药物推理能力。",
+      "llm_score": 8.0,
+      "llm_evidence_en": "AI agent for therapeutic reasoning across biological contexts enabling cross-domain knowledge transfer",
+      "llm_evidence_cn": "跨生物上下文的治疗推理智能体支持跨域知识迁移",
+      "llm_evidence": "跨生物上下文的治疗推理智能体支持跨域知识迁移",
+      "canonical_evidence": "跨生物上下文的治疗推理智能体支持跨域知识迁移",
+      "llm_tldr_en": "Medea is an AI agent that reasons over therapeutic hypotheses across biological contexts, handling context preservation, evidence transfer, and conflict resolution for drug repurposing-like tasks.",
+      "llm_tldr_cn": "治疗假设跨疾病转移需考虑生物上下文差异。Medea是一个AI智能体，可在执行多步治疗推理时保持上下文、验证中间步骤并协调冲突证据。它为跨域知识迁移和药物重定位提供了可复用的推理框架，直接对应冷启动DDI预测中的知识迁移需求。",
+      "llm_tldr": "治疗假设跨疾病转移需考虑生物上下文差异。Medea是一个AI智能体，可在执行多步治疗推理时保持上下文、验证中间步骤并协调冲突证据。它为跨域知识迁移和药物重定位提供了可复用的推理框架，直接对应冷启动DDI预测中的知识迁移需求。",
       "llm_tags": [
         "query:cold-ddi"
       ],
       "matched_query_tag": "query:cold-ddi",
-      "matched_query_text": "biomedical reasoning for drug-drug interaction",
-      "matched_requirement_id": "req-6",
-      "selection_source": "fresh_fetch",
-      "quick_tier": "7"
+      "matched_query_text": "cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
     },
     {
-      "id": "2607.11465v1",
-      "source": "arxiv",
-      "title": "Score-Only Distillation for Compact Dense Retrieval",
-      "abstract": "Large embedding models improve retrieval quality, but serving large encoders online is expensive. We study whether a compact retriever can learn teacher ranking behavior from score vectors without access to teacher hidden states. The student trains on rows built from ground-truth positives and negative candidates produced by our data generation pipeline; we evaluate student-teacher hard-negative mining separately as an extension. We use a row-centered score-vector objective, a memory-efficient implementation of uniform all-pairs PairMSE loss. On a fixed eight-task evaluation panel, our distillation protocol recovers up to 50\\% of the base-to-teacher gap. The distilled 0.6B student is 4.7$\\times$ faster for query encoding and 9.7$\\times$ faster for document encoding than sequential online teacher fusion. External-transfer performance after distillation remains mixed, so our evidence supports compression of teacher rankings under matched retrieval protocols.",
+      "id": "biorxiv-10-64898-2026-07-08-737358-v1",
+      "source": "biorxiv",
+      "title": "EcoXAI: Autonomous Agentic Ecosystem for Explainable Artificial Intelligence and Biomedical Discovery",
+      "abstract": "MotivationAs biomedical datasets and knowledge graphs continue to grow in size, complexity, and heterogeneity, navigating and extracting actionable insights from them presents a major bottleneck for researchers. There is a clear need for autonomous analytical solutions that can utilize recent advancements in agentic AI such as agent harnessing and loop engineering without introducing hallucination or workflow fragmentation. Researchers, regardless of technical expertise, need tools that streamline complex data analysis and deliver meaningful, actionable insights grounded in both data and established biomedical knowledge. EcoXAI addresses this by introducing a modular, customizable, containerized multi-agent system that structures analysis into explicit pipeline execution stages, lowering the computational barrier for clinical and translational researchers.\n\nResultEcoXAI replaces monolithic AI text interfaces with an autonomous execution-driven framework with specialized bioinformatics agents for delivering proactive, data-driven insights grounded in established biological knowledge. Unlike purely LLM-driven or less integrated AI solutions prone to hallucinations or biologically implausible outcomes, EcoXAIs multi-agent framework, which leverages modern agentic management and explicit knowledge graph integration, provides greater transparency and verifiability in its reasoning. In our use case in drug repurposing for Alzheimers Disease, EcoXAI evaluated 103 drug candidates and identified 79 novel candidates whose predictive models exceeded a randomized baseline, including the CCR5 antagonist Maraviroc, whose generated hypothesis was subsequently supported by the literature. These results demonstrate the potential of knowledge graph-grounded AI agents to accelerate hypothesis-driven biomedical research.\n\nAvailability and implementationEcoXAI is available on GitHub at: https://github.com/EpistasisLab/EcoXAI.\n\nContactjason.moore@csmc.edu",
       "authors": [
-        "Kirill Dubovikov",
-        "Martin Takac",
-        "Salem Lahlou"
+        "Matsumoto, N.",
+        "Choi, H.",
+        "Freda, P. J.",
+        "Hernandez, M. E.",
+        "Wang, Z. P.",
+        "Moore, J. H."
       ],
-      "primary_category": "cs.IR",
+      "primary_category": "bioinformatics",
       "categories": [
-        "cs.IR"
+        "bioinformatics"
       ],
-      "published": "2026-07-13T12:18:13+00:00",
-      "link": "https://arxiv.org/pdf/2607.11465v1",
+      "published": "2026-07-13T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.07.08.737358v1.full.pdf",
       "tags": [
         "keyword:cold-DDI",
         "query:cold-DDI"
       ],
-      "llm_score": 6.0,
-      "llm_evidence_en": "Score-only teacher-student distillation for dense retrieval",
-      "llm_evidence_cn": "仅得分教师-学生蒸馏用于密集检索",
-      "llm_evidence": "仅得分教师-学生蒸馏用于密集检索",
-      "canonical_evidence": "仅得分教师-学生蒸馏用于密集检索",
-      "llm_tldr_en": "Proposes score-only distillation for compact dense retrieval, a teacher-student method that can be adapted for DDI prediction models.",
-      "llm_tldr_cn": "针对大型嵌入模型服务成本高的问题，本文研究紧凑检索器能否仅从教师得分向量学习。提出基于行中心得分向量目标的蒸馏协议，无需访问教师隐状态。在8个任务上，学生模型恢复了基线与教师之间差距的50%，编码速度提升4.7倍。该教师-学生蒸馏方法可直接用于压缩药物相互作用预测模型，实现冷启动场景下的知识迁移。",
-      "llm_tldr": "针对大型嵌入模型服务成本高的问题，本文研究紧凑检索器能否仅从教师得分向量学习。提出基于行中心得分向量目标的蒸馏协议，无需访问教师隐状态。在8个任务上，学生模型恢复了基线与教师之间差距的50%，编码速度提升4.7倍。该教师-学生蒸馏方法可直接用于压缩药物相互作用预测模型，实现冷启动场景下的知识迁移。",
+      "llm_score": 8.0,
+      "llm_evidence_en": "modular multi-agent system for biomedical discovery with knowledge graph integration",
+      "llm_evidence_cn": "模块化多智能体系统用于生物医学发现并融合知识图谱",
+      "llm_evidence": "模块化多智能体系统用于生物医学发现并融合知识图谱",
+      "canonical_evidence": "模块化多智能体系统用于生物医学发现并融合知识图谱",
+      "llm_tldr_en": "EcoXAI introduces a containerized multi-agent system that integrates LLM agents with biomedical knowledge graphs, enabling autonomous analysis and explainability for complex biomedical data.",
+      "llm_tldr_cn": "生物医学数据集日益复杂，现有分析工具缺乏自动化与可解释性。EcoXAI提出模块化、容器化的多智能体系统，利用AI智能体与生物医学知识图谱协同工作，实现自主数据分析与可解释洞察。该架构可应用于DDI预测中的多智能体推理与知识检索，为冷启动DDI预测提供通用框架。",
+      "llm_tldr": "生物医学数据集日益复杂，现有分析工具缺乏自动化与可解释性。EcoXAI提出模块化、容器化的多智能体系统，利用AI智能体与生物医学知识图谱协同工作，实现自主数据分析与可解释洞察。该架构可应用于DDI预测中的多智能体推理与知识检索，为冷启动DDI预测提供通用框架。",
       "llm_tags": [
         "query:cold-ddi"
       ],
       "matched_query_tag": "query:cold-ddi",
-      "matched_query_text": "teacher-student knowledge distillation for drug-drug interaction",
-      "matched_requirement_id": "req-5",
-      "selection_source": "fresh_fetch",
-      "quick_tier": "6"
-    },
+      "matched_query_text": "multi-agent systems for drug-drug interaction prediction",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
     {
       "id": "biorxiv-10-64898-2026-05-11-723319-v3",
       "source": "biorxiv",
@@ -121,99 +123,59 @@
         "query:cold-DDI"
       ],
       "llm_score": 7.0,
-      "llm_evidence_en": "LLM-guided multi-agent system for biomedical reasoning on metabolic models; transferable to DDI reasoning",
-      "llm_evidence_cn": "LLM引导的多智能体系统用于代谢模型生物医学推理;可迁移至DDI推理",
-      "llm_evidence": "LLM引导的多智能体系统用于代谢模型生物医学推理;可迁移至DDI推理",
-      "canonical_evidence": "LLM引导的多智能体系统用于代谢模型生物医学推理;可迁移至DDI推理",
-      "llm_tldr_en": "MechAInistic uses a multi-agent architecture with LLM-guided planning and reviewer agent for auditable metabolic model reasoning.",
-      "llm_tldr_cn": "本文提出MechAInistic，一个LLM引导的多智能体系统，通过Architect和Reviewer智能体协作，对基因组规模代谢模型进行推理。Reviewer智能体根据预定义评分标准验证规划并触发重规划，确保推理结果可审计且基于可执行模型分析。该方法为生物医学推理提供了可靠的多智能体框架，可迁移至药物-药物相互作用预测中的复杂推理任务。",
-      "llm_tldr": "本文提出MechAInistic，一个LLM引导的多智能体系统，通过Architect和Reviewer智能体协作，对基因组规模代谢模型进行推理。Reviewer智能体根据预定义评分标准验证规划并触发重规划，确保推理结果可审计且基于可执行模型分析。该方法为生物医学推理提供了可靠的多智能体框架，可迁移至药物-药物相互作用预测中的复杂推理任务。",
+      "llm_evidence_en": "LLM-guided multi-agent system for scientific reasoning grounded in mechanistic models",
+      "llm_evidence_cn": "LLM引导的多智能体系统用于科学推理并基于机制模型",
+      "llm_evidence": "LLM引导的多智能体系统用于科学推理并基于机制模型",
+      "canonical_evidence": "LLM引导的多智能体系统用于科学推理并基于机制模型",
+      "llm_tldr_en": "MechAInistic uses a reviewer-supervised multi-agent system to ground LLM reasoning in executable metabolic model analyses, enabling reliable biomedical hypothesis generation with audit trails.",
+      "llm_tldr_cn": "LLM智能体在科学推理中易产生不可靠输出。MechAInistic构建多智能体系统，其中审查者智能体监督规划者智能体，所有推理均基于可执行的代谢模型分析而非纯文本。系统从自然语言问题到模型推导结果生成可审计链。该框架适用于DDI预测中基于知识的推理与证据整合。",
+      "llm_tldr": "LLM智能体在科学推理中易产生不可靠输出。MechAInistic构建多智能体系统，其中审查者智能体监督规划者智能体，所有推理均基于可执行的代谢模型分析而非纯文本。系统从自然语言问题到模型推导结果生成可审计链。该框架适用于DDI预测中基于知识的推理与证据整合。",
       "llm_tags": [
-        "query:cold-ddi"
+        "query:cold-ddi:composite"
       ],
-      "matched_query_tag": "query:cold-ddi",
-      "matched_query_text": "multi-agent systems for drug-drug interaction prediction",
-      "matched_requirement_id": "req-4",
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 与严格冷启动药物-药物相互作用预测（strict cold-start DDI prediction）相关的论文，重点关注以下方向：利用大型语言模型（LLM）增强药物语义表示或医学知识表示；利用生物医学知识图谱（biomedical knowledge graph）进行药物相互作用预测；面向新药/冷启动药物的知识迁移、跨域对齐、教师-学生蒸馏方法；将AI Agent / 多智能体（multi-agent）用于药物相互作用预测、科学推理、知识检索或证据整合的相关工作；与上述方向相关的DDI、drug recommendation、drug repurposing、biomedical reasoning论文。请优先返回近3年高质量论文，并尽量区分：普通DDI预测、冷启动DDI预测、LLM/Agent增强DDI预测三类工作。, especially work that connects or combines: cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移; strict cold-start drug-drug interaction prediction; biomedical knowledge graph for drug-drug interaction prediction; multi-agent systems for drug-drug interaction prediction; teacher-student knowledge distillation for drug-drug interaction; biomedical reasoning for drug-drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; large language model enhanced semantic representation for strict cold start drug drug interaction prediction; biomedical knowledge graph and multi agent reasoning for drug drug interaction in cold start setting; knowledge transfer and domain adaptation for new drug prediction using teacher student distillation.",
+      "matched_requirement_id": "req-composite-cold-ddi",
       "selection_source": "fresh_fetch",
       "quick_tier": "7"
     },
     {
-      "id": "biorxiv-10-64898-2026-01-16-696667-v2",
-      "source": "biorxiv",
-      "title": "Medea: An AI agent for therapeutic reasoning across biological contexts",
-      "abstract": "Therapeutic hypotheses can transfer across diseases but their relevance depends on biological context. The same target, perturbation, or treatment can produce different effects across cell types, disease states, genetic backgrounds, and patients. Therapeutic reasoning therefore requires methods that preserve context, test when evidence supports transfer, and identify where context-specific effects limit it. Although AI agents can perform therapeutic analyses, existing systems often fail to preserve biological context over long workflows, verify intermediate computational steps, or reconcile conflicting evidence across datasets and literature. Here, we present Medea, an AI agent for therapeutic reasoning across biological contexts. Medea executes multi-step analyses using biological tools, machine learning models, and literature retrieval while enforcing verification during planning, execution, and evidence synthesis. We evaluate Medea across 5,673 open-ended analyses in three domains: cell type specific therapeutic target nomination in five diseases and 29 cell types, synthetic lethality prediction in 7 cancer cell lines, and immunotherapy response prediction from multimodal patient profiles. Using a previously unpublished epistatic miniarray profiling screen performed under two DNA-damaging treatments, we evaluate Medea on predicting synthetic lethality among 238,046 gene-gene pairs in yeast. Medea predicts these experimentally measured synthetic lethal interactions, indicating that its performance reflects biological relevance rather than information leakage from benchmark datasets. Across these evaluations, Medea improves performance over large language models, reasoning models, biomedical agents, and specialized machine learning models while maintaining low failure rates and calibrated abstention. These results show that verifiable AI agents can perform therapeutic analyses across biological contexts.",
+      "id": "2607.10522v1",
+      "source": "arxiv",
+      "title": "Towards Autonomous and Auditable Medical Imaging Model Development",
+      "abstract": "Large language model (LLM) agents are beginning to automate machine learning engineering (MLE) by coupling planning, code execution, debugging, and empirical feedback. Translating this capability to medical imaging remains difficult because each task imposes modality-specific experimentation and strict requirements for validation protocols and prediction artifacts. Here we introduce AMID, an autonomous multi-agent framework for medical imaging model development. AMID first proposes Data-Conditioned Method Planning, which refines coarse task-level search spaces into executable, parallelizable method lanes grounded in task-specific data analysis and runnable medical-imaging resources. It then develops Verification-Guided Two-Stage Optimization, moving from broad early exploration of diverse method lanes to selective exploitation of promising candidates while enforcing strict verification of validation protocols, metric computation, and prediction artifacts throughout the optimization. Across 20 medical imaging challenge tasks spanning diverse modalities and prediction types, AMID outperformed evaluated general-purpose MLE systems and, on several tasks, approached or matched strong human-designed challenge solutions. These results suggest that AMID can turn task-specific medical imaging model development from bespoke manual engineering into an agentic workflow for producing high-performing and auditable model artifacts across heterogeneous tasks.",
       "authors": [
-        "Sui, P.",
-        "Li, M.",
-        "Munson, B. P.",
-        "Gao, S.",
-        "Shen, W.",
-        "Giunchiglia, V.",
-        "Shen, A.",
-        "Huang, Y.",
-        "Kong, Z.",
-        "Licon, K.",
-        "Ideker, T.",
-        "Zitnik, M."
+        "Shengyuan Liu",
+        "Jia-Xuan Jiang",
+        "Boyun Zheng",
+        "Cheng Wang",
+        "Zipei Wang",
+        "Wentao Pan",
+        "Hongtao Wu",
+        "Houwen Peng",
+        "Yu Gu",
+        "Lichao Sun",
+        "Yixuan Yuan"
       ],
-      "primary_category": "bioinformatics",
+      "primary_category": "cs.CV",
       "categories": [
-        "bioinformatics"
+        "cs.CV",
+        "cs.AI"
       ],
-      "published": "2026-07-16T00:00:00+00:00",
-      "link": "https://www.biorxiv.org/content/10.64898/2026.01.16.696667v2.full.pdf",
+      "published": "2026-07-12T00:54:06+00:00",
+      "link": "https://arxiv.org/pdf/2607.10522v1",
       "tags": [
         "keyword:cold-DDI",
         "query:cold-DDI"
       ],
       "llm_score": 6.0,
-      "llm_evidence_en": "AI agent for therapeutic reasoning across contexts",
-      "llm_evidence_cn": "跨背景治疗推理的AI智能体",
-      "llm_evidence": "跨背景治疗推理的AI智能体",
-      "canonical_evidence": "跨背景治疗推理的AI智能体",
-      "llm_tldr_en": "Medea is an AI agent that performs multi-step therapeutic reasoning across biological contexts, preserving context and reconciling conflicting evidence. It supports knowledge transfer across diseases.",
-      "llm_tldr_cn": "该论文提出Medea，一个用于跨生物背景治疗推理的AI智能体。Medea能在长工作流中保留生物上下文，验证中间步骤，并调和不同数据集和文献中的冲突证据。它支持治疗假设在不同疾病间的迁移，为冷启动药物预测中的跨域知识迁移提供了可借鉴的推理框架。",
-      "llm_tldr": "该论文提出Medea，一个用于跨生物背景治疗推理的AI智能体。Medea能在长工作流中保留生物上下文，验证中间步骤，并调和不同数据集和文献中的冲突证据。它支持治疗假设在不同疾病间的迁移，为冷启动药物预测中的跨域知识迁移提供了可借鉴的推理框架。",
-      "llm_tags": [
-        "query:cold-ddi"
-      ],
-      "matched_query_tag": "query:cold-ddi",
-      "matched_query_text": "cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移",
-      "matched_requirement_id": "req-1",
-      "selection_source": "fresh_fetch",
-      "quick_tier": "6"
-    },
-    {
-      "id": "biorxiv-10-64898-2026-07-08-737358-v1",
-      "source": "biorxiv",
-      "title": "EcoXAI: Autonomous Agentic Ecosystem for Explainable Artificial Intelligence and Biomedical Discovery",
-      "abstract": "MotivationAs biomedical datasets and knowledge graphs continue to grow in size, complexity, and heterogeneity, navigating and extracting actionable insights from them presents a major bottleneck for researchers. There is a clear need for autonomous analytical solutions that can utilize recent advancements in agentic AI such as agent harnessing and loop engineering without introducing hallucination or workflow fragmentation. Researchers, regardless of technical expertise, need tools that streamline complex data analysis and deliver meaningful, actionable insights grounded in both data and established biomedical knowledge. EcoXAI addresses this by introducing a modular, customizable, containerized multi-agent system that structures analysis into explicit pipeline execution stages, lowering the computational barrier for clinical and translational researchers.\n\nResultEcoXAI replaces monolithic AI text interfaces with an autonomous execution-driven framework with specialized bioinformatics agents for delivering proactive, data-driven insights grounded in established biological knowledge. Unlike purely LLM-driven or less integrated AI solutions prone to hallucinations or biologically implausible outcomes, EcoXAIs multi-agent framework, which leverages modern agentic management and explicit knowledge graph integration, provides greater transparency and verifiability in its reasoning. In our use case in drug repurposing for Alzheimers Disease, EcoXAI evaluated 103 drug candidates and identified 79 novel candidates whose predictive models exceeded a randomized baseline, including the CCR5 antagonist Maraviroc, whose generated hypothesis was subsequently supported by the literature. These results demonstrate the potential of knowledge graph-grounded AI agents to accelerate hypothesis-driven biomedical research.\n\nAvailability and implementationEcoXAI is available on GitHub at: https://github.com/EpistasisLab/EcoXAI.\n\nContactjason.moore@csmc.edu",
-      "authors": [
-        "Matsumoto, N.",
-        "Choi, H.",
-        "Freda, P. J.",
-        "Hernandez, M. E.",
-        "Wang, Z. P.",
-        "Moore, J. H."
-      ],
-      "primary_category": "bioinformatics",
-      "categories": [
-        "bioinformatics"
-      ],
-      "published": "2026-07-13T00:00:00+00:00",
-      "link": "https://www.biorxiv.org/content/10.64898/2026.07.08.737358v1.full.pdf",
-      "tags": [
-        "keyword:cold-DDI",
-        "query:cold-DDI"
-      ],
-      "llm_score": 7.0,
-      "llm_evidence_en": "Modular multi-agent system for biomedical discovery",
-      "llm_evidence_cn": "模块化多智能体系统用于生物医学发现",
-      "llm_evidence": "模块化多智能体系统用于生物医学发现",
-      "canonical_evidence": "模块化多智能体系统用于生物医学发现",
-      "llm_tldr_en": "EcoXAI is a modular multi-agent system for biomedical discovery, enabling knowledge graph navigation and evidence integration, directly applicable to DDI prediction.",
-      "llm_tldr_cn": "针对生物医学数据集和知识图谱日益增长导致研究者导航困难的问题，本文提出EcoXAI，一个模块化、可定制的多智能体系统。该系统利用增强型AI智能体进行自动化数据分析，避免幻觉和工作流碎片化。在多生物医学任务中，EcoXAI能够高效整合知识图谱并产生可操作的洞察，其架构可直接应用于药物相互作用预测中的多智能体推理和证据整合。",
-      "llm_tldr": "针对生物医学数据集和知识图谱日益增长导致研究者导航困难的问题，本文提出EcoXAI，一个模块化、可定制的多智能体系统。该系统利用增强型AI智能体进行自动化数据分析，避免幻觉和工作流碎片化。在多生物医学任务中，EcoXAI能够高效整合知识图谱并产生可操作的洞察，其架构可直接应用于药物相互作用预测中的多智能体推理和证据整合。",
+      "llm_evidence_en": "autonomous multi-agent framework for medical imaging model development using LLM agents",
+      "llm_evidence_cn": "使用LLM智能体的自主多智能体框架用于医学成像模型开发",
+      "llm_evidence": "使用LLM智能体的自主多智能体框架用于医学成像模型开发",
+      "canonical_evidence": "使用LLM智能体的自主多智能体框架用于医学成像模型开发",
+      "llm_tldr_en": "AMID is an autonomous multi-agent framework for medical imaging model development, using LLM agents for planning, execution, and validation.",
+      "llm_tldr_cn": "医学成像模型开发需要领域特定的实验和验证协议，现有LLM智能体难以适应。本文提出AMID，一个自主多智能体框架，它利用数据条件方法规划和验证引导的两阶段优化，自动完成模型开发流程。在多个医学成像数据集上，AMID生成的模型性能接近甚至超过人工设计。该框架的多智能体协作模式可推广至药物相互作用预测中的模型自动化开发。",
+      "llm_tldr": "医学成像模型开发需要领域特定的实验和验证协议，现有LLM智能体难以适应。本文提出AMID，一个自主多智能体框架，它利用数据条件方法规划和验证引导的两阶段优化，自动完成模型开发流程。在多个医学成像数据集上，AMID生成的模型性能接近甚至超过人工设计。该框架的多智能体协作模式可推广至药物相互作用预测中的模型自动化开发。",
       "llm_tags": [
         "query:cold-ddi"
       ],
@@ -221,7 +183,171 @@
       "matched_query_text": "multi-agent systems for drug-drug interaction prediction",
       "matched_requirement_id": "req-4",
       "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-07-05-736565-v1",
+      "source": "biorxiv",
+      "title": "Autonomous computational prioritisation of colorectal cancer vulnerabilities via multi-scale AI swarms",
+      "abstract": "The acceleration of automated scientific discovery has been fundamentally bottlenecked by the epistemic gap between the semantic reasoning of large language models (LLMs) and the complex, non-linear reality of mammalian biology. While recent multi-agent frameworks have achieved autonomous hypothesis generation and in vitro experimental analysis, they frequently lack the rigorous statistical constraints required for multi-scale clinical translation. Furthermore, while algorithmic clinical digital twins successfully forecast biological states, they often rely on opaque latent spaces, sacrificing mechanistic interpretability for predictive accuracy. Here, we introduce the Multi-Scale Autonomous Discovery Engine (Octopus), a neuro-symbolic framework that unites a fully localised, privacy-preserving multi-agent swarm with regularised predictive algorithmic environments. Rather than stopping at isolated cellular assays, the system autonomously prioritises therapeutic hypotheses against in vitro CRISPR dependency data (CCLE), traces feature attribution cascades using XGBoost SHAP vectors, and orthogonally translates emergent vulnerabilities in silico to predict in vivo mammalian tumour trajectory (PDX) and human overall survival (Marisa). In a fully unsupervised sweep of colorectal cancer transcriptomes, the pipeline autonomously prioritised Insulin-like Growth Factor 2 (IGF2) as a predictive biomarker for 5-Fluorouracil sensitivity. The discovery maintained significance after rigorous Benjamini-Hochberg false discovery rate correction (q = 0.0292, Log-Rank p = 0.0007) and successfully predicted significant in vivo tumour volume shrinkage in an independent mouse cohort (Mixed-Effects LMM p = 0.0373). By bridging agentic hypothesis generation with statistically bounded clinical survival, this framework establishes a verifiable, local paradigm for the automated computational prioritisation of biomedical discoveries.",
+      "authors": [
+        "Baker, C.",
+        "Ren, T.",
+        "Rafferty, K.",
+        "Wang, H.",
+        "McDade, S."
+      ],
+      "primary_category": "cancer biology",
+      "categories": [
+        "cancer biology"
+      ],
+      "published": "2026-07-10T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.07.05.736565v1.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "multi-agent AI swarm for autonomous scientific discovery with LLM reasoning",
+      "llm_evidence_cn": "多智能体AI集群用于自主科学发现与LLM推理",
+      "llm_evidence": "多智能体AI集群用于自主科学发现与LLM推理",
+      "canonical_evidence": "多智能体AI集群用于自主科学发现与LLM推理",
+      "llm_tldr_en": "Octopus uses multi-scale AI swarms with LLMs for autonomous prioritization of cancer vulnerabilities, combining semantic reasoning and statistical rigor.",
+      "llm_tldr_cn": "大规模语言模型的语义推理与复杂生物系统之间存在认知差距，且现有数字孪生缺乏可解释性。本文提出多尺度自主发现引擎Octopus，它利用多智能体集群整合LLM推理与严格的统计约束，在结直肠癌脆弱性发现中实现了自主假设生成和实验分析。该框架展示了多智能体方法在生物医学推理中的潜力，可启发药物相互作用预测中的智能体应用。",
+      "llm_tldr": "大规模语言模型的语义推理与复杂生物系统之间存在认知差距，且现有数字孪生缺乏可解释性。本文提出多尺度自主发现引擎Octopus，它利用多智能体集群整合LLM推理与严格的统计约束，在结直肠癌脆弱性发现中实现了自主假设生成和实验分析。该框架展示了多智能体方法在生物医学推理中的潜力，可启发药物相互作用预测中的智能体应用。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 与严格冷启动药物-药物相互作用预测（strict cold-start DDI prediction）相关的论文，重点关注以下方向：利用大型语言模型（LLM）增强药物语义表示或医学知识表示；利用生物医学知识图谱（biomedical knowledge graph）进行药物相互作用预测；面向新药/冷启动药物的知识迁移、跨域对齐、教师-学生蒸馏方法；将AI Agent / 多智能体（multi-agent）用于药物相互作用预测、科学推理、知识检索或证据整合的相关工作；与上述方向相关的DDI、drug recommendation、drug repurposing、biomedical reasoning论文。请优先返回近3年高质量论文，并尽量区分：普通DDI预测、冷启动DDI预测、LLM/Agent增强DDI预测三类工作。, especially work that connects or combines: cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移; strict cold-start drug-drug interaction prediction; biomedical knowledge graph for drug-drug interaction prediction; multi-agent systems for drug-drug interaction prediction; teacher-student knowledge distillation for drug-drug interaction; biomedical reasoning for drug-drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; large language model enhanced semantic representation for strict cold start drug drug interaction prediction; biomedical knowledge graph and multi agent reasoning for drug drug interaction in cold start setting; knowledge transfer and domain adaptation for new drug prediction using teacher student distillation.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
       "quick_tier": "7"
+    },
+    {
+      "id": "2607.11465v1",
+      "source": "arxiv",
+      "title": "Score-Only Distillation for Compact Dense Retrieval",
+      "abstract": "Large embedding models improve retrieval quality, but serving large encoders online is expensive. We study whether a compact retriever can learn teacher ranking behavior from score vectors without access to teacher hidden states. The student trains on rows built from ground-truth positives and negative candidates produced by our data generation pipeline; we evaluate student-teacher hard-negative mining separately as an extension. We use a row-centered score-vector objective, a memory-efficient implementation of uniform all-pairs PairMSE loss. On a fixed eight-task evaluation panel, our distillation protocol recovers up to 50\\% of the base-to-teacher gap. The distilled 0.6B student is 4.7$\\times$ faster for query encoding and 9.7$\\times$ faster for document encoding than sequential online teacher fusion. External-transfer performance after distillation remains mixed, so our evidence supports compression of teacher rankings under matched retrieval protocols.",
+      "authors": [
+        "Kirill Dubovikov",
+        "Martin Takac",
+        "Salem Lahlou"
+      ],
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR"
+      ],
+      "published": "2026-07-13T12:18:13+00:00",
+      "link": "https://arxiv.org/pdf/2607.11465v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "score-only knowledge distillation from teacher to student retriever",
+      "llm_evidence_cn": "仅使用分数向量的教师-学生蒸馏方法",
+      "llm_evidence": "仅使用分数向量的教师-学生蒸馏方法",
+      "canonical_evidence": "仅使用分数向量的教师-学生蒸馏方法",
+      "llm_tldr_en": "A compact dense retriever learns from a teacher's ranking scores without accessing hidden states, recovering 50% of the performance gap with 4.7x faster encoding.",
+      "llm_tldr_cn": "大型编码器检索成本高昂。本文研究仅利用教师模型的评分向量进行知识蒸馏，无需访问隐层状态。学生模型在8个检索任务上恢复了教师与基线之间50%的性能差距，同时实现4.7倍查询编码加速。该蒸馏范式可直接用于DDI预测中的教师-学生模型压缩与知识迁移。",
+      "llm_tldr": "大型编码器检索成本高昂。本文研究仅利用教师模型的评分向量进行知识蒸馏，无需访问隐层状态。学生模型在8个检索任务上恢复了教师与基线之间50%的性能差距，同时实现4.7倍查询编码加速。该蒸馏范式可直接用于DDI预测中的教师-学生模型压缩与知识迁移。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "teacher-student knowledge distillation for drug-drug interaction",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.13115v1",
+      "source": "arxiv",
+      "title": "Improving Molecular Property Prediction in Small Language Models Using Graph-based Tools",
+      "abstract": "Small language models (SLMs) have shown promise for zero-shot molecular property prediction from SMILES strings, yet they often suffer from structural blindness because sequence representations under-specify key graph-topological cues. We propose a modular Context-Augmented Prompting framework that enables agentic tool use at inference time: a trained GNN expert model provides a predictive hint with confidence, and a GNN extracts an instance-specific explanatory subgraph (e.g., a subgraph SMILES and an accompanying explanatory paragraph). We evaluate three commonly used SLMs on MUTAG and Tox21 under five prompting configurations ranging from SMILES-only to using all available tools at hand. Across two datasets, enriching prompts with graph-derived context yields substantial accuracy gains, often exceeding 25% relative improvement and up to 74% on Tox21. We further validate the functional relevance of the extracted motifs via a necessity-based edge-drop intervention. Despite the observed gains, a persistent gap remains to specialized GNN models, highlighting both the value and limits of text-conditioned reasoning for molecular structure.",
+      "authors": [
+        "Konstantinos Bougiatiotis",
+        "Dimitrios Kelesis",
+        "Georgios Paliouras"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-07-14T13:10:30+00:00",
+      "link": "https://arxiv.org/pdf/2607.13115v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "agentic tool use with GNN for molecular property prediction, transferable to drug representation",
+      "llm_evidence_cn": "分子性质预测的GNN工具增强方法可迁移至药物表示",
+      "llm_evidence": "分子性质预测的GNN工具增强方法可迁移至药物表示",
+      "canonical_evidence": "分子性质预测的GNN工具增强方法可迁移至药物表示",
+      "llm_tldr_en": "Small language models for zero-shot molecular property prediction are enhanced by a GNN tool-use framework that provides structural hints, achieving improved accuracy on MUTAG and Tox21 benchmarks.",
+      "llm_tldr_cn": "小语言模型在零样本分子性质预测中存在结构盲区。本文提出Context-Augmented Prompting框架，通过调用GNN专家模型提供预测提示和子图解释，从而增强小语言模型的分子结构感知能力。在MUTAG和Tox21数据集上的实验表明，融合图工具的多提示配置显著提升了预测性能，为冷启动药物表示学习提供了可行的方法借鉴。",
+      "llm_tldr": "小语言模型在零样本分子性质预测中存在结构盲区。本文提出Context-Augmented Prompting框架，通过调用GNN专家模型提供预测提示和子图解释，从而增强小语言模型的分子结构感知能力。在MUTAG和Tox21数据集上的实验表明，融合图工具的多提示配置显著提升了预测性能，为冷启动药物表示学习提供了可行的方法借鉴。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 与严格冷启动药物-药物相互作用预测（strict cold-start DDI prediction）相关的论文，重点关注以下方向：利用大型语言模型（LLM）增强药物语义表示或医学知识表示；利用生物医学知识图谱（biomedical knowledge graph）进行药物相互作用预测；面向新药/冷启动药物的知识迁移、跨域对齐、教师-学生蒸馏方法；将AI Agent / 多智能体（multi-agent）用于药物相互作用预测、科学推理、知识检索或证据整合的相关工作；与上述方向相关的DDI、drug recommendation、drug repurposing、biomedical reasoning论文。请优先返回近3年高质量论文，并尽量区分：普通DDI预测、冷启动DDI预测、LLM/Agent增强DDI预测三类工作。, especially work that connects or combines: cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移; strict cold-start drug-drug interaction prediction; biomedical knowledge graph for drug-drug interaction prediction; multi-agent systems for drug-drug interaction prediction; teacher-student knowledge distillation for drug-drug interaction; biomedical reasoning for drug-drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; large language model enhanced semantic representation for strict cold start drug drug interaction prediction; biomedical knowledge graph and multi agent reasoning for drug drug interaction in cold start setting; knowledge transfer and domain adaptation for new drug prediction using teacher student distillation.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.15079v1",
+      "source": "arxiv",
+      "title": "BrainPilot: Automating Brain Discovery with Agentic Research",
+      "abstract": "Understanding the brain increasingly depends on integrating evidence across scales, modalities, and disciplines. Addressing a single research question therefore requires a coordinated sequence of operations, from surveying prior work to executing analyses and interpreting results in light of domain knowledge. AI agents promise to accelerate this process, but current agents lack domain expertise in brain science, may fabricate claims, drift during multi-step reasoning, and offer few defined points for expert intervention. These failures are especially costly in brain science, where conclusions feed into downstream scientific claims and depend on laboratory-specific expertise and careful human judgment. We present \\textbf{BrainPilot} a \\textbf{fully open-source} multi-agent system that accelerates brain science research with traceable logs and agent-verified results. A principal investigator (PI) agent coordinates specialist agents grounded in curated domain knowledge: a unified brain science knowledge base containing 7{,}233 indexed items and a skill library of 72 reusable methodology units across seven research domains. Every major step is recorded in the Graph of Trace, an auditable record that links subgoals, tool use, evidence, and claims and allows researchers to follow and inspect the workflow. An Auditor agent further integrates fabrication checking into the workflow. For evaluation, we run three brain science tasks from Agents' Last Exam, introduce our own benchmark, \\textbf{BrainPilotBench-v0}, and present additional end-to-end case studies. Across these evaluations, BrainPilot with an open-source backbone model attains performance comparable to state-of-the-art agent framework with less costs.",
+      "authors": [
+        "Haoxuan Li",
+        "Tianci Gao",
+        "Jianhe Li",
+        "Yang Fan",
+        "Runze Shi",
+        "Weiran Wang",
+        "Tianxiang Zhao",
+        "Zezhao Wu",
+        "Xiaoyang Jiang",
+        "Qihui Zhang",
+        "Jia Li",
+        "Xiao Xiao",
+        "Kai Du",
+        "Xiaoxuan Jia",
+        "Chao Xie",
+        "Lu Mi"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-07-16T14:49:25+00:00",
+      "link": "https://arxiv.org/pdf/2607.15079v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "AI agent for multi-step reasoning and research automation in brain science",
+      "llm_evidence_cn": "用于脑科学多步推理和研究自动化的AI智能体",
+      "llm_evidence": "用于脑科学多步推理和研究自动化的AI智能体",
+      "canonical_evidence": "用于脑科学多步推理和研究自动化的AI智能体",
+      "llm_tldr_en": "BrainPilot is an open-source AI agent platform for automated brain research, integrating literature survey, analysis, and interpretation, applicable to biomedical reasoning.",
+      "llm_tldr_cn": "脑科学研究需要跨尺度、跨模态的证据整合，现有AI智能体缺乏领域专业知识且容易产生虚假信息。本文提出BrainPilot，一个全开源的AI智能体平台，能够自主执行从文献调研到数据分析再到结果解释的多步研究流程。该平台设计了可干预点确保专家监督，在脑科学任务上表现可靠，其多智能体方法论可迁移到药物相互作用预测中的生物医学推理任务。",
+      "llm_tldr": "脑科学研究需要跨尺度、跨模态的证据整合，现有AI智能体缺乏领域专业知识且容易产生虚假信息。本文提出BrainPilot，一个全开源的AI智能体平台，能够自主执行从文献调研到数据分析再到结果解释的多步研究流程。该平台设计了可干预点确保专家监督，在脑科学任务上表现可靠，其多智能体方法论可迁移到药物相互作用预测中的生物医学推理任务。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 与严格冷启动药物-药物相互作用预测（strict cold-start DDI prediction）相关的论文，重点关注以下方向：利用大型语言模型（LLM）增强药物语义表示或医学知识表示；利用生物医学知识图谱（biomedical knowledge graph）进行药物相互作用预测；面向新药/冷启动药物的知识迁移、跨域对齐、教师-学生蒸馏方法；将AI Agent / 多智能体（multi-agent）用于药物相互作用预测、科学推理、知识检索或证据整合的相关工作；与上述方向相关的DDI、drug recommendation、drug repurposing、biomedical reasoning论文。请优先返回近3年高质量论文，并尽量区分：普通DDI预测、冷启动DDI预测、LLM/Agent增强DDI预测三类工作。, especially work that connects or combines: cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移; strict cold-start drug-drug interaction prediction; biomedical knowledge graph for drug-drug interaction prediction; multi-agent systems for drug-drug interaction prediction; teacher-student knowledge distillation for drug-drug interaction; biomedical reasoning for drug-drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; large language model enhanced semantic representation for strict cold start drug drug interaction prediction; biomedical knowledge graph and multi agent reasoning for drug drug interaction in cold start setting; knowledge transfer and domain adaptation for new drug prediction using teacher student distillation.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
     },
     {
       "id": "biorxiv-10-64898-2026-07-11-737987-v1",
@@ -241,22 +367,22 @@
         "keyword:cold-DDI",
         "query:cold-DDI"
       ],
-      "llm_score": 7.0,
-      "llm_evidence_en": "surface-centric multimodal molecular representation learning useful for cross-domain drug representation",
-      "llm_evidence_cn": "以分子表面为中心的多模态表示学习，可用于跨域药物表示",
-      "llm_evidence": "以分子表面为中心的多模态表示学习，可用于跨域药物表示",
-      "canonical_evidence": "以分子表面为中心的多模态表示学习，可用于跨域药物表示",
-      "llm_tldr_en": "MolMAE learns molecular representations from surface point clouds, 3D graphs, and SMILES tokens via masked autoencoding.",
-      "llm_tldr_cn": "本文提出MolMAE，一种以分子表面为中心的多模态掩码自编码器，同时输入分子表面点云、三维分子图和SMILES片段令牌。该模型为分子表示学习提供了新的多模态预训练方法，能够捕获分子表面交互信息，对药物发现中的表示迁移（包括冷启动药物）具有潜在价值。",
-      "llm_tldr": "本文提出MolMAE，一种以分子表面为中心的多模态掩码自编码器，同时输入分子表面点云、三维分子图和SMILES片段令牌。该模型为分子表示学习提供了新的多模态预训练方法，能够捕获分子表面交互信息，对药物发现中的表示迁移（包括冷启动药物）具有潜在价值。",
+      "llm_score": 6.0,
+      "llm_evidence_en": "multimodal molecular representation learning applicable to drug interaction prediction",
+      "llm_evidence_cn": "多模态分子表示学习，可应用于药物相互作用预测",
+      "llm_evidence": "多模态分子表示学习，可应用于药物相互作用预测",
+      "canonical_evidence": "多模态分子表示学习，可应用于药物相互作用预测",
+      "llm_tldr_en": "MolMAE proposes a surface-centric multimodal masked autoencoder that integrates molecular surface, 3D graph, and SMILES tokens for molecular representation, offering a strong foundation for drug-drug interaction prediction.",
+      "llm_tldr_cn": "针对现有分子表示学习主要依赖SMILES、2D图或3D坐标，忽视分子表面关键作用的局限，本文提出MolMAE，一个以分子表面为中心的多模态掩码自编码器。它联合学习分子表面点云、3D分子图和SMILES片段令牌，捕捉药物-靶标相互作用等关键性质，为药物相互作用预测提供了更全面的分子表征基础。",
+      "llm_tldr": "针对现有分子表示学习主要依赖SMILES、2D图或3D坐标，忽视分子表面关键作用的局限，本文提出MolMAE，一个以分子表面为中心的多模态掩码自编码器。它联合学习分子表面点云、3D分子图和SMILES片段令牌，捕捉药物-靶标相互作用等关键性质，为药物相互作用预测提供了更全面的分子表征基础。",
       "llm_tags": [
-        "query:cold-ddi"
+        "query:cold-ddi:composite"
       ],
-      "matched_query_tag": "query:cold-ddi",
-      "matched_query_text": "cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移",
-      "matched_requirement_id": "req-1",
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 与严格冷启动药物-药物相互作用预测（strict cold-start DDI prediction）相关的论文，重点关注以下方向：利用大型语言模型（LLM）增强药物语义表示或医学知识表示；利用生物医学知识图谱（biomedical knowledge graph）进行药物相互作用预测；面向新药/冷启动药物的知识迁移、跨域对齐、教师-学生蒸馏方法；将AI Agent / 多智能体（multi-agent）用于药物相互作用预测、科学推理、知识检索或证据整合的相关工作；与上述方向相关的DDI、drug recommendation、drug repurposing、biomedical reasoning论文。请优先返回近3年高质量论文，并尽量区分：普通DDI预测、冷启动DDI预测、LLM/Agent增强DDI预测三类工作。, especially work that connects or combines: cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移; strict cold-start drug-drug interaction prediction; biomedical knowledge graph for drug-drug interaction prediction; multi-agent systems for drug-drug interaction prediction; teacher-student knowledge distillation for drug-drug interaction; biomedical reasoning for drug-drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; large language model enhanced semantic representation for strict cold start drug drug interaction prediction; biomedical knowledge graph and multi agent reasoning for drug drug interaction in cold start setting; knowledge transfer and domain adaptation for new drug prediction using teacher student distillation.",
+      "matched_requirement_id": "req-composite-cold-ddi",
       "selection_source": "fresh_fetch",
-      "quick_tier": "7"
+      "quick_tier": "6"
     }
   ]
 }

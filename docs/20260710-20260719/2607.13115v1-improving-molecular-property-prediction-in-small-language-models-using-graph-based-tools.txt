@@ -1,0 +1,209 @@
+Title: Improving Molecular Property Prediction in Small Language Models Using Graph-based Tools
+
+URL Source: https://arxiv.org/pdf/2607.13115v1
+
+Published Time: Thu, 16 Jul 2026 00:12:27 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# Improving Molecular Property Prediction in Small Language Models Using Graph-based Tools 
+
+Konstantinos Bougiatiotis 1,*,†, Dimitrios Kelesis 1,† and Georgios Paliouras 1
+
+> 1
+
+Institute of Informatics and Telecommunications, National Center for Scientific Research “Demokritos", Athens, Greece 
+
+Abstract 
+
+Small language models (SLMs) have shown promise for zero-shot molecular property prediction from SMILES 
+
+strings, yet they often suffer from structural blindness because sequence representations under-specify key graph-topological cues. We propose a modular Context-Augmented Prompting framework that enables agentic tool use at inference time: a trained GNN expert model provides a predictive hint with confidence, and a GNNExplainer 
+
+extracts an instance-specific explanatory subgraph (e.g., a subgraph SMILES and an accompanying explanatory paragraph). We evaluate three commonly used SLMs on MUTAG and Tox21 under five prompting configurations ranging from SMILES-only to using all available tools at hand. Across two datasets, enriching prompts with graph-derived context yields substantial accuracy gains, often exceeding 25% relative improvement and up to 74% on Tox21. We further validate the functional relevance of the extracted motifs via a necessity-based edge-drop intervention. Despite the observed gains, a persistent gap remains to specialized GNN models, highlighting both the value and limits of text-conditioned reasoning for molecular structure. 
+
+Keywords 
+
+Molecule Property Prediction, Small Language Models (SLMs), Graph Neural Networks (GNNs), Explainability 
+
+# 1. Introduction 
+
+Molecular Property Prediction (MPP) remains a foundational challenge in the drug discovery pipeline [ 1 ,2 , 3], where the accurate classification of chemical compounds determines the efficiency of the Design-Make-Test-Analyze cycle. Traditionally, Graph Neural Networks (GNNs) have emerged as the state-of-the-art approach for these tasks due to their ability to directly model the topological structure of molecules [ 4, 5 , 6 ]. However, despite their predictive power, GNNs often operate as “black boxes," providing little human-interpretable rationale for their outputs, which limits their utility in high-stakes medicinal chemistry decisions [7, 8]. At the same time, Large Language Models (LLMs) have demonstrated a surprising capacity for zero-shot reasoning across various scientific domains. In the context of chemistry, LLMs typically process molecules via the Simplified Molecular Input Line Entry System (SMILES) [ 9 ]. While SMILES provides a compact string representation, it is a sequence-based abstraction that frequently fails to encode complex 2D branching and spatial relationships. Previous studies [ 10 , 11 ] suggest that LLMs struggle with “structural blindness", leading to inconsistent performance when property prediction relies on specific local motifs or global connectivity. To address these limitations and showcase the improvement that LMs may exhibit when they have access to expert-based tools, we propose a Context-Augmented Prompting framework that leverages a GNN model to ground LM reasoning in the most influential subgraph identified by a GNN explainer. By extracting the causal structural subgraph given by a GNN expert, and use them as a “hint” about chemical properties, we provide Small Language Models (SLMs) with the structural context that raw SMILES strings lack. 
+
+2nd Causal Neuro-symbolic Artificial Intelligence (Causal NeSy): Toward Agentic LLMs with Neuro-Symbolic and Graph Based Reasoning 
+
+> *
+
+Corresponding author. 
+
+> †
+
+These authors contributed equally. 
+
+$ bogas.ko@iit.demokritos.gr (K. Bougiatiotis) 
+
+ 0000-0002-1910-2758 (K. Bougiatiotis); 0000-0002-3434-2717 (D. Kelesis)  
+
+> ©2022 Copyright for this paper by its authors. Use permitted under Creative Commons License Attribution 4.0 International (CC BY 4.0).
+
+In this work, we evaluate three prominent SLMs; namely Llama 3.2 (3B parameters) [ 12 ], Qwen 2.5 (3B parameters) [ 13 ], and DeepSeek (2.4B active parameters in a 16B Mixture-of-Experts architec-ture) [ 14 ], across two benchmark datasets, MUTAG [ 15 ] and Tox21 [ 16 ]. Our empirical findings indicate that incorporating structured contextual information alongside baseline SMILES prompts can lead to meaningful performance improvements (over 25% relative improvement in almost all cases). However, the effectiveness of such explanations appears to depend strongly on the underlying language model architecture, with smaller-parameter models showing limited or inconsistent gains on certain tasks. Additionally, although GNN-augmented SLMs benefit from the integration of graph-derived hints, they do not match the performance of specialized GNN architectures, highlighting persistent challenges in fully capturing structural information through text-based reasoning alone. The main contributions of this work are summarized as follows: 
+
+• A Context-Augmented Prompting Framework: We propose a strategy that bridges the gap between graph-based structural learning and sequence-based SLM reasoning by incorporating GNN-derived hints. 
+
+• Quantification of Explanation Efficacy: We analyze the impact of the GNN-derived signals on SLM performance, showing that while such context can substantially enhance predictive accuracy, the gains are dataset- and model-dependent, and a measurable gap remains between text-augmented SLMs and specialized GNN architectures. 
+
+• Comparative SLM Benchmark: We provide an empirical evaluation of three state-of-the-art SLMs on molecular classification, highlighting the varying degrees of “structural blindness" inherent in different model architectures. 
+
+# 2. Related Work 
+
+2.1. Structural Representation Learning in Chemistry 
+
+The evolution of Molecular Property Prediction (MPP) has transitioned from handcrafted molecular descriptors and fingerprints, such as ECFP [ 17 ], to deep representation learning. Graph Neural Networks (GNNs), including Graph Convolutional Networks (GCN) [ 18 ] and Graph Isomorphism Networks (GIN) [19 ], are widely adopted for molecular representation learning, by treating molecules as topological graphs. While these models excel at capturing local and global chemical environments, their internal representations remain non-symbolic, making it difficult for practitioners to extract actionable chemical insights. 
+
+2.2. Explainability in Graph Neural Networks 
+
+To address the opacity of GNNs, various post-hoc explanation methods have been proposed. Tools such as GNNExplainer [ 20 ] and PGExplainer [ 21 ] identify the most influential subgraphs (motifs) contributing to a specific prediction. However, these explanations are typically provided as importance weights over edges or nodes. Transforming these numerical importance scores into human-intelligible reasoning remains a challenge, which this work addresses by using SLMs as a linguistic interface. 
+
+2.3. LLMs for Molecular Reasoning 
+
+Recent advancements have seen LLMs applied to chemistry via SMILES string processing. Models like Galactica [ 22 ] and MolT5 [ 23 ] demonstrated that pre-training on large scientific corpora enables basic property prediction. However, research into general-purpose models like Llama 3 and GPT-4 has revealed a “SMILES-to-structure" gap; where these models often fail to reliably reconstruct or reason over the underlying molecular graph topology [ 24 ]. Our work builds on this by testing if explicit structural “hints" can mitigate this sequential bias. 2.4. Hybrid GNN-SLM Integration 
+
+Emerging research has explored the alignment of graph encoders with language models, often through contrastive learning or projection layers, such works include MolCA [ 25 ] or MolLM [ 26 ]. Unlike these computationally expensive architectural integrations, our approach focuses on Context-Augmented Prompting . This method preserves the frozen weights of state-of-the-art SLMs and investigates the extent to which GNN-derived explanatory signals, representing the model-identified most influential substructures, can help mitigate the modality gap. Note that this strategy is both more accessible and modular for practical deployment. 
+
+# 3. Methodology 
+
+3.1. Problem Setting 
+
+We study binary molecular property prediction from a textual representation. Each molecule is provided as a SMILES string 𝑠 , and the target label is 𝑦 ∈ { 0, 1} indicating whether the molecule is toxic/muta-genic under the dataset definition. Our goal is to improve zero-shot performance of SLMs on this task by enabling agentic tool use : at inference time, the SLM can query a learned graph expert and explanation tool to obtain structured context that is otherwise absent from the SMILES sequence. 
+
+3.2. Context-Augmented Prompting Framework 
+
+As shown in Figure 1, our framework adopts an agentic architecture where an SLM serves as the reasoning controller, utilizing tools to interact with a GNN expert.  
+
+> Figure 1: The proposed agentic loop. Given the query SMILES, the SLM invokes one or more of the available tools to interact with pre-trained GNN expert, to generate related context and augment the original prompt, to provide assistance for the final inference.
+
+First, let a molecule represented by the SMILES 𝑠 correspond to a molecular graph 𝐺 = ( 𝑉, 𝐸, X) with atoms 𝑉 , bonds 𝐸 , and node features X (e.g., atom type, valence, aromaticity). We assume that there is pre-trained GNN (expert) model available to us 1. We model inference as a single-step agent loop:                   
+
+> 1Practically, we train a GIN model 𝑓 𝜃 (𝐺 )→(^ 𝑦, ^𝑝 )on the training split of each dataset, with 𝐺 a molecule graph, ^𝑦 ∈ { 0,1}
+> and ^𝑝 ∈[0 ,1] is the model confidence.
+
+given an input SMILES string 𝑠 , the SLM can call tools that return (1) expert predictions and confidence (ˆ𝑦, ˆ𝑝 ), (2) the determined explanatory subgraph ( 𝐺 𝑐 ), and (3) a natural-language rationale derived from the subgraph ( 𝑟 ). Specifically, we define three primary tools that the SLM can invoke to enhance its zero-shot reasoning: 
+
+• ExpertPredict (𝑠 ): converts 𝑠 ↦ → 𝐺 , returns (ˆ 𝑦, ˆ𝑝 ) from the pre-trained GIN .
+
+• ExplainSubgraph (𝑠 ): returns an explanatory subgraph 𝐺 𝑐 (in the form of the subgraph SMILES 𝑠 𝑐 )using GNNExplainer [20] over the same GIN .
+
+• ChemReason (𝑠, 𝑠 𝑐 , ˆ𝑦, ˆ𝑝 ): using a short chemistry-oriented explanation templated prompt, we in-struct the SLM to reason about why the motif 𝑠 𝑐 might support toxicity/mutagenicity. In practice we implement this as an instruction block and ask the SLM itself to generate the rationale; conceptually it is a tool interface for a reasoning module. To avoid introducing external knowledge bias from larger teacher models, each SLM model itself is used to generate the rationale (i.e., ChemReason), ensuring that the performance gains are strictly a product of the model’s own reasoning conditioned on GNN-derived evidence. Regarding ExplainSubgraph , we extract a per-instance explanatory subgraph via GNNExplainer as an edge-importance mask m ∈ [0 , 1] |𝐸 |. We then define the candidate causal subgraph :
+
+𝐺 𝑐 = ( 𝑉 𝑐 , 𝐸 𝑐 ), 𝐸 𝑐 = {𝑒 ∈ 𝐸 : 𝑚 𝑒 ≥ 𝜏 },
+
+where the threshold 𝜏 is chosen dynamically for each module, so that 𝐸 𝑐 contains only edges at the top 
+
+10% of the edge importance score. That is, the designated subgraph 𝐺 𝑐 contains only the top-10% most important edges of the graph, as identified by GNNExplainer. To make 𝐺 𝑐 consumable by text-only SLMs, we convert it to a SMILES string (denoted 𝑠 𝑐 ). 
+
+3.3. Prompt Configurations 
+
+Using the above tools, we evaluate five prompt configurations that correspond to progressively richer tool outputs. The variants used are shown below (the exact text of these different prompt configurations can be seen in Appendix A): 1. SMILES (Baseline). Input is only the SMILES string 𝑠 .2. SMILES + SUBGRAPH. Input includes 𝑠 and the extracted subgraph SMILES 𝑠 𝑐 .3. SMILES + HINT. Input includes 𝑠 and the GNN expert output (ˆ 𝑦, ˆ𝑝 ) as a “field expert hint” (i.e., the GNN label prediction and confidence in %) . 4. SMILES + REASONING. Input includes 𝑠 and a short natural-language rationale about the motif’s relevance 𝑟 (generated by the SLM when given 𝑠 and 𝑠 𝑐 ). 5. ALL CONTEXT. Input includes 𝑠 , (ˆ 𝑦, ˆ𝑝 ), 𝑠 𝑐 and the rationale 𝑟 .
+
+# 4. Experiments and Discussion 
+
+4.1. Experimental Setup 
+
+We evaluate our framework on two standard molecular classification benchmarks: MUTAG [ 15 ] and a random subset of 1,000 samples from Tox21 [ 16 ]. MUTAG contains 188 nitroaromatic and heteroaro-matic compounds labeled for mutagenicity, serving as a small benchmark for graph-based molecular classification. Tox21 is a multi-label toxicity benchmark that spans multiple biological targets; we sample 1,000 molecules and convert the task to binary classification by marking a molecule as positive Table 1             
+
+> Dataset characteristics.
+> Dataset # Molecules/Graphs Avg. Nodes Avg. Edges Positive Ratio (%)
+> MUTAG 188 18.03 39.80 67 Tox21 1000 18.37 38.99 37
+
+if it has any positive toxicity label. For each dataset, we use a 70/30 train/test split. Importantly, the split is used only to train the GIN expert. The SLMs are evaluated in a zero-shot manner on the test portion only. The general characteristics of the datasets are shown in Table 1. For the GNN expert, we adopt a common GIN setup across datasets to reduce confounding: 3 message-passing layers, hidden dimension 64, a learning rate of 2 · 10 −3 and trained for up to 100 epochs with early stopping. We hold out 10% of the training split for validation and use patience 10 for early stopping. 
+
+4.2. Small Language Models 
+
+We evaluate three SLMs spanning different architectural and capacity regimes: DeepSeek (Lite-Code), a Mixture-of-Experts model with 16B total parameters and 2.4B active parameters; Qwen 2.5 (Code), with 3B parameters; and Llama 3.2 , also with 3B parameters. DeepSeek is optimized for code-centric instruction following and structured reasoning. Qwen 2.5 is likewise tuned for step-wise generation and robust formatting, making it well suited to evidence-conditioned decision prompts. Llama 3.2 
+
+serves as a general-purpose baseline, enabling comparison between code-tuned models and a more broadly trained conversational model under identical zero-shot prompting. All models are evaluated in zero-shot mode on the test splits of the datasets, using fixed prompts for each configuration. We report classification accuracy (%) for each prompt configuration. 
+
+4.3. Main Results 
+
+Table 2 summarizes the accuracy over the different prompt configurations and the two datasets.                                                   
+
+> Table 2
+> Model accuracy (in %) across different prompt configurations. The highest accuracy per SLM and dataset is highlighted in bold. The “Improvement” row indicates the relative percentage gain of the ALL CONTEXT configuration compared to the baseline SMILES prompt.
+> Configuration MUTAG Tox21 DeepSeek Qwen 2.5 Llama 3.2 DeepSeek Qwen 2.5 Llama 3.2
+> SMILES 56.14 55.36 47.37 38.50 47.50 48.50 SMILES + SUBGRAPH 54.39 66.07 43.86 45.50 47.24 55.00 SMILES + HINT 42.11 49.12 43.86 67.00 67.50 64.00
+> SMILES + REASONING 66.67 49.12 40.35 55.50 51.50 61.50 ALL CONTEXT 75.44 70.18 47.37 67.00 68.50 63.50
+> Improvement over SMILES ↑34.38% ↑26.77% 0.00 ↑74.03% ↑44.21% ↑30.93%
+> GNN Expert 84.21 71.00
+
+Observation 1: Tool augmentation yields large gains on the harder setting. On Tox21 , the baseline SMILES-only prompting is low for DeepSeek (38.50%) and moderate for Qwen/Llama (47–49%). Adding tools closes much of this gap, with ALL CONTEXT reaching 67.00% (DeepSeek) and 68.50% (Qwen), representing large relative gains (74.03% and 44.21% relative improvements over baseline, respectively). This is consistent with the claim that raw SMILES induces “structural blindness” while graph-derived context restores missing relational information. Figure 2: Necessity test, showing the GIN accuracy as edges are removed in explainer-importance order (red) vs random removal (grey). A larger separation indicates that the extracted motif is closer to a necessary substructure for the expert prediction. 
+
+Observation 2: Model capacity/competence mediates benefit from structured context. The strongest and most consistent improvements are observed for DeepSeek and Qwen. Llama 3.2 shows mixed behavior: some single-tool variants help on Tox21 (e.g., SUBGRAPH and HINT), but the ALL CONTEXT improvement is smaller and in MUTAG does not improve beyond baseline, suggesting that smaller-scale general-purpose models may suffer from “information distraction". This suggests that benefiting from tool outputs requires the SLM to (i) integrate heterogeneous evidence and (ii) maintain instruction-following under longer contexts. 
+
+Observation 3: Single-tool signals can be unstable; combined context is more robust. Across datasets, isolated signals sometimes degrade performance (e.g., MUTAG with SMILES+HINT for DeepSeek). This is expected in an agentic setting: expert hints may be miscalibrated, and subgraphs may be hard to interpret without narrative scaffolding. ALL CONTEXT often recovers and improves, indicating complementary effects: (a) expert prediction provides a prior , (b) motif provides structural evidence , (c) reasoning promotes semantic alignment between text and graph evidence. 
+
+Observation 4: The gap to specialized graph models remains. Even with ALL CONTEXT, SLMs do not consistently surpass the GIN expert (84.21% on MUTAG; 71.00% on Tox21). This highlights a boundary of purely text-conditioned reasoning: graph inductive bias and representation learning remain crucial for molecular structure. 
+
+4.4. Complementary Experiments and a Qualitative Case Study 
+
+In this section, we first present a supplementary experiment examining the necessity of the highlighted subgraphs identified by GNNExplainer, thereby supporting the importance of the selection. We then illustrate, through a sample-based case study, a scenario in which the SLM, using the reasoning tool, can disregard the incorrect input provided by the GNNExpert. Figure 3: Example showing that motif-based reasoning can improve the final prediction (and, in some cases, correct the GNN expert) by using the subgraph as structured evidence and reason on its importance. 
+
+To assess whether the extracted motif is merely correlational or behaves like a necessary substructure for the expert’s prediction, we perform a targeted perturbation test on the expert model: we progres-sively remove edges from 𝐺 either: (i) in decreasing importance order according to GNNExplainer 
+
+(GNNExplainer ), or (ii) at random ( Random Score ), and measure the expert accuracy as a function of the number of removed edges. A strong separation between these curves indicates that explainer-ranked edges concentrate predictive signal and removing them is a stronger intervention, consistent with a necessity-style causal diagnostic. Figure 2 reports the necessity test as described. We can see that removing a small fraction of explainer-ranked edges produces a much steeper accuracy drop than removing the same number of random edges. Concretely, the curve indicates that dropping roughly ∼ 8% of top explainer edges yields a degradation comparable to dropping roughly ∼ 25% of randomly chosen edges, illustrating that explainer-selected edges concentrate decision-critical information. The plateau after 25 % for both scenarios is the result of most graphs becoming disconnected so the message-passing regime of the GNN expert breaks down. Moving on to the case study, Figure 3 illustrates a case where providing the motif and asking the SLM to reason about its chemical implications helps produce a correct label even when the GIN expert is wrong. This behavior is important for agentic deployments: tools are not always oracle-correct, and a reliable agent should be able to cross-check tool outputs using additional evidence and domain constraints. The case study suggests a two-level governance pattern: the graph expert provides a strong inductive bias, while the SLM serves as a semantic controller that can (i) interpret explanations, (ii) identify inconsistencies, and (iii) decide whether to accept or ignore the expert output. This resembles 
+
+human-in-the-loop causal evaluation , except here the “human” role is approximated by language-based reasoning conditioned on explicit evidence. 
+
+# 5. Conclusion 
+
+We presented a simple, modular approach to improving zero-shot molecular property prediction with small language models by enabling tool use. A trained GNN expert provides predictive hints and a 
+
+GNNExplainer -derived explanatory motif, which together serve as structured, auditable context that mitigates the structural limitations of SMILES -only prompting. Across MUTAG and a subset of Tox21 ,we find that enriching prompts with expert confidence, subgraph evidence, and motif-based reasoning can yield substantial gains, particularly on the more challenging Tox21 setting, while still leaving a gap to specialized graph models. We further validated that explainer-selected edges behave like necessary structure for the expert under an intervention-style edge-drop test, supporting a causal grounding perspective. Overall, these results position tool-augmented SLMs as lightweight agentic systems that combine neural prediction with symbolic graph evidence, offering a practical step toward causally grounded neuro-symbolic agents in scientific domains. 
+
+# Declaration on Generative AI 
+
+During the preparation of this work, the authors used GPT-5, Gemini 3, and Grammarly for the purposes of: Drafting content, Grammar and spelling check, Paraphrase and reword, Improve writing style. After using these tools/services, the authors reviewed and edited the content as needed and take full responsibility for the publication’s content. 
+
+# References 
+
+[1] J. Gilmer, S. S. Schoenholz, P. F. Riley, O. Vinyals, G. E. Dahl, Neural message passing for quantum chemistry, in: D. Precup, Y. W. Teh (Eds.), Proceedings of the 34th International Conference on Machine Learning, ICML 2017, Sydney, NSW, Australia, 6-11 August 2017, volume 70 of Proceedings of Machine Learning Research , PMLR, 2017, pp. 1263–1272. URL: http://proceedings.mlr.press/v70/ gilmer17a.html. [2] E. Heid, K. P. Greenman, Y. Chung, S. Li, D. E. Graff, F. H. Vermeire, H. Wu, W. H. G. Jr., C. McGill, Chemprop: A machine learning package for chemical property prediction, J. Chem. Inf. Model. 64 (2024) 9–17. URL: https://doi.org/10.1021/acs.jcim.3c01250. doi: 10.1021/ACS.JCIM.3C01250 .[3] H. Askr, E. Elgeldawi, H. A. Ella, Y. A. M. M. Elshaier, M. M. Gomaa, A. E. Hassanien, Deep learning in drug discovery: an integrative review and future challenges, Artif. Intell. Rev. 56 (2023) 5975– 6037. URL: https://doi.org/10.1007/s10462-022-10306-1. doi: 10.1007/S10462-022-10306-1 .[4] K. Yang, K. Swanson, W. Jin, C. W. Coley, P. Eiden, H. Gao, A. Guzman-Perez, T. Hopper, B. Kelley, M. Mathea, A. Palmer, V. Settels, T. S. Jaakkola, K. F. Jensen, R. Barzilay, Analyzing learned molecular representations for property prediction, J. Chem. Inf. Model. 59 (2019) 3370–3388. URL: https://doi.org/10.1021/acs.jcim.9b00237. doi: 10.1021/ACS.JCIM.9B00237 .[5] D. Duvenaud, D. Maclaurin, J. Aguilera-Iparraguirre, R. Gómez-Bombarelli, T. Hirzel, A. Aspuru-Guzik, R. P. Adams, Convolutional networks on graphs for learning molecular fingerprints, in: C. Cortes, N. D. Lawrence, D. D. Lee, M. Sugiyama, R. Garnett (Eds.), Advances in Neural Information Processing Systems 28: Annual Conference on Neural Information Processing Sys-tems 2015, December 7-12, 2015, Montreal, Quebec, Canada, 2015, pp. 2224–2232. URL: https: //proceedings.neurips.cc/paper/2015/hash/f9be311e65d81a9ad8150a60844bb94c-Abstract.html. [6] S. Kearnes, K. McCloskey, M. Berndl, V. S. Pande, P. Riley, Molecular graph convolutions: Moving beyond fingerprints, CoRR abs/1603.00856 (2016). URL: http://arxiv.org/abs/1603.00856. 
+
+> arXiv:1603.00856
+
+.[7] E. Tjoa, C. Guan, A survey on explainable artificial intelligence (xai): Toward medical xai, IEEE Transactions on Neural Networks and Learning Systems 32 (2021) 4793–4813. doi: 10.1109/ TNNLS.2020.3027314 .[8] Z. C. Lipton, The mythos of model interpretability, ACM Queue 16 (2018) 30. URL: https: //doi.org/10.1145/3236386.3241340. doi: 10.1145/3236386.3241340 .[9] D. Weininger, Smiles, a chemical language and information system. 1. introduction to methodology and encoding rules, Journal of Chemical Information and Computer Sci-ences 28 (1988) 31–36. URL: https://doi.org/10.1021/ci00057a005. doi: 10.1021/ci00057a005 .
+
+> arXiv:https://doi.org/10.1021/ci00057a005
+
+.[10] T. B. Brown, B. Mann, N. Ryder, M. Subbiah, J. Kaplan, P. Dhariwal, A. Neelakantan, P. Shyam, G. Sastry, A. Askell, S. Agarwal, A. Herbert-Voss, G. Krueger, T. Henighan, R. Child, A. Ramesh, D. M. Ziegler, J. Wu, C. Winter, C. Hesse, M. Chen, E. Sigler, M. Litwin, S. Gray, B. Chess, J. Clark, C. Berner, S. McCandlish, A. Radford, I. Sutskever, D. Amodei, Language models are few-shot learners, in: H. Larochelle, M. Ranzato, R. Hadsell, M. Balcan, H. Lin (Eds.), Advances in Neural Information Processing Systems 33: Annual Conference on Neural Information Processing Systems 2020, NeurIPS 2020, December 6-12, 2020, virtual, 2020. URL: https://proceedings.neurips.cc/paper/ 2020/hash/1457c0d6bfcb4967418bfb8ac142f64a-Abstract.html. [11] T. Kojima, S. S. Gu, M. Reid, Y. Matsuo, Y. Iwasawa, Large language models are zero-shot reasoners, in: S. Koyejo, S. Mohamed, A. Agarwal, D. Belgrave, K. Cho, A. Oh (Eds.), Advances in Neural Information Processing Systems 35: Annual Conference on Neu-ral Information Processing Systems 2022, NeurIPS 2022, New Orleans, LA, USA, Novem-ber 28 - December 9, 2022, 2022. URL: http://papers.nips.cc/paper_files/paper/2022/hash/ 8bb0d291acd4acf06ef112099c16f326-Abstract-Conference.html. [12] A. G. et al., The llama 3 herd of models, 2024. URL: https://arxiv.org/abs/2407.21783. 
+
+> arXiv:2407.21783
+
+.[13] Qwen, :, A. Y. et al., Qwen2.5 technical report, 2025. URL: https://arxiv.org/abs/2412.15115. 
+
+> arXiv:2412.15115
+
+.[14] DeepSeek-AI, Q. Z. et al., Deepseek-coder-v2: Breaking the barrier of closed-source models in code intelligence, 2024. URL: https://arxiv.org/abs/2406.11931. arXiv:2406.11931 .[15] A. K. Debnath, R. L. Lopez de Compadre, G. Debnath, A. J. Shusterman, C. Hansch, Structure-activity relationship of mutagenic aromatic and heteroaromatic nitro compounds. correla-tion with molecular orbital energies and hydrophobicity, Journal of Medicinal Chem-istry 34 (1991) 786–797. URL: https://doi.org/10.1021/jm00106a046. doi: 10.1021/jm00106a046 .
+
+> arXiv:https://doi.org/10.1021/jm00106a046
+
+.[16] A. M. Richard, R. Huang, S. Waidyanatha, P. Shinn, B. J. Collins, I. Thillainadarajah, C. M. Grulke, A. J. Williams, R. R. Lougee, R. S. Judson, K. A. Houck, M. Shobair, C. Yang, J. F. Rathman, A. Yasgar, S. C. Fitzpatrick, A. Simeonov, R. S. Thomas, K. M. Crofton, R. S. Paules, J. R. Bucher, C. P. Austin, R. J. Kavlock, R. R. Tice, The tox21 10k compound library: Collaborative chemistry advancing toxicology, Chemical Research in Toxicology 34 (2020) 189 – 216. URL: https://api.semanticscholar. org/CorpusID:226242894. [17] D. Rogers, M. Hahn, Extended-connectivity fingerprints, Journal of Chemical Information and Modeling 50 (2010) 742–754. URL: https://doi.org/10.1021/ci100050t. doi: 10.1021/ci100050t .[18] T. N. Kipf, M. Welling, Semi-supervised classification with graph convolutional networks, in: 5th International Conference on Learning Representations, ICLR 2017, Toulon, France, April 24-26, 2017, Conference Track Proceedings, OpenReview.net, 2017. URL: https://openreview.net/forum? id=SJU4ayYgl. [19] K. Xu, W. Hu, J. Leskovec, S. Jegelka, How powerful are graph neural networks?, in: 7th International Conference on Learning Representations, ICLR 2019, New Orleans, LA, USA, May 6-9, 2019, OpenReview.net, 2019. URL: https://openreview.net/forum?id=ryGs6iA5Km. [20] Z. Ying, D. Bourgeois, J. You, M. Zitnik, J. Leskovec, Gnnexplainer: Generating explanations for graph neural networks, in: H. M. Wallach, H. Larochelle, A. Beygelzimer, F. d’Alché-Buc, E. B. Fox, R. Garnett (Eds.), Advances in Neural Information Processing Systems 32: Annual Conference on Neural Information Processing Systems 2019, NeurIPS 2019, December 8-14, 2019, Vancouver, BC, Canada, 2019, pp. 9240–9251. URL: https://proceedings.neurips.cc/paper/2019/ hash/d80b7040b773199015de6d3b4293c8ff-Abstract.html. [21] D. Luo, W. Cheng, D. Xu, W. Yu, B. Zong, H. Chen, X. Zhang, Parameterized explainer for graph neural network, 2020. URL: https://arxiv.org/abs/2011.04573. arXiv:2011.04573 .[22] R. Taylor, M. Kardas, G. Cucurull, T. Scialom, A. Hartshorn, E. Saravia, A. Poulton, V. Kerkez, R. Stojnic, Galactica: A large language model for science, CoRR abs/2211.09085 (2022). URL: https: //doi.org/10.48550/arXiv.2211.09085. doi: 10.48550/ARXIV.2211.09085 . arXiv:2211.09085 .[23] C. Edwards, T. Lai, K. Ros, G. Honke, K. Cho, H. Ji, Translation between molecules and natural language, in: Y. Goldberg, Z. Kozareva, Y. Zhang (Eds.), Proceedings of the 2022 Conference on Em-pirical Methods in Natural Language Processing, Association for Computational Linguistics, Abu Dhabi, United Arab Emirates, 2022, pp. 375–413. URL: https://aclanthology.org/2022.emnlp-main. 26/. doi: 10.18653/v1/2022.emnlp-main.26 .[24] S. Chithrananda, G. Grand, B. Ramsundar, Chemberta: Large-scale self-supervised pretraining for molecular property prediction, 2020. URL: https://arxiv.org/abs/2010.09885. arXiv:2010.09885 .[25] Z. Liu, S. Li, Y. Luo, H. Fei, Y. Cao, K. Kawaguchi, X. Wang, T. Chua, Molca: Molecular graph-language modeling with cross-modal projector and uni-modal adapter, in: H. Bouamor, J. Pino, K. Bali (Eds.), Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing, EMNLP 2023, Singapore, December 6-10, 2023, Association for Computa-tional Linguistics, 2023, pp. 15623–15638. URL: https://doi.org/10.18653/v1/2023.emnlp-main.966. doi: 10.18653/V1/2023.EMNLP-MAIN.966 .[26] X. Tang, A. Tran, J. Tan, M. B. Gerstein, Mollm: a unified language model for integrating biomedical text with 2d and 3d molecular representations, Bioinformatics 40 (2024) i357–i368. URL: https://doi.org/10.1093/bioinformatics/btae260. doi: 10.1093/bioinformatics/btae260 .
+
+# A. Prompts Used in Configurations 
+
+The following table contains the prompts used for the different scenarios as explained in the Methodology Section 3. To make sure the SLMs generate valid labels, we validate their output using Pydantic 2
+
+templates, allowing only for binary predictions when running an inference setup. All SLMs are locally hosted using an Ollama 3 server. 
+
+Table 3 
+
+Different prompts used with SLMs. The “Common” and “Task” prompts are used at the start and end of each variant. The term “Toxic” is substituted with “Mutagenic” when running on the MUTAG dataset. 
+
+Variant Prompt 
+
+Common You are an expert toxicologist. Classify the molecule as Toxic (True) or Non-toxic (False). 
+
+Task Predict toxicity based on this SMILES: {full_smiles}. 
+
+SMILES Common + Task SMILES + SUBGRAPH Common + Critical Subgraph: {sub_smiles}. + Task SMILES + HINT Common + An expert model prediction is that it may be {gnn_pred} (confidence: {gnn_conf} %). + Task SMILES + REASONING Common + A possible chemical reasoning for the molecule’s label is: {chem_reason}. + Task ALL CONTEXT Common + All of the above + Task 
+
+Regarding the ChemReason tool that generates the reasoning paragraph for each subgraph, we use the following prompt template for each SLM:
