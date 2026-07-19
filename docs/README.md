@@ -6,49 +6,45 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-10 ~ 2026-07-19
-- 运行时间：2026-07-19 09:00:47 UTC
+- 最新运行日期：2026-07-19
+- 运行时间：2026-07-19 21:14:41 UTC
 - 运行状态：成功
-- 本次总论文数：9
-- 精读区：2
-- 速读区：7
+- 本次总论文数：7
+- 精读区：1
+- 速读区：6
 
 ### 今日简报（AI）
-1. 本期日报聚焦AI智能体在生物医学推理与可解释AI中的突破，精读两篇高分论文揭示治疗推理与自主发现的新范式。  
-2. 最值得关注方向：Medea实现跨生物语境的治疗推理，EcoXAI构建可解释AI生态助力生物医学发现，两者均获8.0高分；速读推荐MechAInistic基因组规模代谢模型推理与多智能体结直肠癌脆弱性自动优先排序。  
-3. 建议普通读者重点阅读精读论文，理解AI如何实现自主引导的生物学推理和透明化发现，同时关注多智能体协作在复杂疾病研究中的应用潜力。
-- 详情：[/20260710-20260719/README](/20260710-20260719/README)
+今日共推荐7篇论文，其中精读1篇关于多模态医学知识图谱的扩展，速读6篇涵盖图RAG、癌症治疗推荐及CAR-T证据转化。
+
+核心推荐精读《PrimeKG-Plus》（8.0分），它填补了知识图谱与文献证据的缺口；速读中《FAIR GraphRAG》与乳腺癌治疗推荐的Agentic系统也值得关注。
+
+建议优先精读该篇，并留意多智能体工作流在临床证据验证中的潜力，适合对医学AI落地感兴趣的读者。
+- 详情：[/202607/19/README](/202607/19/README)
 
 ### 精读区论文标签
-1. [Medea: An AI agent for therapeutic reasoning across biological contexts](/20260710-20260719/biorxiv-10-64898-2026-01-16-696667-v3-medea-an-ai-agent-for-therapeutic-reasoning-across-biological-contexts)  
+1. [PrimeKG-Plus: a literature-derived expansion of a multimodal precision medicine knowledge graph](/202607/19/biorxiv-10-64898-2026-07-14-738415-v1-primekg-plus-a-literature-derived-expansion-of-a-multimodal-precision-medicine-knowledge-graph)  
    标签：评分：8.0/10、query:cold-ddi
-   evidence：跨生物上下文的治疗推理智能体支持跨域知识迁移
-2. [EcoXAI: Autonomous Agentic Ecosystem for Explainable Artificial Intelligence and Biomedical Discovery](/20260710-20260719/biorxiv-10-64898-2026-07-08-737358-v1-ecoxai-autonomous-agentic-ecosystem-for-explainable-artificial-intelligence-and-biomedical-discovery)  
-   标签：评分：8.0/10、query:cold-ddi
-   evidence：模块化多智能体系统用于生物医学发现并融合知识图谱
+   evidence：扩展生物医学知识图谱，包含药物相互作用信息
 
 ### 速读区论文标签
-1. [MechAInistic: An LLM-guided Multi-Agent System for Reasoning over Genome-Scale Constraint-Based Metabolic Models](/20260710-20260719/biorxiv-10-64898-2026-05-11-723319-v3-mechainistic-an-llm-guided-multi-agent-system-for-reasoning-over-genome-scale-constraint-based-metabolic-models)  
+1. [FAIR GraphRAG: A Retrieval-Augmented Generation Approach for Semantic Data Analysis](/202607/19/2607.11464v1-fair-graphrag-a-retrieval-augmented-generation-approach-for-semantic-data-analysis)  
    标签：评分：7.0/10、query:cold-ddi
-   evidence：LLM引导的多智能体系统用于科学推理并基于机制模型
-2. [Autonomous computational prioritisation of colorectal cancer vulnerabilities via multi-scale AI swarms](/20260710-20260719/biorxiv-10-64898-2026-07-05-736565-v1-autonomous-computational-prioritisation-of-colorectal-cancer-vulnerabilities-via-multi-scale-ai-swarms)  
+   evidence：利用知识图谱和RAG进行生物医学数据检索，可应用于DDI预测
+2. [Agentic systems for breast cancer treatment recommendations](/202607/19/2607.12051v1-agentic-systems-for-breast-cancer-treatment-recommendations)  
    标签：评分：7.0/10、query:cold-ddi
-   evidence：多智能体AI集群用于自主科学发现与LLM推理
-3. [Towards Autonomous and Auditable Medical Imaging Model Development](/20260710-20260719/2607.10522v1-towards-autonomous-and-auditable-medical-imaging-model-development)  
+   evidence：用于临床治疗推荐的多智能体架构
+3. [A multi-agent workflow converts CAR-T patient evidence into experimentally testable hypotheses](/202607/19/biorxiv-10-64898-2026-07-15-738646-v1-a-multi-agent-workflow-converts-car-t-patient-evidence-into-experimentally-testable-hypotheses)  
+   标签：评分：7.0/10、query:cold-ddi
+   evidence：多智能体工作流用于证据整合与假设生成，可迁移至DDI预测
+4. [NVAITC AI Scientist: A Governed End-to-End Research System -- A Hypertension GWAS Case Study](/202607/19/2607.11084v1-nvaitc-ai-scientist-a-governed-end-to-end-research-system----a-hypertension-gwas-case-study)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：使用LLM智能体的自主多智能体框架用于医学成像模型开发
-4. [Score-Only Distillation for Compact Dense Retrieval](/20260710-20260719/2607.11465v1-score-only-distillation-for-compact-dense-retrieval)  
+   evidence：面向生物医学工作流的智能体研究系统，可用于多智能体DDI推理
+5. [Transplant-Agents: A Multi-Agent Artificial Intelligence Framework for Reproducibility Assessment of Post-Transplant Risk Prediction and Rejection Biomarkers](/202607/19/biorxiv-10-1101-2025-07-10-664265-v2-transplant-agents-a-multi-agent-artificial-intelligence-framework-for-reproducibility-assessment-of-post-transplant-risk-prediction-and-rejection-biomarkers)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：仅使用分数向量的教师-学生蒸馏方法
-5. [Improving Molecular Property Prediction in Small Language Models Using Graph-based Tools](/20260710-20260719/2607.13115v1-improving-molecular-property-prediction-in-small-language-models-using-graph-based-tools)  
+   evidence：整合LLM的多智能体框架用于生物标志物识别和风险预测，方法可迁移至DDI预测
+6. [Medea: An AI agent for therapeutic reasoning across biological contexts](/202607/19/biorxiv-10-64898-2026-01-16-696667-v2-medea-an-ai-agent-for-therapeutic-reasoning-across-biological-contexts)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：分子性质预测的GNN工具增强方法可迁移至药物表示
-6. [BrainPilot: Automating Brain Discovery with Agentic Research](/20260710-20260719/2607.15079v1-brainpilot-automating-brain-discovery-with-agentic-research)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：用于脑科学多步推理和研究自动化的AI智能体
-7. [MolMAE: A Surface-Centric Multimodal Masked Autoencoder for Molecular Representation Learning](/20260710-20260719/biorxiv-10-64898-2026-07-11-737987-v1-molmae-a-surface-centric-multimodal-masked-autoencoder-for-molecular-representation-learning)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：多模态分子表示学习，可应用于药物相互作用预测
+   evidence：用于跨生物上下文治疗推理的AI智能体，可迁移至DDI推理
 
 
 <div class="dpr-home-promo-card">

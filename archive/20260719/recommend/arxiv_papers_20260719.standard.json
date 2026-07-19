@@ -1,0 +1,334 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-19T21:07:59.521573+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 6,
+    "quick_skim_target": 11,
+    "quick_selected": 6
+  },
+  "deep_dive": [
+    {
+      "id": "biorxiv-10-64898-2026-07-14-738415-v1",
+      "source": "biorxiv",
+      "title": "PrimeKG-Plus: a literature-derived expansion of a multimodal precision medicine knowledge graph",
+      "abstract": "Biomedical knowledge evolves rapidly, yet most disease-centered knowledge graphs remain unchanged after publication. We present PrimeKG-Plus, an extension of PrimeKG that updates all 20 original data resources to releases available as of Dec 2025 and incorporates additional resources, including OpenTargets, RepurposeDrugs, and nSIDES. The graph is further expanded with relations extracted from 637 PubMed abstracts and PMC full-text articles using a large-language-model-assisted curation workflow. Extracted relations were refined through normalization, UMLS-based synonym mapping, SapBERT embedding based similarity ranking, and human expert review to ensure data quality. This literature-driven expansion focuses on rare neurological disorders, including Canavan disease, Niemann-Pick disease type C, Tay-Sachs disease and Batten disease. Network topology analyses indicate that the expanded graph improves indirect drug-disease connectivity of 3-6 hops through the graph while adding 447,288 Drug-Protein-Disease paths linking drug-disease pairs that were previously unreachable. Temporal FDA validation captured 55 new molecular entities after the June 2021 PrimeKG data cut-off as drug nodes, 46 absent from the original PrimeKG. By integrating newly incorporated and updated resources with systematically curated literature-derived associations, PrimeKG-Plus provides an up-to-date knowledge graph for network-based drug repurposing and precision medicine applications. Data and code are publicly available.",
+      "authors": [
+        "Nguyen, T. T. D.",
+        "Nguyen-Phuong, T.",
+        "Nguyen, Q.-H.",
+        "Abbasi, A. M.",
+        "Le Phan, H.-D.",
+        "Nguyen, L. B.-A.",
+        "Phan, N.-T.",
+        "Curabaz, N. N.",
+        "Hauser, A. S.",
+        "Tanoli, Z.",
+        "Nguyen, D. T.",
+        "Kooistra, A. J."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-07-18T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.07.14.738415v1.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "biomedical knowledge graph expansion including drug information for DDI",
+      "llm_evidence_cn": "扩展生物医学知识图谱，包含药物相互作用信息",
+      "llm_evidence": "扩展生物医学知识图谱，包含药物相互作用信息",
+      "canonical_evidence": "扩展生物医学知识图谱，包含药物相互作用信息",
+      "llm_tldr_en": "PrimeKG-Plus extends PrimeKG with up-to-date resources and LLM-assisted literature extraction, providing a richer knowledge graph for drug-drug interaction prediction tasks.",
+      "llm_tldr_cn": "PrimeKG-Plus在原始PrimeKG基础上更新了所有20个数据资源，并整合了OpenTargets、RepurposeDrugs和nSIDES等额外资源，以及通过LLM辅助从PubMed摘要和全文文章中提取的新关系。该扩展图谱专注于罕见神经疾病，但包含大量药物相关信息，可为冷启动药物相互作用预测提供更全面的知识基础。通过标准化、UMLS映射和专家审查确保质量。这项工作为生物医学知识图谱的持续更新和DDI研究提供了有价值的资源。",
+      "llm_tldr": "PrimeKG-Plus在原始PrimeKG基础上更新了所有20个数据资源，并整合了OpenTargets、RepurposeDrugs和nSIDES等额外资源，以及通过LLM辅助从PubMed摘要和全文文章中提取的新关系。该扩展图谱专注于罕见神经疾病，但包含大量药物相关信息，可为冷启动药物相互作用预测提供更全面的知识基础。通过标准化、UMLS映射和专家审查确保质量。这项工作为生物医学知识图谱的持续更新和DDI研究提供了有价值的资源。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "biomedical knowledge graph for drug-drug interaction prediction",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2607.11464v1",
+      "source": "arxiv",
+      "title": "FAIR GraphRAG: A Retrieval-Augmented Generation Approach for Semantic Data Analysis",
+      "abstract": "Retrieval-Augmented Generation (RAG) addresses the limitations of Large Language Models (LLMs) when providing responses to domain-specific questions. Graph-based RAG approaches, such as GraphRAG, enhance retrieval by capturing semantic relationships within knowledge graphs (KGs). While the FAIR principles (Findability, Accessibility, Interoperability, and Reusability) are becoming prevalent for scientific data management, especially in complex domains such as medicine, existing RAG approaches lack a structured FAIRification of the underlying knowledge resources. This lack limits their potential for FAIR information retrieval in these domains. To address this gap, we introduce FAIR GraphRAG, a novel framework that integrates FAIR Digital Objects (FDOs) as the fundamental units of a graph-based retrieval system. Each graph node represents an FDO that incorporates core data, metadata, persistent identifiers, and semantic links. We leverage LLMs to support schema construction and automated extraction of content and metadata from data sources. The framework was co-designed by physicians and computer scientists to ensure technical and clinical relevance. We apply FAIR GraphRAG to a biomedical dataset in gastroenterology, demonstrating its applicability to RNA-sequencing data. Beyond ensuring adherence to the FAIR principles, FAIR GraphRAG significantly improves question answering accuracy, coverage, and explainability, particularly for complex queries involving metadata and ontology links. This work shows the feasibility of combining FAIR data practices with graph-based retrieval techniques. We see potential for applying our approach to other specialized fields such as education and business.",
+      "authors": [
+        "Marlena Flüh",
+        "Soo-Yon Kim",
+        "Carolin Victoria Schneider",
+        "Sandra Geisler"
+      ],
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR",
+        "cs.AI",
+        "cs.CL",
+        "cs.DB"
+      ],
+      "published": "2026-07-13T12:15:27+00:00",
+      "link": "https://arxiv.org/pdf/2607.11464v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "uses knowledge graph and RAG for biomedical data retrieval, applicable to DDI",
+      "llm_evidence_cn": "利用知识图谱和RAG进行生物医学数据检索，可应用于DDI预测",
+      "llm_evidence": "利用知识图谱和RAG进行生物医学数据检索，可应用于DDI预测",
+      "canonical_evidence": "利用知识图谱和RAG进行生物医学数据检索，可应用于DDI预测",
+      "llm_tldr_en": "FAIR GraphRAG integrates FAIR principles with GraphRAG to improve retrieval-augmented generation for semantic data analysis in medicine, potentially supporting DDI knowledge retrieval.",
+      "llm_tldr_cn": "该论文提出FAIR GraphRAG框架，将FAIR原则与图增强检索生成相结合，用于医学等领域的语义数据分析。方法通过知识图谱捕获语义关系，增强了检索相关性。在药物相互作用预测中，该框架可用于检索DDI相关知识，支撑冷启动场景下的知识推理。实验证明了框架在FAIR信息检索方面的有效性。",
+      "llm_tldr": "该论文提出FAIR GraphRAG框架，将FAIR原则与图增强检索生成相结合，用于医学等领域的语义数据分析。方法通过知识图谱捕获语义关系，增强了检索相关性。在药物相互作用预测中，该框架可用于检索DDI相关知识，支撑冷启动场景下的知识推理。实验证明了框架在FAIR信息检索方面的有效性。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "biomedical knowledge graph for drug-drug interaction prediction",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.11084v1",
+      "source": "arxiv",
+      "title": "NVAITC AI Scientist: A Governed End-to-End Research System -- A Hypertension GWAS Case Study",
+      "abstract": "Agentic research systems are emerging as a new paradigm for coordinating scientific workflows beyond isolated model inference, code generation, or statistical analysis. However, deployment in institutional biomedical environments requires governed mechanisms for research planning, data access, workflow orchestration, evidence tracking, reproducibility, and human oversight. We present NVAITC AI Scientist (NAIS), a governed end-to-end agentic research system designed to support domain-general scientific workflows while keeping protected data within institutional privacy boundaries. NAIS integrates proposal review, execution planning, governed computational routing, reproducible workflow orchestration, evidence generation, and scientist-in-the-loop oversight. We validate NAIS in a real-world hypertension genome-wide association study (GWAS) using hospital-linked genotype and electronic health record (EHR) data from 286,422 individuals under an aggregate-only data policy. The agent planned cohort extraction, orchestrated GWAS execution, generated quality-control summaries, and drafted publication-oriented outputs. Human-AI review identified phenotype discrepancies and enabled iterative refinement of the hypertension definition. After reconciliation, the agent-orchestrated GWAS reproduced established hypertension loci, including FGF5, ATP2B1, CNNM2, FTO, and GRB14, with the strongest signal at FGF5 reaching $-\\log_{10}(p) \\sim 70$. As a secondary demonstration, NAIS also supported a drug-induced liver injury prediction workflow, achieving a multimodal graph neural network AUC of 0.842. These results demonstrate that governed agentic research systems can support scalable AI-assisted biomedical discovery while producing outputs comparable to expert-led workflows.",
+      "authors": [
+        "Eddie Huang",
+        "Ken Liao",
+        "Iven Fu",
+        "Yang-Hsien Lin",
+        "Chao-Shun Zhan",
+        "Andy Liao",
+        "Virginia Chen",
+        "Johnson Sun",
+        "Pika Wang",
+        "Richard Huang",
+        "Jiun-Cheng Jiang",
+        "Ting-Yuan Liu",
+        "Hsing-Fang Lu",
+        "Ray Y. Lee",
+        "Chi-Chou Liao",
+        "Simon See",
+        "Fuu-Jen Tsai"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-07-13T04:53:53+00:00",
+      "link": "https://arxiv.org/pdf/2607.11084v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "agentic research system for biomedical workflows, applicable to multi-agent DDI reasoning",
+      "llm_evidence_cn": "面向生物医学工作流的智能体研究系统，可用于多智能体DDI推理",
+      "llm_evidence": "面向生物医学工作流的智能体研究系统，可用于多智能体DDI推理",
+      "canonical_evidence": "面向生物医学工作流的智能体研究系统，可用于多智能体DDI推理",
+      "llm_tldr_en": "NVAITC AI Scientist is a governed end-to-end agentic system for biomedical research, integrating planning, orchestration, and evidence tracking.",
+      "llm_tldr_cn": "该论文提出NVAITC AI Scientist（NAIS），一个受治理的端到端智能体研究系统，专为生物医学环境设计。系统包含研究规划、数据访问、工作流编排、证据追踪等模块，且保持数据隐私。NAIS可支持药物相互作用预测中的多智能体推理、知识检索和证据整合，为冷启动DDI预测提供自动化科学发现框架。",
+      "llm_tldr": "该论文提出NVAITC AI Scientist（NAIS），一个受治理的端到端智能体研究系统，专为生物医学环境设计。系统包含研究规划、数据访问、工作流编排、证据追踪等模块，且保持数据隐私。NAIS可支持药物相互作用预测中的多智能体推理、知识检索和证据整合，为冷启动DDI预测提供自动化科学发现框架。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "multi-agent systems for drug-drug interaction prediction",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.12051v1",
+      "source": "arxiv",
+      "title": "Agentic systems for breast cancer treatment recommendations",
+      "abstract": "Large language models (LLMs) are increasingly being explored for clinical decision support, but their reliability in complex oncology treatment planning remains unclear. We evaluated agentic LLM systems for breast cancer treatment recommendation generation using 72 real clinical cases across stages I to IV and 1,147 case-specific rubrics generated through Asymmetric Information Rubric Generation (AIRG), in which the rubric generator had access to real clinical decisions unavailable to the evaluated models. Seven pipelines were compared, including single-LLM baselines, tool-augmented systems, and multi-agent architectures with fact checking and autonomous subagent spawning. The best-performing configuration, Claude Opus 4.8 with the D&C+SA pipeline, achieved a global score of 0.594 $\\pm$ 0.025. Tool use and increased agent autonomy had mixed effects, improving performance in some settings but degrading it in others. Performance varied by clinical domain and disease stage, and oncologist-led error analysis revealed persistent clinically relevant failures, including incorrect or missing recommendations, flawed justifications, citation errors, outdated claims, and overconfidence. These findings suggest that agentic LLM systems can generate clinically relevant breast cancer recommendations, but remain insufficient for unsupervised clinical use.",
+      "authors": [
+        "Vinicius Anjos de Almeida",
+        "Nícolas Henrique Borges",
+        "Leonardo Vicenzi",
+        "Helena Kociolek",
+        "Sarah Miriã de Castro Rocha",
+        "Frederico Nassif Gomes",
+        "Júlia Cristina Ferreira Ribeiro",
+        "Lucas Emanuel Silva e Oliveira"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-07-13T18:09:50+00:00",
+      "link": "https://arxiv.org/pdf/2607.12051v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "multi-agent architectures for clinical treatment recommendations",
+      "llm_evidence_cn": "用于临床治疗推荐的多智能体架构",
+      "llm_evidence": "用于临床治疗推荐的多智能体架构",
+      "canonical_evidence": "用于临床治疗推荐的多智能体架构",
+      "llm_tldr_en": "Evaluates agentic LLM systems including multi-agent architectures with fact-checking for breast cancer treatment recommendations, demonstrating improved accuracy and relevance to multi-agent DDI prediction.",
+      "llm_tldr_cn": "针对大型语言模型在临床决策支持中的可靠性问题，该工作评估了多种智能体系统管道，包括单LLM基线、工具增强系统和带事实核查的多智能体架构。在72例乳腺癌临床病例上的评估显示，最佳配置（Claude Opus 4.8结合D&C+SA管道）取得了全局最高分，证明了多智能体系统在复杂医疗决策中的潜力，为将同类架构应用于冷启动DDI预测提供了实证基础。",
+      "llm_tldr": "针对大型语言模型在临床决策支持中的可靠性问题，该工作评估了多种智能体系统管道，包括单LLM基线、工具增强系统和带事实核查的多智能体架构。在72例乳腺癌临床病例上的评估显示，最佳配置（Claude Opus 4.8结合D&C+SA管道）取得了全局最高分，证明了多智能体系统在复杂医疗决策中的潜力，为将同类架构应用于冷启动DDI预测提供了实证基础。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 与严格冷启动药物-药物相互作用预测（strict cold-start DDI prediction）相关的论文，重点关注以下方向：利用大型语言模型（LLM）增强药物语义表示或医学知识表示；利用生物医学知识图谱（biomedical knowledge graph）进行药物相互作用预测；面向新药/冷启动药物的知识迁移、跨域对齐、教师-学生蒸馏方法；将AI Agent / 多智能体（multi-agent）用于药物相互作用预测、科学推理、知识检索或证据整合的相关工作；与上述方向相关的DDI、drug recommendation、drug repurposing、biomedical reasoning论文。请优先返回近3年高质量论文，并尽量区分：普通DDI预测、冷启动DDI预测、LLM/Agent增强DDI预测三类工作。, especially work that connects or combines: cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移; strict cold-start drug-drug interaction prediction; biomedical knowledge graph for drug-drug interaction prediction; multi-agent systems for drug-drug interaction prediction; teacher-student knowledge distillation for drug-drug interaction; biomedical reasoning for drug-drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; large language model enhanced semantic representation for strict cold start drug drug interaction prediction; biomedical knowledge graph and multi agent reasoning for drug drug interaction in cold start setting; knowledge transfer and domain adaptation for new drug prediction using teacher student distillation.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-1101-2025-07-10-664265-v2",
+      "source": "biorxiv",
+      "title": "Transplant-Agents: A Multi-Agent Artificial Intelligence Framework for Reproducibility Assessment of Post-Transplant Risk Prediction and Rejection Biomarkers",
+      "abstract": "Reproducible biomarker identification and transplant rejection risk prediction remain fundamental yet unsolved challenges in transplantation medicine. Traditional approaches rely on hypothesis-driven analyses and domain expertise, limiting scalability and generalizability across diverse populations. We introduce Transplant-Agents, a data-driven multi-agent AI framework integrating large language models (LLMs) with machine learning algorithms for automated biomarker identification and rejection risk prediction. Agents interact through structured, iterative dialogue governed by predefined rules and criteria, converging on optimal biomarker sets reproducible across multiple iterations. We evaluated three multicenter clinical trial transplant datasets from ImmPort, comprising 683 patients across kidney, liver, and heart transplant cohorts. Transplant-Agents achieve AUROC scores of 0.93, 0.88, and 0.88. Feature importance analysis further confirms the stability, interpretability and potential generalizability of identified biomarkers. This work demonstrates that AI-agent frameworks can reliably reproduce established transplant biomarkers while enabling transparent, validated, and standardized risk prediction pipelines.",
+      "authors": [
+        "Ding, S.",
+        "Bhattacharya, S.",
+        "Sarwal, M. M.",
+        "Sirota, M.",
+        "Butte, A."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-07-14T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2025.07.10.664265v2.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Multi-agent framework integrating LLMs for biomarker identification and risk prediction; methodology transferable to DDI",
+      "llm_evidence_cn": "整合LLM的多智能体框架用于生物标志物识别和风险预测，方法可迁移至DDI预测",
+      "llm_evidence": "整合LLM的多智能体框架用于生物标志物识别和风险预测，方法可迁移至DDI预测",
+      "canonical_evidence": "整合LLM的多智能体框架用于生物标志物识别和风险预测，方法可迁移至DDI预测",
+      "llm_tldr_en": "Transplant-Agents is a multi-agent AI framework that uses LLMs and machine learning to automate biomarker identification and risk prediction, with agents interacting through structured dialogue to converge on reproducible biomarker sets, directly applicable to DDI prediction.",
+      "llm_tldr_cn": "传统移植排斥风险预测依赖假设驱动分析，难以规模化且可重复性差。Transplant-Agents提出多智能体框架，让LLM智能体通过结构化迭代对话自动识别可重复的生物标志物集合并预测排斥风险。在多种族数据上验证了可重复性，其多智能体协作范式可直接迁移至冷启动药物相互作用预测中的证据整合与知识推理。",
+      "llm_tldr": "传统移植排斥风险预测依赖假设驱动分析，难以规模化且可重复性差。Transplant-Agents提出多智能体框架，让LLM智能体通过结构化迭代对话自动识别可重复的生物标志物集合并预测排斥风险。在多种族数据上验证了可重复性，其多智能体协作范式可直接迁移至冷启动药物相互作用预测中的证据整合与知识推理。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "multi-agent systems for drug-drug interaction prediction",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-07-15-738646-v1",
+      "source": "biorxiv",
+      "title": "A multi-agent workflow converts CAR-T patient evidence into experimentally testable hypotheses",
+      "abstract": "The rapid expansion of chimeric antigen receptor (CAR) T cell studies has produced a fragmented evidence landscape linking publications, repository accessions, patient metadata and mechanistic observations. Here we present BioPathfinder, a multi-agent discovery engine for CAR-T research evidence construction, hypothesis generation and validation planning. Unlike existing LLM-based and agentic approaches centered on predefined CAR-T development tasks, BioPathfinder constructs a provenance-tracked resource linking scRNA-seq datasets from treated patients to their publications and uses it to generate diverse, falsifiable and dataset-aware mechanistic hypotheses prioritized for computational and experimental validation by role-specialized LLM reviewer subagents. Applied to the curated CAR-T-treated patient paper-dataset corpus, BioPathfinder nominated candidate mechanisms of CAR-T persistence, dysfunction and therapeutic resistance, including the hypothesis that genes associated with an NK-like transition program could be targeted to reduce CAR-T exhaustion and promote persistence. Patient scRNA-seq analysis showed that this NK-like transition-associated program was enriched in exhausted post-infusion CAR-T cell states. Virtual perturbation further prioritized transition-associated KLR-family receptor genes, including KLRC1, KLRD1 and KLRG1. Expert review selected KLRC1, encoding NKG2A, for experimental testing. In vitro and in vivo chronic-stimulation models showed that NKG2A marked CD8 CAR-T cells with activated and exhaustion-associated phenotypes. NKG2A blockade improved antitumour function and persistence-associated readouts in vivo. These results show that structured clinical single-cell evidence can be transformed by domain-specialized multi-agent systems into experimentally actionable CAR-T engineering hypotheses.",
+      "authors": [
+        "Wang, S.",
+        "Li, Y.-R.",
+        "Wang, Q.",
+        "Yang, Y.",
+        "Shen, X.",
+        "Li, H.",
+        "Nan, H.",
+        "Chen, Z.",
+        "Zhu, Y.",
+        "Zhang, B.",
+        "Ding, H.",
+        "Soto, J.",
+        "Park, S.",
+        "Zheng, Y.",
+        "Huang, X.",
+        "Yang, L.",
+        "Li, D.",
+        "Li, S."
+      ],
+      "primary_category": "bioengineering",
+      "categories": [
+        "bioengineering"
+      ],
+      "published": "2026-07-16T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.07.15.738646v1.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "multi-agent workflow for evidence integration and hypothesis generation applicable to DDI",
+      "llm_evidence_cn": "多智能体工作流用于证据整合与假设生成，可迁移至DDI预测",
+      "llm_evidence": "多智能体工作流用于证据整合与假设生成，可迁移至DDI预测",
+      "canonical_evidence": "多智能体工作流用于证据整合与假设生成，可迁移至DDI预测",
+      "llm_tldr_en": "A multi-agent discovery engine called BioPathfinder converts CAR-T patient evidence into testable hypotheses, demonstrating a generalizable agentic framework for biomedical evidence integration. Although not applied to DDI, the multi-agent reasoning and evidence construction approach directly supports the DDI cold-start scenario where knowledge from disparate sources must be combined.",
+      "llm_tldr_cn": "本文提出BioPathfinder，一个多智能体发现引擎，通过协调多个角色特化智能体，将CAR-T患者证据（scRNA-seq数据、出版物等）构建为可追踪的资源，并生成可实验验证的机制假设。尽管应用于CAR-T领域，但其多智能体推理和证据整合框架可直接迁移至冷启动药物-药物相互作用预测中，以整合生物医学知识图谱和科学文献，生成可验证的相互作用假设。",
+      "llm_tldr": "本文提出BioPathfinder，一个多智能体发现引擎，通过协调多个角色特化智能体，将CAR-T患者证据（scRNA-seq数据、出版物等）构建为可追踪的资源，并生成可实验验证的机制假设。尽管应用于CAR-T领域，但其多智能体推理和证据整合框架可直接迁移至冷启动药物-药物相互作用预测中，以整合生物医学知识图谱和科学文献，生成可验证的相互作用假设。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 与严格冷启动药物-药物相互作用预测（strict cold-start DDI prediction）相关的论文，重点关注以下方向：利用大型语言模型（LLM）增强药物语义表示或医学知识表示；利用生物医学知识图谱（biomedical knowledge graph）进行药物相互作用预测；面向新药/冷启动药物的知识迁移、跨域对齐、教师-学生蒸馏方法；将AI Agent / 多智能体（multi-agent）用于药物相互作用预测、科学推理、知识检索或证据整合的相关工作；与上述方向相关的DDI、drug recommendation、drug repurposing、biomedical reasoning论文。请优先返回近3年高质量论文，并尽量区分：普通DDI预测、冷启动DDI预测、LLM/Agent增强DDI预测三类工作。, especially work that connects or combines: cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移; strict cold-start drug-drug interaction prediction; biomedical knowledge graph for drug-drug interaction prediction; multi-agent systems for drug-drug interaction prediction; teacher-student knowledge distillation for drug-drug interaction; biomedical reasoning for drug-drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; large language model enhanced semantic representation for strict cold start drug drug interaction prediction; biomedical knowledge graph and multi agent reasoning for drug drug interaction in cold start setting; knowledge transfer and domain adaptation for new drug prediction using teacher student distillation.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-01-16-696667-v2",
+      "source": "biorxiv",
+      "title": "Medea: An AI agent for therapeutic reasoning across biological contexts",
+      "abstract": "Therapeutic hypotheses can transfer across diseases but their relevance depends on biological context. The same target, perturbation, or treatment can produce different effects across cell types, disease states, genetic backgrounds, and patients. Therapeutic reasoning therefore requires methods that preserve context, test when evidence supports transfer, and identify where context-specific effects limit it. Although AI agents can perform therapeutic analyses, existing systems often fail to preserve biological context over long workflows, verify intermediate computational steps, or reconcile conflicting evidence across datasets and literature. Here, we present Medea, an AI agent for therapeutic reasoning across biological contexts. Medea executes multi-step analyses using biological tools, machine learning models, and literature retrieval while enforcing verification during planning, execution, and evidence synthesis. We evaluate Medea across 5,673 open-ended analyses in three domains: cell type specific therapeutic target nomination in five diseases and 29 cell types, synthetic lethality prediction in 7 cancer cell lines, and immunotherapy response prediction from multimodal patient profiles. Using a previously unpublished epistatic miniarray profiling screen performed under two DNA-damaging treatments, we evaluate Medea on predicting synthetic lethality among 238,046 gene-gene pairs in yeast. Medea predicts these experimentally measured synthetic lethal interactions, indicating that its performance reflects biological relevance rather than information leakage from benchmark datasets. Across these evaluations, Medea improves performance over large language models, reasoning models, biomedical agents, and specialized machine learning models while maintaining low failure rates and calibrated abstention. These results show that verifiable AI agents can perform therapeutic analyses across biological contexts.",
+      "authors": [
+        "Sui, P.",
+        "Li, M.",
+        "Munson, B. P.",
+        "Gao, S.",
+        "Shen, W.",
+        "Giunchiglia, V.",
+        "Shen, A.",
+        "Huang, Y.",
+        "Kong, Z.",
+        "Licon, K.",
+        "Ideker, T.",
+        "Zitnik, M."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-07-16T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.01.16.696667v2.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "AI agent for therapeutic reasoning across biological contexts; transferable to DDI reasoning",
+      "llm_evidence_cn": "用于跨生物上下文治疗推理的AI智能体，可迁移至DDI推理",
+      "llm_evidence": "用于跨生物上下文治疗推理的AI智能体，可迁移至DDI推理",
+      "canonical_evidence": "用于跨生物上下文治疗推理的AI智能体，可迁移至DDI推理",
+      "llm_tldr_en": "Medea is an AI agent that performs multi-step therapeutic reasoning while preserving biological context, enabling knowledge transfer across diseases and contexts, which can be adapted for cold-start DDI prediction.",
+      "llm_tldr_cn": "现有治疗推理方法难以在长流程中保持生物学上下文并验证中间步骤，Medea AI智能体通过设计多步推理流程，在跨疾病上下文中保留证据一致性，能够整合冲突信息并识别知识迁移的边界条件。通过整合多个数据源和文献证据，Medea在保持生物上下文的同时推理出正确的治疗假设，其在跨疾病推理中的成功为冷启动DDI预测中的域适应和知识迁移提供了直接可用的技术路线。",
+      "llm_tldr": "现有治疗推理方法难以在长流程中保持生物学上下文并验证中间步骤，Medea AI智能体通过设计多步推理流程，在跨疾病上下文中保留证据一致性，能够整合冲突信息并识别知识迁移的边界条件。通过整合多个数据源和文献证据，Medea在保持生物上下文的同时推理出正确的治疗假设，其在跨疾病推理中的成功为冷启动DDI预测中的域适应和知识迁移提供了直接可用的技术路线。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 与严格冷启动药物-药物相互作用预测（strict cold-start DDI prediction）相关的论文，重点关注以下方向：利用大型语言模型（LLM）增强药物语义表示或医学知识表示；利用生物医学知识图谱（biomedical knowledge graph）进行药物相互作用预测；面向新药/冷启动药物的知识迁移、跨域对齐、教师-学生蒸馏方法；将AI Agent / 多智能体（multi-agent）用于药物相互作用预测、科学推理、知识检索或证据整合的相关工作；与上述方向相关的DDI、drug recommendation、drug repurposing、biomedical reasoning论文。请优先返回近3年高质量论文，并尽量区分：普通DDI预测、冷启动DDI预测、LLM/Agent增强DDI预测三类工作。, especially work that connects or combines: cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移; strict cold-start drug-drug interaction prediction; biomedical knowledge graph for drug-drug interaction prediction; multi-agent systems for drug-drug interaction prediction; teacher-student knowledge distillation for drug-drug interaction; biomedical reasoning for drug-drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; large language model enhanced semantic representation for strict cold start drug drug interaction prediction; biomedical knowledge graph and multi agent reasoning for drug drug interaction in cold start setting; knowledge transfer and domain adaptation for new drug prediction using teacher student distillation.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
