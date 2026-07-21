@@ -1,0 +1,242 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-21T21:35:39.896773+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 4,
+    "quick_skim_target": 11,
+    "quick_selected": 4
+  },
+  "deep_dive": [
+    {
+      "id": "2607.17070v1",
+      "source": "arxiv",
+      "title": "Bridging the Information Gap: Semantic Densification and Hindsight Distillation for Cold-Start Prediction",
+      "abstract": "New-user cold-start is a critical bottleneck for e-commerce platforms: predicting user lifetime value (LTV) and conversion rate (CVR) for users with sparse interaction history. Two prior directions -- LLM-based semantic augmentation and learning using privileged information (LUPI) -- each face a key limitation. First, LLM augmentation produces unstructured rationales that are noisy and hard to operationalize in production. Second, naive student-teacher distillation can be brittle due to an information gap between the privileged teacher and the sparse student; moreover, this gap is heterogeneous across users. We propose SemRaD, a Semantic Reasoning-aware Distillation framework addressing both limitations. First, a Structured Semantic Reasoning Pipeline replaces free-form rationales with a structured schema built via a discover-curate-audit workflow, producing per user a Densified Semantic Profile (consumed by the deployed student via a Semantic-Gated Encoder that focuses on the most informative dimensions) and a Hindsight Distillation Target reconciled from pre- and post-conversion reasoning (used only at training). Second, to bridge this gap and handle its heterogeneity, a Hindsight-Aware Distillation Network transfers privileged knowledge via the hindsight target, with Distillation Experts improving transfer under per-user variability. On a large-scale industrial dataset, SemRaD lifts +1.9% LTV (Gini) and +1.0% CVR (AUROC) over a production-grade base; a four-week online A/B at Keeta confirms +1.0% LTV / +0.43% CVR. SemRaD also matches the production system's LTV using only 9% of the training data while improving CVR by 0.8%.",
+      "authors": [
+        "Hao Duong Le",
+        "Yifei Gao",
+        "Huan Li",
+        "Lun Jiang",
+        "Chen Bai",
+        "Ke Xing",
+        "Chen Zhang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-07-19T04:25:15+00:00",
+      "link": "https://arxiv.org/pdf/2607.17070v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "teacher-student distillation for cold-start prediction with semantic augmentation",
+      "llm_evidence_cn": "面向冷启动预测的教师-学生蒸馏与语义增强",
+      "llm_evidence": "面向冷启动预测的教师-学生蒸馏与语义增强",
+      "canonical_evidence": "面向冷启动预测的教师-学生蒸馏与语义增强",
+      "llm_tldr_en": "SemRaD uses semantic densification and hindsight distillation to bridge the information gap in cold-start prediction, directly relevant to teacher-student knowledge distillation for DDI.",
+      "llm_tldr_cn": "该论文针对冷启动预测中教师-学生蒸馏的信息鸿沟问题，提出SemRaD框架。通过语义稠密化将LLM生成的杂乱推理结构化，并利用事后蒸馏缓解稀疏学生与特权教师之间的异质性差距。在电商冷启动预测任务上，该方法显著优于基线。其核心思想可直接迁移至冷启动药物相互作用预测，为新药缺乏交互数据时的知识蒸馏提供了有效方法论。",
+      "llm_tldr": "该论文针对冷启动预测中教师-学生蒸馏的信息鸿沟问题，提出SemRaD框架。通过语义稠密化将LLM生成的杂乱推理结构化，并利用事后蒸馏缓解稀疏学生与特权教师之间的异质性差距。在电商冷启动预测任务上，该方法显著优于基线。其核心思想可直接迁移至冷启动药物相互作用预测，为新药缺乏交互数据时的知识蒸馏提供了有效方法论。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "teacher-student knowledge distillation for drug-drug interaction",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2607.14149v1",
+      "source": "arxiv",
+      "title": "Enhancing Small Language Models Reasoning through Knowledge Graph Grounding",
+      "abstract": "Although large language models (LLMs) have set benchmarks for zero-shot reasoning, their deployment remains cost-prohibitive and environmentally taxing. Small Language Models (SLMs) offer a sustainable alternative, but prone to errors, on tasks requiring complex, multi-hop logical grounding. We investigate a neuro-symbolic agentic framework to enhance the reasoning capabilities of SLMs, specifically Gemma 3 (1B, 4B) and Llama 3.2 (3B), using the CLUTRR kinship benchmark. Our approach transforms the SLM into a minimalist agent utilizing two specialized tool calls: extract_facts for symbolic triplet extraction and get_hint for expert reasoning via a Relational Graph Convolutional Network (RGCN). We evaluate these models across two configurations, both in an Oracle scenario with ground-truth triplets and a Realistic scenario relying on self-extracted knowledge. Our results reveal that while RGCN-derived hints provide a 1.5 - 2x performance gain over story-only baselines, the system is constrained by the extraction bottleneck and sequential deductive fragility, where early extraction errors compound over multi-hop chains. Furthermore, we identify a \"distraction effect\" in specific architectures where noisy, self-generated facts degrade performance despite the presence of expert hints. This work characterizes the challenges of symbolic grounding in low-resource agentic systems and provides a roadmap for iterative verification in neuro-symbolic agentic pipelines.",
+      "authors": [
+        "Dimitrios Kelesis",
+        "Konstantinos Bougiatiotis",
+        "Georgios Paliouras"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-07-14T13:07:46+00:00",
+      "link": "https://arxiv.org/pdf/2607.14149v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "agentic framework with knowledge graph grounding for enhancing reasoning",
+      "llm_evidence_cn": "使用知识图谱增强推理的代理框架",
+      "llm_evidence": "使用知识图谱增强推理的代理框架",
+      "canonical_evidence": "使用知识图谱增强推理的代理框架",
+      "llm_tldr_en": "Proposes a neuro-symbolic agentic framework that transforms small language models into agents using knowledge graph grounding to improve multi-hop reasoning, demonstrating potential for biomedical reasoning transfer.",
+      "llm_tldr_cn": "大型语言模型虽推理能力强但部署昂贵，小型模型在复杂逻辑推理上易出错。本文提出一种神经符号代理框架，将小型语言模型转化为智能体，通过提取事实和基于RGCN的专家提示进行知识图谱推理。在CLUTRR亲属关系基准上，该方法显著提升了小模型的推理准确率。该工作为知识图谱与代理推理结合提供了可迁移范例，有望应用于生物医学推理和药物相互作用预测等场景。",
+      "llm_tldr": "大型语言模型虽推理能力强但部署昂贵，小型模型在复杂逻辑推理上易出错。本文提出一种神经符号代理框架，将小型语言模型转化为智能体，通过提取事实和基于RGCN的专家提示进行知识图谱推理。在CLUTRR亲属关系基准上，该方法显著提升了小模型的推理准确率。该工作为知识图谱与代理推理结合提供了可迁移范例，有望应用于生物医学推理和药物相互作用预测等场景。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 与严格冷启动药物-药物相互作用预测（strict cold-start DDI prediction）相关的论文，重点关注以下方向：利用大型语言模型（LLM）增强药物语义表示或医学知识表示；利用生物医学知识图谱（biomedical knowledge graph）进行药物相互作用预测；面向新药/冷启动药物的知识迁移、跨域对齐、教师-学生蒸馏方法；将AI Agent / 多智能体（multi-agent）用于药物相互作用预测、科学推理、知识检索或证据整合的相关工作；与上述方向相关的DDI、drug recommendation、drug repurposing、biomedical reasoning论文。请优先返回近3年高质量论文，并尽量区分：普通DDI预测、冷启动DDI预测、LLM/Agent增强DDI预测三类工作。, especially work that connects or combines: cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移; strict cold-start drug-drug interaction prediction; biomedical knowledge graph for drug-drug interaction prediction; multi-agent systems for drug-drug interaction prediction; teacher-student knowledge distillation for drug-drug interaction; biomedical reasoning for drug-drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; large language model enhanced semantic representation for strict cold start drug drug interaction prediction; biomedical knowledge graph and multi agent reasoning for drug drug interaction in cold start setting; knowledge transfer and domain adaptation for new drug prediction using teacher student distillation.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.16851v1",
+      "source": "arxiv",
+      "title": "AgentBrew: Lifelong Knowledge Brewing from Strong Teachers to Weak LLM Agents",
+      "abstract": "Deploying LLM agents typically requires a compact test-time student, even if a stronger teacher is available during training. We study knowledge brewing: distilling a teacher's interactive experience into a persistent external memory for the student. Crucially, this requires no weight updates, expert demonstrations, ground-truth labels, or test-time teacher access. This setting poses two challenges: environments provide only sparse, binary feedback, and teacher-authored notes must be inherently tailored to be concretely executable by a substantially weaker student. To address these hurdles, we propose AgentBrew, comprising two coupled components. First, a failure-triggered teacher--Ralph Loop mitigates sparse feedback by transforming student failures into environment-validated notes. Second, student-aware synthesis calibrates teacher knowledge to the weak executor's operational granularity, yielding model-specific, actionable guidance. Extensive evaluations and comprehensive ablations across coding, math, and tool-use tasks demonstrate that this asymmetric, training-free brewing paradigm produces highly capable yet deployable LLM agents.",
+      "authors": [
+        "Yangqin Jiang",
+        "Chao Huang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-07-18T15:23:45+00:00",
+      "link": "https://arxiv.org/pdf/2607.16851v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "teacher-student knowledge distillation for LLM agents, method transferable to DDI prediction",
+      "llm_evidence_cn": "教师-学生知识蒸馏用于LLM代理，方法可迁移至DDI预测",
+      "llm_evidence": "教师-学生知识蒸馏用于LLM代理，方法可迁移至DDI预测",
+      "canonical_evidence": "教师-学生知识蒸馏用于LLM代理，方法可迁移至DDI预测",
+      "llm_tldr_en": "AgentBrew distills a strong teacher LLM agent's interactive experience into persistent external memory for a weaker student agent without weight updates, enabling lifelong knowledge brewing.",
+      "llm_tldr_cn": "本文提出AgentBrew，将强教师LLM代理的交互经验蒸馏为持久外部记忆，供弱学生代理使用，无需权重更新或真值标签。方法包括失败触发的教师循环和专门为学生定制的笔记生成。该蒸馏机制可直接应用于冷启动DDI场景，将专家模型（教师）的知识迁移至轻量级预测模型（学生），实现知识迁移和跨域对齐。",
+      "llm_tldr": "本文提出AgentBrew，将强教师LLM代理的交互经验蒸馏为持久外部记忆，供弱学生代理使用，无需权重更新或真值标签。方法包括失败触发的教师循环和专门为学生定制的笔记生成。该蒸馏机制可直接应用于冷启动DDI场景，将专家模型（教师）的知识迁移至轻量级预测模型（学生），实现知识迁移和跨域对齐。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "teacher-student knowledge distillation for drug-drug interaction",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.17508v1",
+      "source": "arxiv",
+      "title": "Retrieval-Augmented Interpretable Learning: Towards Task-Specific Zero-Shot Models in Healthcare",
+      "abstract": "We introduce Retrieval-Augmented Interpretable Learning (RAIL), a probabilistic meta-learning framework for zero-shot generation of task-specific interpretable models that synthesizes coefficient-space structure from natural-language task descriptions and a memory of previously learned task-specific predictors. RAIL retrieves related source tasks, transfers structure through coefficient space, and generates a new predictor in the original diagnostic-feature space, enabling zero-shot and few-shot clinical procedure prediction with feature-level explanations. Its probabilistic formulation provides uncertainty over retrieval, model coefficients, and predictions, supporting reliability-aware deployment: uncertain predictions or unstable explanations can be flagged for additional clinical review rather than treated as automatic decisions. This makes RAIL particularly suited for healthcare settings, where prediction tasks are highly long-tailed, new clinical targets arise frequently, and models must remain inspectable, uncertainty-aware, and compatible with human oversight. Across long-tailed clinical procedure prediction tasks, RAIL maintains reliable performance across data-availability regimes: it achieves 73.4% accuracy in the held-out zero-shot settings, where no supervised task-specific model can be trained, and remains near 73.2% accuracy in the extreme few-shot regime with only 2-4 examples, where supervised task-specific models perform close to chance. RAIL further benefits from clinically informed task representations and yields retrieval, uncertainty, and coefficient-level diagnostics that make model behavior more transparent. These results suggest a path toward scalable clinical prediction systems that can adapt to new tasks while preserving interpretability and reliability.",
+      "authors": [
+        "Sazan Mahbub",
+        "Caleb Ellington",
+        "Zhiyuan Li",
+        "Yixin Yang",
+        "Souvik Kundu",
+        "Ben Lengerich",
+        "Eric P. Xing"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-07-20T03:31:36+00:00",
+      "link": "https://arxiv.org/pdf/2607.17508v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "zero-shot cross-domain knowledge transfer for new tasks",
+      "llm_evidence_cn": "面向新任务的零样本跨域知识迁移",
+      "llm_evidence": "面向新任务的零样本跨域知识迁移",
+      "canonical_evidence": "面向新任务的零样本跨域知识迁移",
+      "llm_tldr_en": "RAIL enables zero-shot transfer of task-specific predictors via retrieval and coefficient-space structure, relevant to cross-domain knowledge transfer for cold-start drugs.",
+      "llm_tldr_cn": "该论文提出RAIL框架，通过检索相关源任务并在系数空间进行结构迁移，实现零样本生成新任务预测器。该方法可直接应用于冷启动药物的跨域知识迁移，尽管当前聚焦临床程序预测，其零样本迁移机制为解决冷启动DDI预测中的知识迁移问题提供了方法论基础。实验展示了在多个医疗预测任务上的有效迁移和不确定性量化能力。",
+      "llm_tldr": "该论文提出RAIL框架，通过检索相关源任务并在系数空间进行结构迁移，实现零样本生成新任务预测器。该方法可直接应用于冷启动药物的跨域知识迁移，尽管当前聚焦临床程序预测，其零样本迁移机制为解决冷启动DDI预测中的知识迁移问题提供了方法论基础。实验展示了在多个医疗预测任务上的有效迁移和不确定性量化能力。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-03-19-712954-v2",
+      "source": "biorxiv",
+      "title": "BioReason-Pro: Advancing Protein Function Prediction with Multimodal Biological Reasoning",
+      "abstract": "Protein function annotation is fundamental to understanding biological mechanisms, designing therapeutics, and advancing biomedical research. Current computational methods either rely on shallow sequence similarity or treat function prediction as isolated classification tasks, failing to capture the integrative reasoning across sequence, structure, domains, and interactions that expert biologists perform to infer function. We introduce BioReason-Pro, the first multimodal reasoning large language model (LLM) for protein function prediction that integrates protein embeddings with biological context to generate structured reasoning traces. A key input into BioReason-Pro is the set of GO term predictions made by GO-GPT, our autoregressive transformer that captures hierarchical and cross-aspect dependencies of GO terms. BioReason-Pro is trained via supervised fine-tuning on synthetic reasoning traces generated by GPT-5 for over 130K proteins and further optimized through reinforcement learning. It achieves 73.6% max on GO term prediction and an LLM judge score of 8/10 on functional summaries, substantially outperforming previous methods. Evaluations with human protein experts show that BioReason-Pro annotations are preferred over ground truth UniProt annotations in 79% of cases. Remarkably, BioReason-Pro predicted a novel interaction partner for the renal cancer biomarker RCDG1, which we confirmed in the lab by co-immunoprecipitation. In other binding-partner predictions, its per-residue attention localized to the exact contact residues resolved in cryo-EM structures. Together, GO-GPT and BioReason-Pro establish a framework for protein function prediction that combines precise ontology modeling with interpretable biological reasoning.",
+      "authors": [
+        "Fallahpour, A.",
+        "Seyed-Ahmadi, A.",
+        "Idehpour, P.",
+        "Ibrahim, O.",
+        "Choi, B. M. H.",
+        "Gupta, P.",
+        "Naimer, J.",
+        "Zhu, K.",
+        "Shah, A.",
+        "Ma, S.",
+        "Adduri, A.",
+        "Güloglu, T.",
+        "Liu, N.",
+        "Cui, H.",
+        "Jain, A.",
+        "de Castro, M.",
+        "Cembellin-Prieto, A.",
+        "Stiles, J. S.",
+        "Nemcko, F.",
+        "Nevue, A. A.",
+        "Moon, H. C.",
+        "Sosnick, L.",
+        "Markham, O.",
+        "Duan, H.",
+        "Lee, M. Y. Y.",
+        "Salvador, A. F. M.",
+        "Maddison, C. J.",
+        "Thaiss, C. A.",
+        "Ricci-Tam, C.",
+        "Plosky, B. S.",
+        "Burke, D. P.",
+        "Hsu, P. D.",
+        "Goodarzi, H.",
+        "Wang, B."
+      ],
+      "primary_category": "molecular biology",
+      "categories": [
+        "molecular biology"
+      ],
+      "published": "2026-07-19T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.03.19.712954v2.full.pdf",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "multimodal reasoning LLM for protein function",
+      "llm_evidence_cn": "多模态推理LLM用于蛋白质功能预测",
+      "llm_evidence": "多模态推理LLM用于蛋白质功能预测",
+      "canonical_evidence": "多模态推理LLM用于蛋白质功能预测",
+      "llm_tldr_en": "Introduces BioReason-Pro, a multimodal reasoning LLM integrating protein embeddings with biological context for protein function prediction via structured reasoning traces.",
+      "llm_tldr_cn": "该论文针对现有蛋白质功能预测方法依赖浅层序列相似性或孤立分类任务、缺乏整合推理能力的问题，提出了BioReason-Pro——首个用于蛋白质功能预测的多模态推理大语言模型。该模型将蛋白质嵌入与生物学上下文结合，生成结构化推理轨迹。输入包含GO-GPT预测的GO术语。实验结果表明该方法在多物种功能注释上显著优于现有方法，为生物医学推理（如药物相互作用推理）提供了可借鉴的多模态推理范式。",
+      "llm_tldr": "该论文针对现有蛋白质功能预测方法依赖浅层序列相似性或孤立分类任务、缺乏整合推理能力的问题，提出了BioReason-Pro——首个用于蛋白质功能预测的多模态推理大语言模型。该模型将蛋白质嵌入与生物学上下文结合，生成结构化推理轨迹。输入包含GO-GPT预测的GO术语。实验结果表明该方法在多物种功能注释上显著优于现有方法，为生物医学推理（如药物相互作用推理）提供了可借鉴的多模态推理范式。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "biomedical reasoning for drug-drug interaction",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
