@@ -6,37 +6,30 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-21
-- 运行时间：2026-07-21 21:42:02 UTC
+- 最新运行日期：2026-07-22
+- 运行时间：2026-07-22 21:18:42 UTC
 - 运行状态：成功
-- 本次总论文数：5
-- 精读区：1
-- 速读区：4
+- 本次总论文数：3
+- 精读区：0
+- 速读区：3
 
 ### 今日简报（AI）
-1) 今日聚焦冷启动预测与知识增强推理，精读论文通过语义稠密化与后见蒸馏填补信息缺口。
-2) 最值得关注：冷启动预测中信息缺口填补方法，以及知识图谱增强小语言模型推理（《Bridging the Information Gap》8.0分，《Enhancing Small Language Models Reasoning》7.0分）。
-3) 建议优先研究语义稠密与蒸馏技术，提升模型在稀疏数据场景下的预测能力。
-- 详情：[/202607/21/README](/202607/21/README)
+今日精选3篇速读论文，解锁精准医学知识图谱、AI逆合成规划与空间多组学融合新进展。最值得关注两篇：PrimeKG-Plus拓展精准医学知识图谱（7.0分）及RetroAgent利用大模型实现智能逆合成规划（6.0分）。建议优先阅读前者，掌握多模态图谱构建前沿方法。
+- 详情：[/202607/22/README](/202607/22/README)
 
 ### 精读区论文标签
-1. [Bridging the Information Gap: Semantic Densification and Hindsight Distillation for Cold-Start Prediction](/202607/21/2607.17070v1-bridging-the-information-gap-semantic-densification-and-hindsight-distillation-for-cold-start-prediction)  
-   标签：评分：8.0/10、query:cold-ddi
-   evidence：面向冷启动预测的教师-学生蒸馏与语义增强
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Enhancing Small Language Models Reasoning through Knowledge Graph Grounding](/202607/21/2607.14149v1-enhancing-small-language-models-reasoning-through-knowledge-graph-grounding)  
+1. [PrimeKG-Plus: a literature-derived expansion of a multimodal precision medicine knowledge graph](/202607/22/biorxiv-10-64898-2026-07-14-738415-v2-primekg-plus-a-literature-derived-expansion-of-a-multimodal-precision-medicine-knowledge-graph)  
    标签：评分：7.0/10、query:cold-ddi
-   evidence：使用知识图谱增强推理的代理框架
-2. [AgentBrew: Lifelong Knowledge Brewing from Strong Teachers to Weak LLM Agents](/202607/21/2607.16851v1-agentbrew-lifelong-knowledge-brewing-from-strong-teachers-to-weak-llm-agents)  
+   evidence：利用文献扩展生物医学知识图谱，可用于药物相互作用预测
+2. [RetroAgent: Harnessing LLMs to Search Over Structured Memory for Agentic Retrosynthesis Planning](/202607/22/2607.14512v1-retroagent-harnessing-llms-to-search-over-structured-memory-for-agentic-retrosynthesis-planning)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：教师-学生知识蒸馏用于LLM代理，方法可迁移至DDI预测
-3. [Retrieval-Augmented Interpretable Learning: Towards Task-Specific Zero-Shot Models in Healthcare](/202607/21/2607.17508v1-retrieval-augmented-interpretable-learning-towards-task-specific-zero-shot-models-in-healthcare)  
+   evidence：基于LLM的智能体结合结构化记忆进行逆合成规划，可类比用于药物相互作用预测
+3. [SpatialJEPA: JEPA-inspired graph-context distillation for spatially aware multiomics integration](/202607/22/biorxiv-10-64898-2026-07-21-739810-v1-spatialjepa-jepa-inspired-graph-context-distillation-for-spatially-aware-multiomics-integration)  
    标签：评分：6.0/10、query:cold-ddi
-   evidence：面向新任务的零样本跨域知识迁移
-4. [BioReason-Pro: Advancing Protein Function Prediction with Multimodal Biological Reasoning](/202607/21/biorxiv-10-64898-2026-03-19-712954-v2-bioreason-pro-advancing-protein-function-prediction-with-multimodal-biological-reasoning)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：多模态推理LLM用于蛋白质功能预测
+   evidence：教师-学生框架用于图上下文蒸馏，可迁移至药物相互作用预测
 
 
 <div class="dpr-home-promo-card">

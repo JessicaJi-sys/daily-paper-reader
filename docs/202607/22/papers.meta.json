@@ -1,0 +1,54 @@
+{
+  "label": "2026-07-22",
+  "date": "2026-07-22",
+  "generated_at": "2026-07-22T21:18:48",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202607/22/biorxiv-10-64898-2026-07-14-738415-v2-primekg-plus-a-literature-derived-expansion-of-a-multimodal-precision-medicine-knowledge-graph",
+      "section": "quick",
+      "title_en": "PrimeKG-Plus: a literature-derived expansion of a multimodal precision medicine knowledge graph",
+      "authors": "Nguyen, T. T. D., Nguyen-Phuong, T., Nguyen, Q.-H., Abbasi, A. M., Le Phan, H.-D., Nguyen, L. B.-A., Phan, N.-T., Curabaz, N. N., Hauser, A. S., Tanoli, Z., Nguyen, D. T., Kooistra, A. J.",
+      "date": "2026-07-21",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.07.14.738415v2.full.pdf",
+      "score": "7.0",
+      "evidence": "利用文献扩展生物医学知识图谱，可用于药物相互作用预测",
+      "tldr": "现有生物医学知识图谱更新缓慢，缺乏最新文献关联。本研究扩展PrimeKG，更新数据源至2025年，并利用大语言模型从文献中提取关系，经归一化、同义词映射、嵌入排序和专家审核构建PrimeKG-Plus。新增447,288条Drug-Protein-Disease路径，连接先前不可达的药物-疾病对，捕获55个新分子实体。该图谱为基于网络的药物重定位和精准医学提供了最新、可用的资源。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Biomedical knowledge evolves rapidly, yet most disease-centered knowledge graphs remain unchanged after publication. We present PrimeKG-Plus, an extension of PrimeKG that updates all 20 original data resources to releases available as of Dec 2025 and incorporates additional resources, including OpenTargets, RepurposeDrugs, and nSIDES. The graph is further expanded with relations extracted from 637 PubMed abstracts and PMC full-text articles using a large-language-model-assisted curation workflow. Extracted relations were refined through normalization, UMLS-based synonym mapping, SapBERT embedding based similarity ranking, and human expert review to ensure data quality. This literature-driven expansion focuses on rare neurological disorders, including Canavan disease, Niemann-Pick disease type C, Tay-Sachs disease and Batten disease. Network topology analyses indicate that the expanded graph improves indirect drug-disease connectivity of 3-6 hops through the graph while adding 447,288 Drug-Protein-Disease paths linking drug-disease pairs that were previously unreachable. Temporal FDA validation captured 55 new molecular entities after the June 2021 PrimeKG data cut-off as drug nodes, 46 absent from the original PrimeKG. By integrating newly incorporated and updated resources with systematically curated literature-derived associations, PrimeKG-Plus provides an up-to-date knowledge graph for network-based drug repurposing and precision medicine applications. Data and code are publicly available.",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/22/2607.14512v1-retroagent-harnessing-llms-to-search-over-structured-memory-for-agentic-retrosynthesis-planning",
+      "section": "quick",
+      "title_en": "RetroAgent: Harnessing LLMs to Search Over Structured Memory for Agentic Retrosynthesis Planning",
+      "authors": "Yanqiao Zhu, Jingru Gan, Xiaoqi Sun, Fang Sun, Yidan Shi, Md Mofijul Islam, Chao Shang, Wenhao Gao, Connor W. Coley, Yizhou Sun, Wei Wang",
+      "date": "2026-07-16",
+      "pdf": "https://arxiv.org/pdf/2607.14512v1",
+      "score": "6.0",
+      "evidence": "基于LLM的智能体结合结构化记忆进行逆合成规划，可类比用于药物相互作用预测",
+      "tldr": "多步逆合成规划面临巨大搜索空间，传统树搜索与离线价值网络无法进行多步推理，LLM方法也受限于简单接口。RetroAgent构建LLM智能体，通过结构化记忆和化学工具感知全局搜索状态，实现符号搜索与神经推理的桥接。在分布内和外分布基准上取得强性能和良好泛化，为逆合成规划提供新范式。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Multi-step retrosynthesis planning seeks to decompose a target molecule into commercially available building blocks through a sequence of feasible reactions. The vast combinatorial search space makes this task challenging even for expert chemists. Traditional methods combine tree search with offline-trained value networks that score candidates in isolation, without reasoning about complete multi-step routes. Recent work leverages Large Language Models (LLMs) for this task, but relies on simple interfaces that limit exploration of the full search space. We introduce RetroAgent, an LLM agent that bridges symbolic search and neural reasoning through a harness with structured memory. Through memory and chemistry tools, the agent observes the full search state, including explored routes, available alternatives, and properties of intermediates, enabling informed decisions grounded in both global progress and domain knowledge. Experiments on in-distribution and out-of-distribution benchmarks demonstrate that RetroAgent delivers strong performance and generalization.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202607/22/biorxiv-10-64898-2026-07-21-739810-v1-spatialjepa-jepa-inspired-graph-context-distillation-for-spatially-aware-multiomics-integration",
+      "section": "quick",
+      "title_en": "SpatialJEPA: JEPA-inspired graph-context distillation for spatially aware multiomics integration",
+      "authors": "Mann-Krzisnik, D., Li, Y.",
+      "date": "2026-07-22",
+      "pdf": "https://www.biorxiv.org/content/10.64898/2026.07.21.739810v1.full.pdf",
+      "score": "6.0",
+      "evidence": "教师-学生框架用于图上下文蒸馏，可迁移至药物相互作用预测",
+      "tldr": "整合空间基因组学模态需要多分子层表示学习，但许多RNA-ATAC配对数据是解离的且缺乏空间坐标。为此提出SpatialJEPA，一个受JEPA启发的师生框架，通过将教师的空间邻域图替换为自身份图来掩码空间上下文，使学生学习匹配嵌入，从而可应用于解离数据。在鼠脑多组学中，该表示支持源-目标对齐，恢复空间组织的转录组和染色质可及性程序，并与非空间参考相比显示配体-受体通路结构一致性。该方法为解离多组学数据赋予了空间上下文感知能力，显著提升了整合效果。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Computational frameworks for integrating spatial genomics modalities extend cell-based representation learning across molecular layers, but many paired RNA-ATAC datasets are dissociated and lack spatial coordinates. We introduce SpatialJEPA, a JEPA-inspired teacher-student framework for transferring spatial context from spatial multiomics data to non-spatial multiome data. In contrast to patch- or feature-masking objectives, SpatialJEPA masks spatial context by replacing the teacher's spatial neighborhood graph with a self-only identity graph during student training, making the spatial sample appear dissociated to the student. The student learns to match teacher embeddings from this graph-context-restricted view and can therefore be applied to dissociated RNA-ATAC data at inference time. In mouse brain multiomics, the resulting representation supports source-target alignment, recovers spatially organized transcriptomic and chromatin-accessibility programs, and shows concordance with ligand-receptor pathway structure compared with non-spatial references. Accepted at the CIBB 2026 conference (https://cibb2026.teralab.ai/)",
+      "source": "biorxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

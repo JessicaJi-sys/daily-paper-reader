@@ -1,0 +1,24 @@
+---
+title: "PrimeKG-Plus: a literature-derived expansion of a multimodal precision medicine knowledge graph"
+title_zh: PrimeKG-Plus：基于文献的多模态精准医学知识图谱扩展
+authors: "Nguyen, T. T. D., Nguyen-Phuong, T., Nguyen, Q.-H., Abbasi, A. M., Le Phan, H.-D., Nguyen, L. B.-A., Phan, N.-T., Curabaz, N. N., Hauser, A. S., Tanoli, Z., Nguyen, D. T., Kooistra, A. J."
+date: 2026-07-21
+pdf: "https://www.biorxiv.org/content/10.64898/2026.07.14.738415v2.full.pdf"
+tags: ["query:cold-ddi"]
+score: 7.0
+evidence: 利用文献扩展生物医学知识图谱，可用于药物相互作用预测
+tldr: "现有生物医学知识图谱更新缓慢，缺乏最新文献关联。本研究扩展PrimeKG，更新数据源至2025年，并利用大语言模型从文献中提取关系，经归一化、同义词映射、嵌入排序和专家审核构建PrimeKG-Plus。新增447,288条Drug-Protein-Disease路径，连接先前不可达的药物-疾病对，捕获55个新分子实体。该图谱为基于网络的药物重定位和精准医学提供了最新、可用的资源。"
+source: biorxiv
+selection_source: fresh_fetch
+figures_json: "[{\"url\": \"assets/figures/biorxiv/biorxiv-10-64898-2026-07-14-738415-v2/fig-001.webp\", \"caption\": \"\", \"page\": 0, \"index\": 1, \"width\": 1697, \"height\": 1003, \"label\": \"Figure\"}, {\"url\": \"assets/figures/biorxiv/biorxiv-10-64898-2026-07-14-738415-v2/fig-002.webp\", \"caption\": \"\", \"page\": 0, \"index\": 2, \"width\": 1690, \"height\": 1021, \"label\": \"Figure\"}, {\"url\": \"assets/figures/biorxiv/biorxiv-10-64898-2026-07-14-738415-v2/fig-003.webp\", \"caption\": \"\", \"page\": 0, \"index\": 3, \"width\": 1679, \"height\": 859, \"label\": \"Figure\"}, {\"url\": \"assets/figures/biorxiv/biorxiv-10-64898-2026-07-14-738415-v2/fig-004.webp\", \"caption\": \"\", \"page\": 0, \"index\": 4, \"width\": 1682, \"height\": 575, \"label\": \"Figure\"}, {\"url\": \"assets/figures/biorxiv/biorxiv-10-64898-2026-07-14-738415-v2/fig-005.webp\", \"caption\": \"\", \"page\": 0, \"index\": 5, \"width\": 1672, \"height\": 990, \"label\": \"Figure\"}, {\"url\": \"assets/figures/biorxiv/biorxiv-10-64898-2026-07-14-738415-v2/fig-006.webp\", \"caption\": \"\", \"page\": 0, \"index\": 6, \"width\": 1536, \"height\": 2365, \"label\": \"Figure\"}, {\"url\": \"assets/figures/biorxiv/biorxiv-10-64898-2026-07-14-738415-v2/fig-007.webp\", \"caption\": \"\", \"page\": 0, \"index\": 7, \"width\": 1675, \"height\": 935, \"label\": \"Figure\"}, {\"url\": \"assets/figures/biorxiv/biorxiv-10-64898-2026-07-14-738415-v2/fig-008.webp\", \"caption\": \"\", \"page\": 0, \"index\": 8, \"width\": 1709, \"height\": 1116, \"label\": \"Figure\"}]"
+motivation: 现有知识图谱更新缓慢，未整合最新文献关联，限制了药物重定位的应用。
+method: 更新数据源并利用大语言模型从文献提取关系，经归一化、同义词映射、嵌入排序和专家审核构建图谱。
+result: "新增447,288条Drug-Protein-Disease路径，连接不可达对，捕获55个新分子实体。"
+conclusion: 提供了高效更新的知识图谱，促进网络药物重定位和精准医学发展。
+---
+
+## 摘要
+生物医学知识迅速发展，然而大多数以疾病为中心的知识图谱在发布后保持不变。我们提出了PrimeKG-Plus，它是PrimeKG的扩展，将所有20个原始数据资源更新至2025年12月可用的版本，并整合了额外资源，包括OpenTargets、RepurposeDrugs和nSIDES。该图谱进一步通过使用大型语言模型辅助的策展工作流程，从637篇PubMed摘要和PMC全文文章中提取的关系进行了扩展。提取的关系通过标准化、基于UMLS的同义词映射、基于SapBERT嵌入的相似性排序以及人类专家评审进行精炼，以确保数据质量。这种基于文献的扩展专注于罕见的神经系统疾病，包括卡纳万病、C型尼曼-匹克病、泰-萨克斯病和巴顿病。网络拓扑分析表明，扩展后的图谱通过增加3-6跳的间接药物-疾病连接性，同时新增了447,288条药物-蛋白质-疾病路径，连接了先前无法到达的药物-疾病对。时间FDA验证在2021年6月PrimeKG数据截止日期后捕获了55个新分子实体作为药物节点，其中46个在原始PrimeKG中缺失。通过将新整合和更新的资源与系统策展的文献来源关联相结合，PrimeKG-Plus为基于网络的药物重定位和精准医学应用提供了最新的知识图谱。数据和代码公开可用。
+
+## Abstract
+Biomedical knowledge evolves rapidly, yet most disease-centered knowledge graphs remain unchanged after publication. We present PrimeKG-Plus, an extension of PrimeKG that updates all 20 original data resources to releases available as of Dec 2025 and incorporates additional resources, including OpenTargets, RepurposeDrugs, and nSIDES. The graph is further expanded with relations extracted from 637 PubMed abstracts and PMC full-text articles using a large-language-model-assisted curation workflow. Extracted relations were refined through normalization, UMLS-based synonym mapping, SapBERT embedding based similarity ranking, and human expert review to ensure data quality. This literature-driven expansion focuses on rare neurological disorders, including Canavan disease, Niemann-Pick disease type C, Tay-Sachs disease and Batten disease. Network topology analyses indicate that the expanded graph improves indirect drug-disease connectivity of 3-6 hops through the graph while adding 447,288 Drug-Protein-Disease paths linking drug-disease pairs that were previously unreachable. Temporal FDA validation captured 55 new molecular entities after the June 2021 PrimeKG data cut-off as drug nodes, 46 absent from the original PrimeKG. By integrating newly incorporated and updated resources with systematically curated literature-derived associations, PrimeKG-Plus provides an up-to-date knowledge graph for network-based drug repurposing and precision medicine applications. Data and code are publicly available.
