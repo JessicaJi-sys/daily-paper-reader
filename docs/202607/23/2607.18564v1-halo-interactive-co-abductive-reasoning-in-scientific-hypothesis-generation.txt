@@ -1,0 +1,608 @@
+Title: HALO: Interactive Co-abductive Reasoning in Scientific Hypothesis Generation
+
+URL Source: https://arxiv.org/pdf/2607.18564v1
+
+Published Time: Wed, 22 Jul 2026 00:23:46 GMT
+
+Number of Pages: 22
+
+Markdown Content:
+# HALO : Interactive Co-abductive Reasoning in Scientific Hypothesis Generation ∗
+
+# Youngseung Jeon 
+
+ysj@ucla.edu University of California Los Angeles, CA, USA 
+
+# Kat Limqueco 
+
+katlimq@ucla.edu University of California Los Angeles, CA, USA 
+
+# JiaSyuan Chang 
+
+serenacjs@ucla.edu University of California Los Angeles, CA, USA 
+
+# Xiang ‘Anthony’ Chen 
+
+xac@ucla.edu University of California Los Angeles, CA, USA 
+
+Figure 1: HALO is a human-AI collaborative system that assists medicinal chemists in abductive reasoning to generate promising molecular hypotheses in drug discovery. HALO supports abductive reasoning through three stages: (1) Improved-candidate Cluster, experts and AI generate molecular candidates and cluster them by property improvement profiles (green: augmented, red: worsened); (2) Strategy Identification, a large language model (LLM) generates explanations for clusters and provides intra-cluster strategies to improve the worsened property; 3) Multi-strategy Synthesis, LLM suggests combinations of multiple strategies across clusters (inter-cluster strategies) and experts iteratively synthesize them until targeted properties are satisfied. 
+
+> ∗
+
+This is the authors’ version, posted for early dissemination. Accepted to UIST ’26; the Version of Record will be available at https://doi.org/10.1145/3830398.3830566 under a Creative Commons Attribution 4.0 International (CC BY 4.0) license. Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org. 
+
+Conference acronym ’XX, Woodstock, NY 
+
+© 2025 Copyright held by the owner/author(s). Publication rights licensed to ACM. ACM ISBN 978-1-4503-XXXX-X/18/06 https://doi.org/XXXXXXX.XXXXXXX 
+
+## Abstract 
+
+Scientific discovery is essential yet inefficient, primarily because generating hypotheses within a vast search space hinders break-throughs. While current AI systems assist in generating new hy-pothesis candidates, they lack interactive support for the reasoning process by which users develop these outputs into promising hy-potheses, resulting in surface-level hypotheses. To address this issue, we present a co-abduction, a human-AI collaborative frame-work for abductive reasoning in scientific hypothesis generation. To operationalize co-abduction, we build HALO , a human–AI col-laborative system for molecular hypothesis generation in drug discovery, enabling improved candidate clustering, strategy identi-fication, and multi-strategy synthesis. In expert studies involving arXiv:2607.18564v1 [cs.HC] 20 Jul 2026 Conference acronym ’XX, June 03–05, 2025, Woodstock, NY Jeon et al. 
+
+10 medicinal chemists, HALO significantly facilitated abductive reasoning for hypothesis generation—efficient candidate observa-tion, systematic strategy identification, and coherent multi-strategy composition—and enabled participants to produce higher-quality, more diverse candidate molecules. 
+
+## CCS Concepts 
+
+• Human-centered computing → Interactive systems and tools .
+
+## Keywords 
+
+Scientific Discovery, LLM, Creativity Supporting Tools    
+
+> ACM Reference Format:
+> Youngseung Jeon, Kat Limqueco, JiaSyuan Chang, and Xiang ‘Anthony’ Chen. 2025. HALO : Interactive Co-abductive Reasoning in Scientific Hypoth-esis Generation. In Proceedings of Make sure to enter the correct conference title from your rights confirmation emai (Conference acronym ’XX). ACM, New York, NY, USA, 22 pages. https://doi.org/XXXXXXX.XXXXXXX
+
+## 1 Introduction 
+
+Scientific discovery advances human progress by generating new knowledge, entities, and mechanisms [ 99 ]. Penicillin saved millions of lives by curing previously lethal infections [ 33 ], and semicon-ductors enabled modern computing [ 74 ]. Achieving these break-throughs required researchers to identify novel directions through extensive experimentation and refinement, a process that is both time- and cost-intensive. Bringing a single new drug to market, for example, typically requires around 14 years and nearly $2 bil-lion [46, 113]. A key bottleneck in this process is hypothesis generation, which requires researchers to reason across high-dimensional search spaces while balancing complex trade-offs among competing criteria [ 91 ]. For example, in drug discovery, medicinal chemists must navigate a scaffold-constrained chemical space comprising approximately 
+
+10 4–10 6 possible analog molecules [ 75 , 117 ], while balancing trade-offs among pharmacological properties such as absorption (e.g., PLogP [ 101 ]), toxicity (e.g., DILI [ 18 ]), and blood–brain barrier permeability (e.g., BBBP [ 102 ]). Similarly, in materials science, re-searchers must explore approximately 10 10 possible quaternary compounds [ 28 ] to optimize battery electrolytes, balancing ionic conductivity against electrochemical stability [ 93 ]. Although com-putational tools broaden exploration in these search spaces, they still offer only partial support for hypothesis formulation, itera-tive refinement, and reasoning about property trade-offs, leaving manual work to experts. Recent advances in AI have opened new avenues for hypoth-esis generation. Generative models now retrieve [ 66 , 67 , 86 ] and produce hypotheses [ 24 , 77 , 116 ] across diverse scientific tasks, including multi-property molecule optimization [ 29 ], 3D protein-ligand docking [ 55 ], and phenotypic profiling [ 16 ]. Interactive AI systems in HCI extend these capabilities to support research ques-tion formulation [ 68 , 85 ], related work retrieval [ 56 , 63 , 65 , 84 , 115 ], and data analysis [ 39 , 58 , 97 ], enabling researchers to engage with previously unexplored information. However, to the best of our knowledge, no AI tools interactively support the reasoning process during hypothesis generation [ 83 ]. The lack of such support implies that researchers must manually and independently construct hypotheses through iterative reason-ing over AI-provided information, indicating that the fundamental bottleneck of hypothesis generation still persists. Consequently, researchers may confine their search to familiar patterns, often over-looking novel and promising directions [ 6 , 38 , 99 ]. Designing AI to actively support this reasoning process remains an open challenge in HCI. In this paper, we present a co-abduction framework that extends abductive reasoning [ 80 ] to human-AI collaboration in hypoth-esis generation. Researchers and AI jointly generate and cluster hypothesis candidates by property improvement profiles, identify strategies to improve properties within each cluster, and synthesize strategies across clusters to produce new and promising hypothe-ses. We demonstrate our approach through ligand optimization in drug discovery 1, where researchers explore and develop molecular hypotheses while managing complex trade-offs among multiple pharmacological properties, such as improving solubility while preventing increased toxicity. We conducted a formative study with five medicinal chemists to understand how they use AI in their reasoning. Chemists use generative models (e.g., GeLLM 4O-C [ 30 ] and DrugGen [ 96 ]) to produce improved molecules, group them by the improved prop-erty, and identify recurring fragment–property relationships. They then recombine fragments across groups to generate hypotheses that balance multiple properties, connecting structural observations to broader explanatory patterns. Our findings revealed that this workflow aligns with abductive reasoning [ 80 , 108 ] across three stages: observation, pattern identification, and hypothesis genera-tion. However, each stage exposes gaps in current tool support: (1) filtering improved molecules lacks streamlined support, (2) iden-tifying frequent fragments is labor-intensive while LLMs remain unreliable due to hallucination, and (3) LLMs lose coherence during iterative multi-fragment refinement. Based on these insights, we developed HALO (Figure 1), an in-teractive interface for human-AI co-abduction: 
+
+• Improved-candidate Cluster : The system generates molecules that improve target properties and clusters them by their property-improvement profiles. 
+
+• Strategy Identification : Researchers explore clusters, and AI explains patterns and suggests strategies to improve wors-ened properties (intra-cluster strategies). 
+
+• Multi-strategy Synthesis : AI suggests strategies across clusters (inter-cluster strategies), and researchers iteratively recombine and refine them until the target properties are met. We conducted an expert study with 10 medicinal chemists, com-paring HALO against a baseline with the same AI model but no abductive reasoning support. Participants rated HALO significantly higher in observation ( 𝑝 < 0.01), strategy identification ( 𝑝 < 0.01), multi-strategy composition ( 𝑝 < 0.01), and overall satisfaction ( 𝑝 
+
+< 0.01), as well as ligand optimization quality and diversity. Usage analysis further revealed that participants frequently experienced abductive leaps (“aha!” moments [ 36 , 62 ]), after which they showed greater initiative and sharply reduced their reliance on AI in favor   
+
+> 1See §3 for more background information HALO : Interactive Co-abductive Reasoning in Scientific Hypothesis Generation Conference acronym ’XX, June 03–05, 2025, Woodstock, NY
+
+of manual editing. These findings suggest that human-AI collabora-tion should adapt to the user’s cognitive stage: before an abductive leap, AI should act as a catalyst, providing divergent triggers; after the leap, AI should shift to a supporting role as users refine their realizations. In summary, our key contributions are as follows: 
+
+• Co-abduction , a human-AI collaborative framework for ab-ductive reasoning in scientific hypothesis generation, en-abling efficient observation, systematic strategy identifica-tion, and coherent multi-strategy synthesis. 
+
+• Design and implementation of HALO , an AI system that supports co-abduction for molecular hypothesis generation in ligand optimization. 
+
+• An expert study with 10 professionals demonstrating that it-erative co-abduction significantly improves hypothesis qual-ity and diversity. 
+
+• Design implications for building AI systems to support hy-pothesis generation in scientific domains. 
+
+## 2 Related work 2.1 Hypothesis Generation in Scientific Domains 
+
+Hypothesis generation is an iterative reasoning process central to scientific discovery [ 89 ], in which researchers explore data repre-sentations to develop and refine plausible explanations [ 62 , 91 ]. Across scientific domains, this process requires navigating high-dimensional search spaces while managing trade-offs among com-peting criteria. In drug discovery, the space of drug-like molecules spans 10 23 –10 60 [11, 82], with competing pharmacological proper-ties such as stability, solubility, and toxicity [ 93 ]. Materials discovery confronts over 10 12 inorganic compositions [ 28 ], requiring balance among conductivity, mechanical robustness, thermodynamic stabil-ity, synthesizability, and cost [ 14 , 51 ]. Bioscience faces still larger spaces, where a 100-residue protein sequence yields 20 100 ≈ 10 130 
+
+possibilities [ 34 ], with fundamental trade-offs between bioactivity and stability [12, 106]. To navigate vast hypothesis spaces across multiple criteria, sci-entific communities have developed computational interfaces that integrate large-scale databases to support the retrieval and screen-ing of validated findings. In drug discovery, platforms such as Pub-Chem [ 60 ] and ChEMBL [ 41 ] provide searchable access to chemi-cal structures and bioactivity data. In materials science, resources like the MaterialsAtlas [ 88 ] and AFLOW [ 27 ] enable filtering of inorganic compounds by stability and functional properties. In bio-science, repositories such as UniProt [ 25 ] and the Protein Data Bank (PDB) [ 9] offer curated sequence and structural data for compar-ative analysis. Despite these advancements, most systems focus on retrieving and ranking previously validated data rather than supporting interactive reasoning, which is a core part of hypothesis generation. 
+
+## 2.2 AI Systems for Hypothesis Generation 
+
+Recent advances in AI models have begun to accelerate the hypothesis-generation process. Generative models show great potential for hypothesis generation by retrieving [ 66 , 67 , 86 ] and generating hy-potheses [ 24 , 77 , 116 ]. These models enable systematic exploration of vast hypothesis spaces by synthesizing multimodal scientific data and identifying latent patterns that inform experimental de-sign. Building on these technical capabilities, specialized platforms are emerging that integrate diverse models to support the entire pipeline, from data preprocessing to model deployment. For exam-ple, Nvidia BioNeMo [ 1 ] is an AI platform for drug discovery that simplifies and accelerates the development and training of various AI models for drug discovery applications, such as AlphaFold [ 55 ], DiffDock [26], and MegaMolBART [50]. Building on these advances, interactive AI systems in HCI in-creasingly support hypothesis generation, including research ques-tion formulation, paper retrieval, and data analysis. For research question formulation, IdeaSynth enables iterative refinement of re-search briefs, allowing users to explore variations of initial ideas [ 85 ], while PersonaFlow supports research question refinement through feedback from multiple domain expert perspectives [ 68 ]. For pa-per retrieval, BIP! Finder accelerates literature review through AI-assisted document synthesis [ 63 ], and ComLittee assembles expert committees to recommend papers based on members’ expertise [ 56 ]. For data analysis, MedChemLens provides visual tools for extracting drug-related insights from existing records [ 97 ], and FathomGPT supports interactive exploration and analysis of ocean science data, images, and figures [58]. Across these tasks, such systems fundamentally support sense-making: organizing and interpreting fragmented information into coherent representations that guide exploration [ 81 ]. Early collabo-rative systems supported sensemaking by helping people organize large sets of artifacts into shared structures such as taxonomies and conference schedules [ 20 , 21 , 59 ]. More recently, interactive tools have extended sensemaking to AI-generated outputs, help-ing users compare, cluster, and evaluate large volumes of model responses [ 4 , 7, 42 –44 , 95 ], and structuring GenAI-assisted hypoth-esis exploration through shared visual representations [31]. Although existing systems support sensemaking by broaden-ing the search space, including finding, surfacing, and organizing candidates, they provide little support for reasoning about the trade-offs that determine which hypotheses are scientifically viable. As a result, researchers must still manually synthesize fragmented AI outputs to judge promising directions on their own. We intro-duce HALO , an interactive interface for human-AI co-abduction in which researchers and AI collaboratively uncover explanations be-hind emerging patterns and apply them to generate well-grounded hypotheses. 
+
+## 2.3 Co-abductive Reasoning: Synergizing Human and AI 
+
+Abductive reasoning is the process of inferring the most plausible explanation for an observed phenomenon, whether diagnosing the cause of a failure or decoding the principles of success for further optimization [ 80 ]. Abduction functions not only as a logical form but also as a strategic methodology that integrates all available constraints and background knowledge into a coherent, organized pattern [ 64 , 79 ]. While deduction guarantees certainty and induc-tion establishes probability [ 47 , 87 , 94 ], abduction provides the Conference acronym ’XX, June 03–05, 2025, Woodstock, NY Jeon et al. 
+
+creative leap necessary to introduce novel hypotheses in the face of uncertainty [ 80 , 108 ], and stands as the only logical operation capable of generating truly new ideas [8, 80]. The ultimate goal of abductive reasoning is the abductive leap, an insightful reconfiguration of observations into a plausible explana-tory hypothesis [ 40 ], often experienced as an Aha! moment [ 15 , 105 ]of sudden understanding. This abductive leap does not result from creating entirely new hypotheses, but from strategically combining previously unconnected elements within a specific problem context and recognizing their validity anew [ 79 ]. Conceptually, abductive reasoning generally unfolds in three stages [ 71 , 104 ]: 1) observing phenomena, 2) identifying patterns, and 3) recombining disjoint or overlapping patterns into novel hypotheses. For example, an ob-served improvement under one condition and a successful strategy from another context may be recombined into a new hypothesis explaining or extending both observations. To gain a deeper understanding of such strategic abduction in the real world, we conducted a formative study with ten medici-nal chemists. Building on these findings, we present co-abductive reasoning, in which humans and AI share a continuous abductive loop through three stages: (1) Improved-candidate Clustering, clus-tering hypothesis candidates by property improvement profiles; (2) Strategy Identification, distilling optimization strategies within a cluster; and (3) Multi-strategy Synthesis, combining strategies across clusters to iteratively refine molecules toward target proper-ties. 
+
+## 3 Background & Definitions of Key Terminology 
+
+In this section, we provide background on lead optimization and define key terminology to aid understanding. 
+
+Figure 2: Description of key terminologies for compound optimization, including lead compound, pharmacological properties, core scaffold, and r-group. Ligand Optimization. Medicinal chemists generate molecular candidates (hypotheses) for wet-lab testing by designing an initial molecule that simultaneously improves multiple pharmacological properties with trade-off, including absorption (e.g., PlogP [ 101 ]), toxicity (e.g., LIVER [ 18 ]), and blood–brain barrier permeability (e.g., BBBP [102]). 
+
+Ligand. A small molecule that interacts with a target protein at its binding site and may modulate its biological function (e.g., inhibition or activation) [ 61 ]. Through high-throughput screening (HTS)—a rapid experimental method for testing large numbers of compounds-medicinal chemists identify those with high binding affinity to a target protein and desired biological activity [69]. 
+
+Pharmacological Properties. Pharmacological properties in-clude pharmacokinetic (ADME) characteristics—describing absorp-tion, distribution, metabolism, and excretion—and toxicity profiles that capture harmful effects such as liver damage (trade-off). For example, increasing solubility—the extent to which a drug dissolves in water or biological fluids—may simultaneously raise liver or cardiac toxicity, leading to adverse side effects [17, 73]. 
+
+Core Scaffold. Core scaffold refers to the preserved central structure of a compound that is critical for its biological activity. Therefore, medicinal researchers maintain the core while generat-ing new compounds [90]. 
+
+R-Group. R-groups are the variable fragments attached to a compound’s core scaffold that can be systematically modified to augment pharmacological properties [70]. 
+
+## 4 Formative study 
+
+The formative study aimed to understand (1) how medicinal chemists perform ligand optimization in practice; (2) how AI tools are cur-rently used during ligand optimization; and (3) the limitations of existing AI systems in supporting this task, which informed our design goals. 
+
+## 4.1 Participant 
+
+We recruited five participants with backgrounds in medicinal chem-istry for the formative study: four senior researchers and one Ph.D. candidate, all currently working on ligand optimization (see Table 4 in the appendix). Their work experience ranged from 4 to 18 years (𝑀 = 12 .2, 𝑆𝐷 = 5.4). Participants were recruited through personal referrals and by contacting research labs via email to request collab-oration. The study was approved by the Institutional Review Board (IRB), and participants’ consent was obtained before the study. Each participant received a $35 gift certificate. When reporting interview quotes, we use 𝑃𝑛 to denote the participant number. 
+
+## 4.2 Procedure 
+
+The study consisted of three parts. First, we conducted a 30-minute in-depth interview covering (1) participants’ workflow in ligand optimization, (2) their goals and strategies when using AI tools, and (3) their past experiences with AI tools in ligand optimization, in-cluding challenges encountered. Next, a 20-minute workflow obser-vation session provided deeper insight into their design strategies as participants used their preferred AI tools to optimize molecules they were currently working on. Finally, a 20-minute post-task in-terview focused on their refinement strategies and difficulties. Each session lasted 1 to 1.5 hours. After completing the interviews, we applied thematic analysis and iterative open coding [ 23 ] to analyze the interview transcripts. Three authors coded and analyzed the HALO : Interactive Co-abductive Reasoning in Scientific Hypothesis Generation Conference acronym ’XX, June 03–05, 2025, Woodstock, NY 
+
+transcripts for emerging themes, and the findings were discussed among the co-authors iteratively until consensus was reached. 
+
+## 4.3 Findings 
+
+We identified that, to optimize molecules, researchers typically fol-low three stages (§4.3.1): (1) grouping molecules that exhibit prop-erty improvements, (2) extracting patterns between augmented properties and structural fragments, and (3) combining these pat-terns to design new candidate molecules with improved multi-property profiles. We found that this process aligns with abductive reasoning, a representative theory of hypothesis generation that moves from observation to pattern discovery to hypothesis formu-lation. Building on this perspective, we examined both the role of AI (§4.3.2) and its limitations within each abductive step (§4.3.3) and, in turn, derived our system design goals to better support hypothesis-driven molecular optimization (§4.4). 
+
+4.3.1 Molecular Hypothesis generation in lead optimization. We identified three stages in ligand optimization: (1) grouping molecules that show property improvements, (2) extracting patterns between augmented properties and structural fragments, and (3) combining these patterns to design new candidate molecules with improved multi-property profiles. First, medicinal chemists identify candidates for the R-group and group them based on their impact on specific pharmacologi-cal properties. They determine the core scaffold of an initial lead compound that must be preserved, as well as the R-groups that can be modified. They then search for prior optimization cases with the target properties. Researchers often identify molecules in which specific target properties have been notably improved, such as one or two out of four, and group them accordingly. Next, they determine which fragments contributed to improvements in par-ticular properties. Within each group of molecules, fragments that appear most frequently are considered more likely to be associated with the observed property improvements. For example, molecules that score highly in solubility and toxicity mitigation often contain specific polar functional groups, whereas molecules with improved permeability and potency frequently include hydrophobic or aro-matic substituents [ 3 , 22 , 45 ]. Such relationships between specific fragments and property improvements provide valuable strategies for researchers aiming to optimize multiple properties simultane-ously. Based on these findings, they design and evaluate compounds through R-group optimization [ 13 ], combining the preserved core scaffold with selected fragments at modifiable positions (R-groups). They define several positions (R 1, R 2, R 3) on the scaffold and sys-tematically assign the previously identified fragments to these sites, generating a series of analogs with different property profiles. This process, in a small-scale synthesis setting, typically takes at least one week. In the first round, researchers design approximately 7 to 10 candidate molecules and evaluate their properties through wet-lab experiments. In the second round, based on these results, they iteratively refine and expand promising candidates, ultimately generating a larger set of over 20 molecules for further exploration. 
+
+4.3.2 Roles of AI in Ligand Optimization. Medicinal chemists often use specialized AI models to design and evaluate new molecules. In addition, large language models have been applied to reasoning strategies for optimization, such as grouping improved molecules, distilling strategies from these groups, and integrating the strategies into a final design. All participants are familiar with using molecular generation models, such as GeLLM 4O-C [ 30 ] and DrugGen [ 96 ], to directly ex-plore novel chemical space. These models generate new molecules to simultaneously optimize multiple properties, given the initial molecule and the targeted properties. Researchers efficiently ex-plore vast molecular spaces using generative AI models. For exam-ple, “Generative models can easily generate new molecules to satisfy properties. Although many of them are difficult to synthesize, they often provide ideas or structural variations that we would not have considered.” (𝑃 2). However, these tools often require programming knowledge and familiarity with computational workflows, creating a practical barrier for many experimental chemists. “Many genera-tive chemistry models have great potential, but they are hard to use in practice for researchers who do not have coding experience” (𝑃 4). 
+
+“...ChatGPT and Gemini might have potential in generating molecules; for now, the results are not that promising.” (𝑃 3). For evaluation, the overall pharmaceutical property scores of these generated molecules are evaluated with AI-based interfaces such as SwissADME 2 and ADMET LAB 3, with real-time evaluation. Medicinal chemists manually edit the generated molecules and repeat the process until the desired properties are achieved. With recent advances in LLM capabilities, many researchers expect these systems to move beyond generation and evaluation to support reasoning for new molecular hypotheses. In practice, they frequently consult LLM interfaces such as ChatGPT 4 and Gem-ini 5. Researchers often input multiple improved molecules into the model and ask it to group and distill the most frequent fragment patterns. “Once we fix the scaffold, I often ask an LLM to suggest plau-sible R-group substitutions that could modulate potency, selectivity, or ADMET properties to understand some patterns between augmenta-tion and molecular structures.” (𝑃 1) To combine multiple strategies, researchers often input pairs of group-augmented molecules into an LLM to explore potential combinations of modifications. Although hallucination remains a concern, the model occasionally suggests meaningful and novel combinations. Despite this potential, LLM outputs still require substantial manual refinement. For example, 
+
+“The model can propose interesting combinations, but we still need to manually evaluate whether they make chemical sense and whether the properties actually improve.” (𝑃 3)
+
+4.3.3 AI Optimization Workflows and Key Challenges. In the work-flow observation, their workflows were similar: they generate mul-tiple molecules, identify relationships between augmenting proper-ties and specific fragments, and iteratively refine the initial molecule by integrating these relationships. They usually begin by grouping molecules whose properties have been improved (improved molecules). However, a key challenge was the lack of a streamlined way to filter for improved molecules; consequently, researchers had to manually summarize the AI output  
+
+> 2http://www.swissadme.ch
+> 3https://admetlab3.scbdd.com/
+> 4https://chatgpt.com/
+> 5https://gemini.google.com/ Conference acronym ’XX, June 03–05, 2025, Woodstock, NY Jeon et al.
+
+from generation and evaluation for multiple molecules. “When I generate hundreds of variants from fragment substitutions, I have to evaluate each one individually and manually prioritize them, which makes the process overwhelming” (𝑃 3). This labor-intensive process prevents them from fully leveraging generation and evaluation models. These challenges highlight the inefficiencies caused by the disconnect between molecular generation and the discovery of meaningful patterns. Another critical bottleneck is that standard LLMs lack spatial grounding; they cannot visually identify which specific regions of a molecule are functionally significant. Because LLMs primarily oper-ate on text-based representations such as SMILES [ 110 ], they cannot intuitively demonstrate how a fragment’s efficacy varies with its precise spatial positioning. “Even if we have a list of molecules, we still need to manually map each fragment to R 1, R 2, or R 3 before we can analyze which fragments are actually driving the property changes.” (𝑃 4). Consequently, researchers must manually inspect molecular structures to determine where specific fragments can be applied. Given that a fragment’s impact can change drastically depending on its location, this limitation prevents experts from effectively leveraging LLMs to clearly identify patterns between a fragment and a property. The final major challenge is maintaining context when integrat-ing multiple strategies. Even with grouped molecules and extracted patterns, LLMs often lose track of these complex constraints during the iterative refinement of multi-pattern combinations. " “When I try to combine a strategy for improving solubility with another for enhancing potency, the model often ’forgets’ the original scaffold con-straints or swaps functional groups in ways that make no sense. It’s like it loses the big picture while focusing on a specific edit.” (𝑃 2). Consequently, this lack of context retention can result in chemi-cally implausible structures or hallucinated suggestions that violate fundamental chemical principles or predefined optimization goals. 
+
+## 4.4 Design goals 
+
+Based on these findings, we proposed three design goals for our system: 
+
+• DG1: Efficient Observation through Grouping of Im-proved Molecules. The system should enable researchers to group improved molecules by diverse property combina-tions, intuitively connecting molecular generation with the discovery of meaningful patterns without labor-intensive manual inspection. 
+
+• DG2: Systematic Strategy Identification through Pat-tern Formalization within Groups. The system should provide explicit guidance on understanding patterns be-tween a fragment and a property, specifically which frag-ments are used for modification and where to position them for R-group design, thereby reducing reliance on manual and heuristic inspection of molecules. 
+
+• DG3: Coherent Multi-Strategy Synthesis across Groups. 
+
+The system should maintain structural and contextual co-herence as researchers recombine and refine multiple strate-gies across groups by simplifying the assembly of complex molecule combinations and reducing the cognitive load of merging complex optimization paths. 
+
+## 5 HALO : Human-AI Co-abduction system for Lead Optimization 
+
+Building on these design goals (DG1-3), we present HALO , a human-AI co-abduction system for lead optimization through three main components: 1) MolCluster , 2) MolStrategy , and 3) MolSynthesis . We explain the technical details of three components in §A.6 in the appendix. 
+
+## 5.1 MolCluster : Improved Candidates Cluster 
+
+MolCluster (Figure 3-B) is designed to support efficient observa-tion by enabling users to explore which properties have improved or worsened during AI-driven generation, forming an initial un-derstanding of the optimization landscape. Users can explore and organize diverse molecule clusters as a foundation for subsequent strategy identification and synthesis. The workflow proceeds as follows: 
+
+• Step 1-1: Users first generate dozens of candidate molecules from an initial molecule on an interactive trajectory map (Fig-ure 3-A) using a generative AI model or by manual editing. The trajectory map allows them to observe how molecular structures evolve and how these changes affect the property score. 
+
+• Step 1-2: The MolCluster (Figure 3-B) enables multi-criteria screening of the candidate set, grouping molecules into clus-ters based on combinations of improved properties (green: augmented and red: worsened). 
+
+• Step 1-3: By creating these clusters, users develop an under-standing of the landscape of generated molecules. They iden-tify worsened properties and use these insights to guide sub-sequent optimization steps. 
+
+## 5.2 MolStrategy : Systematic Strategy Identification 
+
+MolStrategy (Figure 3-C) is designed to help users systematically identify optimization strategies within a cluster by exposing de-tailed cluster-level insights. The workflow proceeds as follows: 
+
+• Step 2-1: The overview tab (Figure 10 in the appendix) displays an AI-generated summary of the cluster alongside its identified strengths and weaknesses to help users understand an cluster overall. 
+
+• Step 2-2: The candidates tab (Figure 10 in the appendix) dis-plays all cluster members in a sortable table with absolute property values and improvement deltas relative to the initial molecule. 
+
+• Step 2-3: The strategies tab summarizes actionable strategies for improving worsened properties within the cluster, suggest-ing which molecular fragments of cluster members should be modified to address observed weaknesses. If users click a molecule in the list, they can open MolSynthesis to edit it (Figure 3-C). HALO : Interactive Co-abductive Reasoning in Scientific Hypothesis Generation Conference acronym ’XX, June 03–05, 2025, Woodstock, NY 
+
+Figure 3: Overview of the HALO workflow: (1) Improved Candidates Cluster, (2) Strategy Identification, and (3) Multi-strategy Synthesis. Improved Candidates Cluster (A, B) generated molecules and organized them into property-based clusters to support efficient observation. Strategy Identification (C) extracts and summarizes intra-cluster optimization strategies from candidate groups. Multi-strategy Synthesis (D, E) enables users to recombine multiple intra-and inter-strategies into actionable edits to generate new, promising candidates. The Insight button (F) allows users to externalize and reflect on abductive leaps as they occur throughout the workflow. Conference acronym ’XX, June 03–05, 2025, Woodstock, NY Jeon et al. 
+
+## 5.3 MolSynthesis : Coherent Multi-strategy Synthesis 
+
+MolSynthesis (Figure 3-D and E) is designed to help users synthe-size multiple strategies across clusters. The workflow proceeds as follows: 
+
+• Step 3-1: MolSynthesis provides users with both intra-cluster and inter-cluster strategies with specific explanations, en-abling users to explore diverse fragments for optimization (Figure 3-D). 
+
+• Step 3-2: When users click on a particular strategy, the mole-cule on the molecule editor (Figure 3-E) is updated to reflect the strategies. 
+
+• Step 3-3: Users can check the change of property scores at the bottom (green: augmented and red: worsened), and with the change, they iteratively refine the molecules until more properties are satisfied. 
+
+• Step 3-4: Saving creates a new node on the tree, connected to its source by an edit edge, which can serve as the starting point for a new round of generation (Figure 3-A). We expect that HALO supports co-abduction through three stages: clustering improved candidates, distilling optimization strate-gies within a cluster, and synthesizing multiple strategies across clusters, thereby helping users generate new, promising molecular hypotheses. 
+
+## 6 User Study 
+
+Our user study evaluates how HALO supports professionals in ab-ductive reasoning within their workflows: 1) grouping improved molecules, 2) extracting strategies from groups, and 3) merging strategies into a new one. We conducted a within-subjects experi-ment simulating real-world ligand-optimization workflows. To isolate and evaluate co-abductive reasoning, we developed a baseline system (§A.5 in the appendix) that includes the non-co-abductive features of HALO (e.g., trajectory map, AI/manual molecule generator, molecular information, and LLM search) but excludes three co-abductive features ( MolCluster , MolStrategy , and 
+
+MolSynthesis ). We designed the baseline based on insights from the formative study (§4.3) that show AI-assisted practice, in which experts use generative models and free-form prompting to generate, evaluate, and reason over candidates. This controlled comparison allows us to assess the contribution of co-abduction in HALO to molecular hypothesis-generation workflows. Our study aimed to answer the following research questions: 
+
+• RQ1-1 : Can HALO help researchers efficiently identify which properties are improved or worsened by grouping improved molecules? 
+
+• RQ1-2 : Can HALO support researchers in systematically identifying optimization strategies within groups of improved molecules? 
+
+• RQ1-3 : Can HALO enable researchers to coherently recom-bine multiple optimization strategies to generate new candi-date molecules? 
+
+• RQ2 : To what extent does HALO achieve multi-objective property enhancement while maintaining structural diver-sity compared to baselines? 
+
+• RQ3 : Does an abductive leap occur during the use of HALO ,and if so, how does it transform human–AI interaction in the discovery trajectory? 
+
+## 6.1 Study Design 
+
+6.1.1 Task. We designed two tasks, Task A and Task B (Figure 12 in the appendix), in which participants improve the initial molecule with respect to four properties (§A.4 in the appendix). The tasks were based on two criteria: 1) versatility of the initial lead compound and 2) applicability of the properties to real-world experimental contexts. First, in selecting the initial lead compound, versatility was essential, as the study does not focus on a specific drug or dis-ease. To ensure diverse modification attempts, we chose the most frequent molecules from a dataset of 100,000 commercially avail-able molecules, where property variations were generated through fragment modification [ 19 ]. Each data instance contains a before-molecule with its property scores and an after-molecule with up-dated property scores generated by fragment modification. Their frequent occurrence indicates strong potential for diverse applica-tions in lead optimization. We selected the top 10 instances from the dataset. Second, for the desired properties, we emphasized relevance to real-world experimental contexts, where multiple properties often involve trade-offs that make simultaneous optimization chal-lenging. To reflect this complexity, we selected properties with well-established trade-off relationships, specifically between PlogP and liver toxicity. Higher PlogP values are often associated with increased metabolic load and an elevated risk of liver injury [ 17 , 73 ], thereby reflecting the difficulty of optimization in practice. We se-lected two cases from the top 10 instances. By grounding the task in the most frequent lead compound and representative properties, participants explore a subspace smaller than the molecule hypothe-sis space required in real-world lead optimization tasks [ 75 , 117 ](∼ 10 4–10 6 ). 
+
+6.1.2 Procedure. Participants were asked to complete both the experimental and control tasks. To control for potential order effects, we counterbalanced the sequence of conditions so that half of the participants began with the experimental condition and the other half with the baseline. We also counterbalanced the assignment of Tasks A and B across conditions so that each task was performed equally often under both the experimental and control settings. Each task was limited to 30 minutes, with a five-minute break between tasks. Before starting each task, participants received a 10-minute instruction session on how to use both corresponding interfaces and were given an additional five minutes to practice using the system. The study was conducted remotely via Zoom 6,and participants were asked to share their screens during the timed tasks. As the final output, participants were asked to submit the top seven molecules in the first-round setting, building on the formative study (§4.3.1). 
+
+6.1.3 Measurement. The post-condition questionnaire evaluated three research questions (R1-1, R1-2, R1-3): efficient observation, systematic strategy identification, coherent strategy composition,   
+
+> 6https://www.zoom.com/ HALO : Interactive Co-abductive Reasoning in Scientific Hypothesis Generation Conference acronym ’XX, June 03–05, 2025, Woodstock, NY
+
+Figure 4: Bar plots showing the results of the user study. Participants rated efficient observation (Q1-3), systematic strategy identification (Q4-6), and cogerent multi-strategy synthesis (Q7-10), and overall evaluation (Q11-12) for both the baseline and HALO using a 7-point Likert scale ( ∗𝑝 < 0.05 ,
+
+> ∗∗
+
+𝑝 < 0.01 , ∗∗∗ 𝑝 < 0.001 ). 
+
+and overall user experience. These twelve questions were developed based on insights from the formative study (§4). All questions and results are shown in Figure 4. Users rated each task in the survey on a 7-point Likert scale (1 is “Not at all” and 7 is “Very much”). For RQ2, we evaluate the quality and diversity of submitted molecules: 1) Quality, measured by how many of the four properties were improved in each submitted compound; 2) Diversity, measured using pairwise structure similarity between submitted molecules. For RQ3, we analyzed log data capturing abductive leaps. Building on prior work [ 15 ], participants were instructed to click the In-sight button (Figure 3-F) whenever they experienced an abductive leap during the experimental tasks with HALO . We defined and explained an abductive leap as a moment when participants form a plausible, novel explanatory hypothesis or research direction. 
+
+6.1.4 Participants. We recruited ten professional medicinal chemists working in nine different drug discovery labs. Table 4 in the ap-pendix presents the participants’ demographic information. Their career experience ranged from 8 to 15 years ( 𝑀 = 10 .90 , 𝑆𝐷 = 2.28 ). We used snowball sampling, leveraging professionals who partici-pated in the formative study. The Institutional Review Board (IRB) approved our study, and we obtained participants’ consent before the study. Each participant received a $75 gift certificate. 
+
+## 6.2 Results and Findings 
+
+We report findings organized by our research questions, combining results from the user study. 
+
+6.2.1 RQ1-1: Efficient Observation . Participants using HALO 
+
+demonstrated more efficient observation rather than the baseline (Figure 4; Q1: 𝑝 < .05 , Q2: 𝑝 < .05 , Q3: 𝑝 < .01 ). Many participants (𝑃 5–𝑃 6, 𝑃 9–𝑃 12 ) noted that HALO facilitated the grouping of im-proved molecules, enabling faster understanding of the overall land-scape and more effective identification of clusters for refinement As 
+
+𝑃 5 explained, “Clustering based on the target property was pretty ef-ficient and reasonable, and it matched how I’d group things naturally.” 
+
+Table 1: Comparison of Quality and Diversity of submitted molecules between conditions. Values indicate mean ± stan-dard deviation ( ∗∗ 𝑝 < 0.01 ). 
+
+Metric Baseline HALO 𝑝 -value Quality 2.25 ± 0.48 3.16 ± 0.37 0.0039 ∗∗ 
+
+Diversity 58 .27% ± 11 .01% 46 .07% ± 7.68% 0.0039 ∗∗ 
+
+𝑃 9 added, “It was easy to see that the AI-generated molecules tended to have low PlogP, which helped me understand which property to pay closer attention to in the next phase.” 
+
+6.2.2 RQ1-2: Systematic Strategy Identification . HALO sig-nificantly enhanced the systematic identification of strategies by identifying relationship fragments and property improvement, sig-nificantly reducing the manual effort and improving diversity (Fig-ure 4; Q4: 𝑝 < .05 , Q5: 𝑝 < .01 , Q6: 𝑝 < .01 ). Many participants (𝑃 3–𝑃 8, 𝑃 11 ) noted that HALO effectively identified rational opti-mization strategies that aligned with expert chemical intuition, reducing manual labor required in traditional workflows. As 𝑃 3
+
+explained, “When improving PlogP, it was easy to plan the optimiza-tion direction by examining fragments that frequently appeared in clusters of molecules with higher PlogP.” 𝑃 11 further noted “The strate-gies provided alongside existing knowledge were generally reasonable, so we don’t waste time in the lab, and additional literature review.” 
+
+Others found that suggesting strategies enables users to develop a molecular hypothesis in diverse ways. 𝑃 8 further noted “Instead of just going with intuition, having multiple evidence-based strategies helped me think of things I wouldn’t have considered and explore different directions.” 
+
+6.2.3 RQ1-3: Coherent Multi-Strategy Synthesis . HALO sig-nificantly enables participants to maintain coherence in synthe-sizing strategies across multiple clusters. HALO streamlined the design of new candidates by enabling the intuitive recombination of optimization strategies, maintaining structural coherence dur-ing the process (Figure 4; Q7: 𝑝 < .01 , Q8: 𝑝 < .01 , Q9: 𝑝 < .05 ,Q10: 𝑝 < .05 ). Several noted that the modular nature of HALO pro-vided a ’plug-and-play’ experience, allowing participants to easily recombine various strategies while maintaining structural coher-ence ( 𝑃 3–𝑃 8, 𝑃 11 –𝑃 12 ). As 𝑃 6 explained, “I really liked the ability to combine fragments like LEGO blocks with just a click, while seeing the score update in real time, which allowed me to quickly design a variety of new molecules.” 𝑃 9 added, “With ChatGPT or Gemini, if I tried to modify multiple fragments, I would probably lose track of the flow pretty quickly. HALO , on the other hand, helped me con-tinuously build new combinations.” However, several participants noted that once the optimization direction became more concrete, 
+
+HALO tended to present too many strategy suggestions, which could feel overwhelming and hinder further refinement ( 𝑃 8-𝑃 12 ). As 𝑃 12 remarked, “Sometimes I just want to make some very simple modifications. This tool can make suggestions for a lot of types of analogs.” 
+
+Overall, these results for RQs (RQ1-1, RQ1-2, and RQ1-3) suggest that HALO supports abductive reasoning in molecular hypothesis workflows, highlighting the suitability of HALO for such processes. Conference acronym ’XX, June 03–05, 2025, Woodstock, NY Jeon et al. 
+
+Figure 5: Each row illustrates a participant’s component-usage logs recorded during the experimental task of the user study. Green squares represent the creation of new molecules, either through manual edits or molecular AI generations. Light blue circles represent MolCluster , blue circles represent 
+
+MolStrategy , and dark blue circles represent MolSynthesis .The yellow star represents an Insight. Table 3 in the appendix defines each label. 
+
+6.2.4 RQ2: Ligand Optimization . We begin the discussion of the results with one of the most critical questions: did HALO result in not only higher-quality but also a greater diversity in ligand optimization? For quality, we evaluated how many of the four properties were improved, using ADMET-AI [ 103 ], which is also used in HALO (Δ = after − before ). We employed the Wilcoxon signed-rank test [ 111 ]. Table 1 shows that there is a significant difference in quality between conditions ( 𝑝 = 0.0039 ). For diversity, we computed the average pairwise similarity within each set (where each participant submitted seven molecules), and then compared between conditions using the Wilcoxon rank-sum test [ 111 ]. Specifically, for a set of 𝑁 molecules, the diversity score is defined as: 
+
+𝐴𝑣𝑒𝑟𝑎𝑔𝑒𝑆𝑖𝑚𝑖𝑙𝑎𝑟𝑖𝑡𝑦 = 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+
+1
+
+𝑁 ∑︁ 𝑗 ≠𝑖 
+
+sim (𝑚 𝑖 , 𝑚 𝑗 )
+
+!
+
+(1) where 𝑚 𝑖 and 𝑚 𝑗 denote molecules in the set, sim (· , ·) represents Tanimoto similarity [ 100 ] between two molecules, and 𝑁 is the number of molecules in the set (i.e., 𝑁 = 7 in our study). Table 1 shows that there is a significant difference in diversity between conditions ( 𝑝 = 0.0039 ). Overall, these results suggest that HALO supports users in achiev-ing both higher-quality optimization and more diverse exploration, highlighting its potential to facilitate the generation of novel and promising molecular hypotheses. 
+
+6.2.5 RQ3: Abductive Leaps . To answer RQ3, we analyzed the usage log of HALO , including the Insight button (Figure 3-F), which participants clicked whenever they experienced an abductive leap toward a plausible and novel hypothesis or research direction. Fig-ure 5 shows participants’ component usage log during the exper-imental task. Participants reported, on average, 1.8 (SD = 0.92) abductive leaps (min: 0, max: 3) in usage of HALO based on the log of the Insight button (Figure 3-F). We defined pre- and post-leap phases based on the first detected abductive leap and ana-lyzed usage patterns in each phase. In the pre-leap phase, abduc-tive leaps often emerged when participants had experienced all three stages—efficient observation ( MolCluster , •, Figure 5), strat-egy identification ( MolStrategy , •, Figure 5), and multi-strategy synthesis ( MolSynthesis , •, Figure 5). In particular, during the multi-strategy synthesis stage, participants often experienced a series of consecutive abductive leaps, suggesting an iterative refinement and expansion of emerging hypotheses rather than a single isolated in-sight. For example, 𝑃 3 explained, “I first had a new idea while trying to merge several strategies around cluster 1. Then, as I merged addi-tional information around clusters 2 and 3, that original idea evolved further.” and 𝑃 6 noted, “ After diving into the whole molecule and the overall strategy, the logic behind the AI’s suggestions became clear. It actually inspired me to develop new approaches myself.” These findings suggest the importance of supporting abductive reason-ing across the three-stage cycle in HALO , while highlighting the organic interplay and interdependence among the stages. In the post-leap phase, for generating molecules, AI usage ( ,Figure 5) dropped sharply (pre-leap: M=9.11, SD=4.54; post-leap: M=1.44, SD=3.68), while manual generation ( , Figure 5) increased (pre-leap: M=3.33, SD=2.40; post-leap: M=4.11, SD=3.76) For exam-ple, 𝑃 5 explained, “Once the new idea came to mind, I wanted to refine it using my own knowledge,” one participant noted. “For an important task, if I triggered a new AI generation at that point, it felt like I would have to start over from scratch.” 𝑃 7 remarked, “Because I cannot give the AI sufficiently detailed and precise instructions on my new idea, I preferred to take the lead and refine the idea myself after that new stage was reached.” These findings suggest that participants primarily appropriated AI as a catalyst for initial conceptual leaps, but once a promising idea had emerged, they tended to reclaim control over the subsequent refinement process to preserve their intended direction. 
+
+## 7 Discussion 
+
+In this section, we reflect on our findings from the design and evaluation of HALO . We also discuss design implications and future opportunities for improving and extending HALO .
+
+## 7.1 Design Implication 1: Generalizing 
+
+## HALO -Co-abduction in Scientific Discovery 
+
+We introduce a co-abduction framework that enables abductive reasoning in human–AI collaboration, incorporating three stages: (1) efficient observation, (2) strategy identification, and (3) multi-strategy synthesis. HALO enables users to explore improved can-didates in vast molecular spaces, organize them into meaningful groups, explain the reasons for their improvements, and identify, refine, and combine optimization strategies across these groups. Our three-stage framework improves quality and diversity of molec-ular optimization in drug discovery by supporting key processes of abductive reasoning, from fragmented observations to a coherent, unified hypothesis [ 2, 114 ], presenting one possible operational-ization of abductive reasoning in the real world. Understanding the mechanisms behind optimization strategies and easily combin-ing multiple strategies significantly enhances researchers’ sense of control, transparency, trust, and alignment with creative intent in scientific discovery, supporting core principles of human-AI inter-action [54, 92, 98, 112]. HALO : Interactive Co-abductive Reasoning in Scientific Hypothesis Generation Conference acronym ’XX, June 03–05, 2025, Woodstock, NY 
+
+Beyond drug discovery, HALO ’s implementation can be directly applied to other complex scientific domains that require abductive reasoning to generate promising hypotheses, including battery ma-terials design and protein antibody design, where experts iteratively refine hypotheses by synthesizing diverse optimization strategies. For example, in battery materials design, material hypothesis (can-didates) compositions can be clustered by improvement profiles across energy density, cycle life, and thermal stability (Stage 1: Improved-candidate Cluster); strategies can be identified within each cluster (e.g., adding dopants to offset stability loss) (Stage 2: Strategy Identification); and strategies are recombined across clusters to new materials (Stage 3: Multi-strategy Synthesis). 
+
+## 7.2 Design Implication 2: Structuring AI’s Imperfection into Grounded Reasoning 
+
+Creative domains often see AI’s imperfections as sources of novelty. AI often helps users break creative ruts by offering divergent op-tions [ 32 , 72 ]; even structurally imperfect outputs can inspire new ideas. Jeon et al. [ 53 ] reported that automotive designers applied twisted and blurred AI-generated designs as inspiration for new designs. In science, however, new discoveries demand objective grounding, such as satisfying multiple properties simultaneously. This means that such imperfections should be treated not as raw inspiration but as additional starting points for promising reasoning Our study suggests how AI’s imperfections can be structured into scientific hypothesis exploration through human-AI collaboration (human-in-the-loop [ 5]). AI rarely produces a complete hypothesis that satisfies all properties in a single step; yet, when accumulated, these outputs form fragmented signals that point in a direction. Scientists further develop these signals into promising molecular hypotheses with their professional domain knowledge. Cluster-ing improved candidates yields a legible landscape for efficient observation (RQ1-1; 𝑃 5, 𝑃 9); surfacing fragment-level regularities turns weak associations into evidence-based directions beyond a user’s intuition, expanding diversity (RQ1-2; 𝑃 3, 𝑃 8); and modular recombination with real-time feedback lets users confirm directions incrementally, sustaining coherence across synthesis (RQ1-3; 𝑃 6,
+
+𝑃 9). In short, scientists achieve scientific leaps through structuring AI’s incompleteness into grounded reasoning, improving both the quality and diversity of molecular hypotheses (RQ2). This structuring of fragmented AI signals parallels sensemaking, organizing scattered information into coherent representations that guide exploration [81]. Given this overlap, co-abduction can draw on established sensemaking design patterns, from organizing arti-facts into shared structures [ 20 , 21 , 59 ] to comparing and evaluating large volumes of imperfect yet potentially valuable AI-generated outputs [4, 7, 31, 42–44, 95]. 
+
+## 7.3 Design Implication 3: Before and After Abductive Leaps 
+
+The purpose of co-abduction is to facilitate an abductive leap in which a scientist suddenly reconfigures the problem space into a new, promising hypothesis [ 36 , 62 ], such as an Aha! or eureka moment. [ 37 , 78 ]. Previous research has demonstrated that scien-tific approaches differ before and after the abductive leap [ 37 , 78 ]. Prior to the insight, scientists engage in iterative cycles of divergent thinking. They use technology to broadly explore the hypothesis space and iteratively build local conceptual contexts, continuing until scientists perceive sufficiently promising cognitive break-throughs have emerged [ 35 , 62 , 76 ]. Post-insight, the cognitive regime shifts: convergent thinking becomes dominant as scientists focus on refining and optimizing these ideas to meet predefined objectives [35, 62]. In our results, while scientists often use AI to help form a promis-ing explanatory frame beforehand, they rely on domain-specific sense-making rather than using AI afterward. These differences in AI usage suggest a phase-dependent initiative in human–AI collab-oration. Before insight, AI can have initiative comparable to that of humans, proactively supporting the iterative cycles of divergent and convergent thinking by understanding the user’s needs and enabling progress toward a crystallized explanatory framework. After insight, the initiative shifts back to the human, and AI should adopt a more restrained, responsive role. Since scientists focus on fine-grained modifications, AI that does not fully understand the precise context may interfere with their work. Making users’ insight states transparent may help HCI researchers design AI roles in scientific discovery interfaces, aligning with the core principle of human-AI collaboration, where humans retain initiative over core tasks [ 6, 109 ]. For example, if users share their experiences of abductive leaps with the AI during a session, the AI can reduce its intrusiveness in later phases by aligning with user input when needed, thereby facilitating human-AI interaction. 
+
+## 7.4 Limitation and Future Work 
+
+First, evaluating the quality of compounds generated by HALO 
+
+solely using model-based scores and counts is inherently limited. Definitive assessment requires scientific validation through wet-lab experiments. However, such experiments are costly, with ap-proximately $2,500 per compound, making large-scale validation impractical within the scope of this study. In future work, we plan to integrate experimentally validated datasets as ground truth, en-abling more rigorous evaluation in lead optimization with HALO .Second, both the duration of the user study (30 minutes) and the size of the participant pool (N = 10) limit the generalizability of our findings. While participants were able to discover several high-quality compound candidates in a short timeframe, in real-world practice, identifying compounds typically takes at least a week. Moreover, although ten participants completed expert studies, the sample may not fully represent the diversity of the drug discovery domain. For future work, by collaborating with more diverse drug discovery labs, we aim to conduct long-term user studies (at least one week) to enhance the generalizability of HALO .Third, regarding the analysis of the abductive leap, we aim to extend our analysis beyond the experimental group to the control group by instrumenting both conditions with a comparable insight-capture mechanism for a more detailed comparison of abductive leap patterns across conditions. 
+
+## 8 Conclusion 
+
+In this paper, we present the Co-abduction framework, a novel approach to human-AI collaboration for abductive reasoning and the generation of new, promising hypotheses. To operationalize Conference acronym ’XX, June 03–05, 2025, Woodstock, NY Jeon et al. 
+
+this framework, we developed HALO , which supports co-abductive reasoning through three stages in ligand optimization: 1) efficient observation, 2) systematic strategy identification, and 3) coherent multi-strategy synthesis. Results from a study involving 10 domain experts demonstrate that HALO facilitates abductive reasoning and supports the generation of higher-quality, more diverse hy-potheses, demonstrating its applicability to scientific domains that require novel and promising hypotheses, including materials sci-ence, biology, and chemistry. Our work offers a new perspective on supporting hypothesis generation, emphasizing the importance of abductive reasoning in human-AI collaboration. HALO : Interactive Co-abductive Reasoning in Scientific Hypothesis Generation Conference acronym ’XX, June 03–05, 2025, Woodstock, NY 
+
+## References 
+
+[1] [n. d.]. Nvida - bionemo. https://www.nvidia.com/en-us/clara/bionemo/. Ac-cessed: 2024-07-31. [2] Atilla Kaan Alkan, Shashwat Sourav, Maja Jablonska, Simone Astarita, Rishabh Chakrabarty, Nikhil Garuda, Pranav Khetarpal, Maciej Pióro, Dimitrios Tanog-lidis, Kartheik G Iyer, et al . 2025. A Survey on Hypothesis Generation for Scientific Discovery in the Era of Large Language Models. arXiv preprint arXiv:2504.05496 (2025). [3] Dana F AlKharboush, Frank Kozielski, Geoffrey Wells, and Exequiel OJ Porta. 2025. Fragment-based drug discovery: A graphical review. Current Research in Pharmacology and Drug Discovery (2025), 100233. [4] Shm Garanganao Almeda, JD Zamfirescu-Pereira, Kyu Won Kim, Pradeep Mani Rathnam, and Bjoern Hartmann. 2024. Prompting for discovery: Flexible sense-making for ai art-making with dreamsheets. In Proceedings of the 2024 CHI Conference on Human Factors in Computing Systems . 1–17. [5] Saleema Amershi, Maya Cakmak, W Bradley Knox, and Todd Kulesza. 2014. Power to the people: The role of humans in interactive machine learning. AI magazine 35, 4 (2014), 105–120. [6] Saleema Amershi, Dan Weld, Mihaela Vorvoreanu, Adam Fourney, Besmira Nushi, Penny Collisson, Jina Suh, Shamsi Iqbal, Paul N Bennett, Kori Inkpen, et al . 2019. Guidelines for human-AI interaction. In Proceedings of the 2019 chi conference on human factors in computing systems . 1–13. [7] Ian Arawjo, Chelse Swoopes, Priyan Vaithilingam, Martin Wattenberg, and Elena L Glassman. 2024. Chainforge: A visual toolkit for prompt engineering and llm hypothesis testing. In Proceedings of the 2024 CHI Conference on Human Factors in Computing Systems . 1–18. [8] Sara Barrena and Jaime Nubiola. 2019. Abduction: The Logic of Creativity. In 
+
+The Bloomsbury Companion to Contemporary Peircean Semiotics . Bloomsbury, 185–203. [9] Helen M. Berman et al . 2000. The Protein Data Bank. Nucleic Acids Research 28, 1 (2000), 235–242. [10] G Richard Bickerton, Gaia V Paolini, Jérémy Besnard, Sorel Muresan, and An-drew L Hopkins. 2012. Quantifying the chemical beauty of drugs. Nature chemistry 4, 2 (2012), 90–98. [11] Camille Bilodeau, Wengong Jin, Tommi Jaakkola, Regina Barzilay, and Klavs F Jensen. 2022. Generative models for molecular discovery: Recent advances and challenges. Wiley Interdisciplinary Reviews: Computational Molecular Science 12, 5 (2022), e1608. [12] Jesse D Bloom, Sy T Labthavikul, Christopher R Otey, and Frances H Arnold. 2006. Protein stability promotes evolvability. Proceedings of the National Acad-emy of Sciences 103, 15 (2006), 5869–5874. [13] Paul E Blower Jr, Kevin P Cross, Michael A Fligner, Glenn J Myatt, Joseph S Verducci, and Chihae Yang. 2004. Systematic analysis of large screening sets in drug discovery. Current Drug Discovery Technologies 1, 1 (2004), 37–47. [14] Keith T Butler, Daniel W Davies, Hugh Cartwright, Olexandr Isayev, and Aron Walsh. 2018. Machine learning for molecular and materials science. Nature 559, 7715 (2018), 547–555. [15] Wesley Carpenter. 2019. The aha! moment: The science behind creative insights. In Toward super-creativity-improving creativity in humans, machines, and human-machine collaborations . IntechOpen. [16] Fengming Chen, Ranran Zhao, Xingxing Han, Huan Li, and Zhishu Tang. 2026. Harnessing AI to fuse phenotypic signatures for drug target identification: progress in computational modeling. Briefings in Bioinformatics 27, 1 (2026), bbag045. [17] Minjun Chen, Jürgen Borlak, and Weida Tong. 2013. High lipophilicity and high daily dose of oral medications are associated with significant risk for drug-induced liver injury. Hepatology 58, 1 (2013), 388–396. [18] Minjun Chen, Ayako Suzuki, Jürgen Borlak, Raúl J Andrade, and M Isabel Lucena. 2015. Drug-induced liver injury: Interactions between drug properties and host factors. Journal of hepatology 63, 2 (2015), 503–514. [19] Ziqi Chen, Martin Renqiang Min, Srinivasan Parthasarathy, and Xia Ning. 2021. A deep generative model for molecule optimization via one fragment modifica-tion. Nature machine intelligence 3, 12 (2021), 1040–1049. [20] Lydia B Chilton, Juho Kim, Paul André, Felicia Cordeiro, James A Landay, Daniel S Weld, Steven P Dow, Robert C Miller, and Haoqi Zhang. 2014. Frenzy: collaborative data organization for creating conference sessions. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems . 1255–1264. [21] Lydia B Chilton, Greg Little, Darren Edge, Daniel S Weld, and James A Landay. 2013. Cascade: Crowdsourcing taxonomy creation. In Proceedings of the SIGCHI Conference on Human Factors in Computing Systems . 1999–2008. [22] José A Cisneros, Michael J Robertson, Brandon Q Mercado, and William L Jorgensen. 2017. Systematic study of effects of structural modifications on the aqueous solubility of drug-like molecules. ACS medicinal chemistry letters 8, 1 (2017), 124–127. [23] Victoria Clarke, Virginia Braun, and Nikki Hayfield. 2015. Thematic analysis. 
+
+Qualitative Psychology: A Practical Guide to Research Methods (2015), 222–248. [24] Kai-Hendrik Cohrs, Emiliano Diaz, Vasileios Sitokonstantinou, Gherardo Varando, and Gustau Camps-Valls. 2025. Large language models for causal hypothesis generation in science. Machine Learning: Science and Technology 6, 1 (2025), 013001. [25] The UniProt Consortium. 2023. UniProt: the Universal Protein Knowledgebase in 2023. Nucleic Acids Research 51, D1 (2023), D523–D531. [26] Gabriele Corso, Hannes Stärk, Bowen Jing, Regina Barzilay, and Tommi Jaakkola. 2022. Diffdock: Diffusion steps, twists, and turns for molecular docking. arXiv preprint arXiv:2210.01776 (2022). [27] Stefano Curtarolo et al . 2012. AFLOW: an automatic framework for high-throughput materials discovery. Computational Materials Science 58 (2012), 218–226. [28] Daniel W Davies, Keith T Butler, Adam J Jackson, Andrew Morris, Jarvist M Frost, Jonathan M Skelton, and Aron Walsh. 2016. Computational screening of all stoichiometric inorganic materials. Chem 1, 4 (2016), 617–627. [29] Vishal Dey, Xiao Hu, and Xia Ning. 2025. GeLLM 3O: Generalizing Large Language Models for Multi-property Molecule Optimization. arXiv preprint arXiv:2502.13398 (2025). [30] Vishal Dey, Xiao Hu, and Xia Ning. 2025. Large language models for controllable multi-property multi-objective molecule optimization. molecules 1, 331,586 (2025), 433–166. [31] Zijian Ding, Michelle Brachman, Joel Chan, and Werner Geyer. 2025. " The Diagram is like Guardrails": Structuring GenAI-assisted Hypotheses Exploration with an Interactive Shared Representation. In Proceedings of the 2025 Conference on Creativity and Cognition . 606–625. [32] Chris Donahue and Yewon Kim. 2025. AMUSE: AI-Integrated Songwriting Workflows. In Proceedings of the CHI Conference on Human Factors in Computing Systems .[33] Jurgen Drews. 2000. Drug discovery: a historical perspective. science 287, 5460 (2000), 1960–1964. [34] David TF Dryden, Andrew R Thomson, and John H White. 2008. How much of protein sequence space has been explored by life on Earth? Journal of The Royal Society Interface 5, 25 (2008), 953–956. [35] Kevin Dunbar. 1993. Concept discovery in a scientific domain. Cognitive science 
+
+17, 3 (1993), 397–434. [36] Kevin Dunbar. 1995. How scientists really reason: Scientific reasoning in real-world laboratories. (1995). [37] Anna Fedor, Eörs Szathmáry, and Michael Öllinger. 2015. Problem solving stages in the five square problem. Frontiers in psychology 6 (2015), 1050. [38] Jacob G Foster, Andrey Rzhetsky, and James A Evans. 2015. Tradition and innovation in scientists’ research strategies. American sociological review 80, 5 (2015), 875–908. [39] Jie Gao, Yuchen Guo, Gionnieve Lim, Tianqin Zhang, Zheng Zhang, Toby Jia-Jun Li, and Simon Tangi Perrault. 2024. CollabCoder: A Lower-barrier, Rigorous Workflow for Inductive Collaborative Qualitative Analysis with Large Language Models. In Proceedings of the 2024 CHI Conference on Human Factors in Computing Systems . 1–29. [40] Massimo Garbuio and Nidthida Lin. 2021. Innovative idea generation in prob-lem finding: Abductive reasoning, cognitive impediments, and the promise of artificial intelligence. Journal of Product Innovation Management 38, 6 (2021), 701–725. [41] Anna Gaulton et al . 2012. ChEMBL: a large-scale bioactivity database for drug discovery. Nucleic Acids Research 40, D1 (2012), D1100–D1107. [42] Katy Ilonka Gero, Chelse Swoopes, Ziwei Gu, Jonathan K Kummerfeld, and Elena L Glassman. 2024. Supporting sensemaking of large language model outputs at scale. In Proceedings of the 2024 CHI Conference on Human Factors in Computing Systems . 1–21. [43] Elena L Glassman, Jeremy Scott, Rishabh Singh, Philip J Guo, and Robert C Miller. 2015. OverCode: Visualizing variation in student solutions to programming problems at scale. ACM Transactions on Computer-Human Interaction (TOCHI) 
+
+22, 2 (2015), 1–35. [44] Ziwei Gu, Joyce Zhou, Ning-Er Lei, Jonathan K Kummerfeld, Mahmood Jasim, Narges Mahyar, and Elena L Glassman. 2025. AbstractExplorer: Leveraging Structure-Mapping Theory to Enhance Comparative Close Reading at Scale. In 
+
+Proceedings of the 38th Annual ACM Symposium on User Interface Software and Technology . 1–25. [45] Zhangxu He, Weiguang Yang, Feifei Yang, Jingyu Zhang, and Liying Ma. 2024. In-novative medicinal chemistry strategies for enhancing drug solubility. European Journal of Medicinal Chemistry 279 (2024), 116842. [46] Izumi V Hinkson, Benjamin Madej, and Eric A Stahlberg. 2020. Accelerating therapeutics for opportunities in medicine: a paradigm shift in drug discovery. 
+
+Frontiers in pharmacology 11 (2020), 770. [47] David Hitchcock. 1979. Deductive and inductive: Types of validity, not types of argument. Informal Logic 2, 3 (1979). [48] Samuel C Hoffman, Vijil Chenthamarakshan, Kahini Wadhawan, Pin-Yu Chen, and Payel Das. 2022. Optimizing molecules using efficient queries from property evaluations. Nature Machine Intelligence 4, 1 (2022), 21–31. Conference acronym ’XX, June 03–05, 2025, Woodstock, NY Jeon et al. 
+
+[49] Tom Hosack, Djamil Damry, and Sujata Biswas. 2023. Drug-induced liver injury: a comprehensive review. Therapeutic advances in gastroenterology 16 (2023), 17562848231163410. [50] Ross Irwin, Spyridon Dimitriadis, Jiazhen He, and Esben Jannik Bjerrum. 2022. Chemformer: a pre-trained transformer for computational chemistry. Machine Learning: Science and Technology 3, 1 (2022), 015022. [51] Anubhav Jain, Shyue Ping Ong, Geoffroy Hautier, Wei Chen, William Davidson Richards, Stephen Dacek, Shreyas Cholia, Dan Gunter, David Skinner, Gerbrand Ceder, et al . 2013. Commentary: The Materials Project: A materials genome approach to accelerating materials innovation. APL materials 1, 1 (2013). [52] Pouria Jandaghi, Hamed S Najafabadi, Andrea S Bauer, Andreas I Papadakis, Matteo Fassan, Anita Hall, Anie Monast, Magnus von Knebel Doeberitz, John P Neoptolemos, Eithne Costello, et al . 2016. Expression of DRD2 is increased in human pancreatic ductal adenocarcinoma and inhibitors slow tumor growth in mice. Gastroenterology 151, 6 (2016), 1218–1231. [53] Youngseung Jeon, Matthew K Hong, Yan-Ying Chen, Kalani Murakami, Jonathan Q Li, Xiang Anthony Chen, and Matthew Klenk. 2024. Weaving ml with human aesthetic assessments to augment design space exploration: An automotive wheel design case study. In Extended Abstracts of the CHI Conference on Human Factors in Computing Systems . 1–10. [54] Tingting Jiang, Zhumo Sun, Shiting Fu, and Yan Lv. 2024. Human-AI inter-action research agenda: A user-centered perspective. Data and Information Management 8, 4 (2024), 100078. [55] John Jumper, Richard Evans, Alexander Pritzel, Tim Green, Michael Figurnov, Olaf Ronneberger, Kathryn Tunyasuvunakool, Russ Bates, Augustin Žídek, Anna Potapenko, et al . 2021. Highly accurate protein structure prediction with AlphaFold. nature 596, 7873 (2021), 583–589. [56] Hyeonsu B Kang, Nouran Soliman, Matt Latzke, Joseph Chee Chang, and Jonathan Bragg. 2023. ComLittee: Literature Discovery with Personal Elected Author Committees. In Proceedings of the 2023 CHI Conference on Human Factors in Computing Systems . 1–20. [57] Abdul Karim, Matthew Lee, Thomas Balle, and Abdul Sattar. 2021. CardioTox net: a robust predictor for hERG channel blockade based on deep learning meta-feature ensembles. Journal of Cheminformatics 13, 1 (2021), 60. [58] Nabin Khanal, Chun Meng Yu, Jui-Cheng Chiu, Anav Chaudhary, Ziyue Zhang, Kakani Katija, and Angus G Forbes. 2024. FathomGPT: A natural language interface for interactively exploring ocean science data. In Proceedings of the 37th Annual ACM Symposium on User Interface Software and Technology . 1–15. [59] Juho Kim, Haoqi Zhang, Paul André, Lydia B Chilton, Wendy Mackay, Michel Beaudouin-Lafon, Robert C Miller, and Steven P Dow. 2013. Cobi: A community-informed conference scheduling tool. In Proceedings of the 26th annual ACM symposium on User interface software and technology . 173–182. [60] Sunghwan Kim et al. 2021. PubChem in 2021: new data content and improved web interfaces. Nucleic Acids Research 49, D1 (2021), D1388–D1395. [61] Douglas B Kitchen, Hélène Decornez, John R Furr, and Jürgen Bajorath. 2004. Docking and scoring in virtual screening for drug discovery: methods and applications. Nature reviews Drug discovery 3, 11 (2004), 935–949. [62] David Klahr and Kevin Dunbar. 1988. Dual space search during scientific reasoning. Cognitive science 12, 1 (1988), 1–48. [63] Paris Koloveas, Serafeim Chatzopoulos, Dionysis Diamantis, Christos Try-fonopoulos, and Thanasis Vergoulis. 2025. Accelerating Scientific Discovery with Multi-Document Summarization of Impact-Ranked Papers. arXiv preprint arXiv:2508.03962 (2025). [64] Ehud Kroll and Lauri Koskela. 2017. Studying design abduction in the context of novelty. In DS 87-7 Proceedings of the 21st International Conference on Engineering Design (ICED 17) Vol 7: Design Theory and Research Methodology, Vancouver, Canada, 21-25.08. 2017 . The Design Society, 61–70. [65] Yoonjoo Lee, Hyeonsu B Kang, Matt Latzke, Juho Kim, Jonathan Bragg, Joseph Chee Chang, and Pao Siangliulue. 2024. PaperWeaver: Enriching Topi-cal Paper Alerts by Contextualizing Recommended Papers with User-collected Papers. In Proceedings of the CHI Conference on Human Factors in Computing Systems . 1–19. [66] Ziwen Li, Xiang Chen, and Youngseung Jeon. 2025. GraPPI: a retrieve-divide-solve GraphRAG framework for large-scale protein-protein interaction explo-ration. In Findings of the Association for Computational Linguistics: NAACL 2025 .3635–3648. [67] Junyong Lin, Lu Dai, Ruiqian Han, Yijie Sui, Ruilin Wang, Xingliang Sun, Qinglin Wu, Min Feng, Hao Liu, and Hui Xiong. 2025. ScIRGen: Synthesize Realistic and Large-Scale RAG Dataset for Scientific Research. In Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining V. 2 . 5619–5630. [68] Yiren Liu, Pranav Sharma, Mehul Oswal, Haijun Xia, and Yun Huang. 2025. PersonaFlow: Designing LLM-Simulated Expert Perspectives for Enhanced Research Ideation. In Proceedings of the 2025 ACM Designing Interactive Systems Conference . 1–29. [69] Ricardo Macarron, Martyn N Banks, Dejan Bojanic, David J Burns, Dragan A Cirovic, Tina Garyantes, Darren VS Green, Robert P Hertzberg, William P Janzen, Jeff W Paslay, et al . 2011. Impact of high-throughput screening in biomedical research. Nature reviews Drug discovery 10, 3 (2011), 188–195. [70] Gerald Maggiora, Martin Vogt, Dagmar Stumpfe, and Jurgen Bajorath. 2014. Molecular similarity in medicinal chemistry: miniperspective. Journal of medic-inal chemistry 57, 8 (2014), 3186–3204. [71] Lorenzo Magnani. 2009. Creative abduction and hypothesis withdrawal. In 
+
+Models of discovery and creativity . Springer, 95–126. [72] Nikolas Martelaro, David Chuan-En Lin, and Hyeonsu B. Kang. 2025. Inkspire: A Sketch-Driven AI Tool for Design Ideation. In Proceedings of the CHI Conference on Human Factors in Computing Systems .[73] Kristin McEuen, Jürgen Borlak, Weida Tong, and Minjun Chen. 2017. Associa-tions of drug lipophilicity and extent of metabolism with drug-induced liver injury. International journal of molecular sciences 18, 7 (2017), 1335. [74] Gordon E Moore et al . 1965. Cramming more components onto integrated circuits. [75] David F Nippa, Kenneth Atz, Yannick Stenzhorn, Alex T Müller, Andreas Tosstorff, Jörg Benz, Hayley Binch, Markus Bürkler, Achi Haider, Dominik Heer, et al . 2025. Expediting hit-to-lead progression in drug discovery through reac-tion prediction and multi-dimensional optimization. Nature Communications 
+
+(2025). [76] Stellan Ohlsson. 1992. Information-processing explanations of insight and related phenomena. Advances in the psychology of thinking 1 (1992), 1–44. [77] Charles O’Neill, Tirthankar Ghosal, Roberta Răileanu, Mike Walmsley, Thang Bui, Kevin Schawinski, and Ioana Ciucă. 2025. Sparks of science: Hypothesis generation using structured paper data. arXiv preprint arXiv:2504.12976 (2025). [78] Antonio J Osuna-Mascaró and Alice MI Auersperg. 2021. Current understanding of the “insight” phenomenon across disciplines. Frontiers in Psychology 12 (2021), 791398. [79] Sami Paavola. 2004. Abduction as a logic and methodology of discovery: The importance of strategies. Foundations of Science 9, 3 (2004), 267–283. [80] Charles Sanders Peirce. 1934. Collected papers of charles sanders peirce . Vol. 5. Harvard University Press. [81] Peter Pirolli and Stuart Card. 2005. The sensemaking process and leverage points for analyst technology as identified through cognitive task analysis. In 
+
+Proceedings of international conference on intelligence analysis , Vol. 5. McLean, VA, USA, 2–4. [82] Pavel G Polishchuk, Timur I Madzhidov, and Alexandre Varnek. 2013. Estimation of the size of drug-like chemical space based on GDB-17 data. Journal of computer-aided molecular design 27, 8 (2013), 675–679. [83] Robert Pool. 2024. AI for Scientific Discovery: Proceedings of a Workshop. (2024). [84] Jason Portenoy, Marissa Radensky, Jevin D West, Eric Horvitz, Daniel S Weld, and Tom Hope. 2022. Bursting scientific filter bubbles: Boosting innovation via novel author discovery. In Proceedings of the 2022 CHI Conference on Human Factors in Computing Systems . 1–13. [85] Kevin Pu, K. J. Kevin Feng, Tovi Grossman, Tom Hope, Bhavana Dalvi Mishra, Matt Latzke, Jonathan Bragg, Joseph Chee Chang, and Pao Siangliulue. 2025. IdeaSynth: Iterative Research Idea Development Through Evolving and Com-posing Idea Facets with Literature-Grounded Feedback. In Proceedings of the 2025 CHI Conference on Human Factors in Computing Systems . 1–31. [86] Biqing Qi, Kaiyan Zhang, Kai Tian, Haoxiang Li, Zhang-Ren Chen, Sihang Zeng, Ermo Hua, Hu Jinfang, and Bowen Zhou. 2024. Large language models as biomedical hypothesis generators: a comprehensive evaluation. arXiv preprint arXiv:2407.08940 (2024). [87] Carveth Read. 1914. Logic, deductive and inductive . A. Moring. [88] Zhi Ren et al . 2022. MaterialsAtlas.org: a materials informatics web app. npj Computational Materials 8, 1 (2022), 77. [89] Jutta Schickore. 2014. Scientific discovery. (2014). [90] Ansgar Schuffenhauer, Peter Ertl, Silvio Roggo, Stefan Wetzel, Marcus A Koch, and Herbert Waldmann. 2007. The scaffold tree- visualization of the scaffold universe by hierarchical scaffold classification. Journal of chemical information and modeling 47, 1 (2007), 47–58. [91] Christian D Schunn and David Klahr. 1995. A 4-space model of scientific discovery. In Proceedings of the 17th annual conference of the cognitive science society . Psychology Press Hove, 106–111. [92] Lisa Schut, Nenad Tomašev, Thomas McGrath, Demis Hassabis, Ulrich Paquet, and Been Kim. 2025. Bridging the human–ai knowledge gap through concept discovery and transfer in alphazero. Proceedings of the National Academy of Sciences 122, 13 (2025), e2406675122. [93] Austin D Sendek, Qian Yang, Ekin D Cubuk, Karel-Alexander N Duerloo, Yi Cui, and Evan J Reed. 2017. Holistic computational structure screening of more than 12000 candidates for solid lithium-ion conductor materials. Energy & Environmental Science 10, 1 (2017), 306–320. [94] Timothy Shanahan. 2022. Deductive and inductive arguments. (2022). [95] Shreya Shankar, JD Zamfirescu-Pereira, Björn Hartmann, Aditya Parameswaran, and Ian Arawjo. 2024. Who validates the validators? aligning llm-assisted evaluation of llm outputs with human preferences. In Proceedings of the 37th Annual ACM Symposium on User Interface Software and Technology . 1–14. HALO : Interactive Co-abductive Reasoning in Scientific Hypothesis Generation Conference acronym ’XX, June 03–05, 2025, Woodstock, NY 
+
+[96] Mahsa Sheikholeslami, Navid Mazrouei, Yousof Gheisari, Afshin Fasihi, Matin Irajpour, and Ali Motahharynia. 2025. DrugGen enhances drug discovery with large language models and reinforcement learning. Scientific Reports 15, 1 (2025), 13445. [97] Chuhan Shi, Fei Nie, Yicheng Hu, Yige Xu, Lei Chen, Xiaojuan Ma, and Qiong Luo. 2022. MedChemLens: An interactive visual tool to support direction selection in interdisciplinary experimental research of medicinal chemistry. 
+
+IEEE Transactions on Visualization and Computer Graphics 29, 1 (2022), 63–73. [98] Chuhan Shi, Xiaoquan Ren, Yifang Wang, Junze Li, Yushi Sun, Yawen Luo, and Rui Sheng. 2026. A Survey of Human-AI Collaboration for Scientific Discovery. (2026). [99] Herbert A Simon. 2019. The Sciences of the Artificial, reissue of the third edition with a new introduction by John Laird . MIT press. [100] Robert R Sokal and Peter Henry Andrews Sneath. 1963. Principles of numerical taxonomy. (1963). [101] Yuchen Sun, Tingjun Hou, Xibing He, Viet Hoang Man, and Junmei Wang. 2023. Development and test of highly accurate endpoint free energy methods. 2: Prediction of logarithm of n-octanol–water partition coefficient (logP) for druglike molecules using MM-PBSA method. Journal of computational chemistry 
+
+44, 13 (2023), 1300–1311. [102] Yifei Sun, Mahmood Zabihi, Qi Li, Xiaosi Li, Brandon J Kim, Eroboghene E Ubogu, Srinivasa N Raja, Ursula Wesselmann, and Chao Zhao. 2023. Drug permeability: From the blood–brain barrier to the peripheral nerve barriers. 
+
+Advanced therapeutics 6, 4 (2023), 2200150. [103] Kyle Swanson, Parker Walther, Jeremy Leitz, Souhrid Mukherjee, Joseph C Wu, Rabindra V Shivnaraine, and James Zou. 2024. ADMET-AI: a machine learning ADMET platform for evaluation of large-scale chemical libraries. Bioinformatics 
+
+40, 7 (2024), btae416. [104] Paul Thagard. 2010. How brains make mental models. In Model-based reasoning in science and technology: Abduction, logic, and computational discovery . Springer, 447–461. [105] Martin Tik, Ronald Sladky, Caroline Di Bernardi Luft, David Willinger, André Hoffmann, Michael J Banissy, Joydeep Bhattacharya, and Christian Windis-chberger. 2018. Ultra-high-field fMRI insights on insight: Neural correlates of the Aha!-moment. Human brain mapping 39, 8 (2018), 3241–3252. [106] Nobuhiko Tokuriki and Dan S Tawfik. 2009. Stability effects of mutations and protein evolvability. Current opinion in structural biology 19, 5 (2009), 596–604. [107] Jan Willem van der Laan, Peter Kasper, Beatriz Silva Lima, David R Jones, and Markku Pasanen. 2016. Critical analysis of carcinogenicity study outcomes. Relationship with pharmacological properties. Critical Reviews in Toxicology 46, 7 (2016), 587–614. [108] Mario Veen. 2021. Creative Leaps in Theory: The Might of Abduction. Advances in Health Sciences Education 26, 3 (2021), 1173–1183. https://doi.org/10.1007/ s10459-020-10017-5 [109] Danding Wang, Qian Yang, Ashraf Abdul, and Brian Y Lim. 2019. Design-ing theory-driven user-centric explainable AI. In Proceedings of the 2019 CHI conference on human factors in computing systems . 1–15. [110] David Weininger. 1988. SMILES, a chemical language and information system. 1. Introduction to methodology and encoding rules. Journal of chemical information and computer sciences 28, 1 (1988), 31–36. [111] Frank Wilcoxon. 1945. Individual comparisons by ranking methods. Biometrics Bulletin 1, 6 (1945), 80–83. https://doi.org/10.2307/3001968 [112] Uta Wilkens, Daniel Lupp, and Valentin Langholf. 2023. Configurations of human-centered AI at work: seven actor-structure engagements in organizations. 
+
+Frontiers in artificial intelligence 6 (2023), 1272159. [113] Olivier J Wouters, Martin McKee, and Jeroen Luyten. 2020. Estimated research and development investment needed to bring a new medicine to market, 2009-2018. Jama 323, 9 (2020), 844–853. [114] Hector Zenil, Jesper Tegnér, Felipe S Abrahão, Alexander Lavin, Vipin Kumar, Jeremy G Frey, Adrian Weller, Larisa Soldatova, Alan R Bundy, Nicholas R Jennings, et al . 2026. The future of fundamental science led by generative closed-loop artificial intelligence. Frontiers in artificial intelligence 9 (2026), 1678539. [115] Chengbo Zheng, Yuanhao Zhang, Zeyu Huang, Chuhan Shi, Minrui Xu, and Xiaojuan Ma. 2024. DiscipLink: Unfolding Interdisciplinary Information Seeking Process via Human-AI Co-Exploration. In Proceedings of the 37th Annual ACM Symposium on User Interface Software and Technology . 1–20. [116] Yangqiaoyu Zhou, Haokun Liu, Tejes Srivastava, Hongyuan Mei, and Chenhao Tan. 2024. Hypothesis generation with large language models. arXiv preprint arXiv:2404.04326 (2024). [117] Phyo Phyo Kyaw Zin, Gavin Williams, and Denis Fourches. 2018. Cheminformatics-based enumeration and analysis of large libraries of macrolide scaffolds. Journal of Cheminformatics 10, 1 (2018), 53. Conference acronym ’XX, June 03–05, 2025, Woodstock, NY Jeon et al. 
+
+## A Appendix A.1 Molecule Generation Pipeline 
+
+Figure 6: Overview of the compound generation pipeline. Users select an optimization task, which is used to con-struct a prompt for Llama 3.1 8B-Instruct fine-tuned on C-MuMOInstruct [ 29 ]. Generated compounds are filtered and scored before display. 
+
+Figure 6 illustrates the molecule generation pipeline. Users select a source molecule and choose an optimization task from predefined profiles that group ADMET properties by therapeutic relevance. Users can modify the molecular structure and review physicochem-ical properties in a web-based chemical editor before initiating generation. The system constructs a structured prompt encoding the source molecule as a SMILES string alongside the task’s property targets and optimization directions (Figure 13). The prompt is processed by Llama 3.1 8B-Instruct fine-tuned on C-MuMOInstruct [ 29 ], an instruction-tuning dataset for controllable multi-property molecule optimization. The model generates multiple candidate SMILES per request. Output SMILES are validated, canonicalized, and dedupli-cated via RDKit. Each candidate undergoes a maximum common substructure (MCS) filter to ensure scaffold preservation. The MCS between candidate and source is computed using RDKit’s FMCS algorithm with whole-ring and ring-bond-type constraints. Candidates whose MCS covers less than 60% of the source’s heavy atoms are discarded: retained =
+
+
+
+𝑚 ∈ candidates |MCS (𝑚, source )| |source | ≥ 0.6
+
+
+
+Retained candidates are scored using ADMET-AI [ 103 ] (car-cinogenicity, hERG, DILI) and Therapeutic Data Commons oracles (DRD2, pLogP), alongside RDKit-computed physicochemical de-scriptors and drug-likeness metrics. Each candidate is rendered on the canvas as a child node linked to its source by a generation edge. 
+
+Figure 7: (a) Core scaffold preservation rate across constraint types. (b) Hallucination rate measured as RDKit parsing failures. Task A represents out-of-distribution optimiza-tion (CARC, hERG, LIVER, PLogP). Task B represents in-distribution optimization (DRD2, PLogP). 𝑛 =1,024 candidates per task. 
+
+Figure 8: Structural similarity distributions between seed and generated molecules. (a) Task A shows tight distributions indicating conservative modifications. (b) Task B exhibits bi-modal Tanimoto coefficients suggesting variable generation behavior. 
+
+## A.2 Computational Evaluation of Molecule Generation 
+
+We evaluated the generation reliability of Llama 3.1 8B-Instruct fine-tuned on C-MuMOInstruct [ 29 ] using property combinations from our user study tasks. Task A optimized CARC, hERG, DILI, and pLogP, a combination absent from training data (out-of-distribution). Task B optimized DRD2, DILI, pLogP, and QED, matching the train-ing distribution (in-distribution). We generated 1,024 candidates per task and measured hallucination rate (RDKit parsing failures), scaf-fold preservation, and any-property success across three scaffold constraints: Bemis-Murcko, ring system, and complete molecular structure. Task A produced 0% hallucination, 89.8–93.8% scaffold preserva-tion, and 72.3–79.3% any-property success. Task B achieved 100% scaffold preservation and 100% any-property success but exhibited 29.7–39.8% hallucination (Figure 7, Table 2). The out-of-distribution HALO : Interactive Co-abductive Reasoning in Scientific Hypothesis Generation Conference acronym ’XX, June 03–05, 2025, Woodstock, NY 
+
+Table 2: Computational evaluation of compound generation across scaffold types and tasks. 
+
+Any Property Success (%) Hallucination Rate (%) Scaffold Preservation (%) Scaffold Type Task A Task B Task A Task B Task A Task B Bemis-Murcko (murcko) a 72.3 100.0 0.0 38.3 89.8 100.0 Ring System (ring only) b 79.3 100.0 0.0 29.7 93.8 100.0 Exact Structure (full molecule) c 73.8 100.0 0.0 39.8 90.6 100.0  
+
+> a
+
+Bemis-Murcko scaffold: the core ring structure with linkers, removing side chains.  
+
+> b
+
+Ring system: only ring atoms are preserved.  
+
+> c
+
+Exact structure: the complete molecular structure. task outperformed on validity. We attribute this to learned biases for DRD2 optimization in the training data. When scaffold con-straints conflict with these patterns, the model forces modifications that produce invalid molecules. Structural similarity confirms this: Task A generated conservative modifications (Tanimoto centered at 0.8), whereas Task B showed bimodal behavior with peaks at 0.6 and 1.0 (Figure 8). 
+
+## A.3 Framework for Evaluating Properties 
+
+The evaluated property scores are grouped into three categories: ADMET properties, physicochemical properties, and Drug-Likeness. To maintain a clean interface, each category is displayed within an expandable accordion section. Within each category, the proper-ties scores are listed in a structured tabular format. In addition to properties scores, similar compounds for each molecule, retrieved through PubChem’s PUG REST 7.
+
+## A.4 Details on properties 
+
+We used a total of five properties in Tasks A and B. Task A included PlogP, hERG, CARC, and LIVER, while Task B included PlogP, QED, DRD2, and LIVER. 
+
+• PlogP (Penalized logP) [ 48 ]: PlogP is the octanol–water par-tition coefficient (logP); higher values are preferred. 
+
+• hERG [ 57 ]: hERG refers to whether a compound blocks a heart potassium channel (called hERG); lower values are preferred. 
+
+• CARC (Carcinogenicity) [ 107 ]: CARC refers to the risk that a compound could cause cancer; lower values are preferred. 
+
+• DRD2 [ 52 ]: DRD2 refers to the probability that a compound blocks the dopamine D2 receptor (DRD2); higher values are preferred. 
+
+• QED [ 10 ]: QED refers to overall drug-likeness by incorporat-ing molecular weight, lipophilicity, and hydrogen bonding ability– higher QED is desired for better drug-likeness 
+
+• LIVER (Drug - induced liver injury risk) [ 49 ]: LIVER risk de-scribes the propensity of a compound to cause liver injury; lower values are preferred. 
+
+## A.5 Baseline Interface 
+
+To isolate and evaluate co-abductive reasoning, we developed a base-line system (Figure 11). The baseline includes non-co-abductive 
+
+> 7https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest
+
+components and excludes three co-abductive features (e.g., Mol-Cluster , MolStrategy , and MolSynthesis ). First, users can use the generative AI model in HALO to generate molecules on the tra-jectory map, and then check the property scores for four targeted properties (green: augmented and red: worsened). Newly edited or generated molecules appear beneath the original molecule, con-nected by a dashed line. If users choose to edit a molecule, the pop-up window is divided into a chemical editor and a properties panel that updates in real time as changes are made in the editor on the right. By right-clicking on any molecule node, users can access a side panel where the properties and LLM interface are located. The properties display includes various ADMET, physicochemical, and Drug-Likeness scores, as well as similar compounds found in PubChem. The LLM interface allows users to input queries to as-sist with their tasks (e.g., searching for references, strategies for optimization, etc.). 
+
+## A.6 Technical Details of HALO 
+
+We describe the technical details of HALO in terms of three main components: MolCluster , MolStrategy , and MolSynthesis (Figure 9). 
+
+A.6.1 Stage 1: Candidate Generation Pipeline. The generation pipeline converts a user’s optimization task into scored candidate molecules. The system constructs a structured prompt that encodes the source molecule as a SMILES string, selected ADMET property targets, and their optimization directions (e.g., decrease hERG, increase pLogP). Each property direction and threshold is formatted as an adjustment instruction. The prompt is processed by Llama 3.1 8B-Instruct, fine-tuned on C-MuMOInstruct [ 29 ]. The model generates multiple SMILES candi-dates per request, which are extracted using <SMILES> . . . </SMILES> 
+
+delimiters, then validated, canonicalized, and deduplicated with RDKit. 
+
+A.6.2 Stage 2: Cluster Annotation Pipeline. The annotation pipeline runs when a user opens a cluster’s detail view, computing five parallel analyses that characterize the cluster’s structure-activity profile. 
+
+Core scaffold detection. Shared scaffolds are identified through a two-phase MCS search. First, a global MCS is computed across all cluster members. To address diverse clusters where the global MCS may be trivially small, a per-scaffold MCS is also computed within the five largest Murcko scaffold subgroups. Candidate cores are filtered by coverage, minimum heavy atom count (at least 60% Conference acronym ’XX, June 03–05, 2025, Woodstock, NY Jeon et al. 
+
+Figure 9: Overview of the HALO pipeline. A three-stage workflow: (1) Observation, generate and cluster molecules by properties; (2) Strategy Identification, analyze scaffolds, scores, and fragment strategies; (3) Strategy Synthesis, combine and apply strategies to iteratively refine candidates. 
+
+of the median scaffold size), and decomposition quality. A greedy set-cover algorithm selects up to three complementary cores that maximize cluster coverage. 
+
+R-group library construction. Each selected core defines a decom-position using RDKit’s R-group decomposition. Matching molecules are split into the shared scaffold and variable side chains at num-bered attachment sites, producing a frequency-ranked catalog of observed R-group fragments at each site. 
+
+Chemotype profiling. Each molecule is annotated for ring sys-tems, functional groups, and structural alerts using medicinal chem-istry catalogs. Per-molecule profiles are aggregated at the cluster level into motif frequencies and alert themes. 
+
+Cluster overview generation. Pareto statistics, property ranges, scaffold distributions, and alert themes are assembled into struc-tured context and passed to Gemini 3 Flash, which generates a natural-language summary of the cluster’s strengths and weak-nesses. 
+
+A.6.3 Stage 3: Strategy Synthesis Pipeline. The strategy pipeline transforms cluster annotations into actionable optimization recom-mendations by integrating inter-cluster and intra-cluster structural insights. 
+
+Source molecule selection. Candidates are ranked using Pareto evaluation criteria (objectives met, Pareto optimality, baseline im-provement), and the top three are chosen as source molecules. Each source is decomposed relative to the cluster’s core to show its current R-group assignment and available alternatives from the R-group library. 
+
+Cross-cluster fragment import. The system evaluates neighboring clusters by running abbreviated Pareto evaluations and selecting the highest-ranked molecules. Pairwise MCS computations between primary sources and neighboring molecules identify regions of structural overlap. Where sufficient overlap exists, the system ex-tracts R-group fragments from neighbors that are absent from the primary cluster’s library, introducing structurally validated modifi-cation options from related chemical contexts. 
+
+Strategy generation. A structured prompt containing the source molecules, their R-group assignments, all available intra-cluster and inter-cluster alternatives, and the optimization objectives is processed by Gemini 3 Flash. Each returned strategy specifies a title, target property, natural-language rationale, source molecule, attachment site, current fragment SMILES, and replacement frag-ment SMILES. Strategies are classified as intra-cluster (from the cluster’s own library) or inter-cluster (from neighboring clusters). 
+
+Post-processing and validation. All SMILES strings are canoni-calized and validated. Common LLM encoding errors in aromatic fragments are corrected using standard ring templates. HALO : Interactive Co-abductive Reasoning in Scientific Hypothesis Generation Conference acronym ’XX, June 03–05, 2025, Woodstock, NY 
+
+Figure 10: Two tabs of MolStrategy . The overview tab displays an AI-generated summary of the cluster alongside its identified strengths and weaknesses. A scaffold image shows the shared core structure identified across cluster members, and a top candidates section highlights the highest-ranked molecules based on Pareto evaluation. The candidates tab lists all cluster members in a sortable table, where users can toggle between absolute property scores and improvement deltas relative to the baseline. Delta values are color-coded to indicate improvements and regressions. Table 3: Definitions used to label participants’ actions for the user studies. Label Description 
+
+Molecule Generated (AI) • Participant generates from a preexisting molecule. Molecule Generated (Manual) • Participant saves a manually edited molecule. 
+
+• Participant edits a preexisting molecule before generating. 
+
+MolCluster 
+
+• Participant modifies the filters and applies changes. 
+
+• Participant utilizes MolCluster panel to select or deselect at least one property from a cluster. 
+
+• Participant utilizes selection tool to group or ungroup at least two molecules. 
+
+MolStrategy • Participant actively interacts (e.g., scrolls or clicks) with MolStrategy panel. 
+
+MolSynthesis • Participant clicks on at least one strategy in MolSynthesis panel. Insight • Participant clicks on the “Insight” button. Conference acronym ’XX, June 03–05, 2025, Woodstock, NY Jeon et al. 
+
+Figure 11: The baseline interface used for user studies. The Molecule Editor and Molecule Generator appear as pop-up windows when the user selects from a context menu. Molecular Information and LLM appear in the side panel when expanded. (green: augmented and red: worsened) Task-A             
+
+> O=C(COc1ccccc1)NC1CCN(Cc2ccccc2)CC1
+> PlogP: 2.119
+> hERG: 0.924
+> CARC: 0.101
+> DILI: 0.092
+> Cc1cccc(NC(=O)N2CCN(Cc3ccccc3)CC2)c1
+> PlogP: 0.328
+> hERG: 0.495
+> CARC: 0.092
+> LIVER: 0.054
+> O=C(C)NC1CCC(C2=NC=C(O)C=C2)CC1
+> PlogP: 0.689
+> hERG: 0.008
+> CARC: 0.286
+> LIVER: 0.108
+
+Initial  lead  compound  Case-1:  Three  properties  were  augmented  Case-2:  A property  was  augmented 
+
+Task-B 
+
+Initial  lead  compound  Case-3:  Three  properties  were  augmented  Case-4:  A property  was  augmented             
+
+> COc1cc2c(cc1OC)C(c1ccc3ccccc3c1)NCC2
+> PlogP: 1.928
+> QED: 0.899
+> DRD2: 0.016
+> DILI: 0.682
+> Cc1cccc(Nc2cc(C(=O)O)cc(N3CCC(C(=O)O)
+> CC3)c2)c1
+> PlogP: 2.21
+> QED: 1.136
+> DRD2: 0.019
+> LIVER: 0.905
+> COC1=C(OC)C=C2C(N(CCC)CCC2=C1OC
+> C(=O)OC)C1=CC2=C(C=CC=C2)C=C1
+> PlogP: 1.86
+> QED: 0.429
+> DRD2: 0.102
+> LIVER: 0.736
+
+Figure 12: The initial lead compounds and the desired properties of Task-A and Task-B. Four representative cases illustrate contrasting outcomes: Cases 1 and 3 show ideal results, where three properties were improved simultaneously, whereas Cases 2 and 4 show less desirable results, where only one property was improved at the expense of the others (green: augmented and red: worsened). For PlogP, DRD2, and QED, higher values indicate more desirable outcomes, whereas for hERG, CARC, and LIVER, lower values are preferred. Please refer to the details of these properties §A.4 in the appendix. HALO : Interactive Co-abductive Reasoning in Scientific Hypothesis Generation Conference acronym ’XX, June 03–05, 2025, Woodstock, NY 
+
+Table 4: Participant demographics and study participation. Senior: Senior Researcher; Postdoc: Postdoctoral Researcher; PhD Cand.: Ph.D. Candidate. ID Age Profession YoE Formative User Study 
+
+𝑃 1 36–45 Senior R. 18 ✓
+
+𝑃 2 26–35 PhD Cand. 4 ✓
+
+𝑃 3 36–45 Postdoc 10 ✓ ✓
+
+𝑃 4 36–45 Senior R. 14 ✓ ✓
+
+𝑃 5 26–35 Senior R. 15 ✓ ✓
+
+𝑃 6 26–35 Postdoc 9 ✓
+
+𝑃 7 26–35 Postdoc 10 ✓
+
+𝑃 8 26–35 Postdoc 10 ✓
+
+𝑃 9 36–45 Senior R. 13 ✓
+
+𝑃 10 26–35 Postdoc 8 ✓
+
+𝑃 11 26–35 Postdoc 10 ✓
+
+𝑃 12 26–35 Postdoc 10 ✓Conference acronym ’XX, June 03–05, 2025, Woodstock, NY Jeon et al. [System Message]
+
+You are an expert medicinal chemist specializing in molecular optimization. You understand how structural modifications affect key
+
+ADMET properties and inhibitions of common receptor targets like DRD2.
+
+[User Message]
+
+{instruction}
+
+%%% Input: <SMILES>{source_smiles}</SMILES>
+
+%%% Adjust: {list of adjustment_prompt}
+
+[Template]
+
+instructions:
+
+1. "Adjust the molecular structure to ensure that each specified property reaches the corresponding threshold listed in <THRESHOLD>
+
+</THRESHOLD>. Minimize structural changes and try to maintain the input <SMILES>. Return the resulting molecule using <SMILES>
+
+</SMILES> tags”
+
+2. "Alter the molecule to satisfy the provided property thresholds in <THRESHOLD> </THRESHOLD>. Preserve the input <SMILES> and
+
+make as few structural changes as possible. Output the SMILES of the new molecule, enclosed in <SMILES> </SMILES>."
+
+3. "Update the given molecule so that the specified properties fall within acceptable ranges defined by the values in <THRESHOLD>
+
+</THRESHOLD>. Maintain as much of the input <SMILES> as possible. Output only the modified molecule enclosed in <SMILES>
+
+</SMILES> tags."
+
+4. "Modify the molecule to bring its properties to at least the levels defined in <THRESHOLD> </THRESHOLD>. Avoid excessive
+
+modifications and preserve the input <SMILES>. Output only the resulting molecule's SMILES wrapped in <SMILES> </SMILES>."
+
+5. "Edit the molecular structure so that all required properties match or exceed the threshold values defined in <THRESHOLD>
+
+</THRESHOLD>. Try to retain the input <SMILES>. Output only the SMILES representation of the optimized molecule enclosed in
+
+<SMILES> </SMILES>."
+
+6. “Your task is to modify the given molecule to adjust specific molecular properties so that the resulting molecule satisfies the
+
+given target thresholds. Keep structural changes as minimal as possible. Your response should only contain a valid SMILES
+
+representation of the modified molecule enclosed in <SMILES> </SMILES> tags. The property values of the new molecule should meet
+
+or exceed the specified targets enclosed in <THRESHOLD> </THRESHOLD> tags.”
+
+adjustment_prompt:
+
+1. "{change} {property} to be {direction} <THRESHOLD> {value} </THRESHOLD>"
+
+2. "{change} the value of {property} to be {direction} <THRESHOLD> {value} </THRESHOLD>"
+
+3. "{change} {property} aiming for {direction} <THRESHOLD> {value} </THRESHOLD>"
+
+4. "{change} {property} so it is {direction} <THRESHOLD> {value} </THRESHOLD>"
+
+5. "{change} {property} with a goal of {direction} <THRESHOLD> {value} </THRESHOLD>"
+
+Figure 13: The prompts used to generate molecules through Llama 3.1 8B-Instruct. Source_smiles refers to the SMILES string com-bining the core scaffold and preserving R-groups. Instruction is selected at random from the “instructions” list in Template. For each optimizing property, an adjustment_prompt is appended by randomly selecting a prompt from the “adjustment_prompt” list in the Template, with variables (denoted by { }) filled in for each ADMET property.

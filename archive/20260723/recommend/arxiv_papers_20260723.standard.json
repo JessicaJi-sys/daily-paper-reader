@@ -1,0 +1,135 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-23T21:36:33.630997+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 3,
+    "quick_skim_target": 11,
+    "quick_selected": 3
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.18481v1",
+      "source": "arxiv",
+      "title": "Search-on-Graph-R1: Training Large Language Models to Search Knowledge Graphs with Reinforcement Learning",
+      "abstract": "Knowledge graph question answering (KGQA) requires navigating from topic entities to an answer several relations away. Recent methods prompt a frontier LLM to explore the graph through a retrieval tool, but their reliance on frontier-scale inference makes them costly to deploy. We present Search-on-Graph-R1 (\\sogrone{}), which internalizes this navigation into a compact 8B model through supervised fine-tuning (SFT) followed by reinforcement learning (RL). Our central idea is to scaffold a frontier teacher with each question's gold SPARQL query, so the teacher traverses a known answer-bearing path with a live \\texttt{Search} tool rather than having to discover the path itself. Since every call executes against a live Freebase server, the resulting trajectories are grounded in the knowledge graph by construction. On WebQSP, CWQ, and GrailQA, \\sogrone{} at 8B surpasses every frozen frontier-LLM system in our comparison and posts the strongest results on CWQ of any system we compare against. It does so using no auxiliary module at inference and no LLM judge during training. Isolating each training stage shows that SFT and RL contribute complementary gains, our approach transfers across model families, and RL learns to reach answers in fewer \\texttt{Search} calls than its SFT initialization.",
+      "authors": [
+        "Jia Ao Sun",
+        "Hao Yu",
+        "Fengran Mo",
+        "Zhan Su",
+        "Yuchen Hui",
+        "Bang Liu",
+        "Jian-Yun Nie"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-07-20T19:58:32+00:00",
+      "link": "https://arxiv.org/pdf/2607.18481v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "training LLMs to search knowledge graphs with RL",
+      "llm_evidence_cn": "使用强化学习训练LLM搜索知识图谱",
+      "llm_evidence": "使用强化学习训练LLM搜索知识图谱",
+      "canonical_evidence": "使用强化学习训练LLM搜索知识图谱",
+      "llm_tldr_en": "Search-on-Graph-R1 trains a small LLM to navigate KGs via teacher scaffolding and RL, relevant for KG-based DDI.",
+      "llm_tldr_cn": "Search-on-Graph-R1通过教师脚手架和强化学习训练一个8B模型在知识图谱上进行路径导航，从而避免使用昂贵的前沿模型。该方法将KGQA的搜索过程内化到小模型中。对于冷启动DDI预测中利用知识图谱进行推理具有启发意义，可直接用其方法检索药物-药物关系。但论文本身不涉及DDI预测。",
+      "llm_tldr": "Search-on-Graph-R1通过教师脚手架和强化学习训练一个8B模型在知识图谱上进行路径导航，从而避免使用昂贵的前沿模型。该方法将KGQA的搜索过程内化到小模型中。对于冷启动DDI预测中利用知识图谱进行推理具有启发意义，可直接用其方法检索药物-药物关系。但论文本身不涉及DDI预测。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 与严格冷启动药物-药物相互作用预测（strict cold-start DDI prediction）相关的论文，重点关注以下方向：利用大型语言模型（LLM）增强药物语义表示或医学知识表示；利用生物医学知识图谱（biomedical knowledge graph）进行药物相互作用预测；面向新药/冷启动药物的知识迁移、跨域对齐、教师-学生蒸馏方法；将AI Agent / 多智能体（multi-agent）用于药物相互作用预测、科学推理、知识检索或证据整合的相关工作；与上述方向相关的DDI、drug recommendation、drug repurposing、biomedical reasoning论文。请优先返回近3年高质量论文，并尽量区分：普通DDI预测、冷启动DDI预测、LLM/Agent增强DDI预测三类工作。, especially work that connects or combines: cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移; strict cold-start drug-drug interaction prediction; biomedical knowledge graph for drug-drug interaction prediction; multi-agent systems for drug-drug interaction prediction; teacher-student knowledge distillation for drug-drug interaction; biomedical reasoning for drug-drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; large language model enhanced semantic representation for strict cold start drug drug interaction prediction; biomedical knowledge graph and multi agent reasoning for drug drug interaction in cold start setting; knowledge transfer and domain adaptation for new drug prediction using teacher student distillation.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.18564v1",
+      "source": "arxiv",
+      "title": "HALO: Interactive Co-abductive Reasoning in Scientific Hypothesis Generation",
+      "abstract": "Scientific discovery is essential yet inefficient, primarily because generating hypotheses within a vast search space hinders breakthroughs. While current AI systems assist in generating new hypothesis candidates, they lack interactive support for the reasoning process by which users develop these outputs into promising hypotheses, resulting in surface-level hypotheses. To address this issue, we present co-abduction, a human-AI collaborative framework for abductive reasoning in scientific hypothesis generation. To operationalize co-abduction, we build HALO, a human-AI collaborative system for molecular hypothesis generation in drug discovery, enabling improved candidate clustering, strategy identification, and multi-strategy synthesis. In expert studies involving 10 medicinal chemists, HALO significantly facilitated abductive reasoning for hypothesis generation -- efficient candidate observation, systematic strategy identification, and coherent multi-strategy composition -- and enabled participants to produce higher-quality, more diverse candidate molecules.",
+      "authors": [
+        "Youngseung Jeon",
+        "Kat Limqueco",
+        "JiaSyuan Chang",
+        "Xiang 'Anthony' Chen"
+      ],
+      "primary_category": "cs.HC",
+      "categories": [
+        "cs.HC"
+      ],
+      "published": "2026-07-20T22:54:42+00:00",
+      "link": "https://arxiv.org/pdf/2607.18564v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "co-abductive reasoning for scientific hypothesis generation in drug discovery",
+      "llm_evidence_cn": "协同溯因推理用于药物发现中的科学假设生成",
+      "llm_evidence": "协同溯因推理用于药物发现中的科学假设生成",
+      "canonical_evidence": "协同溯因推理用于药物发现中的科学假设生成",
+      "llm_tldr_en": "HALO enables human-AI co-abductive reasoning to generate molecular hypotheses in drug discovery.",
+      "llm_tldr_cn": "HALO是一个人类-AI协作的溯因推理系统，用于药物发现中的分子假设生成，通过聚类、策略识别和多策略合成支持用户深入开发假设。其推理机制可迁移至药物相互作用预测中的生物医学推理任务。",
+      "llm_tldr": "HALO是一个人类-AI协作的溯因推理系统，用于药物发现中的分子假设生成，通过聚类、策略识别和多策略合成支持用户深入开发假设。其推理机制可迁移至药物相互作用预测中的生物医学推理任务。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "biomedical reasoning for drug-drug interaction",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.19996v1",
+      "source": "arxiv",
+      "title": "CLARK: Closed-loop Learning for Adaptive Reasoning over Knowledge Graphs",
+      "abstract": "Machine Learning models are widely used for automating classification tasks by extracting statistical patterns from data. However, their performance deteriorates if the data distribution changes, making them ill-suited to handle uncertain and evolving information. Moreover, they provide limited support for integrating prior knowledge. To address these limitations, we present CLARK (Closed-loop Learning for Adaptive Reasoning over Knowledge Graphs), a framework that integrates knowledge graphs, symbolic rule mining, and probabilistic reasoning under the Logic Programs with Markov Logic Networks (LP$^{\\text{MLN}}$) formalism. Starting from CACTUS-derived KGs, CLARK translates graph structure into an LP$^{\\text{MLN}}$ program and iteratively enriches it with candidate rules proposed by symbolic learners. These rules are calibrated through probabilistic weight learning, enabling reasoning under uncertainty and refinement of the underlying graph structure. We evaluate CLARK on two medical datasets, analysing both rule quality and downstream classification performance. Results demonstrate that CLARK leads to improved classification performance and more generalisable inference. Overall, CLARK provides a principled approach to constructing adaptive, interpretable, knowledge-driven models for classification.",
+      "authors": [
+        "Yousef Khan",
+        "Luca Gherardini",
+        "Marco Maratea",
+        "Joel Arrais",
+        "Jose Sousa"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-07-22T10:30:45+00:00",
+      "link": "https://arxiv.org/pdf/2607.19996v1",
+      "tags": [
+        "keyword:cold-DDI",
+        "query:cold-DDI"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "knowledge graph reasoning framework adaptable to biomedical KGs for DDI",
+      "llm_evidence_cn": "知识图谱推理框架，可适用于生物医学知识图谱进行DDI预测",
+      "llm_evidence": "知识图谱推理框架，可适用于生物医学知识图谱进行DDI预测",
+      "canonical_evidence": "知识图谱推理框架，可适用于生物医学知识图谱进行DDI预测",
+      "llm_tldr_en": "CLARK integrates knowledge graphs, symbolic rule mining, and probabilistic reasoning in a closed-loop for adaptive KG reasoning; its methodology is transferable to biomedical knowledge graphs used in DDI prediction, though not specific to drugs.",
+      "llm_tldr_cn": "CLARK框架将知识图谱、符号规则挖掘与概率推理相结合，通过闭环学习实现自适应推理。该框架能够处理不确定信息并整合先验知识，其方法可迁移至生物医学知识图谱，用于药物相互作用预测等任务，尽管本文未直接涉及药物领域。",
+      "llm_tldr": "CLARK框架将知识图谱、符号规则挖掘与概率推理相结合，通过闭环学习实现自适应推理。该框架能够处理不确定信息并整合先验知识，其方法可迁移至生物医学知识图谱，用于药物相互作用预测等任务，尽管本文未直接涉及药物领域。",
+      "llm_tags": [
+        "query:cold-ddi:composite"
+      ],
+      "matched_query_tag": "query:cold-ddi:composite",
+      "matched_query_text": "Papers central to 与严格冷启动药物-药物相互作用预测（strict cold-start DDI prediction）相关的论文，重点关注以下方向：利用大型语言模型（LLM）增强药物语义表示或医学知识表示；利用生物医学知识图谱（biomedical knowledge graph）进行药物相互作用预测；面向新药/冷启动药物的知识迁移、跨域对齐、教师-学生蒸馏方法；将AI Agent / 多智能体（multi-agent）用于药物相互作用预测、科学推理、知识检索或证据整合的相关工作；与上述方向相关的DDI、drug recommendation、drug repurposing、biomedical reasoning论文。请优先返回近3年高质量论文，并尽量区分：普通DDI预测、冷启动DDI预测、LLM/Agent增强DDI预测三类工作。, especially work that connects or combines: cross-domain knowledge transfer for cold-start drugs 面向冷启动药物的跨域知识迁移; strict cold-start drug-drug interaction prediction; biomedical knowledge graph for drug-drug interaction prediction; multi-agent systems for drug-drug interaction prediction; teacher-student knowledge distillation for drug-drug interaction; biomedical reasoning for drug-drug interaction; Cold start drug drug interaction prediction using large language models and biomedical knowledge graphs; large language model enhanced semantic representation for strict cold start drug drug interaction prediction; biomedical knowledge graph and multi agent reasoning for drug drug interaction in cold start setting; knowledge transfer and domain adaptation for new drug prediction using teacher student distillation.",
+      "matched_requirement_id": "req-composite-cold-ddi",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
