@@ -1,0 +1,262 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-24T13:24:47.612597+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 5,
+    "deep_divecandidates": 3,
+    "deep_cap": 10,
+    "deep_selected": 3,
+    "quick_candidates": 2,
+    "quick_skim_target": 15,
+    "quick_selected": 2
+  },
+  "deep_dive": [
+    {
+      "id": "biorxiv-10-1101-2025-08-01-668090-v11",
+      "source": "biorxiv",
+      "title": "Target Preference Maps: A machine learning model generalizing transferable drug-receptor interactions and guiding drug discovery",
+      "abstract": "Modern AI models can decode the genomic landscape and protein structure world. Yet, they fail to generalize to one of the most important fields: small-molecule drug discovery. Since the late 1970s, the advent of macromolecular crystallography inspired the notion that structural knowledge alone could enable a lock-and-key approach to drug design. However, drug discovery continues to depend on costly, resource-intensive, and largely serendipitous screening campaigns that probe only an infinitesimal fraction of the drug-like chemical space. Despite some successful cases, our understanding of, and reasoning from, non-bonded interaction chemistry remains limited for general applicability. Furthermore, though structural databases contain hundreds of thousands of entries, a strong historical bias pervades protein-drug structures, hindering reliable advances through AI scaling. Here, we present a machine-learning framework that learns atom-type-specific spatial preference maps from local protein microenvironments in protein-ligand structures. By excluding ligand topology from the model input and learning from local atom-level environments, the framework is designed to reduce dependence on whole-ligand memorization and to capture transferable interaction preferences. The resulting maps recover chemically meaningful interaction patterns, including cases involving bridging waters and metal-dependent environments. The model was validated using retrospective and prospective real-world data in drug optimization when targeting a challenging protein-protein interface. This shows that the method can provide interpretable workflows to guide molecule optimization and provide input for downstream generative or docking workflows.",
+      "authors": [
+        "Menezes, F.",
+        "Wahida, A.",
+        "Froehlich, T.",
+        "Grass, P.",
+        "Zaucha, J.",
+        "Napolitano, V.",
+        "Siebenmorgen, T.",
+        "Pustelny, K.",
+        "Barzowska-Gogola, A.",
+        "Rioton, S.",
+        "Didi, K.",
+        "Bronstein, M.",
+        "Czarna, A.",
+        "Hochhaus, A.",
+        "Plettenburg, O.",
+        "Sattler, M.",
+        "Nissen-Meyer, J.",
+        "Conrad, M.",
+        "Kurzrock, R.",
+        "Popowicz, G. M."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-07-21T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.1101/2025.08.01.668090v11.full.pdf",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "transferable drug-receptor interactions, inductive generalization to unknown drugs",
+      "llm_evidence_cn": "可迁移的药物-受体相互作用，对未知药物的归纳泛化",
+      "llm_evidence": "可迁移的药物-受体相互作用，对未知药物的归纳泛化",
+      "canonical_evidence": "可迁移的药物-受体相互作用，对未知药物的归纳泛化",
+      "llm_tldr_en": "Target Preference Maps learns transferable drug-receptor interaction patterns, enabling generalization to unknown drugs without retraining, matching cold-start knowledge transfer requirements.",
+      "llm_tldr_cn": "现代AI模型在小分子药物发现中泛化能力不足，因为结构知识无法直接推导非键相互作用。本文提出靶点偏好图模型，通过学习可迁移的药物-受体相互作用模式，实现向未知药物的归纳泛化，无需重新训练。该方法在药物发现任务中验证了其迁移能力，可直接应用于冷启动DDI预测中的知识迁移。",
+      "llm_tldr": "现代AI模型在小分子药物发现中泛化能力不足，因为结构知识无法直接推导非键相互作用。本文提出靶点偏好图模型，通过学习可迁移的药物-受体相互作用模式，实现向未知药物的归纳泛化，无需重新训练。该方法在药物发现任务中验证了其迁移能力，可直接应用于冷启动DDI预测中的知识迁移。",
+      "llm_tags": [
+        "query:ddi-transfer"
+      ],
+      "matched_query_tag": "query:ddi-transfer",
+      "matched_query_text": "inductive knowledge transfer from known to unknown drugs for drug interaction prediction",
+      "matched_requirement_id": "req-14",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.21561v1",
+      "source": "arxiv",
+      "title": "Graph Learning on Ensembles of Cyclic Peptides: An Investigation of Molecular Ensemble Modeling",
+      "abstract": "Molecular property prediction from structure often uses a single representative conformation, even though many molecules exist as conformational ensembles in solution. We introduce EnsembleEGNN, a molecular ensemble foundation model that encodes an ensemble by first encoding each conformer with shared Equivariant Graph Neural Network (EGNN) layers, then pooling the resulting conformer representations with a Set Attention Block. We pretrain the model on CREMP, a cyclic peptide ensemble dataset, using a multi-task self-supervised objective combining masked token recovery, noisy-coordinate reconstruction, and pairwise distance reconstruction. On the CREMP-CycPeptMPDB dataset, training EnsembleEGNN from scratch fails entirely ($R^2=0.005$). However, the pretrained model reaches $R^2=0.477$ and Pearson $r=0.699$, outperforming the sequence-only BERT baseline ($R^2=0.439$, Pearson $r=0.667$). When EnsembleEGNN is co-trained end-to-end with the BERT sequence encoder, the hybrid model improves further to $R^2=0.538$ and Pearson $r=0.737$. These results demonstrate that encoding conformational ensembles into a single thermodynamically informed embedding improves cyclic-peptide property prediction.",
+      "authors": [
+        "Aaron Feller",
+        "Kris Deibler",
+        "Maxim Secor"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-bio.BM"
+      ],
+      "published": "2026-07-23T17:42:51+00:00",
+      "link": "https://arxiv.org/pdf/2607.21561v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "molecular graph pretraining on cyclic peptide ensembles with self-supervised tasks",
+      "llm_evidence_cn": "在环肽分子集合上进行分子图预训练，使用自监督任务",
+      "llm_evidence": "在环肽分子集合上进行分子图预训练，使用自监督任务",
+      "canonical_evidence": "在环肽分子集合上进行分子图预训练，使用自监督任务",
+      "llm_tldr_en": "EnsembleEGNN pretrains an equivariant GNN on cyclic peptide ensembles using masked token recovery and distance reconstruction; improves property prediction and addresses cold-start.",
+      "llm_tldr_cn": "该论文提出EnsembleEGNN，一种基于分子构象集合的图神经网络基础模型。在环肽数据集上进行自监督预训练，结合掩码原子恢复、噪声坐标重建和距离重建任务。实验表明预训练能显著提升分子性质预测性能，并缓解训练样本不足的问题。该工作为分子预训练在冷启动药物预测中的应用提供了有效方法。",
+      "llm_tldr": "该论文提出EnsembleEGNN，一种基于分子构象集合的图神经网络基础模型。在环肽数据集上进行自监督预训练，结合掩码原子恢复、噪声坐标重建和距离重建任务。实验表明预训练能显著提升分子性质预测性能，并缓解训练样本不足的问题。该工作为分子预训练在冷启动药物预测中的应用提供了有效方法。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "molecular graph pretraining on unlabeled data",
+      "matched_requirement_id": "req-20",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2607.19977v1",
+      "source": "arxiv",
+      "title": "Rem3Di: Learning smooth, chiral 3D molecular descriptors from atomistic foundation models",
+      "abstract": "Foundation machine-learned interatomic potentials (MLIPs) are trained on large quantum-mechanical datasets and generalise across broad regions of chemical and configurational space. Beyond their usual role in accelerating sampling-based simulations, their internal representations encode chemically rich local atomic environments. Here, we introduce Rem3Di, a representation-learning framework that repurposes latent features from atomistic foundation models as transferable molecular descriptors for property prediction and virtual screening. Rem3Di combines a potential's per-atom features into a single fixed-length descriptor of the whole molecule that varies smoothly with three-dimensional structure and is invariant to the ordering of the atoms. The descriptor can be used directly or fine-tuned for specific prediction tasks. To capture molecular handedness, Rem3Di constructs pseudoscalar features, which are unchanged by rotation but reverse sign under mirror reflection. This lets the descriptor distinguish enantiomers, which can differ in activity and toxicity. The transformer is pretrained on large molecular datasets by reconstructing corrupted atom features, so no experimental labels are required. Across public drug-property benchmarks, Rem3Di matches or exceeds published baselines without relying on classical 2D fingerprints. Additionally, the same descriptor yields chemically meaningful differentiation of transition-metal complexes without predefined bonding rules or handcrafted representations. Rem3Di therefore provides a route from simulation-trained atomistic representations to transferable, chirality-aware molecular representations for chemical machine learning.",
+      "authors": [
+        "Steffen Wedig",
+        "Felix Burton",
+        "Rokas Elijošius",
+        "Christoph Schran",
+        "Lars L. Schaaf"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "physics.atm-clus",
+        "physics.comp-ph"
+      ],
+      "published": "2026-07-22T10:05:09+00:00",
+      "link": "https://arxiv.org/pdf/2607.19977v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "molecular descriptor learning from atomistic foundation models for property prediction",
+      "llm_evidence_cn": "从原子基础模型学习分子描述符用于性质预测",
+      "llm_evidence": "从原子基础模型学习分子描述符用于性质预测",
+      "canonical_evidence": "从原子基础模型学习分子描述符用于性质预测",
+      "llm_tldr_en": "Rem3Di repurposes latent features from atomistic foundation models as smooth, transferable 3D molecular descriptors for property prediction and virtual screening, aligning with molecular pretraining for unseen drug tasks.",
+      "llm_tldr_cn": "该研究针对分子性质预测中缺乏统一、平滑且可迁移的3D描述符的问题，提出Rem3Di框架，从预训练的原子基础模型中提取原子级特征，聚合为固定长度的分子整体描述符。该描述符光滑依赖于三维结构且对原子顺序不变。在多种性质预测任务上验证了其优越性，为冷启动药物预测和分子分布外泛化提供了有效的预训练表示方法。",
+      "llm_tldr": "该研究针对分子性质预测中缺乏统一、平滑且可迁移的3D描述符的问题，提出Rem3Di框架，从预训练的原子基础模型中提取原子级特征，聚合为固定长度的分子整体描述符。该描述符光滑依赖于三维结构且对原子顺序不变。在多种性质预测任务上验证了其优越性，为冷启动药物预测和分子分布外泛化提供了有效的预训练表示方法。",
+      "llm_tags": [
+        "query:mgp:composite"
+      ],
+      "matched_query_tag": "query:mgp:composite",
+      "matched_query_text": "Papers central to 请帮我找利用大规模无标签分子数据进行预训练，以提升未见药物预测能力的研究。重点关注分子图预训练、自监督分子表示学习、掩码原子或子结构预测、图对比学习、分子语言模型以及预训练—微调范式。关注预训练模型如何覆盖更广泛的化学空间，并缓解冷启动药物由于训练样本不足或结构新颖造成的表示缺失问题。优先返回在药物相互作用预测、药物属性预测、药物靶点预测和分子分布外泛化任务中验证过的方法。, especially work that connects or combines: molecular graph pretraining on unlabeled data; self-supervised representation learning for molecules; masked atom prediction for molecular pretraining; molecular language model pretraining; pretrain-finetune paradigm for drug discovery; pretrained molecular representation for drug-target interaction prediction; pretrained molecular graph models for drug drug interaction prediction and out of distribution generalization; self supervised learning on large unlabeled molecular data to improve unseen drug property prediction; molecular pretraining methods addressing cold start scenarios with insufficient training samples.",
+      "matched_requirement_id": "req-composite-mgp",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2607.13350v1",
+      "source": "arxiv",
+      "title": "How Well Can Frontier Large Language Models Generate Structures? High Quality Prediction of Molecular Geometries with Help from Fine-Tuning",
+      "abstract": "The power of Large Language Models (LLMs) has led us to investigate how they might be fine-tuned for learning the \"language of molecular geometry\". The fine-tuning of the LLMs using Cartesian coordinates or Z-matrices provides an extremely simple method for accurately predicting equilibrium structures and diverse sets of conformers of small organic and drug-like molecules with excellent accuracy and outperforming specialized deep learning models. While the most common representation of molecular geometries are Cartesian coordinates performs adequately, we find that the inherent invariances and relational nature of geometries represented as Z-matrices provides a better grammar for LLM adaptation. Finally, we show that enhancing an LLMs capabilities for robust prediction of small molecule geometries still retains nearly all of its pre-trained language abilities by randomly mixing in small quantities of natural language prompt-response pairs into the fine-tuning.",
+      "authors": [
+        "Joseph M. Cavanagh",
+        "Jonathan B. Arnold",
+        "Giovanni Battista Alteri",
+        "Andrew Gritsevskiy",
+        "Teresa Head-Gordon"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph"
+      ],
+      "published": "2026-07-15T00:22:20+00:00",
+      "link": "https://arxiv.org/pdf/2607.13350v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "LLM fine-tuning for molecular geometry prediction, a form of molecular language model pretraining",
+      "llm_evidence_cn": "基于大语言模型微调的分子几何预测，属于分子语言模型预训练方法",
+      "llm_evidence": "基于大语言模型微调的分子几何预测，属于分子语言模型预训练方法",
+      "canonical_evidence": "基于大语言模型微调的分子几何预测，属于分子语言模型预训练方法",
+      "llm_tldr_en": "Fine-tuning frontier LLMs on Cartesian coordinates or Z-matrices enables accurate prediction of molecular geometries and conformers, outperforming specialized deep learning models, demonstrating the potential of molecular language model pretraining.",
+      "llm_tldr_cn": "该论文探索了利用大语言模型（LLM）进行分子几何预测的能力。通过将分子结构表示为笛卡尔坐标或Z矩阵，对前沿LLM进行微调，可以高精度预测小分子和类药分子的平衡构象，其性能优于专门的深度学习模型。研究表明，Z矩阵表示因其内在不变性和关系特性，为LLM提供了更优的分子几何语法。这项工作展示了LLM在分子表示学习中的潜力，为分子预训练提供了新途径。",
+      "llm_tldr": "该论文探索了利用大语言模型（LLM）进行分子几何预测的能力。通过将分子结构表示为笛卡尔坐标或Z矩阵，对前沿LLM进行微调，可以高精度预测小分子和类药分子的平衡构象，其性能优于专门的深度学习模型。研究表明，Z矩阵表示因其内在不变性和关系特性，为LLM提供了更优的分子几何语法。这项工作展示了LLM在分子表示学习中的潜力，为分子预训练提供了新途径。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "molecular language model pretraining",
+      "matched_requirement_id": "req-23",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "biorxiv-10-64898-2026-07-06-736700-v1",
+      "source": "biorxiv",
+      "title": "Biological Continued Pretraining Reshapes the Capability Profile of a Foundation Model Without Catastrophic Forgetting",
+      "abstract": "It is widely assumed that continued pretraining (CPT) on a narrow, out-of-distribution corpus such as raw biological sequence must trade away a general-purpose models broad competence -- the \"alignment tax\" or catastrophic-forgetting intuition. We test this directly, without any new training, by re-analyzing three checkpoints from a single lineage of a 26B-parameter Mixture-of-Experts model (Gemma-4-26B-A4B): the instruction-tuned base, the same model after biological CPT (8.7B tokens of DNA, protein, and biomedical text), and after subsequent supervised fine-tuning (SFT). Across three independent capability axes -- general knowledge/reasoning (MMLU, ARC, HellaSwag), code generation (MBPP), and biomedical knowledge (BixBench) -- we find that biological CPT does not degrade the model; it lifts it: MMLU +13 points, MBPP pass@1 nearly doubles (0.33 [-&gt;]0.63), and BixBench discrimination rises sharply (MCC 0.23 [-&gt;] 0.92). The single measured regression is truthfulness (TruthfulQA 8.8 points), a small and interpretable domain drift. A clean vocabulary-expansion ablation (< 0.4 pt on every general metric) confirms the gains are attributable to CPT, not tokenizer changes. Crucially, subsequent SFT narrows the model back: all three axes fall to near-base levels, revealing a consistent division of labor -- CPT re-organizes and lifts the shared capability substrate; SFT cashes it out onto target tasks. We argue this reframes biological sequence not as a competitor for a foundation models capacity but as a form of structured scientific data that reshapes its capability profile, and that CPT and SFT should be budgeted as complementary rather than substitutable stages. All checkpoints, evaluation code, and per-example outputs are public.\n\nHighlightsO_LIA training-free re-analysis of one 26B MoE lineage isolates the effect of biological continued pretraining (CPT) from tokenizer changes and from fine-tuning.\nC_LIO_LIBiological CPT does not cause catastrophic forgetting; it raises general knowledge (MMLU +13 pts) and code generation (MBPP pass@1 0.33[-&gt;] 0.63).\nC_LIO_LICPT also makes chain-of-thought reasoning 41% shorter and near-backtrack-free while pre-serving accuracy -- an effect invisible to accuracy metrics.\nC_LIO_LIA consistent CPT-lifts / SFT-narrows division of labor recurs across four axes, reframing biological sequence as structured scientific data that reshapes a models capability profile.\nC_LI\n\nThe Bigger PictureAdapting a general-purpose AI model to a specialized domain -- here, the language of DNA and proteins -- is usually assumed to come at a cost: teach it biology and it forgets how to reason about everything else. This \"no free lunch\" intuition shapes how practitioners budget compute and whether they attempt domain adaptation at all. We test the assumption directly, and without running any new training, by comparing three snapshots of the same model taken before and after biological training. The result overturns the intuition: feeding the model raw biological sequence made it better at general knowledge, at writing code, and even changed how it reasons -- producing shorter, more decisive chains of thought without losing accuracy. The gains appear during the sequence-pretraining stage and are partly given back during task-specific fine-tuning, revealing that the two stages play complementary rather than interchangeable roles. This suggests a broader principle for data-centric AI: structured scientific data -- biological sequence today, and by extension code, mathematics, and chemistry -- is not merely knowledge to be absorbed but a lever that reshapes what a foundation model can do.",
+      "authors": [
+        "Wang, L."
+      ],
+      "primary_category": "bioinformatics",
+      "categories": [
+        "bioinformatics"
+      ],
+      "published": "2026-07-16T00:00:00+00:00",
+      "link": "https://www.biorxiv.org/content/10.64898/2026.07.06.736700v1.full.pdf",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "biological continued pretraining on DNA and protein sequences",
+      "llm_evidence_cn": "生物序列持续预训练",
+      "llm_evidence": "生物序列持续预训练",
+      "canonical_evidence": "生物序列持续预训练",
+      "llm_tldr_en": "Biological continued pretraining on DNA, protein, and biomedical text reshapes a foundation model's capability without catastrophic forgetting, directly relevant to molecular language model pretraining.",
+      "llm_tldr_cn": "该论文研究在DNA、蛋白质和生物医学文本上对通用基础模型进行持续预训练的影响，发现这不会导致灾难性遗忘，反而重塑了模型的能力剖面。这直接关联到分子语言模型预训练的需求，表明在生物序列上继续预训练可以保持通用能力并增强生物相关表现。实验评估了通用推理、代码生成和生物任务，为分子预训练-微调范式提供了实证支持。",
+      "llm_tldr": "该论文研究在DNA、蛋白质和生物医学文本上对通用基础模型进行持续预训练的影响，发现这不会导致灾难性遗忘，反而重塑了模型的能力剖面。这直接关联到分子语言模型预训练的需求，表明在生物序列上继续预训练可以保持通用能力并增强生物相关表现。实验评估了通用推理、代码生成和生物任务，为分子预训练-微调范式提供了实证支持。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "molecular language model pretraining",
+      "matched_requirement_id": "req-23",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

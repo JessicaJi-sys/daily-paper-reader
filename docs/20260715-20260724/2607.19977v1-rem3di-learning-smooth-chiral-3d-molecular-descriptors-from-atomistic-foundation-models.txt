@@ -1,0 +1,1402 @@
+Title: Rem3Di: Learning smooth, chiral 3D molecular descriptors from atomistic foundation models
+
+URL Source: https://arxiv.org/pdf/2607.19977v1
+
+Published Time: Thu, 23 Jul 2026 00:42:32 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+Rem3Di: Smooth, chiral 3D molecular descriptors 
+
+# Rem3Di: Learning smooth, chiral 3D molecular descriptors from atomistic foundation models 
+
+Steffen Wedig, 1, 2 Felix Burton, 1 Rokas Elijošius *,1 Christoph Schran *,1 and Lars L. Schaaf *1, 3 
+
+> 1)
+
+Cavendish Laboratory, Department of Physics, University of Cambridge, Cambridge CB3 0HE, U.K. 
+
+> 2)
+
+Max Planck Institute for Polymer Research, Ackermannweg 10, Mainz, 55128, Germany 
+
+> 3)
+
+Department of Materials, Imperial College London, Exhibition Road, London SW7 2AZ, U.K. 
+
+(*Correspondence to: re344@cam.ac.uk, cs2121@cam.ac.uk, lls34@cam.ac.uk) (Dated: 23 July 2026) 
+
+Foundation machine-learned interatomic potentials (MLIPs) are trained on large quantum-mechanical datasets and generalise across broad regions of chemical and configurational space. Beyond their usual role in accelerating sampling-based simulations, their internal representations encode chemically rich local atomic environments. Here, we introduce Rem3Di, a representation-learning framework that repurposes la-tent features from atomistic foundation models as transferable molecular descriptors for property prediction and virtual screening. Rem3Di combines a potential’s per-atom features into a single fixed-length descriptor of the whole molecule that varies smoothly with three-dimensional structure and is invariant to the ordering of the atoms. The descriptor can be used directly or fine-tuned for specific prediction tasks. To capture molecular handedness, Rem3Di constructs pseudoscalar features, which are unchanged by rotation but re-verse sign under mirror reflection. This lets the descriptor distinguish enantiomers, which can differ in activity and toxicity. The transformer is pretrained on large molecular datasets by reconstructing corrupted atom features, so no experimental labels are required. Across public drug-property benchmarks, Rem3Di matches or exceeds published baselines without relying on classical 2D fingerprints. Additionally, the same descrip-tor yields chemically meaningful differentiation of transition-metal complexes without predefined bonding rules or handcrafted representations. Rem3Di therefore provides a route from simulation-trained atomistic representations to transferable, chirality-aware molecular representations for chemical machine learning. 
+
+I. INTRODUCTION 
+
+The predictive power of molecular machine learning is often determined as much by the molecular repre-sentation as by the learning algorithm itself. A useful representation must be efficient to compute, compati-ble with statistical learning, and expressive enough to encode the structural features that determine molecular properties. Many successful workflows in drug discov-ery rely on two-dimensional graph-based descriptors, par-ticularly Extended Connectivity Fingerprints (ECFPs), which encode atom environments through iterative hash-ing of molecular graphs 1,2 . These fingerprints are fast, robust, and remain competitive baselines when combined with simple supervised models such as random forests 3,4 .However, graph-based descriptors make bonding topol-ogy the primary object of representation. This limits their ability to describe conformational effects, stereo-chemistry, and systems for which bonding assignments are ambiguous, such as transition-metal complexes 5.In parallel, a large body of work in atomistic ma-chine learning has developed representations of chem-ical systems in three dimensions. These methods de-scribe molecules and materials through atomic identities and spatial arrangements of the molecule’s nuclei, rather than relying solely on an assigned network of molecu-lar bonds. Global descriptors such as the Coulomb ma-trix and related fixed-size representations encode molec-ular structure from nuclear charges and coordinates 6–8 .Local atom-centred descriptors, including atom-centred symmetry functions 9,10 , SOAP-type atom-density rep-resentations 11 , the Atomic Cluster Expansion 12 and SLATM 13 , describe atomic environments through invari-ant geometric features. Molecular kernels based on local environments further showed how atom-level representa-tions can be compared or aggregated into molecular sim-ilarities 14 . Many of these representations were developed for interatomic potentials, but related geometric descrip-tors and neural architectures have also been used directly for molecular property prediction 15–20 . They established principles that remain central to atomistic learning, in-cluding locality, smoothness, completeness and rotational invariance 21 .Recent machine-learned interatomic potentials extend this line of work to learning atomic representations for predicting energies and forces from quantum mechani-cal calculations 15–17 . Their internal features are there-fore shaped by local chemical environments, energetic smoothness, and the symmetries of three-dimensional space. Large-scale models trained across broad chemical domains now generalise well beyond individual datasets and can be viewed as atomistic foundation models 22–30 .This generalisability is not guaranteed for atom-scale models. Protein-ligand cofolding models, for example, show limited chemical generalisation, indicating that arXiv:2607.19977v1 [physics.chem-ph] 22 Jul 2026 Rem3Di: Smooth, chiral 3D molecular descriptors 2Molecular Descriptor Atomic Descriptors Molecular Structures Smiles Cc1ccccc1    
+
+> Conformer Generation Property Prediction Similarity Screening Retrieval Foundation MLIP Learnable Global Aggregation
+> Figure 1 .Constructing 3D molecular descriptors with the Rem3Di framework. Atom-centred features from atomistic foundation models are combined into a fixed-dimension molecular descriptor that varies smoothly with 3D structure.
+
+they may not learn transferable representations of chem-ical interactions 31–35 . The central question is therefore whether the latent features of atomistic foundation mod-els can be reused directly as molecular descriptors. Machine-learned interatomic potentials are most com-monly used as fast surrogate energy models for sampling-based simulations, such as molecular dynamics. Al-though this has transformed atomistic simulation, many molecular observables still require extensive sampling and free-energy estimation, making such workflows diffi-cult to deploy across large chemical libraries 36 . An alter-native is to bypass simulation and use the internal rep-resentations of MLIPs directly as molecular descriptors. This route is attractive because these features are learned from quantum-mechanical energies and forces, and there-fore encode transferable information about local chemi-cal environments. Recent studies have also analysed the structure and utility of atomistic foundation-model latent spaces, suggesting that independently trained models may converge towards shared representations of atomic environments 37–40 . These findings support the idea that MLIP features contain transferable chemical information beyond their original use in force and energy predic-tion. Related work has begun to reuse atom-centred features from machine-learned potentials, either pooled into structure-level descriptors for property prediction 41 
+
+or used directly for atom-level properties, such as NMR chemical shifts in molecules 42 and proteins 43 . How-ever, converting atom-centred MLIP features into a use-ful molecular descriptor is non-trivial. The representa-tion must aggregate a variable number of atoms into a fixed-size embedding, preserve smooth three-dimensional chemical information, remain invariant to rotations and atom permutations, and still distinguish stereoisomers. It must also be trainable in the low-label regimes typical of molecular property prediction. Here, we introduce Rem3Di, a representation-learning framework that addresses these requirements (Figure 1). Given a molecular structure, a frozen atomistic founda-tion model first produces atom-centred latent features. Rem3Di then learns to contract these local features into a fixed-dimensional, conformation-aware molecular em-bedding using permutation-invariant attention-based set pooling 44,45 . To make the descriptor sensitive to stere-ochemistry, Rem3Di constructs pseudoscalar channels from equivariant features. These channels are invariant to rotations but change sign under reflection, allowing the representation to distinguish enantiomers while re-specting the symmetries of three-dimensional space. Fi-nally, because the aggregation weights themselves must be learned, we introduce a self-supervised denoising ob-jective that pretrains the molecular descriptor on large unlabelled molecular datasets. The model learns to reconstruct clean atom-level representations from cor-rupted MLIP features, enabling it to acquire chemically meaningful aggregation rules before task-specific labels are introduced. We find that the chiral encoding generalises across molecular scaffolds and predicts the sign of the opti-cal rotation of chiral molecules. Across public drug-property benchmarks, Rem3Di matches or improves upon descriptor-based and learned baselines on sev-eral regression tasks without relying on classical two-dimensional fingerprints. We further show that the same descriptor gives chemically meaningful differenti-ation of transition-metal complexes without predefined bonding rules. Rem3Di therefore provides a route from simulation-trained atomistic foundation models to trans-ferable, chirality-aware molecular descriptors for chemi-cal machine learning.   
+
+> II. METHOD: THE REM3DI ARCHITECTURE A. Overview
+
+Rem3Di (REpresentation learning for Molecules using 3D Information) maps a molecular conformer to a fixed-length molecular descriptor for property prediction, vir-tual screening, and stereochemical classification, as sum-marised in Figure 1. The dimension of the descriptor is fixed at a given channel dimension and is independent of the number of atoms. The input is a set of atomic species and Cartesian coordinates, obtained either from an ex-isting three-dimensional structure or generated from a molecular representation such as a SMILES string using Rem3Di: Smooth, chiral 3D molecular descriptors 3Structure Encoder MLIP   
+
+> Chiral Encoder
+> Global Encoder
+> Aggregation Positions (N,3) Species (N) Pair Rep P Geom Rep G Atomic Rep S
+
+Rem3Di Descriptor M     
+
+> (l1, ᅺ pl1)(l2, ᅺ pl2)
+> ab
+
+⊗ TP1   
+
+> (l3, −ᅺ pl3)(l3, ᅺ pl3)
+> c
+
+⊗ TP2 
+
+> (0, −)
+> pseudo-scalar
+
+( l , ᅺ )                 
+
+> degree lparity 𝜋
+> (1, −) (1, −)
+> ⊗
+> (1, −) (1, +)
+> ⊗
+> (0, −)
+> a×bc⋅ ( a×b)
+> Example
+> Proper (polar): ᅺpl= (− 1)l
+> Axial (pseudo): ᅺal= −ᅺ pl
+
+R S
+
+stereocenter inversion stereocenter inversion 
+
+R S
+
+> Δ scalar pseudo-scalar
+> rotation angle (°)
+
+Encoding 2D Graph    
+
+> T=D−1(A+ ත)
+
+3D Geometric 
+
+k-hop RW    
+
+> T0T1⋯T20
+
+Bessel RBF Pairwise Distances 
+
+# ( )
+
+Gij ,k
+
+P(0)
+
+> ij ,k
+
+Gij ,k
+
+P(0)
+
+> ij ,k
+
+or 
+
+Global Encoder Block × N          
+
+> Pair Biased Attention Block MLP
+> MLP Pair Outer Product
+> Gate
+> ΔP=1
+> 2(ΔO+ΔOT)
+> MLP
+> ++
+> +
+
+Atomic Rep. S Geometric Rep. G Pair Rep. P S′
+
+P′
+
+# Rem ia b Chiral Encoder 
+
+c Structure Encoder d Global Encoder 
+
+Figure 2 . The Rem3Di architecture. (a) Overview of the Rem3Di blocks mapping position and chemical element to a molecular descriptor. (b-left) Construction of chiral features using two tensor products, with an example for vectorial features ( ℓ1 = ℓ2 = ℓ3 = 1 )corresponding to the vector triple product. Tensors a, b and c are learnable combinations of latent features in a spherical harmonic basis. (b-right) Chiral atom-level embeddings of a molecule as it transforms smoothly into its mirror image through the continuous rotation of a functional group, showing the even and odd behaviour of the scalar and pseudoscalar features. (c) Two options for the structure encoder. (d) Architecture of the global encoder mixing atomic and pair representations. 
+
+standard conformer-generation tools such as RDKit. The architecture, shown in Figure 2a, has four main compo-nents. A frozen atomistic foundation model first con-verts the conformer into atom-centred latent features. A chiral encoder then constructs pseudoscalar channels from equivariant MLIP features, making the atom repre-sentation sensitive to molecular handedness (Figure 2b). Following architectures such as AlphaFold 32,46 , we con-struct a pair representation that is updated throughout the architecture. A structure encoder builds an initial pair representation from the molecular 3D geometry (Fig-ure 2c). Finally, a global encoder mixes atom and pair in-formation across the whole molecule, before permutation-invariant attention pooling produces the Rem3Di molec-ular descriptor (Figure 2d). Detailed architectural hy-perparameters are reported in Appendix B. Concretely, the frozen MLIP provides per-atom invari-ant features and, for equivariant backbones, higher-order tensor features. The invariant features are normalised and projected to the encoder width, while the equivari-ant features are passed to the chiral encoder to produce parity-odd pseudoscalars. These scalar and pseudoscalar channels form the initial atom representation S0. In par-allel, the structure encoder initialises a pair representa-tion P from interatomic distances and optional molecu-lar graph information. The global encoder then updates 
+
+S and P jointly using pair-biased self-attention, allow-ing local MLIP-derived atom features to be contextu-alised by the full molecular geometry. The final atom representations are aggregated by pooling-by-multihead-attention 45 into a fixed-dimensional descriptor, which can be used directly, adapted by low-rank fine-tuning, or trained further with the supervised task head. Rem3Di: Smooth, chiral 3D molecular descriptors 4 
+
+> B. Foundation-model featurisation
+
+For each conformer, the pretrained MLIP is evaluated on the atomic species and coordinates, and internal per-atom node features are extracted. This is the entry stage of the pipeline in Figure 2a. The framework is agnostic to the choice of backbone MLIPs and we show performance on equivariant (MACE) models and models where equiv-ariance is learnt through data augmentation (Orb) 29 . We mainly focus on constructing meaningful latent spaces from equivariant architectures, so the chiral encoder, for example, is only relevant if the latent features are equiv-ariant and can be separated by their spherical degree (ℓ). In all experiments the MLIP is frozen, and no gra-dients are propagated through the potential. Rem3Di therefore learns a map from pretrained atom-level fea-tures to molecular descriptors, rather than retraining or fine-tuning the atomistic foundation model itself. For equivariant MLIPs, the extracted features are or-ganised as irreducible representations of O(3) . They in-clude even scalar channels, which are invariant under ro-tations and reflections, and higher-order tensor channels, rotating with the atomic environment and acquiring a parity sign under reflection. The scalar channels are nor-malised using training-set statistics and projected to the encoder width. Given a fixed encoder width, the number of Rem3Di model parameters is hence predominantly in-dependent of the MLIP’s feature dimension. The equiv-ariant channels are rescaled with an O(3) -equivariant RMS normalisation, which changes channel magnitudes but not tensor directions. These normalised equivariant features are passed to the chiral encoder. The standard-ised scalar features and the pseudoscalar output of the chiral encoder together form the initial atom representa-tion S0 ∈ RN ×dmodel . Backbone-specific feature choices, layer selection, and projection dimensions are given in Appendix B.  
+
+> C. Constructing pseudoscalars from equivariant features
+
+The scalar latent features of common equivariant MLIPs are invariant under inversion ( r 7 → − r), and there-fore cannot distinguish between two enantiomers 47 . This is appropriate for potential-energy prediction, since the potential energy is unchanged by reflection, but is insuffi-cient for molecular properties that depend on interactions with chiral environments, such as proteins, enzymes, chromatographic media, or solvents. Rem3Di therefore constructs atom-wise pseudoscalar features from equiv-ariant MLIP channels. A pseudoscalar is invariant under proper rotations but changes sign under reflection, mak-ing it the natural scalar representation of molecular hand-edness 48 . An alternative route to chirality-sensitive fea-tures takes determinants over ordered atomic quadruples around each stereocentre, which are likewise invariant un-der proper rotations and change sign under reflection 49 .As illustrated in Figure 2b, reflection-even scalars are identical for mirror configurations, whereas pseudoscalars have equal magnitude and opposite sign. Along the con-tinuous path connecting the two enantiomers, Rem3Di’s pseudoscalars pass through zero when the atoms become coplanar at θ = 0 , corresponding to an achiral configura-tion. Below we outline how the chiral encoder constructs pseudoscalars: we first fix the notation and parity con-ventions, then recall the spherical tensor product, and then show that two successive products are required to reach a pseudoscalar.  
+
+> 1. Notation and parity
+
+The irreducible representations of SO (3) are labelled by an angular degree ℓ, and act on a (2 ℓ + 1) -dimensional space whose elements transform under proper rotations 
+
+R through the Wigner D-matrices D(ℓ)(R),
+
+[
+
+R · t(ℓ,π )] 
+
+> m
+
+=
+
+> ℓ
+
+∑
+
+> m′=−ℓ
+
+D(ℓ) 
+
+> mm ′
+
+(R) t(ℓ,π ) 
+
+> m′
+
+, (1) where D(ℓ) 
+
+> mm ′
+
+(R) is the matrix of the degree-ℓ irreducible representation in the spherical-harmonic basis. The com-ponents of spherical tensors, hence, transform like the spherical harmonics Y mℓ and only components indexed by m mix. Physical tensors also carry a behaviour under inversion I : r 7 → − r, which is not fixed by ℓ. We record it with a second index, the parity π ∈ { +1 , −1}, defined by 
+
+I · t(ℓ,π ) = π t(ℓ,π ). (2) Adjoining inversion to the proper rotations extends the group from SO (3) to the full orthogonal group O(3) ,and the pair (ℓ, π ) labels its irreducible representations. We write Vπℓ for the corresponding (2 ℓ + 1) -dimensional space, whose elements t(ℓ,π ) ∈ V πℓ are spherical tensors with components t(ℓ,π ) 
+
+> m
+
+, m = −ℓ, . . . , ℓ .We call a tensor proper when its parity matches the natural parity of its degree, and pseudo when it carries the opposite parity: 
+
+˜πpr  
+
+> ℓ
+
+= ( −1) ℓ, ˜πps  
+
+> ℓ
+
+= −˜πpr  
+
+> ℓ
+
+= ( −1) ℓ+1 . (3) Thus V+0 contains proper scalars and V− 
+
+> 1
+
+proper (polar) vectors, whereas V+1 contains even pseudovectors (ax-ial vectors) and V− 
+
+> 0
+
+pseudoscalars. 50 The MLIP chan-nels supplied to the chiral encoder block are proper ten-sors 16,17 . Our goal is to build a pseudoscalar, an element of V− 
+
+> 0
+
+, from these proper inputs. We first recall the ten-sor product that couples two such tensors, then show that a single product cannot produce pseudoscalars and that two successive products can. Rem3Di: Smooth, chiral 3D molecular descriptors 5 
+
+> 2. The tensor product
+
+Two spherical tensors t(ℓ1,π 1)1 and t(ℓ2,π 2)2 form the ten-sor product space, 
+
+Vπ1 
+
+> ℓ1
+
+⊗ V π2 
+
+> ℓ2
+
+, (4) of dimension (2 ℓ1 + 1)(2 ℓ2 + 1) . This space decomposes as a direct sum of irreducible representations of O(3) ,
+
+Vπ1 
+
+> ℓ1
+
+⊗ V π2 
+
+> ℓ2
+
+=
+
+> ℓ1+ℓ2
+
+⊕
+
+> ℓ3=|ℓ1−ℓ2|
+
+Vπ1π2 
+
+> ℓ3
+
+, (5) reached by an orthogonal change of basis from the prod-ucts t(ℓ1,π 1)1 ⊗ t(ℓ2,π 2)2 to the degree-ℓ3 components, such that under rotation these components mix only within each degree-ℓ3 subspace and never between subspaces of different degree (Equation 1). The change of basis is given by the Clebsch–Gordan coefficients, so that the degree-ℓ3 output tensor t(ℓ3,π 3)3 reads 
+
+t(ℓ3,π 3)3, m 3 = ∑
+
+> m1,m 2
+
+Cℓ3m3 
+
+> ℓ1m1,ℓ 2m2
+
+t(ℓ1,π 1)1, m 1 t(ℓ2,π 2)2, m 2 , (6) where the Clebsch–Gordan coefficients Cℓ3m3 
+
+> ℓ1m1,ℓ 2m2
+
+are nonzero only when the selection rules are met: (degree) |ℓ1 − ℓ2| ≤ ℓ3 ≤ ℓ1 + ℓ2, (7) (order) m1 + m2 = m3. (8) The degree rule (7) is often referred to as the triangle inequality. We write [ · ](ℓ3) for the projection onto the degree-ℓ3 summand of Equation 5, i.e. the selection of the degree-ℓ3 component of a tensor product. To obtain pseudoscalars we apply two tensor products.  
+
+> 3. Constructing pseudotensors
+
+Let a ∈ V πa 
+
+> ℓa
+
+and b ∈ V πb 
+
+> ℓb
+
+be two proper input tensors obtained from the latent features of an MLIP model. Ap-plying the tensor product (6) we obtain the intermediate, 
+
+⊕ 
+
+> L
+
+x(L,π aπb) = a(ℓa,π a) ⊗ b(ℓb,π b), (9) where we define ⊗ as the spherical tensor product con-taining the change of basis, such that L spans all admis-sible degrees |ℓa − ℓb| ≤ L ≤ ℓa + ℓb.This product can already produce higher-order pseu-dotensors, whenever the output parity πaπb is oppo-site to the natural parity (−1) L of its degree. Hence, when ℓa + ℓb + L is odd, the intermediate, x, is a pseu-dotensor. However, the triangle inequality prevents us from constructing a scalar ( L = 0 ) pseudotensor directly, which would require ℓa = ℓb via the triangle selection rule. For proper inputs this forces the parity (−1) ℓa+ℓb =(−1) 2ℓa = + to be even, and the result is a proper scalar. A single product therefore yields, at best, a pseudoten-sor of nonzero degree. A second product combines these higher-degree pseudotensors with a proper tensor to cre-ate a pseudoscalar.  
+
+> 4. Two products make a pseudoscalar
+
+We couple the intermediate pseudotensor to a third proper tensor c ∈ V πc 
+
+> ℓc
+
+and project onto degree zero. By the triangle inequality (7), degree zero is reached only when the two coupled degrees are equal, 
+
+L = ℓc, (10) so the intermediate degree is fixed to ℓc. The resulting scalar 
+
+χ =
+
+[
+
+[a ⊗ b](ℓc) ⊗ c
+
+](0) 
+
+∈ V πaπbπc 
+
+> 0
+
+(11) is invariant under proper rotations, and its parity is 
+
+πaπbπc. By definition, it is a pseudoscalar precisely when 
+
+πaπbπc = −1. (12) For proper inputs, πi = (−1) ℓi , this becomes 
+
+(−1) ℓa+ℓb+ℓc = −1. Hence, a triple of proper ten-sors couples to a pseudoscalar exactly when the degrees satisfy the triangle inequality (7), 
+
+|ℓa − ℓb| ≤ ℓc ≤ ℓa + ℓb, and 
+
+ℓa + ℓb + ℓc, is odd . (13) The simplest such example path is ℓa = ℓb = ℓc = 1 ,shown in the left panel of Figure 2b. In e3nn parity notation it reads 
+
+1o ⊗ 1o → 1e, 1e ⊗ 1o → 0o, (14) where the first product builds a pseudovector from a and 
+
+b, and the second contracts it with the proper vector 
+
+c. Here e and o refer to even and odd tensors respec-tively. Up to sign and normalisation conventions, this is the scalar triple product 
+
+c · (a × b). (15) In practice a, b, and c are learnable linear mixings of the internal latent features hℓm , formed with parity-and rotation-preserving maps in e3nn 51 . For features up to a maximum degree there are many combinations 
+
+(ℓa, ℓ b, ℓ c) satisfying the selection rules, each such a choice is a path . We take a learnable combination of paths, giving every path an independent multiplicative weight. An e3nn implementation of the construction is released with the code (Section IV). The resulting learnable pseudoscalars are invariant un-der proper rotations, change sign under inversion or re-flection, vanish when the three tensors are coplanar, and take opposite signs for mirror-related configurations. To weight their contributions, they are gated by a factor computed from the frozen MLIP scalar features and pro-jected by a bias-free linear map to form the chiral em-beddings. These are appended to the invariant atomic features, as visualised in Figure 2b. Rem3Di: Smooth, chiral 3D molecular descriptors 6MLIP Atomic Rep 
+
+> Pair Rep
+> Encoder
+> Aggregator
+
+REM3DI 
+
+Descriptor M  
+
+> Layer 1
+> Layer k
+> Layer N
+> ...
+> Denoised
+> Atomic Rep SS
+> Decoder Pair-Biased
+> Self-Attention
+> Descriptor
+> Cross-Attention
+> S-MLP
+> P-MLP
+> Pretraining Supervised Training  Large Molecular Corpora Small Pharmaceutical Datasets
+
+Pretrained REM3DI 
+
+Embedding Model 
+
+Frozen 
+
+Embeddings 
+
+LoRA 
+
+Finetuning     
+
+> Gradient fl ows
+> into embedding model
+> Encoder
+> Aggregator
+> REM3DI
+> Descriptor M
+> Prediction
+> Models
+> Prediction
+> Target
+> No backwards
+> gradient fl ow
+> Encoder
+> Aggregator
+> REM3DI
+> Descriptor M
+> Prediction
+> Models
+> Prediction
+> Target
+> Add Noise
+
+Pretrained Rem3Di descriptor 
+
+## a Pre -training 
+
+> MLIP Atomic Rep
+> Pair Rep
+> Encoder
+> Aggregator
+
+REM3DI 
+
+Descriptor M  
+
+> Layer 1
+> Layer k
+> Layer N
+> ...
+> Denoised
+> Atomic Rep SS
+> Decoder Pair-Biased
+> Self-Attention
+> Descriptor
+> Cross-Attention
+> S-MLP
+> P-MLP
+> Pretraining Supervised Training  Large Molecular Corpora Small Pharmaceutical Datasets
+
+Pretrained REM3DI 
+
+Embedding Model 
+
+Frozen 
+
+Embeddings 
+
+LoRA 
+
+Finetuning     
+
+> Gradient fl ows
+> into embedding model
+> Encoder
+> Aggregator
+> REM3DI
+> Descriptor M
+> Prediction
+> Models
+> Prediction
+> Target
+> No backwards
+> gradient fl ow
+> Encoder
+> Aggregator
+> REM3DI
+> Descriptor M
+> Prediction
+> Models
+> Prediction
+> Target
+> Add Noise
+
+## ❄ 𝑊 =𝑊 ❄ +𝐴 𝐵 
+
+## ❄ +
+
+## b Supervised learning 
+
+Figure 3 . Denoising pretraining and fine-tuning. (a) The self-supervised training objective, in which the decoder reconstructs clean atomic representations from noisy ones using a clean global Rem3Di descriptor. (b) The supervised adaptation strategies, in which the pretrained encoder is either kept frozen or augmented with LoRA adapters while the task head is trained. 
+
+D. Pair representation and geometry 
+
+MLIP features describe the many-body local envi-ronment of each atom. To facilitate learning longer-range dependencies, Rem3Di supplements the atom rep-resentation S ∈ RN ×dmodel with a pair representation 
+
+P ∈ RN ×N ×dpair that explicitly encodes the geometry and evolving chemical relationship between every pair of atoms. As shown in Figure 2c, P is initialised from the interatomic distances 
+
+dij = ∥⃗r i −⃗r j ∥, (16) which are expanded using a DimeNet-style Bessel basis, 
+
+en(d) = 
+
+√ 2
+
+c
+
+sin( nπd/c )
+
+d . (17) The resulting radial features are passed through a bias-free linear projection, symmetrised over the two atom indices, and masked such that pairs involving padded atoms are zero. We use a large cutoff of c = 32 Å with 16 basis functions, allowing the geometric encoding to span large parts of a molecule rather than only bonded or spatially adjacent atoms. Optionally, additional pairwise information may be supplied by a two-dimensional molec-ular graph or a k-nearest-neighbour graph constructed in three-dimensional space. The global encoder, illustrated in Figure 2d, jointly updates the atom and pair representations using a stack of transformer blocks. Each block comprises pair-biased multi-head self-attention, an atom feed-forward update, a pair update, and a pair feed-forward update. Because molecules are unordered sets of atoms, no sequence po-sitional embeddings are used. Permutation equivariance is instead maintained by applying identical operations to all atoms and atom pairs, together with padding masks for variable-sized molecules. As in AlphaFold2 46 , at each layer, the current pair representation enters the atom update as an additive, head-specific bias to the self-attention logits, 
+
+∆S = softmax 
+
+( QK ⊤
+
+√dk
+
++ B
+
+)
+
+V, (18) where the bias B depends on the pair representation at the current layer, such that for each attention head h and atom pair (i, j ),
+
+Bhij = w⊤ 
+
+> h
+
+LayerNorm( Pij ), (19) where wh is a bias-free linear map producing one scalar bias for attention head h and atom pair (i, j ). Conse-quently, the attention assigned between two atoms can depend on their current geometric and chemical relation-ship, rather than only on the similarity of their atom embeddings. The pair representation is itself refined at every en-coder layer using the current pair features, the embed-dings of the two corresponding atoms, and the original radial distance encoding, as visualised in Figure 2d. This bidirectional coupling allows the atom representations to be learned in the context of the full molecular geometry while the pair pathway progressively develops represen-tations of relationships such as covalent bonding, conju-gation, electrostatic interactions, and non-covalent con-tacts. The original radial features are retained through-out the encoder, providing a fixed geometric reference for the learned pair updates. Rem3Di: Smooth, chiral 3D molecular descriptors 7Atomic Rep 
+
+> Pair Rep
+> Add Noise
+> Encoder
+> Aggregator
+> REM3DI
+> Descriptor  M
+> Layer 1
+> Layer k
+> Layer N
+> ...
+> Denoised
+> Atomic Rep  SS
+> Decoder
+> Pair-Biased
+> Self-Attention
+> Descriptor
+> Cross-Attention
+> Pair Update
+> S-MLP
+> P-MLP
+> Clustering by
+> Structure and Chemistry
+> Chemically Interpretable
+> Molecular Embeddings
+> higher molecular similarity
+> with increasing chain length
+> ...
+> ...
+> PC2  PC1
+> baseline training
+> from scratch
+> pretrained
+> on PCQM4M
+> UMAP of 134k QM9 a
+> b c
+> HOMO-LUMO Gap (meV)
+> Pa
+> Self
+> De
+> Cros
+> Pai
+> higher molecular similarity
+> with increasing chain length
+> baseline training
+> from scratch
+> pretrained
+> on PCQM4M
+
+# b c
+
+> HOMO-LUMO
+
+# a. b. Atomic Rep 
+
+Pair Rep 
+
+Add Noise 
+
+Encoder 
+
+Aggregator 
+
+REM3DI 
+
+Descriptor M
+
+Layer 1 
+
+Layer k 
+
+Layer N 
+
+> ...
+
+Denoised 
+
+Atomic Rep SS 
+
+Decoder 
+
+Pair-Biased 
+
+Self-Attention 
+
+Descriptor 
+
+Cross-Attention 
+
+Pair Update 
+
+S-MLP 
+
+P-MLP  
+
+> higher molecular similarity
+> with increasing chain length
+> PC1
+> baseline training
+> from scratch
+> pretrained
+> on PCQM4M
+
+# c
+
+> HOMO-LUMO Gap (meV)
+
+Figure 4 . Denoising pretraining. (a) UMAP of the resulting pretrained molecular representations, with insets showing that chemically similar molecules are clustered together. (b) Performance on a HOMO-LUMO gap regression task, on a 10,000-molecule subset of QM9, as a function of pretraining dataset size. 
+
+Local positional and chemical information is already encoded in the MLIP features through their short-range many-body environments. Combining these features with all-pairs geometric attention allows Rem3Di to model longer-range effects, including conjugation, elec-trostatics, and π–π stacking, and to learn distance-dependent weighting of atomic environments before ag-gregation. Constructing and updating the pair repre-sentation requires O(N 2) operations and memory, but this does not change the asymptotic complexity of the encoder, which is already O(N 2) owing to full self-attention. For substantially larger systems, the same ar-chitecture could be adapted by imposing a global cutoff or using sparse attention, or by replacing the all-pairs encoding with a formulation that recovers global atomic representations at linear cost 52 .After the final encoder layer, the variable-sized set of atom representations is converted into a fixed-dimensional molecular descriptor using permutation-invariant pooling by multi-head attention (PMA) 45 . Afixed number of learned seed vectors cross-attend to the final atom representations, producing a fixed number of pooled tokens independent of molecular size. These to-kens are subsequently flattened or projected to obtain the final Rem3Di descriptor. We ablate the number of learned query vectors and use PMA unless otherwise stated. 
+
+E. Training of Rem3Di 
+
+We first pretrain Rem3Di in a self-supervised way, re-quiring no experimentally labelled data. Subsequently, we fine-tune the model for specific tasks. 
+
+1. Denoising pretraining 
+
+Experimental labels for pharmaceutically relevant molecules are scarce and often proprietary, whereas unla-belled molecules are available at scale through databases such as ZINC, PubChem and ChEMBL 53–55 . Addi-tionally, there are large databases of plausible SMILES strings, for which 3D conformers can be generated with RDKit and relaxed in batch using an MLIP 24,56 . To ex-ploit these collections, we pretrain Rem3Di with a self-supervised objective that requires no labels. The prin-ciple, shared with denoising autoencoders and diffusion models 57,58 , is to corrupt the input and train the model to undo the corruption. Succeeding at this forces the model to learn a useful representation. In atomistic ma-chine learning, denoising has been used to pretrain force fields 59,60 and property predictors 61,62 , often by perturb-ing atomic coordinates, which can create high-energy, bond-breaking geometries 63,64 . Furthermore, generative models have been trained to denoise in the latent space of variational autoencoders for molecular and material structures 65,66 , and to run joint flow matching over real-space coordinates and per-residue latent variables for atomistic protein generation 67,68 .We add noise direclty in pretrained MLIP feature space. As illustrated in Figure 3a, the encoder first maps the clean molecule to its descriptor M . The pre-processed per-atom features are then corrupted with isotropic Gaussian noise of fixed scale σ, and a trans-former decoder is trained to reconstruct the clean fea-tures from the noised ones. Crucially, the only trainable global information path from the clean molecule to the decoder is through cross-attention to the descriptor M ,while the pair representation P is provided only as de-tached geometric context. For the reconstruction to suc-ceed, M must therefore carry a faithful, compressed sum-Rem3Di: Smooth, chiral 3D molecular descriptors 8mary of the whole molecule: it is an information bottle-neck. The objective is a padding-masked mean-squared error, rescaled by the corruption variance so its scale is comparable across noise levels, 
+
+Ldenoise = 1
+
+Natoms σ2
+
+∑
+
+> i∈real
+
+∥∥ ˆS0 
+
+> i
+
+− S0
+
+> i
+
+∥∥2, (20) where S0 are the clean preprocessed atom features and 
+
+ˆS0 the decoder reconstructions. To discourage represen-tational collapse, in which every molecule maps to the same vector, we optionally add VICReg variance and co-variance regularisers on the descriptor batch 69 : a hinge that keeps each dimension’s standard deviation above a target, and an off-diagonal covariance penalty that decorrelates dimensions, with the denoising term itself playing the role of VICReg’s invariance term. We opti-mise all trainable parameters (preprocessor, encoder and decoder) with AdamW under a one-cycle learning-rate schedule, while the foundation MLIP stays frozen. After pretraining the decoder is discarded and the encoder pro-duces the descriptors. Full hyperparameters and pseu-docode are given in Appendices B and C.  
+
+> 2. Supervised training for property prediction
+
+After pretraining (Figure 3a), Rem3Di is adapted to la-belled property-prediction tasks. Throughout, the foun-dation MLIP is kept frozen and only the components downstream of it are trained or adapted. We consider three training strategies of increasing capacity. First, in the frozen-descriptor strategy the encoder and ag-gregator are fixed and the descriptor is used as an in-put feature for a separate predictor, either a lightweight task head or a classical regressor fit under repeated nested cross-validation with randomised hyperparameter search 73 . The classical regressors we use are ridge re-gression 74 , random forests 3 and gradient-boosted trees. This isolates the quality of the learned descriptor from any task-specific adaptation of the representation. Second, we use parameter-efficient LoRA fine-tuning 75 . In this setting, the pretrained Rem3Di encoder weights remain frozen but are augmented with trainable low-rank updates, while the supervised prediction head is trained in the usual way. For a linear projection with pretrained weight W ∈ Rdout ×din , LoRA defines the ef-fective weight as 
+
+WLoRA = W + ∆ W, ∆W = αr BA, (21) with A ∈ Rr×din , B ∈ Rdout ×r and rank r ≪
+
+min( dout , d in ), so that only r(din + dout ) parameters are trained per adapted layer (in our experiments we insert rank-16 adapters, scaled by α = 32 , into the encoder at-tention and pooling projections). Restricting adaptation to a low-rank subspace is well suited to the small-label regime typical of molecular property prediction, where unconstrained fine-tuning readily overfits. Third, as a high-capacity baseline, we fully fine-tune all trainable Rem3Di weights downstream of the frozen MLIP to-gether with the prediction head.  
+
+> III. RESULTS
+
+We investigate the Rem3Di molecular descriptor from its semantic nature to its performance on cheminfor-matics regression and classification tasks. We find that Rem3Di maintains the transferable nature of the under-lying MLIP and, under a matched evaluation protocol, is the best model on the regression endpoints of widely used drug-property benchmarks, with its advantage most visible on tasks governed by 3D physics. We then ap-ply Rem3Di in a setting where the covalent graph that conventional bond-based descriptors assume is not well defined, namely transition-metal complexes.  
+
+> A. Denoising pretraining structures the molecular representation
+
+The self-supervised pretraining protocol produces chemically structured descriptors and improves perfor-mance on regression tasks. We show that a Rem3Di model pretrained on the PCQM4M 76 dataset, using the denoising objective of Figure 3a, yields chemically struc-tured descriptors for molecules in the QM9 dataset. Fig-ure 4a shows clusters in the low-dimensional UMAP pro-jection. The molecules within an example cluster con-tain the same functional groups, but in differently or-dered substitutions along the aromatic ring. Conformers of each molecule, obtained by short ( 200 fs) molecular dynamics simulation, fall in the same region of descrip-tor space, as indicated by the multiple encircled scatter points, showing that the descriptor is stable against small geometric perturbations. This hierarchical structure of the Rem3Di descriptor improves the performance on re-gression tasks compared to randomly initialised weights, as outlined in Section III D 1. Consistent with this, down-stream accuracy on a HOMO-LUMO gap regression task grows with the amount of unlabelled data used for pre-training (Figure 4b).  
+
+> B. Chiral encoder for optical rotation predictions
+
+A chiral molecule rotates the plane of polarised light, and its two enantiomers rotate it by equal amounts in op-posite directions. The sign of this optical rotation (OR) therefore records which enantiomer a molecule is. This makes OR prediction a suitable and controlled bench-mark for chirality prediction. We compare Rem3Di’s chiral encoder, which builds the pseudoscalar features il-lustrated in Figure 2b, with alternative descriptors on QM9-OR 70 , a dataset that pairs 121 ,416 molecules from Rem3Di: Smooth, chiral 3D molecular descriptors 9a b
+
+c               
+
+> Figure 5 .Chirality property prediction under random and scaffold splits on QM9-OR. (a) Test accuracy of six methods on two targets, R/S (handedness of chiral centres) and OR-sign (sign of the optical rotation at 589 .3nm), under a random split and a Bemis–Murcko scaffold split. The test set is mirror-balanced, so chance accuracy is 0.50 (dashed line). Grey hatched bars are the OHECC descriptor baselines of Zhou et al. 70 on their own random split. Coloured bars are the methods retrained on our splits: random forest, XGBoost and ANN on the OHECC descriptor, a Morgan-fingerprint random forest (ECFP), and the chiral encoder Rem3Di. Error bars are ±1s.d. over four seeds. (b) Row-normalised confusion matrices for OR-sign on the scaffold split, on single-stereocentre test molecules ( n= 1229 ), for Rem3Di (balanced accuracy ≈0.70 ) and ECFP ( ≈0.56 ). (c) Schematic of the train/test split: molecules sharing a scaffold are highly correlated, so a random split places members of one cluster in both train and test, which leaks information from training into the test set 71,72 , while a scaffold split reduces data leakage.
+
+QM9 77 (≤ 9 heavy atoms) with optical rotations com-puted by TD-DFT (CAM-B3LYP/6-31G**) and abso-lute R/S (CIP) labels. We train two binary heads on the frozen descriptor, one for the configuration of the stereo-centre (R/S, assigned by the Cahn–Ingold–Prelog rules) and one for the sign of the optical rotation at 589 .3 nm (OR-sign). Each molecule is included with its mirror im-age and the labels flipped, so the two classes are balanced and chance accuracy is 0.50 .We compare Rem3Di with the OHECC descriptor classifiers of Zhou et al. (random forest, XGBoost, ANN) 70 and a chirality-aware Morgan fingerprint with a random forest (ECFP) 2, under a random split and a Bemis–Murcko scaffold split 78 . The scaffold split groups molecules by their Bemis-Murcko framework and assigns each group entirely to either the training or the test set. As visualised in Figure 5c, a random split places molecules that share a scaffold in both train and test, so a method can score highly by matching a test molecule to a near-duplicate in the training set, a form of data leak-age 71,72 . A scaffold split does not place the same scaffold in the train and test set, thereby reducing data leakage. We find that across the benchmarks all models per-form better at predicting the handedness of stereocentres (R/S) than the sign of the optical rotation (OR-sign). Across both the random and the scaffold split, Rem3Di performs better than the OHECC and ECFP at predict-ing OR-sign. On the random split, ECFP reaches 0.92 
+
+on R/S, above Rem3Di at 0.88 , because the Morgan chi-rality bit records the CIP label and R/S is hence easy to regress. This does not transfer to the scaffold split, where ECFP drops to 0.70 on R/S and the OHECC base-lines to 0.52 –0.56 . For OR-sign, which has no 2D corre-late, ECFP scores 0.68 on the random split and 0.56 on the scaffold split, and the OHECC baselines are close to chance. Rem3Di stays above chance on the scaffold split for both targets (R/S 0.77 , OR-sign 0.70 ) and has the highest OR-sign accuracy on both splits (Figure 5a). The confusion matrices for OR-sign on the scaffold split (Figure 5b) separate accuracy from class bias. Rem3Di predicts both signs at similar rates (balanced accuracy ≈ 0.70 ). ECFP predicts one sign preferentially, with balanced accuracy ≈ 0.56 , consistent with its OR-sign bar in panel (a).  
+
+> C. Property prediction in drug discovery
+
+We benchmark Rem3Di against published baselines on two public drug-property suites, the Therapeutics Data Commons (TDC) ADMET collection 79 and Molecu-leNet 71 , both as a frozen descriptor and after task-specific fine-tuning. Table I reports the TDC ADMET classification and the combined TDC/MoleculeNet re-gression results. The complete per-task leaderboard with all baselines, including the MoleculeNet classifica-tion suite, is given in Appendix E 2. These benchmarks include experimentally grounded pharmacokinetic and Rem3Di: Smooth, chiral 3D molecular descriptors 10 
+
+TABLE I. Drug-property benchmark on TDC and MoleculeNet. Per-task results shown as two stacked blocks: classification (top, AUROC ↑, higher is better) and regression (bottom, lower is better ↓, TDC scored by MAE, MoleculeNet by RMSE). Cells: mean std over seeds (our rows: 3 seeds, external baselines as published). Within each block, external published baselines (top) and matched-protocol evaluations (bottom) are separated by a rule. In each column the best and second-best rankable values are shaded (ties share a rank). “–”: endpoint not reported for that model. †: coverage < 90% (shown but excluded from ranking). Fine-tuned Rem3Di is the best matched-protocol model on all six regression endpoints. The complete leaderboard, including the MoleculeNet classification suite, is given in Appendix E 2 (Table IV). 
+
+Classification, AUROC ↑ BBB HIA Pgp Bioav. Tox-Avg CYP-Avg 
+
+D-MPNN / Chemprop 0.864 .010 0.976 .004 0.889 .005 0.617 .050 0.821 .019 0.819 .004 
+
+AttentiveFP 0.855 .011 0.974 .007 0.892 .012 0.632 .039 0.842 .010 0.749 .008 
+
+DeepMol 0.774 .023 0.880 .012 0.821 .007 0.509 .026 0.735 .015 0.770 .008 
+
+FPGNN 0.888 .018 0.958 .012 0.930 .007 0.666 .035 0.860 .017 0.866 .004 
+
+TranFoxMol 0.868 .019 0.951 .036 0.875 .011 0.619 .019 0.837 .017 0.860 .006 
+
+ECFP4 + LightGBM 0.884 .005 0.905 .048 0.907 .013 0.591 .036 0.829 .013 0.866 UniMol2 (frozen) 0.884 .014 0.902 .088 † 0.898 .017 0.617 .041 0.833 .020 † 0.867 MuMo (frozen) 0.893 .019 0.980 .012 † 0.891 .006 0.626 .048 0.812 .012 † 0.852 
+
+Rem3Di (frozen) 0.894 .004 0.949 .019 † 0.898 .012 0.558 .057 0.863 .013 0.862 
+
+Rem3Di (fine-tuned) 0.898 .007 0.974 .008 † 0.911 .006 0.561 .018 0.871 .016 0.867 
+
+Regression, error ↓ TDC, MAE MoleculeNet, RMSE Model LD50 Caco-2 PPBR LIPO ESOL FreeSolv 
+
+D-MPNN / Chemprop 0.607 .022 0.388 .077 8.158 .314 0.448 .014 1.050 .008 2.082 .082 
+
+AttentiveFP 0.678 .012 0.401 .032 9.373 .335 0.572 .007 0.877 .029 2.073 .183 
+
+DeepMol 0.589 .006 0.327 .012 9.533 .162 0.660 .004 – –GROVER – – – – 0.831 .120 1.544 .397 
+
+MolCLR – – – – 1.271 .040 2.594 .249 
+
+GraphMVP – – – – 1.029 .033 –GEM – – – – 0.798 .029 1.877 .094 
+
+Uni-Mol – – – – 0.788 .029 1.480 .048 
+
+FPGNN 0.638 .024 0.326 .040 8.465 1.709 0.544 .011 0.658 .006 1.106 .195 
+
+TranFoxMol 0.645 .036 0.487 .068 9.055 .523 0.525 .024 0.930 .261 1.225 .155 
+
+ECFP4 + LightGBM 0.659 .005 0.477 .011 9.646 .122 0.627 .014 1.069 .124 2.178 .400 
+
+UniMol2 (frozen) 0.682 .012 0.338 .018 8.985 .244 0.602 .017 0.655 .065 1.169 .144 
+
+MuMo (frozen) 0.693 .030 0.353 .022 8.265 .287 0.677 .008 0.647 .039 1.243 .111 
+
+Rem3Di (frozen) 0.656 .015 0.368 .022 8.536 .313 0.625 .006 0.655 .071 1.069 .205 
+
+Rem3Di (fine-tuned) 0.638 .031 0.326 .016 8.054 .237 0.499 .015 0.594 .057 0.820 .177 
+
+safety endpoints, such as blood–brain-barrier penetra-tion, intestinal absorption, P-glycoprotein transport, oral bioavailability, cytochrome P450 metabolism, toxisity plasma protein binding, Caco-2 permeability, lipophilic-ity, and acute toxicity, together with physically well-defined solubility and hydration-free-energy tasks from MoleculeNet. The resulting tasks are challenging because they combine small labelled datasets, assay noise, end-point heterogeneity, class imbalance, and scaffold-level generalisation, but they remain highly informative be-cause performance reflects molecular features directly rel-evant to drug discovery. The same difficulty is reflected in community blind challenges on pharmaceutical data 80 ,where held-out experimental endpoints remain hard to predict. To obtain a controlled comparison, we evaluate a set of baselines under one matched protocol, with the same train/test splits and regression heads. As a classical cheminformatics baseline we use an ECFP4 + LightGBM 2D anchor 2, and the frozen UniMol2 and MuMo descrip-tors as machine-learned baselines. Across the twelve end-points shown here, fine-tuned Rem3Di is the best model in the matched-protocol band on ten (all six regression endpoints and four of the six TDC classification end-points), and the single best entry overall, including the external published baselines, on seven. The advantage is concentrated in regression: fine-tuned Rem3Di is the best matched-protocol model on all six regression endpoints (ESOL, FreeSolv, Caco-2, LD50, Lipophilicity, PPBR) and the best entry overall on four of them. The sepa-ration is largest on tasks governed by 3D physics, most clearly the solvation free energy FreeSolv, where Rem3Di improves on every 2D and graph baseline and on its own frozen descriptor (RMSE 1.07 → 0.82 ). On classification it leads the TDC blood–brain-barrier, toxicity and CYP endpoints. For most of the tasks where fine-tuned Rem3Di ranks first, there are similarly performing models within one standard deviation of cross-seed variation. The robust finding is one of breadth. Rem3Di is simultaneously at or near the best performing models across the entire re-gression family and most TDC classification endpoints, a pattern that no single baseline reproduces. Rem3Di is not uniformly strong. It is weakest on TDC bioavailabil-ity, where several baselines do better. More generally, on the smallest classification datasets full fine-tuning can de-Rem3Di: Smooth, chiral 3D molecular descriptors 11 random     
+
+> (frozen)
+> random
+> (full-FT)
+> mean agg.
+> ( - )
+> pretrained
+> (frozen)
+> pretrained
+> (LoRA)
+> pretrained
+> (full-FT)
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Rel. score (0 1)
+> 0.02
+> 0.62 0.63 0.63
+> 0.82
+> 0.96
+> Rem3Di random initialisation
+> mean aggregation
+> Rem3Di pre-trained
+> OrbNet OFF24 POLAR
+> 0.16
+> 0.56
+> 0.63
+> pretrained (frozen)
+
+Figure 6 . Rem3Di architectural and training ablations. Relative performance across 12 drug-property tasks. Left: encoder initialisation (random or denoising-pretrained) crossed with the adaptation strategy (frozen descriptor or full fine-tune), together with a parameter-free mean-aggregation baseline. Right: the same comparison across three frozen foundation models. For each task the native metric is oriented so that higher is always better (error metrics are sign-flipped) and then min–max normalised to a relative score, where 0 is the worst and 1 the best of the conditions for that task. Grey lines show the 12 individual tasks, and the mean over all 12 as a thicker blue line, with the shaded band denoting ±1 standard deviation across tasks and annotated values giving the mean at each condition. Pretraining followed by full fine-tuning gives the highest score ( 0.96 ), the pretrained frozen descriptor ( 0.63 )matches both the randomly initialised, fully fine-tuned model ( 0.62 ) and the mean-aggregation baseline ( 0.63 ). 
+
+grade performance relative to the frozen descriptor while improving every regression endpoint, a pattern we anal-yse in more detail on the MoleculeNet classification suite in Appendix E 2. This contrast motivates the ablation studies below. 
+
+D. Ablations 
+
+Having established Rem3Di’s performance across a va-riety of benchmarks, we investigate key components of the architecture. We find that pretraining and fine-tuning are both required for competitive performance on benchmarks, and that Rem3Di’s performance is strongly linked to the choice of frozen MLIP. To capture ablation trends from noisy experimental datasets, we compare models across 12 drug-property tasks on their official splits. For each task we min–max normalise the results, such that higher is better and all scores are between 1 (best) and 0 (worst), as compared to all tested models. Figure 6 summarises the ablations. Their absolute values are given in Table IV. To keep the comparison controlled, every variant is pretrained with the identical denoising objective, opti-miser schedule, and Rem3Di architecture used for the main model (Section II E 1). All models are trained on the same set of GEOM-drugs top-one conformers (∼281k molecules), and the 3D conformer used for a given SMILES string is identical across variants. 
+
+1. Pretraining and fine-tuning 
+
+We find that the highest performance is obtained when pretraining the Rem3Di aggregator and subsequently fine-tuning the model. To quantify each contribution we perform the ablations visualised in Figure 6. The fig-ure shows the relative performance, min-max normalised, of Rem3Di models that are randomly initialised or pre-trained. For each initialisation we fit models in which the molecular descriptor is frozen during fine-tuning and only the task-specific heads are trained, as well as models in which the entire architecture is fine-tuned. The low-est score, 0.02 , occurs for randomly initialised weights that are then kept frozen. Allowing those weights to vary during fine-tuning raises the score to 0.62 , against 
+
+0.96 for the best model, which combines pretraining with full fine-tuning. Pretraining Rem3Di and then freezing the weights gives 0.63 , comparable to the randomly ini-tialised model that is fully fine-tuned. As a baseline, we mean aggregate the individual MLIP features, removing all learnable parameters from the Rem3Di descriptor. This parameter-free model scores 
+
+0.63 , matching the pretrained frozen descriptor. This ab-lation supports the initial hypothesis that MLIPs learn chemically rich descriptors, which can be used for tasks outside of direct simulation. The remaining gap to the pretrained and fully fine-tuned model, 0.63 to 0.96 , is what the learned aggregation contributes. Rem3Di: Smooth, chiral 3D molecular descriptors 12 carborane ligands sandwich complexes phosphine ligands Rh/Ir/Re/Ru half-sandwich complexes diimine chelate complexes (square planar geometry) diimine chelate complexes (octahedral geometry) oxygen donor-ligands complexes Ti centers Fe centers 
+
+Ir(III) Rh(III) Ru(II) Re(I) 
+
+arene - Re/Ru 
+
+Cp - Rh/Ir    
+
+> Figure 7 .Transition-metal complexes. UMAP of the molecular descriptors after denoising pretraining without ground-truth labels. Insets highlight the clustering of chemically similar compounds, which groups TMCs by geometry, ligand chemistry, and metal centre identity.
+> 2. Base foundation model
+
+To identify how important the base-MLIP model is, we pretrain a set of Rem3Di models on two MACE models and one Orb model. Figure 6 (right) shows that MACE-POLAR-1-M scores highest ( 0.63 ), followed by MACE-OFF24 ( 0.56 ), with the Orb model lowest (0.16 ). MACE-POLAR-1-M is a polarisable electrostatic model 81 trained on the OMol dataset 82 , whereas the MACE-OFF24 features were trained on SPICEv2 83 . The results indicate that the base foundation model can have a large impact on the final performance.  
+
+> E. Descriptors for transition-metal complexes
+
+Finally, we evaluate Rem3Di on transition-metal com-plexes (TMCs), a chemically distinct setting in which conventional graph-based descriptors can be brittle be-cause coordination and organometallic bonding often in-volve delocalised, polycentric, metal-ligand, and metal-metal interactions that are not naturally captured by standard molecular graphs 5,84 . Hand-built cheminfor-matics descriptors typically assume a fixed covalent bonding pattern, which breaks down for TMCs: the metal-ligand interaction is usually coordinate (dative) bonding and can involve multi-centre π interactions, so a unique bond order is ambiguous 84 . Descriptors that de-pend on well-defined covalent graphs therefore struggle or require restrictive assumptions, such as a small set of metals and ligands and a few interatomic distances cho-sen a priori 5,85,86 . One common alternative is the revised autocorrelation functions (RACs), which encode the cor-relation of selected atomic properties around the metal centre 87 . This descriptor gap hinders the exploitation of transition-metal compounds as pharmaceutical agents, particularly as anti-cancer drugs 88,89 .We probe whether a 3D, physics-informed represen-tation can retain information that is largely absent from circular substructure fingerprints such as ECFP. Rem3Di captures chemical trends in transition-metal complexes in the tmQM dataset 90 . Figure 7 shows the UMAP projec-Rem3Di: Smooth, chiral 3D molecular descriptors 13 tion of the Rem3Di descriptors after pretraining a model via the denoising objective of Figure 3a on the tmQM dataset. Clusters form based on the transition-metal cen-tre species, the ligand chemistry, or the geometry. Spe-cific clusters, such as the Rh/Ir/Re/Ru half-sandwich complexes, show that the model can also capture elec-tronic interactions between different structural features of the complexes. This shows that Rem3Di is transfer-able to a diverse set of systems that can be modelled with the underlying MLIP, without having to hand-pick relevant features for systems of interest. Metal-containing compounds are largely absent from the screening libraries and pretraining corpora that drive small-molecule discovery 91 , and metallodrug candidates have lacked a general-purpose descriptor to organise them 92,93 . By resolving transition-metal complexes into a fixed-size representation ordered by metal centre, lig-and chemistry, and geometry without predefined bond-ing rules, Rem3Di supplies the input that standard cheminformatics workflows require. Similarity search, descriptor-based QSAR regression, and virtual library screening, which are routine for organic small molecules but obstructed for coordination compounds by the ambi-guity of the covalent graph, therefore become applicable to metallodrug space through the same descriptor evalu-ated here.  
+
+> IV. CONCLUSION
+
+We introduced Rem3Di, a framework that repurposes the latent features of atomistic foundation models as fixed-size, 3D-aware molecular descriptors. Per-atom fea-tures from a frozen machine-learning interatomic poten-tial are aggregated by a geometry-biased, permutation-invariant transformer into a single molecular embedding, pseudoscalar channels constructed from the equivariant features encode chirality, and a self-supervised denoising objective enables pretraining on large unlabelled molec-ular datasets. Our experiments demonstrate that simulation-trained representations transfer directly to quantitative structure-property prediction. Under a matched evalua-tion protocol on the TDC and MoleculeNet benchmarks, fine-tuned Rem3Di is the strongest model across the regression endpoints and competitive on most TDC classification tasks, with its advantage most pronounced on properties governed by 3D physics, such as solva-tion free energy. Ablations attribute this descriptor quality to denoising pretraining, whose benefit persists after parameter-efficient LoRA adaptation. The same descriptor extends naturally to chemistries where con-ventional 2D representations struggle: its pseudoscalar channels resolve stereochemistry that inversion-invariant features cannot, and it yields a chemically meaningful, interpretable organisation of transition-metal complexes without predefined bonding rules. Benchmarked on QM9-OR, a dataset of molecules with DFT-computed optical rotations, Rem3Di recovers the handedness of chiral centres with 77% accuracy and the sign of the optical rotation with 70% under a scaffold split, where two-dimensional fingerprint and descriptor baselines perform close to chance. Predicting experimental properties remains difficult, limited by small and noisy labelled datasets. Denoising pretraining mitigates this scarcity and produces a de-scriptor space in which chemically similar molecules clus-ter together. Taken together, these results establish that the internal representations of atomistic foundation mod-els, trained only to reproduce energies and forces, provide a transferable and chirality-aware foundation for molecu-lar machine learning that reaches well beyond their orig-inal simulation setting. 
+
+> Outlook
+
+Smooth, differentiable molecular descriptors create a bridge between atomistic simulation and chemical ma-chine learning. In the present work this bridge is tested on supervised property prediction and unsuper-vised chemical organisation. The same idea could sup-port structure-aware screening, where a descriptor car-ries three-dimensional and stereochemical information into simple regression or classification models. Because Rem3Di remains differentiable with respect to atomic co-ordinates, its descriptors could also be evaluated as col-lective variables for enhanced sampling. Finally, the de-scriptor need not remain downstream of a frozen MLIP: future work could test joint training of the interatomic potential and descriptor, using self-supervised denoising as an auxiliary objective alongside energy and force re-gression. These extensions connect to work on train-ing the interatomic potentials themselves with denoising objectives. As an auxiliary task, denoising generalised to non-equilibrium structures improves equivariant force fields 59 , and as a pretraining stage, denoising diffusion is already used to initialise production foundation poten-tials before energy and force training 28,29 . Pretraining a descriptor and a potential jointly on unlabelled struc-tures is therefore a natural next step. In general the Rem3Di framework points to a broader use for atomistic foundation-model representations, not only as inputs to molecular predictors, but as a reusable framework for learning, comparing, and navigating chemical structure. 
+
+> ACKNOWLEDGEMENTS
+
+The authors thank Kieran Didi, Simon Mathis and Ilyes Batatia for useful discussion throughout the project. S.W. kindly acknowledges support from the German Aca-demic Scholarship Foundation, and travel sponsorship from Dunia Innovations. C.S. acknowledges support from the Isaac Newton Trust G122390, the UKRI reference EP/V062654/1 and the Royal Society RGS/R2/242614. Rem3Di: Smooth, chiral 3D molecular descriptors 14 L.L.S. kindly acknowledges support from Wolfson Col-lege, Cambridge through a Junior Research Fellowship and funding from the Advanced Research and Invention Agency (ARIA) and the Department for Science, Inno-vation and Technology (DSIT) and Pillar VC under the Encode AI for Science Fellowship. This work was also performed using resources pro-vided by the Cambridge Service for Data Driven Dis-covery (CSD3) operated by the University of Cambridge Research Computing Service (www.csd3.cam.ac.uk), pro-vided by funding from the Engineering and Physical Sci-ences Research Council (capital grant EP/T022159/1), and DiRAC funding from the Science and Technology Facilities Council (www.dirac.ac.uk). Access to CSD3 was obtained through a University of Cambridge EPSRC Core Equipment Award EP/X034712/1 
+
+CODE AND DATA AVAILABILITY 
+
+The code, including the pseudoscalar triple tensor-product construction, is available at https://github. com/molsuit/Rem3Di , with accompanying documenta-tion at https://molsuit.github.io/Rem3Di/ .
+
+REFERENCES 
+
+> 1
+
+Morgan, H. L. The generation of a unique machine description for chemical structures-a technique developed at chemical abstracts service. Journal of Chemical Documentation 5, 107–113 (1965). 
+
+> 2
+
+Rogers, D. & Hahn, M. Extended-connectivity fingerprints. Jour-nal of Chemical Information and Modeling 50 , 742–754 (2010). 
+
+> 3
+
+Breiman, L. Random forests. Machine Learning 45 , 5–32 (2001). 
+
+> 4
+
+Jiang, D. et al. Could graph neural networks learn better molec-ular representation for drug discovery? a comparison study of descriptor-based and graph-based models. Journal of Chemin-formatics 13 (2021). 
+
+> 5
+
+Rasmussen, M. H. et al. Smiles all around: structure to smiles conversion for transition metal complexes. Journal of Chemin-formatics 17 (2025). 
+
+> 6
+
+Rupp, M., Tkatchenko, A., Müller, K.-R. & von Lilienfeld, O. A. Fast and accurate modeling of molecular atomization energies with machine learning. Physical Review Letters 108 , 058301 (2012). 
+
+> 7
+
+Hansen, K. et al. Machine learning predictions of molecular properties: Accurate many-body potentials and nonlocality in chemical space. The Journal of Physical Chemistry Letters 6,2326–2331 (2015). 
+
+> 8
+
+Huo, H. & Rupp, M. Unified representation of molecules and crystals for machine learning. Machine Learning: Science and Technology 3, 045017 (2022). 
+
+> 9
+
+Behler, J. & Parrinello, M. Generalized neural-network repre-sentation of high-dimensional potential-energy surfaces. Physical Review Letters 98 , 146401 (2007). 
+
+> 10
+
+Behler, J. Atom-centered symmetry functions for construct-ing high-dimensional neural network potentials. The Journal of Chemical Physics 134 (2011). 
+
+> 11
+
+Bartók, A. P., Kondor, R. & Csányi, G. On representing chemical environments. Physical Review B 87 , 184115 (2013). 
+
+> 12
+
+Drautz, R. Atomic cluster expansion for accurate and trans-ferable interatomic potentials. Physical Review B 99 , 014104 (2019). 
+
+> 13
+
+Huang, B. & von Lilienfeld, O. A. Quantum machine learning us-ing atom-in-molecule-based fragments selected on the fly. Nature Chemistry 12 , 945–951 (2020). 
+
+> 14
+
+De, S., Bartók, A. P., Csányi, G. & Ceriotti, M. Compar-ing molecules and solids across structural and alchemical space. 
+
+Physical Chemistry Chemical Physics 18 , 13754–13769 (2016). 
+
+> 15
+
+Schütt, K. T. et al. Schnet: A continuous-filter convolutional neural network for modeling quantum interactions. In Guyon, I. 
+
+et al. (eds.) Advances in Neural Information Processing Systems ,vol. 30, 991–1001 (Curran Associates, Inc., 2017). 
+
+> 16
+
+Batatia, I., Kovács, D. P., Simm, G. N. C., Ortner, C. & Csányi, G. MACE: Higher order equivariant message passing neural net-works for fast and accurate force fields. In Koyejo, S. et al. (eds.) 
+
+Advances in Neural Information Processing Systems , vol. 35 of 
+
+NeurIPS 2022 , 11423–11436 (Curran Associates, Inc., 2022). 
+
+> 17
+
+Batzner, S. et al. E(3)-equivariant graph neural networks for data-efficient and accurate interatomic potentials. Nature Com-munications 13 (2022). 
+
+> 18
+
+Wang, Y. et al. Enhancing geometric representations for molecules with equivariant vector-scalar interactive message passing. Nature Communications 15 (2024). 
+
+> 19
+
+Stärk, H. et al. 3d infomax improves gnns for molecular property prediction. In Chaudhuri, K. et al. (eds.) Proceedings of the 39th International Conference on Machine Learning , vol. 162 of Pro-ceedings of Machine Learning Research , 20479–20502 (PMLR, 2022). 
+
+> 20
+
+Zhou, G. et al. Uni-mol: A universal 3d molecular representation learning framework. In The Eleventh International Conference on Learning Representations (ICLR) (OpenReview.net, 2023). 
+
+> 21
+
+Pozdnyakov, S. N. et al. Incompleteness of atomic structure rep-resentations. Physical Review Letters 125 , 166001 (2020). 
+
+> 22
+
+Bommasani, R. et al. On the opportunities and risks of founda-tion models (2021). 
+
+> 23
+
+Merchant, A. et al. Scaling deep learning for materials discovery. 
+
+Nature 624 , 80–85 (2023). 
+
+> 24
+
+Batatia, I. et al. A foundation model for atomistic materials chemistry. The Journal of Chemical Physics 163 , 184110 (2025). 
+
+> 25
+
+Kovács, D. P. et al. Mace-off: Short-range transferable machine learning force fields for organic molecules. Journal of the Amer-ican Chemical Society 147 , 17598–17611 (2025). 
+
+> 26
+
+Wood, B. M. et al. Uma: A family of universal models for atoms. In Belgrave, D. et al. (eds.) Advances in Neural Information Pro-cessing Systems , vol. 38 (Curran Associates, Inc., 2025). Spot-light Poster. 
+
+> 27
+
+Plé, T. et al. A foundation model for accurate atomistic simula-tions in drug design (2025). 
+
+> 28
+
+Neumann, M. et al. Orb: A fast, scalable neural network poten-tial (2024). 
+
+> 29
+
+Rhodes, B. et al. Orb-v3: atomistic simulation at scale (2025). 
+
+> 30
+
+Fu, X. et al. Learning smooth and expressive interatomic poten-tials for physical property prediction. In Singh, A. et al. (eds.) 
+
+Proceedings of the 42nd International Conference on Machine Learning , vol. 267 of Proceedings of Machine Learning Research ,17875–17893 (PMLR, 2025). 
+
+> 31
+
+Masters, M. R., Mahmoud, A. H. & Lill, M. A. Investigating whether deep learning models for co-folding learn the physics of protein-ligand interactions. Nature Communications 16 (2025). 
+
+> 32
+
+Abramson, J. et al. Accurate structure prediction of biomolecular interactions with alphafold 3. Nature 630 , 493–500 (2024). 
+
+> 33
+
+Krishna, R. et al. Generalized biomolecular modeling and design with rosettafold all-atom. Science 384 (2024). 
+
+> 34
+
+Boitreaud, J. et al. Chai-1: Decoding the molecular interactions of life (2024). 
+
+> 35
+
+Wohlwend, J. et al. Boltz-1 democratizing biomolecular interac-tion modeling (2024). 
+
+> 36
+
+Cournia, Z., Allen, B. & Sherman, W. Relative binding free en-ergy calculations in drug discovery: Recent advances and practi-cal considerations. Journal of Chemical Information and Mod-eling 57 , 2911–2937 (2017). Rem3Di: Smooth, chiral 3D molecular descriptors 15 
+
+> 37
+
+Huh, M., Cheung, B., Wang, T. & Isola, P. Position: The pla-tonic representation hypothesis. In Salakhutdinov, R. et al. (eds.) 
+
+Proceedings of the 41st International Conference on Machine Learning , vol. 235 of Proceedings of Machine Learning Research ,20617–20642 (PMLR, 2024). 
+
+> 38
+
+Li, Z. & Walsh, A. Platonic representation of foundation machine learning interatomic potentials. Nature Machine Intelligence 8,830–840 (2026). 
+
+> 39
+
+Edamadaka, S., Yang, S., Li, J. & Gómez-Bombarelli, R. Univer-sally converging representations of matter across scientific foun-dation models (2025). 
+
+> 40
+
+Uchiyama, R., Nakajima, Y., Tanaka, Y. & Seino, J. Impact of local descriptors derived from machine learning potentials in graph neural networks for molecular property prediction (2026). 
+
+> 41
+
+Kim, S. Y., Park, Y. J. & Li, J. Leveraging neural network interatomic potentials for a foundation model of chemistry. npj Computational Materials (2026). 
+
+> 42
+
+Shiota, T., Ishihara, K. & Mizukami, W. Universal neural net-work potentials as descriptors: towards scalable chemical prop-erty prediction using quantum and classical computers. Digital Discovery 3, 1714–1728 (2024). 
+
+> 43
+
+Bojan, M. et al. Representing local protein environments with machine learning force fields. In The Fourteenth International Conference on Learning Representations, ICLR 2026 (OpenRe-view.net, 2026). 
+
+> 44
+
+Zaheer, M. et al. Deep sets. In Guyon, I. et al. (eds.) Advances in Neural Information Processing Systems , vol. 30, 3391–3401 (Curran Associates, Inc., 2017). 
+
+> 45
+
+Lee, J. et al. Set transformer: A framework for attention-based permutation-invariant neural networks. In Chaudhuri, K. & Salakhutdinov, R. (eds.) Proceedings of the 36th International Conference on Machine Learning, ICML 2019, 9-15 June 2019, Long Beach, California, USA , vol. 97 of Proceedings of Machine Learning Research , 3744–3753 (PMLR, 2019). 
+
+> 46
+
+Jumper, J. et al. Highly accurate protein structure prediction with alphafold. Nature 596 , 583–589 (2021). 
+
+> 47
+
+Dumitrescu, A. et al. E(3)-equivariant models cannot learn chi-rality: Field-based molecular generation. In The Thirteenth In-ternational Conference on Learning Representations, ICLR 2025 
+
+(OpenReview.net, 2025). 
+
+> 48
+
+Harris, A. B., Kamien, R. D. & Lubensky, T. C. Molecular chirality and chiral parameters. Reviews of Modern Physics 71 ,1745–1757 (1999). 
+
+> 49
+
+Shi, R., Zhang, Z., Chen, L., Yu, G. & Yang, Y. Learning molec-ular chirality via chiral determinant kernels. In International Conference on Learning Representations (ICLR) (2026). 
+
+> 50
+
+A pseudoscalar is invariant under proper rotations but changes sign under inversion. A proper scalar is invariant under both. 
+
+> 51
+
+Geiger, M. & Smidt, T. e3nn: Euclidean neural networks (2022). 
+
+> 52
+
+Frank, J. T., Chmiela, S., Müller, K.-R. & Unke, O. T. Ma-chine learning global atomic representations with euclidean fast attention. Nature Machine Intelligence 8, 388–402 (2026). 
+
+> 53
+
+Irwin, J. J., Sterling, T., Mysinger, M. M., Bolstad, E. S. & Cole-man, R. G. Zinc: A free tool to discover chemistry for biology. 
+
+Journal of Chemical Information and Modeling 52 , 1757–1768 (2012). 
+
+> 54
+
+Kim, S. et al. Pubchem 2025 update. Nucleic Acids Research 
+
+53 , D1516–D1525 (2024). 
+
+> 55
+
+Mendez, D. et al. Chembl: towards direct deposition of bioassay data. Nucleic Acids Research 47 , D930–D940 (2018). 
+
+> 56
+
+Cohen, O. et al. Torchsim: an efficient atomistic simulation en-gine in pytorch. AI for Science 1, 025003 (2025). 
+
+> 57
+
+Ho, J., Jain, A. & Abbeel, P. Denoising diffusion probabilistic models. In Larochelle, H., Ranzato, M., Hadsell, R., Balcan, M.-F. & Lin, H.-T. (eds.) Advances in Neural Information Pro-cessing Systems 33: Annual Conference on Neural Information Processing Systems 2020, NeurIPS 2020, December 6-12, 2020, virtual , vol. 33 of NeurIPS 2020 , 6840–6851 (Curran Associates, Inc., 2020). 
+
+> 58
+
+Song, Y. et al. Score-based generative modeling through stochas-tic differential equations. In 9th International Conference on Learning Representations, ICLR 2021, Virtual Event, Austria, May 3-7, 2021 (OpenReview.net, 2021). 
+
+> 59
+
+Liao, Y.-L., Smidt, T. E., Shuaibi, M. & Das, A. Generalizing de-noising to non-equilibrium structures improves equivariant force fields. Transactions on Machine Learning Research (2024). 
+
+> 60
+
+Liu, S., Guo, H. & Tang, J. Molecular geometry pretraining with se(3)-invariant denoising distance matching. In The Eleventh International Conference on Learning Representations, ICLR 2023, Kigali, Rwanda, May 1-5, 2023 (OpenReview.net, 2023). 
+
+> 61
+
+Zaidi, S. et al. Pre-training via denoising for molecular prop-erty prediction. In The Eleventh International Conference on Learning Representations, ICLR 2023, Kigali, Rwanda, May 1-5, 2023 (OpenReview.net, 2023). 
+
+> 62
+
+Wijaya, K. T. et al. Two-stage pretraining for molecular property prediction in the wild (2024). 
+
+> 63
+
+Feng, S., Ni, Y., Lan, Y., Ma, Z.-M. & Ma, W.-Y. Fractional denoising for 3d molecular pre-training. In Krause, A. et al. (eds.) 
+
+Proceedings of the 40th International Conference on Machine Learning , vol. 202 of Proceedings of Machine Learning Research ,9938–9961 (PMLR, 2023). 
+
+> 64
+
+Liu, Y. et al. DenoiseVAE: Learning molecule-adaptive noise distributions for denoising-based 3d molecular pre-training. In 
+
+The Thirteenth International Conference on Learning Represen-tations (2025). 
+
+> 65
+
+Joshi, C. K. et al. All-atom diffusion transformers: Unified gen-erative modelling of molecules and materials. In Singh, A. et al. 
+
+(eds.) Proceedings of the 42nd International Conference on Ma-chine Learning , vol. 267 of Proceedings of Machine Learning Re-search , 28393–28417 (PMLR, 2025). 
+
+> 66
+
+Park, H. & Walsh, A. Guiding generative models to uncover diverse and novel crystals via reinforcement learning. Nature Machine Intelligence (2026). 
+
+> 67
+
+Geffner, T. et al. La-proteina: Atomistic protein generation via partially latent flow matching. In The Fourteenth International Conference on Learning Representations, ICLR 2026, Rio de Janeiro, Brazil, April 23-27, 2026 (OpenReview.net, 2026). 
+
+> 68
+
+Didi, K. et al. Scaling atomistic protein binder design with gen-erative pretraining and test-time compute. In International Con-ference on Learning Representations (2026). Oral Presentation. 
+
+> 69
+
+Bardes, A., Ponce, J. & LeCun, Y. Vicreg: Variance-invariance-covariance regularization for self-supervised learning. In The Tenth International Conference on Learning Representations, ICLR 2022, Virtual Event, April 25-29, 2022 (OpenReview.net, 2022). 
+
+> 70
+
+Zhou, Y., Zhu, H., Yuan, Y., Song, Z. & Mort, B. C. Machine learning classification of chirality and optical rotation using a simple one-hot encoded cartesian coordinate molecular represen-tation. Journal of Chemical Information and Modeling 65 , 4281– 4292 (2025). 
+
+> 71
+
+Wu, Z. et al. Moleculenet: a benchmark for molecular machine learning. Chemical Science 9, 513–530 (2018). 
+
+> 72
+
+Sheridan, R. P. Time-split cross-validation as a method for esti-mating the goodness of prospective prediction. Journal of Chem-ical Information and Modeling 53 , 783–790 (2013). 
+
+> 73
+
+Ash, J. R. et al. Practically significant method comparison pro-tocols for machine learning in small molecule drug discovery. 
+
+Journal of Chemical Information and Modeling 65 , 9398–9411 (2025). 
+
+> 74
+
+Hilt, D. E. & Seegrist, D. W. Ridge, a computer program for calculating ridge regression estimates / (Dept. of Agriculture, Forest Service, Northeastern Forest Experiment Station„ 1977). 
+
+> 75
+
+Hu, E. J. et al. Lora: Low-rank adaptation of large language models. In The Tenth International Conference on Learning Representations (ICLR 2022) (OpenReview.net, 2022). 
+
+> 76
+
+Nakata, M. & Maeda, T. Pubchemqc b3lyp/6-31g*//pm6 data set: The electronic structures of 86 million molecules using b3lyp/6-31g* calculations. Journal of Chemical Information and Modeling 63 , 5734–5754 (2023). Rem3Di: Smooth, chiral 3D molecular descriptors 16 
+
+> 77
+
+Ramakrishnan, R., Dral, P. O., Rupp, M. & von Lilienfeld, O. A. Quantum chemistry structures and properties of 134 kilo molecules. Scientific Data 1 (2014). 
+
+> 78
+
+Bemis, G. W. & Murcko, M. A. The properties of known drugs. 1. molecular frameworks. Journal of Medicinal Chemistry 39 ,2887–2893 (1996). 
+
+> 79
+
+Huang, K. et al. Therapeutics data commons: Machine learn-ing datasets and tasks for drug discovery and development. In Vanschoren, J. & Yeung, S.-K. (eds.) Proceedings of the Neural Information Processing Systems Track on Datasets and Bench-marks 1, NeurIPS Datasets and Benchmarks 2021 (2021). 
+
+> 80
+
+MacDermott-Opeskin, H. et al. A computational community blind challenge on pan-coronavirus drug discovery data. Journal of Chemical Information and Modeling 66 , 3129–3149 (2026). 
+
+> 81
+
+Batatia, I. et al. Mace-polar-1: A polarisable electrostatic foun-dation model for molecular chemistry (2026). 
+
+> 82
+
+Levine, D. S. et al. The open molecules 2025 (omol25) dataset, evaluations, and models (2025). 
+
+> 83
+
+Eastman, P., Pritchard, B. P., Chodera, J. D. & Markland, T. E. Nutmeg and spice: Models and data for biomolecular machine learning. Journal of Chemical Theory and Computation 20 ,8583–8593 (2024). 
+
+> 84
+
+Brammer, J. C. et al. Tucan: A molecular identifier and de-scriptor applicable to the whole periodic table from hydrogen to oganesson. Journal of Cheminformatics 14 (2022). 
+
+> 85
+
+Nandy, A. et al. Computational discovery of transition-metal complexes: From high-throughput screening to machine learning. 
+
+Chemical Reviews 121 , 9927–10000 (2021). 
+
+> 86
+
+Heller, S. R., McNaught, A., Pletnev, I., Stein, S. &Tchekhovskoi, D. Inchi, the iupac international chemical identi-fier. Journal of Cheminformatics 7 (2015). 
+
+> 87
+
+Janet, J. P. & Kulik, H. J. Resolving transition metal chem-ical space: Feature selection for machine learning and struc-ture–property relationships. The Journal of Physical Chemistry A 121 , 8939–8954 (2017). 
+
+> 88
+
+Meggers, E. Targeting proteins with metal complexes. Chemical Communications 1001 (2009). 
+
+> 89
+
+Mjos, K. D. & Orvig, C. Metallodrugs in medicinal inorganic chemistry. Chemical Reviews 114 , 4540–4563 (2014). 
+
+> 90
+
+Balcells, D. & Skjelstad, B. B. tmqm dataset—quantum geome-tries and properties of 86k transition metal complexes. Journal of Chemical Information and Modeling 60 , 6135–6146 (2020). 
+
+> 91
+
+Adamczyk, J., Poziemski, J., Job, F., Król, M. & Makowski, M. Molpile – large-scale, diverse dataset for molecular representation learning (2025). 
+
+> 92
+
+Medina-Franco, J. L. et al. Bridging informatics and medici-nal inorganic chemistry: Toward a database of metallodrugs and metallodrug candidates. Drug Discovery Today 27 , 1420–1430 (2022). 
+
+> 93
+
+Anthony, E. J. et al. Metallodrugs are unique: opportunities and challenges of discovery and development. Chemical Science 11 ,12888–12917 (2020). 
+
+> 94
+
+Peng, Y. et al. Chiralcat: Molecular chirality classification with enhanced spatial representation using learnable queries. Artificial Intelligence Chemistry 3, 100091 (2025). Rem3Di: Smooth, chiral 3D molecular descriptors 17 
+
+APPENDIX Appendix A: Implementation details 
+
+Online featurisation. For each molecule the coordinates are centred and placed in a non-periodic cubic box of side 2 ( radius + max(20 Å, 1.5 rmax )) , large enough that the MLIP neighbour list spans the whole molecule, per-system total charge and spin multiplicity are passed to the potential. MLIP features are computed online at every training step and detached. The online featurisation in principle allows for fine-tuning of the MACE features, or using the Rem3Di architecture to pretrain MLIPs. 
+
+Numerical precision. The MLIP runs in single precision in our experiments. The equivariant tensor algebra of the chiral block benefits from extra precision: the atomic preprocessor is cast to double precision in the descriptor-inference and supervised-fine-tuning paths, while pretraining runs the preprocessor in single precision. In all cases the per-atom embeddings are cast back to single precision at the boundary that feeds the encoder. 
+
+Normalisation statistics. The invariant standardisation mean and standard deviation are estimated once by streaming up to ∼31 batches of 10 ,000 structures, accumulating per-channel sums and sums-of-squares in double precision, with the standard deviation floored at 10 −9. The equivariant RMS layer-norm is active only when the chiral branch is enabled. 
+
+Warm-started geometry. Both the pair-to-attention bias projection and the gate of the pair feed-forward block are zero-initialised, so the encoder’s first forward pass is identical to a standard self-attention transformer and the geometric pathway is learned from that starting point. 
+
+Appendix B: Architecture and training hyperparameters 
+
+Table II lists the architecture and training settings used in our baseline configuration. Dimensions not listed are resolved automatically from the MLIP irrep signature at model-assembly time. 
+
+TABLE II. Default Rem3Di architecture and training hyperparameters.                                                              
+
+> Featurisation
+> Foundation MLIP frozen MACE (MACE-POLAR-1-M) MLIP features used deepest layer, 512 ×0e+ 512 ×1o
+> Invariant projection linear, 512 →256 (bias-free)
+> Encoder
+> Blocks ×width 4×256
+> Attention heads 8
+> Feed-forward width 1024 (GeGLU) Dropout 0.3
+> Pair width dpair 64
+> Radial basis / cutoff Bessel, 16 functions, 32 ÅChiral channels K128 (when enabled)
+> Pretraining
+> Noise scale σ0.3(constant) Optimiser AdamW, one-cycle schedule Learning rate / weight decay 3×10 −4/10 −3
+> Gradient-norm clip 1.0
+> Epochs 15
+> Batch cap / bucket size 5250 atoms / 512
+> VICReg ( λvar , λ cov , target std) off; 25 ,1,1when on
+> Adaptation
+> LoRA rank r/ scale α16 /32 (attention + pool) Classical-ML cross-validation 5×3outer, 3-fold inner search Chiral classifier loss focal ( γ= 2 , inverse-freq. weights)
+
+Rem3Di: Smooth, chiral 3D molecular descriptors 18 
+
+Appendix C: Denoising pretraining algorithm 
+
+Algorithm 1 shows a single denoising pretraining step for Rem3Di. A frozen MLIP provides atom, pair, and geometry features. The encoder produces a clean molecular descriptor, and the decoder reconstructs clean atom features from noised atom features conditioned on this descriptor. 
+
+Algorithm 1: One denoising pretraining step for Rem3Di. 
+
+Input: molecule batch B; frozen MLIP ϕ; trainable preprocessor q;encoder Eθ; decoder Dψ ; noise scale σ
+
+Output: updated q, Eθ, and Dψ ; frozen ϕ unchanged 
+
+> 1
+
+Frozen feature extraction. 
+
+> 2
+
+(A, P, m) ← ϕ(B) ▷ MLIP features and real-atom mask 
+
+> 3
+
+S0 ← q(A) ▷ clean preprocessed atom features 
+
+> 4
+
+Clean molecular descriptor. 
+
+> 5
+
+M ← Eθ(S0, P, m) ▷ encode clean molecule 
+
+> 6
+
+Feature-space corruption. 
+
+> 7
+
+ϵ ∼ N (0, I)
+
+> 8
+
+˜S0 ← sg( S0) + σϵ ▷ noise valid atom features 
+
+> 9
+
+Denoising decoder. 
+
+> 10
+
+̂ S0 ← Dψ
+
+(˜S0, M; sg( P), m
+
+) 
+
+> ▷reconstruct clean atom features
+> 11
+
+Training objective. 
+
+> 12
+
+Ldenoise ← 1
+
+Natoms σ2
+
+∑
+
+> i∈real
+
+∥∥∥̂ S0 
+
+> i
+
+− S0
+
+> i
+
+∥∥∥2 
+
+> ▷masked variance-normalised MSE
+> 13
+
+L ← L denoise 
+
+> 14
+
+if VICReg regularisation is used then 
+
+> 15
+
+L ← L + λvar Lvar (M) + λcov Lcov (M) ▷ discourage descriptor collapse 
+
+> 16
+
+Parameter update. 
+
+> 17
+
+Update q, θ, and ψ using ∇L 
+
+> 18
+
+Keep the MLIP ϕ frozen Rem3Di: Smooth, chiral 3D molecular descriptors 19 
+
+Appendix D: Stereochemistry tasks 
+
+We train Rem3Di models on two stereochemical classification tasks. The first is the ChiralCat benchmark 94 , in which models classify the type of chirality among the classes achiral, central, axial, helical, and planar. The dataset contains structures with overlapping atoms, which required filtering and re-splitting. The helical and planar classes contain few labelled structures, so small changes in the model prediction alter the accuracy metrics substantially, and direct comparisons between Rem3Di and the baselines are of limited value. Rem3Di models with and without pseudoscalars both classify the type of chirality, which can be determined from atomic environments alone. The ChiralCat benchmark however does not distinguish between R and S configuration. For Rem3Di, the focal loss, which upweights the rare chirality classes, balances accuracy across the imbalanced classes. As the next benchmark shows, pseudoscalars are required for determining the handedness of the chirality. 
+
+TABLE III. Per-class accuracy (%) on the ChiralCat chirality-classification benchmark. Literature methods (E3FP, Uni-Mol, ChiralCat) are taken from the ChiralCat paper and evaluated on its test split. Rem3Di variants are our ablation, evaluated on our own split, as the ChiralCat dataset contained defective molecular structures. Weighted is the sample-weighted (micro) accuracy over each method’s own evaluation set. Bal. Acc. is the unweighted mean of the five per-class accuracies. Per-block support rows give the number of test molecules per class. 
+
+Per-class accuracy Overall Method Achiral Central Axial Helical Planar Weighted Bal. Acc. 
+
+Support (ChiralCat test split) 140 139 107 8 12 406 –E3FP + XGBoost 90.00 87.05 63.55 0.00 50.00 79.06 58.12 Uni-Mol 95.00 76.98 73.83 37.50 83.33 81.77 73.33 ChiralCat 96.43 98.56 76.64 37.50 91.67 90.64 80.16 
+
+Support (our test split) 1000 625 55 4 6 1690 –Rem3Di (ps_focal) 95.60 96.30 92.70 50.00 100.00 95.67 86.93 Rem3Di (nops_focal) 98.60 99.00 94.50 50.00 100.00 98.50 88.44 Rem3Di (ps_ce) 98.60 99.20 92.70 50.00 100.00 98.52 88.11 Rem3Di (nops_ce) 99.20 99.50 94.50 75.00 83.33 99.04 90.32 Rem3Di: Smooth, chiral 3D molecular descriptors 20  
+
+> Appendix E: Benchmarks 1. ADMET and activity prediction tasks
+
+We evaluate Rem3Di on drug-property benchmarks from the Therapeutics Data Commons (TDC) ADMET suite 79 
+
+and MoleculeNet 71 . The TDC tasks cover absorption, distribution, metabolism, and toxicity endpoints relevant to small-molecule pharmacokinetics and safety. Binary endpoints are evaluated with AUROC, whereas regression endpoints are evaluated with MAE. The MoleculeNet regression tasks used here are ESOL and FreeSolv and are evaluated with RMSE. 
+
+TDC classification endpoints. BBB denotes blood–brain-barrier penetration and is a binary measure of whether a compound crosses the blood–brain barrier. HIA denotes human intestinal absorption and measures whether a compound is absorbed after oral administration. Pgp denotes inhibition of P-glycoprotein, an efflux transporter involved in absorption, distribution, and multidrug resistance. Bioav. denotes oral bioavailability and measures whether a compound reaches systemic circulation after oral dosing. Tox-Avg is the mean AUROC over toxicity classification endpoints, including hERG blockade, Ames mutagenicity, and drug-induced liver injury. CYP-Avg is the mean AUROC over cytochrome P450 metabolism endpoints, covering CYP2C9, CYP2D6, and CYP3A4 inhibition and substrate classification. All classification targets are binary and dimensionless. 
+
+TDC regression endpoints. LD50 is an acute oral toxicity endpoint, defined as the dose causing lethality in 50% of the test population. The TDC label is reported as log(1 /(mol /kg)) . Caco-2 measures apparent permeability across Caco-2 cell monolayers, an in vitro proxy for intestinal permeability. Its results are reported on the released TDC target scale. PPBR denotes plasma protein binding rate and is reported as a percentage. LIPO denotes lipophilicity, measured as the octanol/water distribution coefficient log D at pH 7.4, and is therefore dimensionless. 
+
+MoleculeNet regression endpoints. ESOL measures aqueous solubility and is reported as log S in log(mol /L) .FreeSolv measures hydration free energy in water and is reported in kcal mol −1. These two endpoints probe comple-mentary physical properties: ESOL reflects bulk solubility, whereas FreeSolv is a direct thermodynamic measure of transferring a molecule from gas phase to water.  
+
+> 2. Complete drug-property benchmark results
+
+Table IV reports the complete per-task TDC and MoleculeNet 71 leaderboard, including all external baselines, the endpoints summarised in the main text (Table I), and the MoleculeNet classification suite (BACE, BBBP, ClinTox, SIDER, Tox21) omitted there for compactness. On these small MoleculeNet classification sets Rem3Di is competitive but does not lead: its frozen descriptor is the best entry on Tox21, whereas on BACE, BBBP and ClinTox it trails the strongly pretrained 2D graph models such as GROVER. Consistent with the limited training data on these endpoints, full fine-tuning degrades small-classification performance relative to the frozen descriptor (e.g. ClinTox AUROC 0.86 → 0.76 ) while improving every regression endpoint, the contrast that motivates the adaptation study in the main text. Rem3Di: Smooth, chiral 3D molecular descriptors 21 
+
+TABLE IV. Complete drug-property benchmark on TDC and MoleculeNet (all baselines and endpoints). The main-text Table I shows only the TDC classification and the combined regression results. AUROC is used for classification ( ↑), and MAE (TDC) / RMSE (MolNet) for regression ( ↓). Cells: mean std over seeds (our rows: 3 seeds, external baselines: as published). Each block is grouped into external published baselines (top) and matched-protocol evaluations (bottom). Within a block, the top-2 rankable cells per task are shaded first / second . †: coverage < 90% (excluded from ranking). Top2Cnt counts a model’s top-2 placements across that block’s rankable cells. 
+
+TDC classification, AUROC ↑
+
+Model BBB HIA Pgp Bioav. Tox-Avg CYP-Avg Top2Cnt/6 
+
+D-MPNN / Chemprop 0.864 .010 0.976 .004 0.889 .005 0.617 .050 0.821 .019 0.819 .004 1AttentiveFP 0.855 .011 0.974 .007 0.892 .012 0.632 .039 0.842 .010 0.749 .008 2DeepMol 0.774 .023 0.880 .012 0.821 .007 0.509 .026 0.735 .015 0.770 .008 0FPGNN 0.888 .018 0.958 .012 0.930 .007 0.666 .035 0.860 .017 0.866 .004 3TranFoxMol 0.868 .019 0.951 .036 0.875 .011 0.619 .019 0.837 .017 0.860 .006 0ECFP4 + LightGBM 0.884 .005 0.905 .048 0.907 .013 0.591 .036 0.829 .013 0.866 1UniMol2 (frozen) 0.884 .014 0.902 .088 † 0.898 .017 0.617 .041 0.833 .020 † 0.867 1MuMo (frozen) 0.893 .019 0.980 .012 † 0.891 .006 0.626 .048 0.812 .012 † 0.852 0
+
+Rem3Di (frozen) 0.894 .004 0.949 .019 † 0.898 .012 0.558 .057 0.863 .013 0.862 2
+
+Rem3Di (fine-tuned) 0.898 .007 0.974 .008 † 0.911 .006 0.561 .018 0.871 .016 0.867 4
+
+MoleculeNet classification, AUROC ↑
+
+Model BACE-S BBBP-S ClinTox SIDER Tox21 Top2Cnt/5 
+
+D-MPNN / Chemprop 0.809 .006 0.710 .003 0.906 .006 0.570 .007 0.759 .007 0AttentiveFP 0.784 .022 0.643 .018 0.847 .003 0.606 .032 0.761 .005 0GROVER 0.894 .028 0.940 .019 0.944 .021 0.658 .023 0.831 .025 3MolCLR 0.824 .009 0.722 .021 0.912 .035 0.589 .014 0.750 .002 0GraphMVP 0.812 .009 0.724 .016 0.791 .028 0.639 .012 0.759 .005 0GEM 0.856 .011 0.724 .004 0.901 .013 0.672 .004 0.781 .001 1Uni-Mol 0.857 .002 0.729 .006 0.919 .018 0.659 .013 0.796 .005 2FPGNN 0.831 .011 0.892 .019 0.732 .068 0.661 .014 0.833 .004 2TranFoxMol 0.780 .032 0.881 .015 0.830 .047 0.636 .022 0.816 .011 0ECFP4 + LightGBM 0.795 .043 0.794 .119 0.818 .074 0.647 .025 0.805 .015 0UniMol2 (frozen) 0.833 .070 † 0.800 .117 0.794 .065 † 0.622 .032 0.842 .011 0MuMo (frozen) 0.787 .019 † 0.661 .008 0.800 .075 † 0.599 .013 † 0.827 .012 0
+
+Rem3Di (frozen) 0.794 .003 0.680 .005 0.857 .099 0.626 .016 † 0.861 .014 1
+
+Rem3Di (fine-tuned) 0.795 .002 0.657 .008 0.763 .054 0.616 .027 † 0.853 .012 1
+
+TDC regression, MAE ↓
+
+Model LD50 Caco-2 PPBR LIPO Top2Cnt/4 
+
+D-MPNN / Chemprop 0.607 .022 0.388 .077 8.158 .314 0.448 .014 3AttentiveFP 0.678 .012 0.401 .032 9.373 .335 0.572 .007 0DeepMol 0.589 .006 0.327 .012 9.533 .162 0.660 .004 1FPGNN 0.638 .024 0.326 .040 8.465 1.709 0.544 .011 1TranFoxMol 0.645 .036 0.487 .068 9.055 .523 0.525 .024 0ECFP4 + LightGBM 0.659 .005 0.477 .011 9.646 .122 0.627 .014 0UniMol2 (frozen) 0.682 .012 0.338 .018 8.985 .244 0.602 .017 0MuMo (frozen) 0.693 .030 0.353 .022 8.265 .287 0.677 .008 0
+
+Rem3Di (frozen) 0.656 .015 0.368 .022 8.536 .313 0.625 .006 0
+
+Rem3Di (fine-tuned) 0.638 .031 0.326 .016 8.054 .237 0.499 .015 3
+
+MoleculeNet regression, RMSE ↓
+
+Model ESOL FreeSolv Top2Cnt/2 
+
+D-MPNN / Chemprop 1.050 .008 2.082 .082 0AttentiveFP 0.877 .029 2.073 .183 0GROVER 0.831 .120 1.544 .397 0MolCLR 1.271 .040 2.594 .249 0GraphMVP 1.029 .033 – 0GEM 0.798 .029 1.877 .094 0Uni-Mol 0.788 .029 1.480 .048 0FPGNN 0.658 .006 1.106 .195 0TranFoxMol 0.930 .261 1.225 .155 0ECFP4 + LightGBM 1.069 .124 2.178 .400 0UniMol2 (frozen) 0.655 .065 1.169 .144 0MuMo (frozen) 0.647 .039 1.243 .111 1
+
+Rem3Di (frozen) 0.655 .071 1.069 .205 1
+
+Rem3Di (fine-tuned) 0.594 .057 0.820 .177 2

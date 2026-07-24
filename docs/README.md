@@ -6,32 +6,35 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-07-23
-- 运行时间：2026-07-23 21:38:24 UTC
+- 最新运行日期：2026-07-15 ~ 2026-07-24
+- 运行时间：2026-07-24 13:27:21 UTC
 - 运行状态：成功
-- 本次总论文数：3
-- 精读区：0
-- 速读区：3
+- 本次总论文数：5
+- 精读区：3
+- 速读区：2
 
 ### 今日简报（AI）
-今日速读3篇论文，聚焦知识图谱与大语言模型的推理及科学假设生成。
-最值得关注方向：用强化学习训练LLM搜索知识图谱的《Search-on-Graph-R1》（7分）和交互式协同推理的《HALO》（6分）。
-建议优先精读《Search-on-Graph-R1》，它代表了知识图谱推理的新范式，对理解LLM+图推理前沿很有帮助。
-- 详情：[/202607/23/README](/202607/23/README)
+今日精读2篇8分论文、速读2篇7分论文，聚焦分子描述符与环肽建模新方法。最值得关注的是Rem3Di平滑手性3D描述符及环肽集成图学习，两者均达8分。建议优先阅读Rem3Di和环肽论文，同时注意LLM生成几何与生物继续预训练对模型能力的重塑。
+- 详情：[/20260715-20260724/README](/20260715-20260724/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [Rem3Di: Learning smooth, chiral 3D molecular descriptors from atomistic foundation models](/20260715-20260724/2607.19977v1-rem3di-learning-smooth-chiral-3d-molecular-descriptors-from-atomistic-foundation-models)  
+   标签：评分：8.0/10、query:mgp
+   evidence：从原子基础模型学习分子描述符用于性质预测
+2. [Graph Learning on Ensembles of Cyclic Peptides: An Investigation of Molecular Ensemble Modeling](/20260715-20260724/2607.21561v1-graph-learning-on-ensembles-of-cyclic-peptides-an-investigation-of-molecular-ensemble-modeling)  
+   标签：评分：8.0/10、query:mgp
+   evidence：在环肽分子集合上进行分子图预训练，使用自监督任务
+3. [Target Preference Maps: A machine learning model generalizing transferable drug-receptor interactions and guiding drug discovery](/20260715-20260724/biorxiv-10-1101-2025-08-01-668090-v11-target-preference-maps-a-machine-learning-model-generalizing-transferable-drug-receptor-interactions-and-guiding-drug-discovery)  
+   标签：评分：8.0/10、query:ddi-transfer
+   evidence：可迁移的药物-受体相互作用，对未知药物的归纳泛化
 
 ### 速读区论文标签
-1. [Search-on-Graph-R1: Training Large Language Models to Search Knowledge Graphs with Reinforcement Learning](/202607/23/2607.18481v1-search-on-graph-r1-training-large-language-models-to-search-knowledge-graphs-with-reinforcement-learning)  
-   标签：评分：7.0/10、query:cold-ddi
-   evidence：使用强化学习训练LLM搜索知识图谱
-2. [HALO: Interactive Co-abductive Reasoning in Scientific Hypothesis Generation](/202607/23/2607.18564v1-halo-interactive-co-abductive-reasoning-in-scientific-hypothesis-generation)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：协同溯因推理用于药物发现中的科学假设生成
-3. [CLARK: Closed-loop Learning for Adaptive Reasoning over Knowledge Graphs](/202607/23/2607.19996v1-clark-closed-loop-learning-for-adaptive-reasoning-over-knowledge-graphs)  
-   标签：评分：6.0/10、query:cold-ddi
-   evidence：知识图谱推理框架，可适用于生物医学知识图谱进行DDI预测
+1. [How Well Can Frontier Large Language Models Generate Structures? High Quality Prediction of Molecular Geometries with Help from Fine-Tuning](/20260715-20260724/2607.13350v1-how-well-can-frontier-large-language-models-generate-structures-high-quality-prediction-of-molecular-geometries-with-help-from-fine-tuning)  
+   标签：评分：7.0/10、query:mgp
+   evidence：基于大语言模型微调的分子几何预测，属于分子语言模型预训练方法
+2. [Biological Continued Pretraining Reshapes the Capability Profile of a Foundation Model Without Catastrophic Forgetting](/20260715-20260724/biorxiv-10-64898-2026-07-06-736700-v1-biological-continued-pretraining-reshapes-the-capability-profile-of-a-foundation-model-without-catastrophic-forgetting)  
+   标签：评分：7.0/10、query:mgp
+   evidence：生物序列持续预训练
 
 
 <div class="dpr-home-promo-card">
