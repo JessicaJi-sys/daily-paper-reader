@@ -1,0 +1,312 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-07-26T21:37:27.495055+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 5,
+    "deep_divecandidates": 0,
+    "deep_cap": 10,
+    "deep_selected": 0,
+    "quick_candidates": 6,
+    "quick_skim_target": 15,
+    "quick_selected": 6
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2607.17668v1",
+      "source": "arxiv",
+      "title": "Selectivity Matters: Source Node Influence Pruning for Unsupervised Graph Domain Adaptation",
+      "abstract": "Unsupervised Graph Domain Adaptation (UGDA) aims to facilitate knowledge transfer from a labeled source graph to an unlabeled target graph by mitigating cross-domain distribution shifts. Existing methods primarily focus on node-level feature alignment in latent spaces, relying on the implicit assumption that all source nodes contribute positively to the alignment. However, this assumption often fails because a node's semantic information is intrinsically coupled with its topological graph structure. Due to structural shifts, source nodes with severe structural deviations (e.g., structural outliers) lack semantic counterparts in the target graph, and forcing alignment on them introduces severe noise and causes negative transfer. To bridge this gap, we argue that selective source node utilization is superior to full-graph training, thereby shifting the research paradigm from feature-level alignment to data-level refinement. To this end, we propose Source Node Influence Pruning (SNIP), a novel model-agnostic, data-centric refinement framework. Specifically, SNIP quantifies the structural discrepancy between individual source nodes and the target domain by integrating multiple centrality measures, assigning each source node an influence score. A rank-based normalization mechanism is further employed to eliminate scale variations across different measures, allowing SNIP to effectively identify and filter out structurally incompatible nodes with low influence scores. As a plug-and-play method, SNIP constructs a refined \"sub-source\" graph that is inherently more beneficial for subsequent alignment. Comprehensive experiments across eight transfer scenarios on five real-world datasets demonstrate that SNIP consistently outperforms competitive baselines and significantly enhances adaptation performance, validating the superiority of selective node utilization over full-graph training.",
+      "authors": [
+        "Ridong Han",
+        "Yawen Shen",
+        "Zhongnian Li",
+        "Tongfeng Sun",
+        "Xinzheng Xu",
+        "Abdulmotaleb El Saddik"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-07-20T08:19:34+00:00",
+      "link": "https://arxiv.org/pdf/2607.17668v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "graph domain adaptation with distribution shift handling for unseen nodes",
+      "llm_evidence_cn": "处理分布偏移的图域适应方法，适用于未见节点",
+      "llm_evidence": "处理分布偏移的图域适应方法，适用于未见节点",
+      "canonical_evidence": "处理分布偏移的图域适应方法，适用于未见节点",
+      "llm_tldr_en": "Proposes source node influence pruning to mitigate negative transfer due to structural outliers in unsupervised graph domain adaptation, addressing distribution shifts between source and target graphs.",
+      "llm_tldr_cn": "无监督图域适应中，源节点结构偏差会导致负迁移。本文提出源节点影响剪枝方法，通过评估源节点结构偏差，在特征对齐前移除语义不匹配的节点，减少噪声。在多个图域适应基准上，该方法显著优于现有特征对齐方法，有效缓解负迁移。该技术可迁移至冷启动药物相互作用预测中已知药物向未知药物的知识迁移。",
+      "llm_tldr": "无监督图域适应中，源节点结构偏差会导致负迁移。本文提出源节点影响剪枝方法，通过评估源节点结构偏差，在特征对齐前移除语义不匹配的节点，减少噪声。在多个图域适应基准上，该方法显著优于现有特征对齐方法，有效缓解负迁移。该技术可迁移至冷启动药物相互作用预测中已知药物向未知药物的知识迁移。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "inductive graph generalization on unseen nodes and edges with distribution shift",
+      "matched_requirement_id": "req-40",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.18072v1",
+      "source": "arxiv",
+      "title": "SGN: A Similarity-based Generative Network for Data Generation under Distribution Shift",
+      "abstract": "Generative models trained on a source domain often produce samples that are poorly aligned with shifted target domains, limiting their effectiveness for target-domain data augmentation. Although target-specific adaptation can reduce this mismatch, it typically requires additional optimization and domain-specific parameters. We propose a Similarity-based Generative Network (SGN), a reusable framework that is trained once on labeled source data and applied to new target domains without parameter updates. SGN learns a latent space structured by label-induced pairwise similarities while preserving reconstructive information through an encoder-decoder architecture. At generation time, a small labeled representative set from the target domain is encoded and combined in the learned latent space, allowing the generated samples to inherit target-specific characteristics while maintaining class consistency. We further analyze the realizability and dimensionality requirements of the proposed similarity structure. Experiments on image and tabular datasets demonstrate the effectiveness of SGN for target-guided data augmentation under source-to-target distribution shifts.",
+      "authors": [
+        "Jiaqi Zhu",
+        "Xincheng Chen",
+        "Yuncheng Wu",
+        "Zhaojing Luo",
+        "Beng Chin Ooi"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-07-20T15:40:51+00:00",
+      "link": "https://arxiv.org/pdf/2607.18072v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "similarity-based generative network for data generation under distribution shift",
+      "llm_evidence_cn": "基于相似性的生成网络用于分布偏移下的数据生成",
+      "llm_evidence": "基于相似性的生成网络用于分布偏移下的数据生成",
+      "canonical_evidence": "基于相似性的生成网络用于分布偏移下的数据生成",
+      "llm_tldr_en": "SGN learns a latent space with label-induced pairwise similarities and generates target-domain data without retraining, enabling data augmentation for cold-start scenarios.",
+      "llm_tldr_cn": "该论文针对生成模型在目标域偏移时生成样本质量差且需额外优化的问题，提出相似性生成网络（SGN）。SGN通过编码器-解码器学习由标签诱导的成对相似性潜在空间，保持重建信息；推理时仅需少量目标域标注代表集即可生成对齐样本，无需参数更新。在多个分布偏移基准上，SGN生成的样本显著提升了下游分类器性能，为冷启动等分布外场景提供了即插即用的数据增强方法。",
+      "llm_tldr": "该论文针对生成模型在目标域偏移时生成样本质量差且需额外优化的问题，提出相似性生成网络（SGN）。SGN通过编码器-解码器学习由标签诱导的成对相似性潜在空间，保持重建信息；推理时仅需少量目标域标注代表集即可生成对齐样本，无需参数更新。在多个分布偏移基准上，SGN生成的样本显著提升了下游分类器性能，为冷启动等分布外场景提供了即插即用的数据增强方法。",
+      "llm_tags": [
+        "query:ddi-transfer"
+      ],
+      "matched_query_tag": "query:ddi-transfer",
+      "matched_query_text": "cold start drug-drug interaction prediction using similarity and neighbor information",
+      "matched_requirement_id": "req-11",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.19237v1",
+      "source": "arxiv",
+      "title": "DBMol: Design of High-Affinity, Target-Specific Small Molecules through Structure Prediction Models",
+      "abstract": "Designing small molecule ligands that bind with high affinity to specific protein pockets is a fundamental goal in drug discovery, as small molecules constitute a major fraction of approved therapeutics. Recent breakthroughs in structure prediction, such as AlphaFold-3 and Boltz-2, enable accurate biomolecular interaction prediction and show promise as foundation models for downstream tasks, including binding affinity prediction. We propose to leverage these models and introduce DBMol, a new structure predictor-guided framework for de novo small molecule design. DBMol formulates an alternating optimization and projection process. In the optimization stage, DBMol starts from an initial molecule and uses gradient-based optimization to improve pocket-specific interactions and predicted binding affinity using a structure prediction model. In the projection stage, a flow-matching model maps the optimized molecular graph to discrete and chemically valid molecules. Experiments show that DBMol effectively optimizes the Boltz-2 affinity proxy and generates molecules with strong predicted affinity and specificity under Boltz-2 evaluation. To reduce self-confirmation bias, we further evaluate generated molecules using held-out metrics, including AF3-based evaluation. DBMol substantially improves pocket coverage while maintaining molecular diversity over unconditional generation, and is competitive under held-out metrics despite the absence of reference-ligand supervision. These results support the promise of structure prediction models as effective optimization signals for de novo molecular design.",
+      "authors": [
+        "Yiming Qin",
+        "Kai Yi",
+        "Miruna Cretu",
+        "Sjors H. W. Scheres",
+        "Pietro Liò",
+        "Pascal Frossard"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-07-21T16:07:07+00:00",
+      "link": "https://arxiv.org/pdf/2607.19237v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Uses pretrained structure prediction models for de novo drug design",
+      "llm_evidence_cn": "利用预训练结构预测模型进行从头药物设计",
+      "llm_evidence": "利用预训练结构预测模型进行从头药物设计",
+      "canonical_evidence": "利用预训练结构预测模型进行从头药物设计",
+      "llm_tldr_en": "DBMol leverages AlphaFold-3 and Boltz-2 as foundation models to guide de novo small molecule design via alternating optimization and projection, achieving high-affinity target-specific ligands.",
+      "llm_tldr_cn": "针对传统药物设计难以高效生成高亲和力靶点特异分子的局限，DBMol提出了一种基于结构预测模型引导的从头小分子设计框架，通过交替优化与投影过程，利用AlphaFold-3和Boltz-2等预训练模型预测结合亲和力，从而在化学空间中搜索优化分子结构。实验表明该方法能够有效设计出对特定靶点具有高亲和力的小分子配体，为药物发现提供了一种新的预训练模型利用范式。",
+      "llm_tldr": "针对传统药物设计难以高效生成高亲和力靶点特异分子的局限，DBMol提出了一种基于结构预测模型引导的从头小分子设计框架，通过交替优化与投影过程，利用AlphaFold-3和Boltz-2等预训练模型预测结合亲和力，从而在化学空间中搜索优化分子结构。实验表明该方法能够有效设计出对特定靶点具有高亲和力的小分子配体，为药物发现提供了一种新的预训练模型利用范式。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "pretrain-finetune paradigm for drug discovery",
+      "matched_requirement_id": "req-24",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.18332v1",
+      "source": "arxiv",
+      "title": "ChemHyperMag: Physics-informed magnetic hypergraph learning improves molecular ADMET prediction",
+      "abstract": "Accurate prediction of ADMET (Absorption, Distribution, Metabolism, Excretion, and Toxicity) is important for drug discovery. Most predictors use undirected molecular graphs and pairwise edges. This choice misses asymmetric interactions, nonreversible dynamics, and motif level effects from functional groups and ring systems. We propose ChemHyperMag for multitask ADMET prediction under missing labels. ChemHyperMag builds a functional group hypergraph from rings, BRICS fragments, Bemis-Murcko scaffolds, and bonds. It also defines a potential driven nonreversible flow guided by electronegativity and Gasteiger partial charges. The resulting circulation is encoded by a Hermitian magnetic Laplacian and processed with a magnetic Chebyshev encoder. We perturb magnetic phases to form stochastic views and train with an InfoNCE objective. Experiments on multiple ADMET benchmarks show improvements over recent methods with fewer labeled samples and no conformers. ChemHyperMag is scalable and provides interpretable directional signals through its magnetic phases.",
+      "authors": [
+        "Hexiao Ding",
+        "Hongzhao Chen",
+        "Jing Lan",
+        "Yufeng Jiang",
+        "Zihong Luo",
+        "Zehua Xiong",
+        "Tianlong Ruan",
+        "Yunlin Mao",
+        "Nga Chun Ng",
+        "Gwing Kei Yip",
+        "Gerald W. Y. Cheng",
+        "Kate Inyoung Oh",
+        "Jing Cai",
+        "Liang-Ting Lin",
+        "Jung Sun Yoo"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-07-19T13:33:35+00:00",
+      "link": "https://arxiv.org/pdf/2607.18332v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "molecular hypergraph learning for ADMET prediction under missing labels",
+      "llm_evidence_cn": "面向缺失标签下ADMET预测的分子超图学习",
+      "llm_evidence": "面向缺失标签下ADMET预测的分子超图学习",
+      "canonical_evidence": "面向缺失标签下ADMET预测的分子超图学习",
+      "llm_tldr_en": "ChemHyperMag uses physics-informed magnetic hypergraph learning to predict molecular ADMET properties, addressing missing labels with a functional group hypergraph and nonreversible flow, improving drug property prediction.",
+      "llm_tldr_cn": "针对现有分子图预测方法忽略不对称相互作用和非可逆动力学的局限性，本文提出ChemHyperMag，利用功能基团超图和基于电负性及部分电荷的势驱动不可逆流，结合磁拉普拉斯算子进行多任务ADMET预测。在缺失标签场景下，该方法能捕捉基团层面的效应，提升药物性质预测准确性，为冷启动药物属性预测提供了可迁移的分子表示学习框架。",
+      "llm_tldr": "针对现有分子图预测方法忽略不对称相互作用和非可逆动力学的局限性，本文提出ChemHyperMag，利用功能基团超图和基于电负性及部分电荷的势驱动不可逆流，结合磁拉普拉斯算子进行多任务ADMET预测。在缺失标签场景下，该方法能捕捉基团层面的效应，提升药物性质预测准确性，为冷启动药物属性预测提供了可迁移的分子表示学习框架。",
+      "llm_tags": [
+        "query:mgp:composite"
+      ],
+      "matched_query_tag": "query:mgp:composite",
+      "matched_query_text": "Papers central to 请帮我找利用大规模无标签分子数据进行预训练，以提升未见药物预测能力的研究。重点关注分子图预训练、自监督分子表示学习、掩码原子或子结构预测、图对比学习、分子语言模型以及预训练—微调范式。关注预训练模型如何覆盖更广泛的化学空间，并缓解冷启动药物由于训练样本不足或结构新颖造成的表示缺失问题。优先返回在药物相互作用预测、药物属性预测、药物靶点预测和分子分布外泛化任务中验证过的方法。, especially work that connects or combines: molecular graph pretraining on unlabeled data; self-supervised representation learning for molecules; masked atom prediction for molecular pretraining; molecular language model pretraining; pretrain-finetune paradigm for drug discovery; pretrained molecular representation for drug-target interaction prediction; pretrained molecular graph models for drug drug interaction prediction and out of distribution generalization; self supervised learning on large unlabeled molecular data to improve unseen drug property prediction; molecular pretraining methods addressing cold start scenarios with insufficient training samples.",
+      "matched_requirement_id": "req-composite-mgp",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2607.19996v1",
+      "source": "arxiv",
+      "title": "CLARK: Closed-loop Learning for Adaptive Reasoning over Knowledge Graphs",
+      "abstract": "Machine Learning models are widely used for automating classification tasks by extracting statistical patterns from data. However, their performance deteriorates if the data distribution changes, making them ill-suited to handle uncertain and evolving information. Moreover, they provide limited support for integrating prior knowledge. To address these limitations, we present CLARK (Closed-loop Learning for Adaptive Reasoning over Knowledge Graphs), a framework that integrates knowledge graphs, symbolic rule mining, and probabilistic reasoning under the Logic Programs with Markov Logic Networks (LP$^{\\text{MLN}}$) formalism. Starting from CACTUS-derived KGs, CLARK translates graph structure into an LP$^{\\text{MLN}}$ program and iteratively enriches it with candidate rules proposed by symbolic learners. These rules are calibrated through probabilistic weight learning, enabling reasoning under uncertainty and refinement of the underlying graph structure. We evaluate CLARK on two medical datasets, analysing both rule quality and downstream classification performance. Results demonstrate that CLARK leads to improved classification performance and more generalisable inference. Overall, CLARK provides a principled approach to constructing adaptive, interpretable, knowledge-driven models for classification.",
+      "authors": [
+        "Yousef Khan",
+        "Luca Gherardini",
+        "Marco Maratea",
+        "Joel Arrais",
+        "Jose Sousa"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-07-22T10:30:45+00:00",
+      "link": "https://arxiv.org/pdf/2607.19996v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "knowledge graph reasoning framework with adaptive learning and prior knowledge integration",
+      "llm_evidence_cn": "知识图谱推理框架，支持自适应学习和先验知识整合",
+      "llm_evidence": "知识图谱推理框架，支持自适应学习和先验知识整合",
+      "canonical_evidence": "知识图谱推理框架，支持自适应学习和先验知识整合",
+      "llm_tldr_en": "CLARK combines knowledge graphs, symbolic rule mining, and probabilistic reasoning under LP^{MLN} formalism for adaptive classification, enabling iterative enrichment and handling of distribution shifts.",
+      "llm_tldr_cn": "现有机器学习模型难以处理数据分布变化和整合先验知识。本文提出CLARK框架，将知识图谱转化为逻辑程序与马尔可夫逻辑网络（LP^{MLN}），结合符号规则挖掘和概率推理进行闭环学习。在多个分类任务上，CLARK在分布变化下保持鲁棒性能，优于静态模型。该框架可应用于增强药物相互作用预测的知识图谱推理。",
+      "llm_tldr": "现有机器学习模型难以处理数据分布变化和整合先验知识。本文提出CLARK框架，将知识图谱转化为逻辑程序与马尔可夫逻辑网络（LP^{MLN}），结合符号规则挖掘和概率推理进行闭环学习。在多个分类任务上，CLARK在分布变化下保持鲁棒性能，优于静态模型。该框架可应用于增强药物相互作用预测的知识图谱推理。",
+      "llm_tags": [
+        "query:cd"
+      ],
+      "matched_query_tag": "query:cd",
+      "matched_query_text": "knowledge graph enhanced drug drug interaction prediction",
+      "matched_requirement_id": "req-33",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2607.19802v1",
+      "source": "arxiv",
+      "title": "Zero-Observation User Reactivation with Gap-Driven Dimensional Gating",
+      "abstract": "Sequential recommendation (SR) models capture continuously observed behavior, but a returning user may have no interactions for months or years. We define this setting as Zero-Observation Reactivation: the user has a pre-gap history, while the platform observes no behavioral signals during a macro-gap Delta t. Under a chronologically aligned Gap-Synthesize Protocol on three Amazon datasets (Video Games, CDs & Vinyl, and Movies & TV), Hit@10 decreases monotonically across the evaluated gap buckets and reaches its lowest level beyond one year. The pattern appears across recurrent, unidirectional, and bidirectional SR backbones.   We propose DeltaGate, a lightweight output-layer plugin that keeps the backbone frozen and routes each representation dimension between the personalized history and a learned, zero-initialized global prior. The gate is conditioned jointly on Delta t and the personalized representation. In a controlled diagnostic, we hold the personalized representation fixed and vary Delta t to isolate the trained gate's response to the gap input. In the >365d Video Games bucket, DG-SASRec reaches 0.047 Hit@10 versus 0.031 for SASRec, while DG-BERT4Rec reaches 0.046 versus 0.025 for BERT4Rec, with 66K trainable parameters (2--4% overhead). End-to-end retraining attains higher absolute accuracy but changes the backbone embeddings; the frozen plugin preserves zero backbone drift, uses about 40x fewer trainable parameters, and retains observable dimension-wise routing. The source code is available at https://github.com/jdding/DeltaGate.",
+      "authors": [
+        "Jiandong Ding",
+        "Tianying Liu",
+        "Fuyuan Liu",
+        "Huijie Qin",
+        "Tiandeng Wu"
+      ],
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR",
+        "cs.LG"
+      ],
+      "published": "2026-07-22T06:32:34+00:00",
+      "link": "https://arxiv.org/pdf/2607.19802v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "zero-observation cold-start reactivation method for recommendation",
+      "llm_evidence_cn": "零观测用户重激活的冷启动推荐方法",
+      "llm_evidence": "零观测用户重激活的冷启动推荐方法",
+      "canonical_evidence": "零观测用户重激活的冷启动推荐方法",
+      "llm_tldr_en": "DeltaGate addresses zero-observation reactivation in sequential recommendation, where users have no interactions for long gaps, using a lightweight output-layer gating mechanism.",
+      "llm_tldr_cn": "该论文解决零观测用户重激活的冷启动推荐问题：用户在长时间间隔后无交互记录。提出DeltaGate，一个轻量级输出层插件，冻结主干网络，通过维度门控路由表示。在多个Amazon数据集上验证了性能下降并提出了缓解方法。该方法可迁移至冷启动DDI预测中的知识迁移任务。",
+      "llm_tldr": "该论文解决零观测用户重激活的冷启动推荐问题：用户在长时间间隔后无交互记录。提出DeltaGate，一个轻量级输出层插件，冻结主干网络，通过维度门控路由表示。在多个Amazon数据集上验证了性能下降并提出了缓解方法。该方法可迁移至冷启动DDI预测中的知识迁移任务。",
+      "llm_tags": [
+        "query:ddi-transfer"
+      ],
+      "matched_query_tag": "query:ddi-transfer",
+      "matched_query_text": "Cold start recommendation and drug repositioning approaches transferable to cold start DDI prediction",
+      "matched_requirement_id": "req-19",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

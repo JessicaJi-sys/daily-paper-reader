@@ -1,0 +1,862 @@
+Title: ChemHyperMag: Physics-informed magnetic hypergraph learning improves molecular ADMET prediction
+
+URL Source: https://arxiv.org/pdf/2607.18332v1
+
+Published Time: Wed, 22 Jul 2026 00:07:57 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+# ChemHyperMag: Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+Hexiao Ding * 1 Hongzhao Chen * 1 Jing Lan * 1 Yufeng Jiang 1 Zihong Luo 2 Zehua Xiong 3 Tianlong Ruan 4
+
+Yunlin Mao 1 Nga Chun Ng 1 Gwing Kei Yip 1 Gerald W.Y. Cheng 1 Kate Inyoung Oh 1 Jing Cai 1
+
+Liang-Ting Lin 1 Jung Sun Yoo # 1 
+
+## Abstract 
+
+Accurate prediction of ADMET (Absorption, Dis-tribution, Metabolism, Excretion, and Toxicity) is important for drug discovery. Most predictors use undirected molecular graphs and pairwise edges. This choice misses asymmetric interactions, non-reversible dynamics, and motif level effects from functional groups and ring systems. We propose ChemHyperMag for multitask ADMET predic-tion under missing labels. ChemHyperMag builds a functional group hypergraph from rings, BRICS fragments, Bemis-Murcko scaffolds, and bonds. It also defines a potential driven nonreversible flow guided by electronegativity and Gasteiger partial charges. The resulting circulation is en-coded by a Hermitian magnetic Laplacian and processed with a magnetic Chebyshev encoder. We perturb magnetic phases to form stochastic views and train with an InfoNCE objective. Ex-periments on multiple ADMET benchmarks show improvements over recent methods with fewer labeled samples and no conformers. ChemHyper-Mag is scalable and provides interpretable direc-tional signals through its magnetic phases. 
+
+## 1. Introduction 
+
+The prediction of ADMET (Absorption, Distribution, Metabolism, Excretion, and Toxicity) is a key question in the discovery of small-molecule drugs. It determines which can-didates justify costly synthesis and assays. ADMET bench-marks in machine learning encompass multi - task learning, 
+
+> *
+
+Equal contribution #Corresponding author. 1Department of Health Technology and Informatics, Hong Kong Polytechnic Uni-versity, Hong Kong SAR, China 2University of Liverpool, Liver-pool, United Kingdom 3Shanghai Jiao Tong University, Shanghai, China 4Fudan University, Shanghai, China. Correspondence to: Jung Sun Yoo <jungsun.yoo@polyu.edu.hk >.
+
+Proceedings of the AI4Physics Workshop at the 43 rd International Conference on Machine Learning (AI4Physics@ICML 2026) ,Seoul, South Korea. 2026. Copyright 2026 by the author(s). 
+
+heterogeneous label semantics, and pervasive missingness (Wu et al., 2018; Huang et al., 2022). Currently, many work-flows begin with SMILES (Weininger, 1988), which are modeled as sequences or transformed into two - dimensional atom-bond graphs by RDKit (Bento et al., 2020). Molecular encoders underperform in this regime because their repre-sentations lack comprehensive structural detail and fail to capture the physical and chemical nature of molecules. Sequence encoders built on SMILES provide only indi-rect access to molecular structure, so functional regularities must be inferred from sparse and heterogeneous endpoints (Weininger, 1988). Message passing on bond graphs ex-poses topology, yet it is typically defined through undirected pairwise interactions. This formulation ensures invariance to edge reversal but neglects bond polarity and donor–acceptor roles, thus higher-order motifs are merely approximated via local aggregation (Yang et al., 2019). However, the abstraction of these representations is misaligned with the physical drivers behind many ADMET endpoints. Transport and partitioning are shaped by local polarity fields induced by electronegativity imbalance and charge separation (Paul-ing, 1960; Gasteiger & Marsili, 1980), while conjugated substructures exhibit directional redistribution and cyclic electronic circulation that cannot be expressed by undirected diffusion. Geometry-based and multimodal models can re-cover part of this signal. However, they rely on conformer generation and large-scale three-dimensional supervision, which raises data and compute demands and often conflicts with high-throughput ADMET settings (Zhou et al., 2023; Lu et al., 2024; Wang et al., 2024). The challenge is to design a SMILES-based pipeline that captures higher-order motif structures. At the same time, it should embed phys-ically and chemically grounded directionality to enhance learning processes. We propose ChemHyperMag to address this issue. It intro-duces directionality by integrating physically and chemi-cally grounded energy-structure coupling. We start from the standard 2D molecular graph extracted from SMILES, which fixes the atom set and covalent connectivity. We then lift this graph to a functional group hypergraph that 1arXiv:2607.18332v1 [cs.LG] 19 Jul 2026 Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+augments pairwise bonds with motif-defined higher-order neighborhoods, so that propagation is supported not only on covalent edges but on atom pairs that co-occur within chem-ically meaningful motifs. On this hypergraph-supported neighborhood we define a potential-driven, nonreversible diffusion. Each atom is assigned a chemical potential com-puted from its electronegativity and partial charge, and tran-sitions are biased along potential gradients. The resulting Markov operator induces a stationary flow that decomposes into a symmetric component encoding diffusion strength and an antisymmetric component encoding circulation. We encode this circulation with a magnetic Laplacian, where the complex phase represents cyclic currents while the operator remains Hermitian, enabling stable learning while retaining directional information (Fanuel et al., 2017; Zhang et al., 2021; Benko et al., 2025). To improve robustness under missing labels, we construct stochastic views by perturbing the magnetic phase while keeping the hypergraph fixed. We then optimize an InfoNCE objective to align these views at the operator level, following directed contrastive learning (Tong et al., 2021). This design removes the need for con-formers, but it introduces sparse hypergraph construction and complex-valued propagation. Figure 1 illustrates the concept and workflow of ChemHyperMag. The main contributions of this work are summarized as follows. First, we build a SMILES-derived functional group hypergraph that encodes motif-level neighborhoods beyond pairwise bonds. Second, we introduce a physicochemically-grounded nonreversible Markov flow on this hypergraph and encode its directional bias and circulation with a Hermitian magnetic Laplacian through complex phases. Third, we propose magnetic phase perturbation as operator-level view generation for InfoNCE regularization in multitask ADMET with missing labels. 
+
+## 2. Related Work 
+
+ADMET prediction is framed as multi-endpoint learning with heterogeneous labels and strong emphasis on standard-ized splits and metrics, as in MoleculeNet (Wu et al., 2018) and the Therapeutics Data Commons (Huang et al., 2022). 
+
+2.1. Statistical Learning Methods 
+
+Quantitative Structure-Activity Relationship (QSAR) base-lines remain central for ADMET. Extended-connectivity fin-gerprints used physicochemical descriptors and fingerprints with linear models or tree ensembles (Rogers & Hahn, 2010). The other QSAR models such as pkCSM (Pires et al., 2015), SwissADME (Daina et al., 2017), vNN-ADMET (Schyman et al., 2017), and ADMETboost (Tian et al., 2022) serve as rule- and descriptor-based screening tools.        
+
+> Figure 1. Workflow of ChemHyperMag. Stage 1 parses SMILES into a 2D molecular graph with RDKit and computes atom elec-tronegativity and Gasteiger partial charges together with structural annotations. Stage 2 constructs a functional group hypergraph from rings, BRICS fragments, scaffolds, and bonds, then defines a chemical potential that induces directed flow under the hypergraph constraints. Stage 3 encodes this directionality with a magnetic phase, forms the magnetic adjacency, and builds the normalized magnetic Laplacian for spectral propagation.
+
+2.2. Deep Learning Methods 
+
+The next-generation ADMET platforms combine these in-gredients with learned-models and curated endpoints at scale. ADMETlab 2.0 (Xiong et al., 2021) and 3.0 (Fu et al., 2024) and ADMET-AI (Swanson et al., 2024) are pioneer works. Besides, end-to-end representation learning largely follows message passing on atom-bond graphs, with PotentialNet (Feinberg et al., 2018) and the D-MPNN fam-ily implemented in Chemprop (Yang et al., 2019; Heid et al., 2023). Notably, Chemprop v2 is now serving as a widely adopted ADMET backbone (Graff et al., 2025). Moreover, recent advances in transformer architectures and 3D pre-training frameworks, such as Graphormer (Ying et al., 2021) and Uni-Mol (Zhou et al., 2023), have shown improved capacity to address the long-context problem and capture geometric effects in molecular ADMET prediction. Current deep learning models increasingly leverage endpoint struc-ture and analogue comparisons in ADMET prediction. No-table strategies include adaptive auxiliary task selection in MTGL-ADMET (Du et al., 2023a) and pairwise difference learning in DeepDelta (Fralish et al., 2023), while OmniMol emphasizes multi-task robustness under imperfect labeling 2Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+conditions (Wang et al., 2025a). 
+
+2.3. Physics-informed Methods 
+
+Physics -informed ADMET models incorporate physico-chemical priors by supervising molecular representations with electronic or thermodynamic features beyond connec-tivity. Recent work uses quantum chemistry supervision to pretrain graph transformers on atom-in-a-molecule proper-ties and transfers the resulting encoders to ADMET end-points (Kim et al., 2024; Fallani et al., 2025). Physics-informed methods improve model performance and sample efficiency when labels are sparse or missing. 
+
+2.4. Hypergraph and Magnetic Laplacian 
+
+2.4.1. H YPERGRAPH NEURAL NETWORKS 
+
+Hypergraph neural networks generalize graph message pass-ing by defining transmission over node-hyperedge inci-dence structures (Feng et al., 2019). Surveys have or-ganized existing approaches into convolutional, attention, and spectral formulations (Yang & Xu, 2025). For undi-rected hypergraphs, multiset-based encoders such as AllSet learn permutation-invariant node-hyperedge aggregation and unify several incidence variants (Chien et al., 2022). In parallel, sheaf hypergraph networks enrich hyperedge states and produce more expressive Laplacians for modeling higher-order diffusion (Duta et al., 2023). Directed hyper-graphs assign each hyperedge a tail and a head, thereby inducing nonreversible dynamics and asymmetric Lapla-cians. DHGNN introduces a directed-hypergraph Laplacian for convolution and link prediction (Ma et al., 2024), while DSHN unifies directed and undirected learning through a complex-valued directed sheaf Laplacian (Mule et al., 2025). In molecular learning, hyperedges are used to represent rings, fragments, and reaction environments (Kajino, 2019; Chen & Schwaller, 2024). Functional-group hypergraphs have been shown to improve toxicity prediction and related ADMET endpoints in MolHGCN (Chen et al., 2021), while molecular hypergraph message passing captures irregular higher-order conjugation beyond conventional bond graphs (Chen & Schwaller, 2024). 2.4.2. M AGNETIC LAPLACIAN 
+
+Magnetic Laplacians encode edge orientation in complex phases while remaining Hermitian, which enables spectral learning under nonreversible dynamics (Fanuel et al., 2017). MagNet introduces a charge-parameterized magnetic Lapla-cian for directed representation learning (Zhang et al., 2021), and MSGNN generalizes it to signed digraphs through a magnetic signed Laplacian with Chebyshev polynomial fil-ters (He et al., 2022b). SD-GCN derives a related Hermitian magnetic Laplacian for signed directed graphs and uses it for spectral convolution (Ko et al., 2023b). HyperMag-Net extends magnetic operators to hypergraphs by defining an edge-dependent random walk on the incidence bipartite graph and constructing a magnetic hypergraph Laplacian with learnable charge (Benko et al., 2025). 
+
+2.5. Graph Contrastive Learning (CL) 
+
+2.5.1. G RAPH CL WITHOUT DIRECTIONS 
+
+Graph contrastive learning (GCL) learns robust graph rep-resentations by promoting representation scattering, often via agreement between augmented views or distribution dis-crimination (He et al., 2024). Representative frameworks such as GraphCL (You et al., 2020) have standardized ob-jectives and augmentation pipelines. Follow-up research improves view construction and loss formulation using ad-versarial and prototypical strategies (Suresh et al., 2021; Lin et al., 2022). Empirical analyses also identify scenarios where augmentations enhance representation learning or cause collapse (Zhu et al., 2021). For molecular ADMET predictions, labeled endpoints are heterogeneous and often limited. Recent GCL frameworks enhance data efficiency by tailoring chemically-valid perturbations and enforcing cross-view alignment. MolCLR (Wang et al., 2022), Graph-MVP (Liu et al., 2022b), and 3DGCL (Moon et al., 2023) advance 2D-3D contrast; ATMOL (Liu et al., 2022a) intro-duces attention-guided masking; and ACML (Wang et al., 2025b) develops multimodal asymmetric alignment. Collec-tively, these methods achieve consistent gains on drug-like benchmarks with ADMET endpoints. 2.5.2. G RAPH CL WITH DIRECTIONS 
+
+Directed Graph CL avoids orientation loss by perturbing graph operators. DiGCL leverages directed Laplacian per-turbations with dynamic view sampling (Tong et al., 2021), and UGCL extends this framework to unify Laplacian per-turbations across undirected, directed, and signed graphs (Ko et al., 2023c). For signed directed structure, SDGCL (Ko et al., 2023a) introduces Laplacian augmentation in magnetic space and S2-DiGCL further couples path-based spatial views with operator-level perturbations (Su et al., 2025). However, molecular representations are generally treated as undirected graphs, and directed graph contrastive learning remains unexplored in ADMET prediction. 
+
+## 3. Preliminaries 
+
+3.1. Problem Definition 
+
+Let G be the set of molecular graphs and let T ∈ N be the number of prediction tasks. The training set is 
+
+D = (Gi, y i, m i) Ni=1 ⊆ G × RT × { 0, 1}T , (1) 3Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+where Gi ∈ G is the ith molecule, yi = ( yi1, . . . , y iT ) ∈
+
+RT is its multitask label vector with yit the ground truth target for task t, and mi = ( mi1, . . . , m iT ) ∈ { 0, 1}T is the observation mask with mit = 1 if yit is observed and 
+
+mit = 0 otherwise. A model fθ : G → RT maps an input G
+
+to a prediction vector fθ (G), whose tth component fθ (G)t
+
+predicts task t.On a mini batch B ⊂ D the supervised multitask loss is 
+
+Lsup = 1
+
+|B| 
+
+X
+
+> (G,y,m )∈B
+> T
+
+X
+
+> t=1
+
+mt ℓt
+
+ fθ (G)t, y t
+
+, (2) where ℓt is the loss for task t. ChemHyperMag implements 
+
+fθ as a shared magnetic hypergraph encoder with task spe-cific heads and combines (2) with a contrastive term. 
+
+3.2. Functional Group Hypergraphs 
+
+3.2.1. M OLECULAR GRAPHS 
+
+A two dimensional molecular graph is G = ( V, B, X ),where V = {1, . . . , n } is the set of atoms, B ⊆ V × V is the set of undirected covalent bonds, and X ∈ Rn×d is the node feature matrix with rows xu ∈ Rd for u ∈ V .The bond graph (V, B ) encodes connectivity and bond dis-tance. For u, v ∈ V , a bond path of length k from u to 
+
+v is a sequence (u0, . . . , u k) with u0 = u, uk = v, and 
+
+(ur−1, u r ) ∈ B for all r ∈ { 1, . . . , k }. Define the bond distance 
+
+dist B (u, v ) = min k ∈ N0 : ∃ (u0, . . . , u k) s.t. 
+
+u0 = u, u k = v, (ur−1, u r ) ∈ B, ∀r ∈ [k] ,
+
+(3) with dist B (u, v ) = + ∞ if no such path exists. In particular, 
+
+u and v are connected if and only if dist B (u, v ) < +∞.3.2.2. H YPERGRAPHS 
+
+To represent functional groups and structural motifs, we lift the molecule to a hypergraph H = ( V, E ) with the same node set V and hyperedges E = {e1, . . . , e m}, where each ej ⊆ V . The incidence matrix is denoted by M ∈{0, 1}n×m with entries 
+
+Mu,j =
+
+(
+
+1, u ∈ ej ,
+
+0, u / ∈ ej , (4) for u ∈ V and j ∈ { 1, . . . , m }. In ChemHyperMag, each hyperedge ej corresponds to a ring, a BRICS fragment, a Bemis-Murcko scaffold, or a bond hyperedge. Throughout, u, v ∈ V denote atoms, and an ordered pair 
+
+(u, v ) denotes a directed transition from u to v. For e ∈ E
+
+and u ∈ e, define 
+
+Ne(u) = {v ∈ e | v̸ = u}, (5) and the hypergraph neighborhood 
+
+N (u) = [  
+
+> e∈E:u∈e
+
+Ne(u). (6) Thus v ∈ N (u) means that u and v co-occur in at least one hyperedge. All Markov transitions in Section 3.3 are supported on ordered pairs (u, v ) with v ∈ N (u).Each atom u ∈ V carries a scalar chemical potential 
+
+ϕ(u) = α χ (u) + β Q (u), (7) where χ(u) is the Pauling electronegativity of the atom at u
+
+and Q(u) is its Gasteiger partial charge. The scalars α and 
+
+β are learned parameters, and ϕ biases the nonreversible Markov dynamics. 
+
+3.3. Magnetic Markov Operators 
+
+3.3.1. E RGODIC MARKOV CHAINS 
+
+Let V = {1, . . . , n } be the atom set of Section 3.2, which we also use as the finite state space of the Markov chain. A row stochastic matrix is P ∈ [0 , 1] n×n with nonnegative entries and 
+
+P 1 = 1, (8) where 1 is the all ones vector. We interpret Puv as the one step transition probability from state u to state v. A distribution π ∈ Rn with πu ≥ 0 and 1⊤π = 1 is stationary for P if π⊤P = π⊤.To guarantee ergodicity, we add a teleportation term. The same teleporting random walk is used in directed graph spec-tral learning (Tong et al., 2021) and in magnetic hypergraph operators (Benko et al., 2025). Given a base transition ma-trix P and a distribution ν ∈ Rn with full support, meaning 
+
+νu > 0 for all u ∈ V , for η ∈ (0 , 1) define 
+
+P (η) = (1 − η)P + η 1 ν⊤. (9) Since (P (η))uv ≥ ην v > 0 for all u, v ∈ V , the chain is irreducible and aperiodic, hence admits a unique stationary distribution. We denote it by π(η), and when η is fixed we write π.3.3.2. P HASE MAP AND MAGNETIC ADJACENCY 
+
+Let A ∈ Rn×n be a real matrix supported on the allowed ordered pairs, meaning Auv = 0 whenever v /∈ N (u).Define its symmetric and skew symmetric parts 
+
+Asym = A + A⊤
+
+2 , Askew = A − A⊤
+
+2 . (10) For u, v ∈ V with Asym  
+
+> uv
+
+> 0 define 
+
+Ruv = Askew 
+
+> uv
+
+Asym  
+
+> uv
+
++ ε , Θ(q) 
+
+> uv
+
+= 2 πq tanh( Ruv ), (11) 4Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+with ε > 0 and q ≥ 0. Then Θ(q) 
+
+> uv
+
+= −Θ(q) 
+
+> vu
+
+and Θ(q) 
+
+> uu
+
+= 0 .Define Ξ(q) ∈ Cn×n by 
+
+Ξ(q) 
+
+> uv
+
+=
+
+(
+
+exp  i Θ (q)
+
+> uv
+
+, Asym  
+
+> uv
+
+> 0,
+
+1, Asym  
+
+> uv
+
+= 0 , (12) where the choice on {(u, v ) | Asym  
+
+> uv
+
+= 0 } is irrelevant since 
+
+H(q) 
+
+> uv
+
+= 0 there. For Asym  
+
+> uv
+
+> 0, |Ξ(q) 
+
+> uv
+
+| = 1 and Ξ(q) 
+
+> uv
+
+= Ξ (q) 
+
+> vu
+
+,hence Ξ(q) is Hermitian and generally not real. The magnetic adjacency is 
+
+H(q) = Asym ⊙ Ξ(q), (A ⊙ B)uv = Auv Buv . (13) 3.3.3. M AGNETIC LAPLACIAN 
+
+Let du = P 
+
+> v∈V
+
+Asym  
+
+> uv
+
+and D = diag( d1, . . . , d n). As-sume du > 0 for all u ∈ V . The normalized magnetic Laplacian is 
+
+Lmag = I − D−1/2H(q)D−1/2. (14) 
+
+Proposition 1. Lmag is Hermitian and positive semidefinite. 
+
+Proof. Since Asym is real symmetric and Ξ(q) is Hermitian, the Hadamard product H(q) = Asym ⊙Ξ(q) satisfies H(q) 
+
+> uv
+
+=
+
+H(q) 
+
+> vu
+
+, hence H(q) is Hermitian. The matrix D−1/2 is real diagonal, hence Hermitian, so Lmag is Hermitian. For z ∈
+
+Cn define bzu = zu/√du. Using H(q) 
+
+> uv
+
+= Asym  
+
+> uv
+
+Ξ(q) 
+
+> uv
+
+and 
+
+|Ξ(q) 
+
+> uv
+
+| = 1 , one obtains 
+
+z∗Lmag z = 12
+
+X
+
+> u,v ∈V
+
+Asym  
+
+> uv
+
+bzu − Ξ(q) 
+
+> uv
+
+bzv 
+
+> 2
+
+≥ 0, (15) which proves positive semidefiniteness. 
+
+3.4. Contrastive Objectives 
+
+An InfoNCE objective is applied to pairs of stochastic views of the same molecule (Oord et al., 2018). Let X be the space of molecular inputs. A stochastic augmentation kernel 
+
+T maps x ∈ X to a random view ex ∼ T (· | x). An encoder fθ : X → Rp produces embeddings h = fθ (ex).For each x, sample two views ex(1) , ex(2) ∼ T (· | x) and set 
+
+h(k) = fθ (ex(k)).For a mini batch of size B, write (h(1)  
+
+> i
+
+, h (2)  
+
+> i
+
+) for the pair from the ith molecule. With cosine similarity 
+
+sim( u, v ) = ⟨u, v ⟩∥u∥2 ∥v∥2
+
+, (16) and temperature τ > 0, define the batchwise scores 
+
+s12  
+
+> ij
+
+= sim  h(1)  
+
+> i
+
+, h (2) 
+
+> j
+
+, s21  
+
+> ij
+
+= sim  h(2)  
+
+> i
+
+, h (1) 
+
+> j
+
+. (17) The symmetric InfoNCE loss is 
+
+LNCE = 12B
+
+> B
+
+X
+
+> i=1
+
+ ℓ(1)  
+
+> i
+
++ ℓ(2) 
+
+> i
+
+, (18) where 
+
+ℓ(1)  
+
+> i
+
+= − log exp  s12  
+
+> ii
+
+/τ PBj=1 exp  s12  
+
+> ij
+
+/τ  , (19) 
+
+ℓ(2)  
+
+> i
+
+= − log exp  s21  
+
+> ii
+
+/τ PBj=1 exp  s21  
+
+> ij
+
+/τ  . (20) In ChemHyperMag, T perturbs Ξ(q) while keeping the molecular hypergraph H = ( V, E ) fixed, and LNCE is com-bined with Lsup in Equation (2). 
+
+## 4. Methodology 
+
+ChemHyperMag combines a functional group hypergraph representation with magnetic spectral propagation for mul-titask molecular prediction. Hypergraph construction and notation follow Section 3.2. The encoder instantiates the magnetic operator of Section 3.3 from atom level chemical potential in Equation (7) , applies a Chebyshev spectral filter on the resulting complex magnetic Laplacian in Equation 
+
+(14) , and produces real node embeddings used by task spe-cific pooling and predictors. Training minimizes the masked supervised loss in Equation (2) and the contrastive objective in Equation (18) . The model framework of ChemHyper-Mag is shown in Figure 2 .
+
+4.1. Functional Group Hypergraph 
+
+For each molecule G = ( V, B, X ), we construct the hyper-graph H = ( V, E ) as in Section 3.2, with hyperedges from SSSR rings (Figueras, 1996), BRICS fragments (Degen et al., 2008), the Bemis-Murcko scaffold (Bemis & Mur-cko, 1996), and bond hyperedges {u, v } for all (u, v ) ∈ B.We implement H as an incidence graph whose node set augments atoms with one node per hyperedge, and whose directed edges connect each hyperedge node to its incident atom nodes in both directions. The heterogeneous input projector maps both node types to a shared width. For atom nodes, we apply a linear map to the first datom input chan-nels. For hyperedge nodes, we apply a linear map to the first dhe channels. We restore the original node order, then apply LayerNorm and ReLU. This yields real initial states 
+
+H(0) ∈ Rn×dh on the incidence graph. 
+
+4.2. Magnetic Operator from Chemical Potential 
+
+When using magnetic propagation, each node u is assigned electronegativity χ(u) and Gasteiger charge Q(u), and the chemical potential is computed by Equation (7) . In the inci-dence graph, χ(u) = Q(u) = 0 for hyperedge nodes, while 5Physics-informed magnetic hypergraph learning improves molecular ADMET prediction      
+
+> Figure 2. The model framework of ChemHyperMag. A. Internal structure of the Magnetic Chebyshev Encoder and subsequent gating mechanism; B. Brief overview of contrastive learning.
+
+atom nodes use the stored descriptors, with electronegativity rescaled by a constant factor 4.0 in the implementation. Let 
+
+Adj ∈ { 0, 1}n×n be the directed adjacency matrix of the incidence graph. We construct a biased transition matrix P
+
+by assigning unnormalized weights 
+
+Wuv = Adj uv exp  ϕ(v) − ϕ(u), P uv = Wuv 
+
+P 
+
+> w
+
+Wuw 
+
+, (21) and setting Pu· to the uniform distribution when P 
+
+> w
+
+Wuw 
+
+is numerically zero. We then apply teleportation with uni-form ν and rate η ∈ (0 , 1) using Equation (9) , implemented as νu = 1 /n and η = τ with τ = 0 .15 . The stationary distri-bution π is computed by a fixed number of power iterations, initialized uniformly and iterated as π ← (P (η))⊤π for 20 
+
+steps with renormalization. Given P (η) and π, we form the stationary flow matrix 
+
+eA = diag( π) P (η), (22) and decompose it into eAsym and eAskew via Equation (10) .We then compute the phase ratio and phase map exactly as in Equation (11) with Asym = eAsym , Askew = eAskew ,
+
+ε = 10 −7, and phase strength q. The phase factors Ξ(q) and magnetic adjacency H(q) are computed by Equation (12) and Equation (13) , and the normalized magnetic Laplacian 
+
+Lmag follows Equation (14) with degrees computed from 
+
+eAsym .
+
+4.3. Magnetic Chebyshev Encoder 
+
+Each magnetic layer applies a Chebyshev filter on the nor-malized operator eL = −D−1/2H(q)D−1/2, which equals 
+
+Lmag − I. Given real input features h ∈ Rn×din , we first apply a real linear map x = W h and lift it to complex by 
+
+xC = x + i 0 . We then compute Chebyshev iterates by 
+
+T0 = xC, T1 = eL x C,Tk = 2 eL T k−1 − Tk−2, (k ≥ 2) , (23) where each multiplication by eL is implemented as u 7 →−D−1/2H(q)D−1/2u using degrees from eAsym . The layer output before nonlinearity follows the ChebNetII reparametrization (He et al., 2022a), which learns the filter response at Chebyshev interpolation nodes and builds on the Chebyshev spectral filtering of ChebNet (Defferrard et al., 2016). We write the expansion as 
+
+z = c0
+
+2 T0 +
+
+> K
+
+X
+
+> k=1
+
+ckTk, (24) with coefficients ck derived from nonnegative parameters 
+
+˜cj = ReLU( tj ). Let xj = cos  (K − j + 0 .5) π/ (K + 1) 
+
+for j = 0 , . . . , K . The coefficients are 
+
+ck = 2
+
+K + 1 
+
+> K
+
+X
+
+> j=0
+
+˜cj Tk(xj ), (25) where Tk(·) denotes the scalar Chebyshev polynomial. To return physically interpretable real representations while still using phase during propagation, we apply a magni-tude based activation that does not separate real and imag-inary parts. Concretely, we map z to real features by 
+
+|z| = pℜ(z)2 + ℑ(z)2 elementwise and apply ReLU on this magnitude, 
+
+˜h = ReLU( |z| + b) , (26) with a learned bias b. We do not apply ReLU to ℜ(z)
+
+and ℑ(z) separately, since independent truncation modi-fies phase in an uncontrolled manner and conflicts with the interpretation of phase as directed bias. In Equation (26) the phase influences message mixing through H(q), while the stored features remain real and nonnegative. Each layer adds a residual term ReLU( Wres h) and applies batch nor-malization to the resulting real features. The encoder stacks three such layers. 6Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+4.4. Gating Mechanism 
+
+From the final node states H(L), we compute one molecular embedding per task by gated sum pooling. For task t, a learned scalar gate wu,t = σ(a⊤
+
+t h(L)
+
+u ) is applied to each node, and the task embedding is zt = P
+
+u wu,t h(L)
+
+u . Each task uses its own two layer MLP head with dropout, ReLU, and batch normalization, followed by a linear output. When a primary task index p is specified, we fuse auxiliary task embeddings into the primary pathway using a graph level gate conditioned on the mean node embedding hG =
+
+1
+
+n
+
+P
+
+u h(L)
+
+u . For each auxiliary task t̸ = p, we compute the batch averaged cosine similarity between zp and zt,sort tasks by this score, then select a subset Ap by first taking tasks with similarity above a fixed threshold and, if fewer than a prescribed minimum are selected, adding the top scoring tasks until the minimum is reached. For each t ∈ A p, a linear map produces a two dimensional logit vector from hG, a softmax yields γt ∈ R2, and we form a convex combination ˜zp,t = γt, 1zt + γt, 2zp. The fused representation is zfused 
+
+p = P
+
+t∈A p ˜zp,t , and when 
+
+Ap is empty, we set zfused 
+
+p = zp. Only the primary head consumes zfused 
+
+p , while all other heads use their own zt.
+
+4.5. Contrastive Learning 
+
+Contrastive learning uses two stochastic views that share 
+
+Adj , ϕ, P (η), π, and eAsym , and differ only in the magnetic phases. Starting from Θ(q) computed by Equation (11) , we sample an elementwise noise matrix ∆ with independent entries ∆uv ∼ Unif( −ρ, ρ ), and define the perturbed phase 
+
+eΘ(q) = Θ (q) + ∆ . (27) This perturbs only the phase Θ(q), leaving the hypergraph 
+
+H = ( V, E ) and magnitude eAsym fixed, so atoms, bonds, motifs, and diffusion strength are unchanged. Since ϕ is only an estimate from electronegativity and Gasteiger charges, a small zero-mean ∆uv ∼ Unif( −ρ, ρ ) yields a plausible directional variant of the same molecule, forming a valid positive pair as in operator-level directed graph contrastive learning (Tong et al., 2021). We then construct the perturbed phase factors entrywise by 
+
+eΞ(q)
+
+uv = cos   eΘ(q)
+
+uv 
+
+ + i sin   eΘ(q)
+
+uv 
+
+, (28) and the perturbed magnetic adjacency is eH(q) = eAsym ⊙
+
+eΞ(q). This is the only augmentation applied inside the mag-netic operator, with ρ implemented as a scalar perturbation passed to the adjacency constructor. For supervised predic-tion, we set ρ = 0 ; and for contrastive views, we sample two independent noise matrices to obtain two independent phase perturbations. The two views are encoded and trained with 
+
+Table 1. Model performance on selected MTGL-ADMET datasets.                                                                
+
+> Endpoint Metric [ST]-GCN [ST]-MGA [MT]-GCN MGA MTGL ChemBFN Uni-Mol Ours
+> Distribution
+> PPB R2.577 .028 .585 .004 .589 .036 .568 .038 .626 .029 .537 .030 .562 .028 .687 .012
+> Toxicity
+> Hepatotoxicity ROC-AUC .653 .040 .669 .022 .612 .039 .713 .053 .701 .036 .697 .041 .660 .037 .664 .019
+> Respiratory tox. ROC-AUC .842 .018 .872 .013 .810 .014 .828 .021 .859 .010 .818 .028 .865 .015 .872 .007
+> Cardiotoxicity-1 ROC-AUC .707 .026 .703 .020 .683 .028 .684 .023 .740 .023 .745 .027 .761 .024 .816 .010
+> Physicochemical
+> IGC50 R2.703 .055 .818 .021 .618 .027 .772 .021 .819 .008 .797 .014 .832 .012 .830 .010
+> ESOL R2.814 .030 .896 .013 .824 .030 .866 .020 .931 .038 .907 .042 .920 .039 .936 .016
+
+Note: [ST] denotes single-task training and [MT] denotes multi-task training with a shared encoder and task-specific heads, while GCN refers to graph convolutional networks and MGA refers to multitask graph attention. Results are reported as mean ±std under a random 80 /10 /10 split. Baseline numbers are taken from the original papers with 10 repetitions for MTGL-ADMET baselines (Du et al., 2023b) and MTGIB-UNet baselines (Li et al., 2025). We evaluated ChemHyperMag under the same protocol with 10 runs. The best result(s) are in bold , and the second-best result is underlined. For tied best results, all tied entries are highlighted in bold .
+
+the symmetric InfoNCE loss in Equation (18) . Supervision uses the masked multitask loss in Equation (2) , with MSE for regression tasks and binary cross entropy for classifica-tion tasks. The final objective is L = Lsup + λ LNCE with 
+
+λ > 0.
+
+## 5. Experiments 
+
+5.1. Experimental Setup 
+
+We evaluated ChemHyperMag on six ADMET endpoints: PPB, IGC50, ESOL, Hepatotoxicity, Respiratory toxicity, and Cardiotoxicity-1, including three regression tasks and three classification tasks (based on MTGL-ADMET (Du et al., 2023b) and MoleculeNet Leaderboard (Wu et al., 2018) for fair comparisons). Following the baseline setting, each dataset was randomly split into training, validation, and test sets in an 8:1:1 ratio. Results were reported as mean 
+
+± standard deviation over ten runs with different random seeds. All methods used the same RDKit atom featuriza-tion. ChemHyperMag further augmented the atom features with Pauling electronegativity and RDKit Gasteiger partial charges, and built the corresponding hypergraph incidence structure for the encoder. We adopted ROC-AUC for classi-fication and R2 for regression, where higher is better. 
+
+5.2. Baselines 
+
+We compared against single task and multitask baselines in ADMET prediction. Single task baselines trained one model per endpoint with a GCN (Kipf, 2016) or a graph attention model (Veli ˇckovi ´c et al., 2017). Multitask graph baselines used a shared encoder with task-specific heads, matching the supervision setting in Equation (2) . We additionally in-cluded recent multitask frameworks and pretrained molecu-lar models reported in the benchmark, including MTGL (Du et al., 2023a), ChemBERTa (Chithrananda et al., 2020), Uni-Mol (Zhou et al., 2023), ADMET-AI (Swanson et al., 2024), and Chemprop v2 (Graff et al., 2025). 7Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+5.3. Implementation Details 
+
+ChemHyperMag was implemented in PyTorch and DGL and trained on NVIDIA A100 GPUs. Hyperedges were constructed from SSSR rings, BRICS fragments, Bemis-Murcko scaffolds, and bond hyperedges as described in Section 3.2. The magnetic operator was computed from the teleported Markov chain in Equation (9) and the magnetic adjacency in Equation (13) . We set the magnetic strength 
+
+q = 0 .1 and the teleportation rate η = 0 .15 . The encoder used three magnetic Chebyshev layers with hidden width 
+
+64 , intermediate molecular width 128 , and output width 64 ,with Chebyshev order K = 2 . We trained with Adam using learning rate 10 −3 and weight decay 10 −5, batch size 128 ,and up to 200 epochs. We applied early stopping based on the validation score aggregated over tasks. For contrastive training, we used the symmetric InfoNCE loss in Equation 
+
+(18) with temperature τ = 0 .07 .
+
+5.4. Main Results 
+
+Table 1 reports results on the MTGL-ADMET datasets. ChemHyperMag achieves the best or tied-best result on four of the six selected endpoints and ranks second on IGC50. It improves the strongest baseline by +0.061 on PPB ( 0.687 vs. 
+
+0.626 ) and by +0.055 on Cardiotoxicity-1 ( 0.816 vs. 0.761 ), matches the best on Respiratory toxicity ( 0.872 ), and attains the highest ESOL score ( 0.936 ). On IGC50 it stays within 
+
+0.002 of the top result ( 0.830 vs. 0.832 ). It trails the lead-ing baselines only on Hepatotoxicity, where MGA reaches 
+
+0.713 and ChemHyperMag obtains 0.664 .The ablation in Table 2 uses MoleculeNet. The full model is strongest on five of the six endpoints, showing that ChebNet, the magnetic Laplacian, hypergraph construction, and contrastive learning contribute complementary gains. Cardiotoxicity-1 is the most sensitive endpoint. Removing the hypergraph, magnetic Laplacian, contrastive objective, or ChebNet lowers it from 0.851 to 0.720 , 0.734 , 0.749 ,and 0.767 . PPB drops sharply without ChebNet ( 0.439 )or the hypergraph ( 0.479 ). Respiratory toxicity is the only endpoint where an ablated variant beats the full model, indi-cating a task-specific trade-off rather than a uniform gain. 
+
+## 6. Limitations 
+
+Random splits and masked supervision may overestimate scaffold generalization and bias multitask effects under miss-ing not at random labels. The directional signal relies on a heuristic chemical potential from electronegativity and Gasteiger charges, so outcomes can be sensitive to charge and protonation protocols and remain weakly mechanisti-cally grounded for ADMET. Fixed step stationary estimation and complex spectral propagation introduce approximation and stability risks, and magnitude projection removes phase 
+
+Table 2. Full ablation study results on MoleculeNet benchmark.                                                                                                        
+
+> Regression (R 2)Classification (ROC-AUC)
+> Variant PPB IGC50 ESOL Hepato. Resp. Cardio-1
+> Base Model (All modules off)
+> Base Model .376 .161 .709 .078 .829 .083 .547 .060 .843 .038 .745 .053
+> Single Module Enabled
+> Only ChebNet .418 .135 .790 .049 .892 .045 .628 .103 .794 .059 .730 .064
+> Only Magnetic .376 .161 .709 .078 .829 .083 .547 .060 .843 .038 .745 .053
+> Only Hypergraph .363 .250 .742 .043 .905 .019 .640 .079 .842 .038 .741 .115
+> Two Modules Enabled
+> ChebNet + CL .418 .135 .790 .049 .892 .045 .628 .103 .794 .059 .730 .064
+> Magnetic + CL .376 .161 .709 .078 .829 .083 .547 .060 .843 .038 .745 .053
+> Magnetic + ChebNet .418 .135 .790 .049 .892 .045 .628 .103 .794 .059 .730 .064
+> Hypergraph + CL .428 .119 .802 .042 .905 .020 .639 .083 .808 .032 .705 .151
+> Hypergraph + ChebNet .423 .214 .765 .012 .847 .061 .588 .010 .837 .005 .723 .107
+> Hypergraph + Magnetic .451 .093 .756 .097 .902 .006 .582 .006 .815 .034 .723 .124
+> Leave-One-Out
+> w/o ChebNet .439 .000 ↓.789 .000 ↓.915 .000 .655 .000 .813 .000 .767 .000
+> w/o Hyp .479 .000 .802 .000 .912 .000 .647 .000 .869 .000 .720 .000 ↓
+> w/o MagLap .505 .020 .798 .015 .920 .015 .606 .020 ↓.813 .005 ↓.734 .017
+> w/o CL .523 .043 .797 .016 .907 .032 ↓.641 .029 .829 .011 .749 .031
+> Full Model .544 .806 .925 .669 .835 .851
+
+Note: Bold /underline /↓ indicate highest/second-highest performance among ablated models and the largest drop relative to the Full Model, respectively. Ties are marked for all corresponding entries. Subscripts denote the absolute difference between test and validation results. 
+
+information. Phase-only contrastive learning regularizes sparse supervision but imposes a narrow invariance that may not be chemically faithful. Future work should use scaffold and distribution shift splits, stress test charge and protona-tion settings, and adopt convergence-controlled solvers with scaling analyses. 
+
+## 7. Conclusion 
+
+We propose ChemHyperMag for multitask ADMET pre-diction with sparse labels. It builds a functional group hy-pergraph, applies magnetic spectral propagation to encode directional effects, and adds phase perturbation contrastive learning as regularization. ChemHyperMag shows strong performance, and ablation studies confirm that the hyper-graph, magnetic operator, and contrastive learning each contribute to the gains. 
+
+## Conflict of Interest Disclosure 
+
+There are no conflicts of interest among all authors. 
+
+## Impact Statement 
+
+ChemHyperMag is a physics-informed, conformer-free, and lightweight model for small-molecule ADMET pre-diction. Our code can be found at https://github. com/1anj/ChemHyperMag .
+
+## Acknowledgments 
+
+This work was fully supported by a Collaborative Research Fund (Project No. C5082-25E) and a General Research Fund (Project No. 15101422) from the Research Grants Council of the Hong Kong Special Administrative Region, P. R. China, and an internal grant (P0051278) from The Hong Kong Polytechnic University. 8Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+## References 
+
+Bemis, G. W. and Murcko, M. A. The properties of known drugs. 1. molecular frameworks. Journal of medicinal chemistry , 39(15):2887–2893, 1996. Benko, T., Buck, M., Amburg, I., Young, S. J., and Aksoy, S. G. Hypermagnet: A magnetic laplacian based hyper-graph neural network. Transactions on Machine Learn-ing Research , 2025. ISSN 2835-8856. URL https: //openreview.net/forum?id=Gdf4P7sEzE .Bento, A. P., Hersey, A., F ´elix, E., Landrum, G., Gaulton, A., Atkinson, F., Bellis, L. J., De Veij, M., and Leach, A. R. An open source chemical structure curation pipeline using rdkit. Journal of Cheminformatics , 12(1):51, 2020. Chen, F., Park, J., and Park, J. A hypergraph convolutional neural network for molecular properties prediction using functional group. arXiv , 2021. Chen, J. and Schwaller, P. Molecular hypergraph neural networks. The Journal of Chemical Physics , 160(14), 2024. Chien, E., Pan, C., Peng, J., and Milenkovic, O. You are allset: A multiset function framework for hypergraph neu-ral networks. In International Conference on Learning Representations , 2022. URL https://openreview. net/forum?id=hpBTIv2uy_E .Chithrananda, S., Grand, G., and Ramsundar, B. Chemberta: large-scale self-supervised pretraining for molecular prop-erty prediction. arXiv preprint arXiv:2010.09885 , 2020. Daina, A., Michielin, O., and Zoete, V. Swissadme: a free web tool to evaluate pharmacokinetics, drug-likeness and medicinal chemistry friendliness of small molecules. 
+
+Scientific reports , 7(1):42717, 2017. Defferrard, M., Bresson, X., and Vandergheynst, P. Con-volutional neural networks on graphs with fast localized spectral filtering. Advances in neural information pro-cessing systems , 29, 2016. Degen, J., Wegscheid-Gerlach, C., Zaliani, A., and Rarey, M. On the art of compiling and using’drug-like’chemical fragment spaces. ChemMedChem , 3(10):1503, 2008. Du, B.-X., Xu, Y., Yiu, S.-M., Yu, H., and Shi, J.-Y. Admet property prediction via multi-task graph learning under adaptive auxiliary task selection. Iscience , 26(11), 2023a. Du, B.-X., Xu, Y., Yiu, S.-M., Yu, H., and Shi, J.-Y. Mtgl-admet: a novel multi-task graph learning framework for admet prediction enhanced by status-theory and maxi-mum flow. In International Conference on Research in Computational Molecular Biology , pp. 85–103. Springer, 2023b. Duta, I., Cassar `a, G., Silvestri, F., and Li `o, P. Sheaf hyper-graph networks. Advances in Neural Information Pro-cessing Systems , 36:12087–12099, 2023. Fallani, A., Nugmanov, R., Arjona-Medina, J., Wegner, J. K., Tkatchenko, A., and Chernichenko, K. Pretraining graph transformers with atom-in-a-molecule quantum properties for improved admet modeling. Journal of Cheminformatics , 17(1):25, 2025. Fanuel, M., Alaiz, C. M., and Suykens, J. A. Magnetic eigenmaps for community detection in directed networks. 
+
+Physical Review E , 95(2):022302, 2017. Feinberg, E. N., Sur, D., Wu, Z., Husic, B. E., Mai, H., Li, Y., Sun, S., Yang, J., Ramsundar, B., and Pande, V. S. Potentialnet for molecular property prediction. ACS central science , 4(11):1520–1530, 2018. Feng, Y., You, H., Zhang, Z., Ji, R., and Gao, Y. Hypergraph neural networks. In Proceedings of the AAAI confer-ence on artificial intelligence , volume 33, pp. 3558–3565, 2019. Figueras, J. Ring perception using breadth-first search. Jour-nal of chemical information and computer sciences , 36 (5):986–991, 1996. Fralish, Z., Chen, A., Skaluba, P., and Reker, D. Deepdelta: predicting admet improvements of molecular derivatives with deep learning. Journal of cheminformatics , 15(1): 101, 2023. Fu, L., Shi, S., Yi, J., Wang, N., He, Y., Wu, Z., Peng, J., Deng, Y., Wang, W., Wu, C., et al. Admetlab 3.0: an updated comprehensive online admet prediction platform enhanced with broader coverage, improved performance, api functionality and decision support. Nucleic acids research , 52(W1):W422–W431, 2024. Gasteiger, J. and Marsili, M. Iterative partial equalization of orbital electronegativity—a rapid access to atomic charges. Tetrahedron , 36(22):3219–3228, 1980. Graff, D. E., Morgan, N. K., Burns, J. W., Doner, A. C., Li, B., Li, S.-C., Manu, J., Menon, A., Pang, H.-W., Wu, H., et al. Chemprop v2: An efficient, modular machine learn-ing package for chemical property prediction. Journal of Chemical Information and Modeling , 2025. He, D., Shan, L., Zhao, J., Zhang, H., Wang, Z., and Zhang, W. Exploitation of a latent mechanism in graph con-trastive learning: Representation scattering. Advances in Neural Information Processing Systems , 37:115351– 115376, 2024. 9Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+He, M., Wei, Z., and Wen, J.-R. Convolutional neural networks on graphs with chebyshev approximation, revis-ited. In Oh, A. H., Agarwal, A., Belgrave, D., and Cho, K. (eds.), Advances in Neural Information Processing Systems , 2022a. URL https://openreview.net/ forum?id=jxPJ4QA0KAb .He, Y., Perlmutter, M., Reinert, G., and Cucuringu, M. Ms-gnn: A spectral graph neural network based on a novel magnetic signed laplacian. In Learning on graphs confer-ence , pp. 40–1. PMLR, 2022b. Heid, E., Greenman, K. P., Chung, Y., Li, S.-C., Graff, D. E., Vermeire, F. H., Wu, H., Green, W. H., and McGill, C. J. Chemprop: a machine learning package for chemical property prediction. Journal of Chemical Information and Modeling , 64(1):9–17, 2023. Huang, K., Fu, T., Gao, W., Zhao, Y., Roohani, Y., Leskovec, J., Coley, C. W., Xiao, C., Sun, J., and Zitnik, M. Artificial intelligence foundation for therapeutic science. Nature chemical biology , 18(10):1033–1036, 2022. Kajino, H. Molecular hypergraph grammar with its appli-cation to molecular optimization. In International Con-ference on Machine Learning , pp. 3183–3191. PMLR, 2019. Kim, J., Chang, W., Ji, H., and Joung, I. Quantum-informed molecular representation learning enhancing admet prop-erty prediction. Journal of Chemical Information and Modeling , 64(13):5028–5040, 2024. Kipf, T. Semi-supervised classification with graph con-volutional networks. arXiv preprint arXiv:1609.02907 ,2016. Ko, T., Choi, Y., and Kim, C.-K. Signed directed graph contrastive learning with laplacian augmentation. arXiv preprint arXiv:2301.05163 , 2023a. Ko, T., Choi, Y., and Kim, C.-K. A spectral graph convo-lution for signed directed graphs via magnetic laplacian. 
+
+Neural Networks , 164:562–574, 2023b. Ko, T., Choi, Y., and Kim, C.-K. Universal graph contrastive learning with a novel laplacian perturbation. In Uncer-tainty in Artificial Intelligence , pp. 1098–1108. PMLR, 2023c. Li, X., Du, W., Xia, J., Wang, J., Wang, X., Yang, Y., and Wang, Y. Mtgib-unet: A multi-task graph information bottleneck and uncertainty weighted network for admet prediction. In Proceedings of the Thirty-Fourth Inter-national Joint Conference on Artificial Intelligence , pp. 7518–7526, 2025. Lin, S., Liu, C., Zhou, P., Hu, Z.-Y., Wang, S., Zhao, R., Zheng, Y., Lin, L., Xing, E., and Liang, X. Prototypical graph contrastive learning. IEEE transactions on neural networks and learning systems , 35(2):2747–2758, 2022. Liu, H., Huang, Y., Liu, X., and Deng, L. Attention-wise masked graph contrastive learning for predicting molecu-lar property. Briefings in bioinformatics , 23(5):bbac303, 2022a. Liu, S., Wang, H., Liu, W., Lasenby, J., Guo, H., and Tang, J. Pre-training molecular graph representation with 3d geometry. In International Conference on Learning Rep-resentations , 2022b. URL https://openreview. net/forum?id=xQUe1pOKPam .Lu, S., Gao, Z., He, D., Zhang, L., and Ke, G. Data-driven quantum chemical property prediction leveraging 3d con-formations with uni-mol+. Nature communications , 15 (1):7104, 2024. Ma, Z., Zhao, W., and Yang, Z. Directed hypergraph rep-resentation learning for link prediction. In International conference on artificial intelligence and statistics , pp. 3268–3276. PMLR, 2024. Montanari, F., Kuhnke, L., Ter Laak, A., and Clevert, D.-A. Modeling physico-chemical admet endpoints with multitask graph convolutional networks. Molecules , 25 (1):44, 2019. Moon, K., Im, H.-J., and Kwon, S. 3d graph contrastive learning for molecular property prediction. Bioinformat-ics , 39(6):btad371, 2023. Mule, E., Fiorini, S., Purificato, A., Siciliano, F., Coniglio, S., and Silvestri, F. Directional sheaf hypergraph net-works: Unifying learning on directed and undirected hy-pergraphs. arXiv preprint arXiv:2510.04727 , 2025. Oord, A. v. d., Li, Y., and Vinyals, O. Representation learn-ing with contrastive predictive coding. arXiv preprint arXiv:1807.03748 , 2018. Pauling, L. The nature of the chemical bond and the struc-ture of molecules and crystals: an introduction to modern structural chemistry , volume 18. Cornell university press, 1960. Pires, D. E., Blundell, T. L., and Ascher, D. B. pkcsm: predicting small-molecule pharmacokinetic and toxic-ity properties using graph-based signatures. Journal of medicinal chemistry , 58(9):4066–4072, 2015. Rogers, D. and Hahn, M. Extended-connectivity finger-prints. Journal of chemical information and modeling , 50 (5):742–754, 2010. 10 Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+Schyman, P., Liu, R., Desai, V., and Wallqvist, A. vnn web server for admet predictions. Frontiers in pharmacology ,8:889, 2017. Su, D., Zhang, Y., Li, X., Li, R.-H., and Wang, G. To-ward general digraph contrastive learning: A dual spatial perspective. arXiv preprint arXiv:2510.16311 , 2025. Suresh, S., Li, P., Hao, C., and Neville, J. Adversarial graph augmentation to improve graph contrastive learning. 
+
+Advances in Neural Information Processing Systems , 34: 15920–15933, 2021. Swanson, K., Walther, P., Leitz, J., Mukherjee, S., Wu, J. C., Shivnaraine, R. V., and Zou, J. Admet-ai: a machine learn-ing admet platform for evaluation of large-scale chemical libraries. Bioinformatics , 40(7):btae416, 2024. Tao, N. and Abe, M. Bayesian flow network framework for chemistry tasks. Journal of Chemical Information and Modeling , 65(3):1178–1187, 2025. Tian, H., Ketkar, R., and Tao, P. Admetboost: a web server for accurate admet prediction. Journal of molecular mod-eling , 28(12):408, 2022. Tong, Z., Liang, Y., Ding, H., Dai, Y., Li, X., and Wang, C. Directed graph contrastive learning. Advances in neural information processing systems , 34:19580–19593, 2021. Veli ˇckovi ´c, P., Cucurull, G., Casanova, A., Romero, A., Lio, P., and Bengio, Y. Graph attention networks. arXiv preprint arXiv:1710.10903 , 2017. Wang, B., Li, J., Zhou, D., Li, L., Li, J., Wang, E., Hao, J., Shi, L., Lu, C., Qiu, J., et al. Unified and explain-able molecular representation learning for imperfectly annotated data from the hypergraph view. Nature Com-munications , 16(1):1–18, 2025a. Wang, Y., Wang, J., Cao, Z., and Barati Farimani, A. Molec-ular contrastive learning of representations via graph neu-ral networks. Nature Machine Intelligence , 4(3):279–287, 2022. Wang, Y., Li, Y., Liu, L., Hong, P., and Xu, H. Advancing drug discovery with enhanced chemical understanding via asymmetric contrastive multimodal learning. Journal of chemical information and modeling , 2025b. Wang, Z., Gao, Z., Zheng, H., Zhang, L., Ke, G., et al. Exploring molecular pretraining model at scale. Advances in Neural Information Processing Systems , 37:46956– 46978, 2024. Weininger, D. Smiles, a chemical language and information system. 1. introduction to methodology and encoding rules. Journal of chemical information and computer sciences , 28(1):31–36, 1988. Wu, Z., Ramsundar, B., Feinberg, E. N., Gomes, J., Ge-niesse, C., Pappu, A. S., Leswing, K., and Pande, V. Moleculenet: a benchmark for molecular machine learn-ing. Chemical science , 9(2):513–530, 2018. Xiong, G., Wu, Z., Yi, J., Fu, L., Yang, Z., Hsieh, C., Yin, M., Zeng, X., Wu, C., Lu, A., et al. Admetlab 2.0: an in-tegrated online platform for accurate and comprehensive predictions of admet properties. Nucleic acids research ,49(W1):W5–W14, 2021. Yang, K., Swanson, K., Jin, W., Coley, C., Eiden, P., Gao, H., Guzman-Perez, A., Hopper, T., Kelley, B., Mathea, M., et al. Analyzing learned molecular representations for property prediction. Journal of chemical information and modeling , 59(8):3370–3388, 2019. Yang, M.-R. and Xu, X.-J. Recent advances in hypergraph neural networks: M.-r. yang, x.-j. xu. Journal of the Operations Research Society of China , pp. 1–37, 2025. Ying, C., Cai, T., Luo, S., Zheng, S., Ke, G., He, D., Shen, Y., and Liu, T.-Y. Do transformers really perform badly for graph representation? Advances in neural information processing systems , 34:28877–28888, 2021. You, Y., Chen, T., Sui, Y., Chen, T., Wang, Z., and Shen, Y. Graph contrastive learning with augmentations. Advances in neural information processing systems , 33:5812–5823, 2020. Zhang, X., He, Y., Brugnone, N., Perlmutter, M., and Hirn, M. Magnet: A neural network for directed graphs. Ad-vances in neural information processing systems , 34: 27003–27015, 2021. Zhou, G., Gao, Z., Ding, Q., Zheng, H., Xu, H., Wei, Z., Zhang, L., and Ke, G. Uni-mol: A universal 3d molecular representation learning framework. In The eleventh inter-national conference on learning representations , 2023. Zhu, Y., Xu, Y., Liu, Q., and Wu, S. An empirical study of graph contrastive learning. In Thirty-fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track (Round 2) , 2021. URL https:// openreview.net/forum?id=UuUbIYnHKO .11 Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+## A. Additional Details 
+
+A.1. Notation 
+
+Table 3. Summary of notation 
+
+Symbol Description 
+
+Problem Setup & Dataset 
+
+G Set of molecular graphs 
+
+T Number of prediction tasks 
+
+N Number of training molecules 
+
+D Training set {(Gi, y i, m i)}Ni=1 
+
+Gi The i-th molecular graph 
+
+yi ∈ RT Multitask label vector 
+
+mi ∈ { 0, 1}T Observation mask 
+
+fθ Model mapping G → RT
+
+ℓt Loss function for task t
+
+Lsup , LNCE , λ Supervised / contrastive loss; weight 
+
+Molecular Graph 
+
+G = ( V, B, X ) 2D molecular graph 
+
+V = {1, . . . , n } Set of atoms (nodes) 
+
+B ⊆ V × V Undirected covalent bonds 
+
+X ∈ Rn×d Node feature matrix 
+
+Functional Group Hypergraph 
+
+H = ( V, E ) Hypergraph over atoms 
+
+E = {e1, . . . , e m} Hyperedges 
+
+M ∈ { 0, 1}n×m Incidence matrix 
+
+N (u) Hypergraph neighborhood 
+
+Adj Adjacency of incidence graph 
+
+Chemical Potential 
+
+χ(u), Q(u) Electronegativity; partial charge 
+
+α, β Learnable scaling parameters 
+
+ϕ(u) Potential: αχ (u) + βQ (u)
+
+Markov Chain & Flow 
+
+Wuv , P Transition weight; matrix 
+
+η, ν Teleportation rate; distribution 
+
+π Stationary distribution 
+
+eA Flow: diag( π)P (η)
+
+eAsym , eAskew Symmetric / skew parts 
+
+Symbol Description 
+
+Magnetic Laplacian 
+
+q Magnetic charge parameter 
+
+ε Stability constant ( 10 −7)
+
+Ruv Asymmetry ratio 
+
+Θ(q) 
+
+> uv
+
+Phase: 2πq tanh( Ruv )Ξ(q) Phase factor: eiΘ (q)
+
+> uv
+
+H(q) Magnetic adjacency 
+
+D, du Degree matrix; node degree 
+
+Lmag Magnetic Laplacian 
+
+eL Shifted: Lmag − I
+
+⊙, i Hadamard product; imaginary unit 
+
+Chebyshev Encoder 
+
+K Chebyshev order 
+
+Tk k-th Chebyshev iterate 
+
+ck , ˜cj Expansion coefficients 
+
+z ∈ Cn×dh Complex layer output 
+
+|z| Element-wise magnitude 
+
+H(0) , H (L) Initial / final states 
+
+dh, L Hidden dim; num layers 
+
+Gating & Task Fusion 
+
+at, wu,t Gate vector; weight 
+
+zt Task embedding 
+
+hG Graph mean embedding 
+
+Ap, γt Auxiliary tasks; gate 
+
+zfused  
+
+> p
+
+Fused embedding 
+
+Contrastive Learning 
+
+ρ, ∆ Perturbation magnitude; noise 
+
+eΘ(q) Perturbed phase 
+
+h(1) , h (2) Two-view embeddings 
+
+B, |B| Mini-batch; size 
+
+sim( u, v ) Cosine similarity 
+
+τ InfoNCE temperature 
+
+A.2. Datasets 
+
+We evaluate ChemHyperMag on six selected ADMET endpoints drawn from the 24-endpoint benchmark, namely PPB, IGC50, ESOL, Hepatotoxicity, Respiratory toxicity, and Cardiotoxicity-1. These tasks cover distribution, toxicity, and physicochemical property prediction, and include three regression tasks and three binary classification tasks. PPB measures plasma protein binding and reflects the free fraction of a compound available for distribution, metabolism, and excretion. IGC50 measures 48-hour Tetrahymena pyriformis growth inhibition and is commonly used as an indicator of general cytotoxicity and environmental toxicity. ESOL measures aqueous solubility, which is directly related to dissolution-limited absorption and formulation feasibility. Hepatotoxicity predicts drug-induced liver injury risk, Respiratory toxicity captures pulmonary adverse effects such as fibrosis and bronchospasm, and Cardiotoxicity-1 corresponds to the strictest hERG-related threshold ( IC 50 < 1 μM), identifying compounds with high cardiotoxic risk. The selected datasets range from 1,128 to 1,830 molecules. Among the classification tasks, Hepatotoxicity contains 782 positive and 531 negative samples, Respiratory toxicity contains 844 positive and 555 negative samples, and Cardiotoxicity-1 contains 350 positive and 1,215 negative samples, indicating different degrees of class imbalance. The full statistics, 12 Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+including data split sizes and task types, are summarized in Table 4.                              
+
+> Table 4. Statistics of the six selected ADMET endpoints.
+> Endpoint #Mol Pos/Neg Train/Val/Test Type
+> PPB 1,830 –1,464/183/183 Reg IGC50 1,787 –1,429/179/179 Reg ESOL 1,128 –902/113/113 Reg Hepatotoxicity 1,313 782/531 1,050/131/132 Cls Respiratory toxicity 1,399 844/555 1,120/139/140 Cls Cardiotoxicity-1 1,565 350/1,215 927/235/403 Cls
+
+A.3. Baselines 
+
+We compare ChemHyperMag against representative methods spanning single-task models, multi-task architectures, and pretrained foundation models. A.3.1. S INGLE -T ASK METHODS 
+
+ST-GCN (Montanari et al., 2019) applies graph convolutional networks to molecular property prediction. It treats atoms as nodes and bonds as edges, aggregating neighbor information through spectral convolutions on the normalized adjacency matrix. Node features are initialized with atom descriptors such as element type and formal charge. Graph-level representa-tions are obtained via global pooling for endpoint prediction. ST-GCN is trained independently on each ADMET endpoint without cross-task parameter sharing. 
+
+ST-MGA (Xiong et al., 2021) extends graph attention networks to molecular graphs. Instead of fixed aggregation weights, ST-MGA computes attention coefficients that dynamically weight neighbor contributions based on their relevance. Multi-head attention enables the model to capture different structural patterns simultaneously. Originally developed for ADMETlab 2.0, ST-MGA is trained separately for each property as the single-task baseline. 
+
+Chemprop v2 (Graff et al., 2025) implements directed message passing neural networks (D-MPNN). Unlike node-centric GNNs, D-MPNN propagates messages along directed edges, distinguishing incoming and outgoing bond information to avoid redundant updates. Version 2 introduces significant engineering improvements including 10 × faster training, native support for reaction inputs, and uncertainty quantification. Chemprop v2 represents the state-of-the-art single-task GNN baseline and serves as the backbone for several production ADMET tools. A.3.2. M ULTI -T ASK METHODS 
+
+MT-GCN (Montanari et al., 2019) extends GCN to multi-task learning by sharing the graph encoder across all endpoints while maintaining task-specific prediction heads. This hard parameter sharing provides regularization and enables knowledge transfer between related properties. The model handles missing labels through masked loss computation, updating only on observed endpoints for each molecule. 
+
+MGA (Xiong et al., 2021) is the multi-task graph attention architecture powering ADMETlab 2.0 and 3.0. Beyond basic parameter sharing, MGA incorporates bond attributes into attention computation and uses a virtual node connected to all atoms for improved global information flow. Attention weights often highlight pharmacologically relevant substructures such as toxicophores and metabolic soft spots. 
+
+MTGL-ADMET (Du et al., 2023b) introduces adaptive auxiliary task selection for multi-task ADMET prediction. The key insight is that not all auxiliary tasks benefit a given primary task; some may cause negative transfer. MTGL-ADMET constructs a task relationship graph and applies status theory with maximum flow optimization to select beneficial auxiliaries for each endpoint. This dynamic selection mechanism achieved state-of-the-art results among 2D methods prior to our work. 
+
+ADMET-AI (Swanson et al., 2024) combines Chemprop with 200 RDKit molecular descriptors including molecular weight, logP, and topological polar surface area. The learned and handcrafted features are concatenated before task-specific prediction heads. Trained on Therapeutics Data Commons datasets with careful hyperparameter tuning, ADMET-AI achieves the best average rank on the TDC ADMET Benchmark leaderboard and represents a strong ensemble baseline. 13 Physics-informed magnetic hypergraph learning improves molecular ADMET prediction 
+
+A.3.3. P RETRAINED AND FOUNDATION MODELS 
+
+ChemBFN (Tao & Abe, 2025) applies Bayesian Flow Networks to molecular representation learning. Operating on SMILES or SELFIES strings, ChemBFN learns to denoise corrupted molecular representations during pretraining, capturing chemical grammar and structural patterns from millions of unlabeled molecules. The pretrained encoder is then fine-tuned for ADMET prediction through task-specific output layers. 
+
+Uni-Mol (Zhou et al., 2023) is a 3D molecular foundation model with 209 million parameters pretrained on 209 million conformations. The SE(3)-invariant transformer processes atomic coordinates and types, capturing both local bonding patterns and global molecular shape. Pretraining combines masked atom prediction, coordinate denoising, and conformer contrastive learning. Uni-Mol requires 3D conformer generation as input, adding computational overhead but providing access to spatial information. It serves as a reference for methods with explicit geometric information. 14
