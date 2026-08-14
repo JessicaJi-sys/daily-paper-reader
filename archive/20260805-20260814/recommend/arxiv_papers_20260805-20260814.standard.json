@@ -1,0 +1,635 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-08-14T10:26:05.879139+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 5,
+    "deep_divecandidates": 4,
+    "deep_cap": 10,
+    "deep_selected": 4,
+    "quick_candidates": 9,
+    "quick_skim_target": 15,
+    "quick_selected": 9
+  },
+  "deep_dive": [
+    {
+      "id": "2608.12219v1",
+      "source": "arxiv",
+      "title": "ScreenShot: A Foundation Model for Few-Shot Combination Drug Screening",
+      "abstract": "Treating patients with combinations of drugs reduces the risk of resistance to any individual drug. Finding effective combinations is difficult because the large search space makes combinatorial screens prohibitively expensive, time consuming, and often technically infeasible. Predictive models can fill this gap, yet existing methods typically require molecular profiling of each sample and per-cohort training, limiting their applicability when time and tissue are scarce. To address this challenge, we introduce ScreenShot, a hierarchical transformer pretrained on 40 drug screening datasets covering 3,700 drugs and 6,000 biological samples, whose architecture mirrors the nested structure of screening data. Given a few-shot context of observations from a new patient, ScreenShot predicts the response of the sample to combination therapies through in-context learning, operating directly on functional measurements with no fine-tuning and no molecular profiling. On four held-out datasets, ScreenShot outperforms all baselines in both prediction accuracy and identification of selectively effective treatments. ScreenShot's internal representations are directly useful for experimental design: we use them to drive a weighted k-means++ active learning strategy that selects which experiments to run, achieving the same hit detection as uniform screening with a third of the budget. Source code and interactive dashboard: https://github.com/tansey-lab/screenshot.",
+      "authors": [
+        "Antoine de Mathelin",
+        "Christopher Tosh",
+        "Wesley Tansey"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-08-12T16:13:50+00:00",
+      "link": "https://arxiv.org/pdf/2608.12219v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Foundation model for few-shot combination drug screening, directly predicts drug-drug interactions",
+      "llm_evidence_cn": "用于少样本组合药物筛选的基础模型，直接预测药物相互作用",
+      "llm_evidence": "用于少样本组合药物筛选的基础模型，直接预测药物相互作用",
+      "canonical_evidence": "用于少样本组合药物筛选的基础模型，直接预测药物相互作用",
+      "llm_tldr_en": "ScreenShot is a hierarchical transformer pretrained on 40 drug screening datasets for few-shot combination drug screening prediction.",
+      "llm_tldr_cn": "组合药物筛选是降低耐药性风险的重要策略，但搜索空间庞大、成本高昂，现有预测模型往往需要分子谱和逐队列训练，难以在样本稀缺时使用。该文提出ScreenShot，一个在40个药物筛选数据集上预训练的分层Transformer基础模型，其架构模拟筛选数据的嵌套结构。给定少量样本上下文即可进行少样本组合药物筛选预测，为组合药物筛选和冷启动药物相互作用预测提供了新的基础模型。",
+      "llm_tldr": "组合药物筛选是降低耐药性风险的重要策略，但搜索空间庞大、成本高昂，现有预测模型往往需要分子谱和逐队列训练，难以在样本稀缺时使用。该文提出ScreenShot，一个在40个药物筛选数据集上预训练的分层Transformer基础模型，其架构模拟筛选数据的嵌套结构。给定少量样本上下文即可进行少样本组合药物筛选预测，为组合药物筛选和冷启动药物相互作用预测提供了新的基础模型。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "strict cold-start drug-drug interaction prediction",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.06713v1",
+      "source": "arxiv",
+      "title": "MolBioKG: Grounding Out-of-Graph Molecules in Biomedical Knowledge Graphs via Multi-Resolution Structural Anchoring",
+      "abstract": "Biomedical knowledge graphs (KGs) accelerate drug discovery, but standard pipelines assume query molecules already exist as graph entities, leaving unregistered molecules disconnected. We address this cold-start challenge, termed the out-of-graph molecule problem, by introducing MolBioKG. This two-layer system grounds unseen molecules in biomedical evidence via multi-resolution structural anchoring. It connects an index of 2.74 million molecules (represented by scaffolds, fragments, functional groups, and fingerprints) to a 9.6-million-edge KG. Given only a SMILES string, MolBioKG retrieves structurally related graph entities and traverses their biomedical neighborhoods without task-specific training. It features two inference mechanisms: static multi-anchor retrieval using Reciprocal Rank Fusion, and Adapt-KG, a tool-using LLM policy for adaptive traversal. Evaluated across in-graph link recovery, complex multi-hop reasoning, and out-of-graph generalization, MolBioKG outperforms strong baselines. Notably, it raises Hits@10 from 0.585 to 0.876 in multi-hop reasoning and out-of-graph target recall from 0.145 to 0.269, all while ensuring predictions retain traceable structural anchors and source-attributed KG evidence.",
+      "authors": [
+        "Yiming Zhang",
+        "Hikaru Shindo",
+        "Shuan Chen",
+        "Kaushalya Madhawa",
+        "Jun Jin Choong",
+        "Yuna Oikawa",
+        "Takashi Fujiwara",
+        "Keisuke Ozawa"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-08-07T02:12:52+00:00",
+      "link": "https://arxiv.org/pdf/2608.06713v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "cold-start out-of-graph molecule grounding via structural anchoring in biomedical KG for new drugs",
+      "llm_evidence_cn": "通过多分辨率结构锚定将未见分子关联到生物医学知识图谱，为冷启动新药提供归纳知识迁移",
+      "llm_evidence": "通过多分辨率结构锚定将未见分子关联到生物医学知识图谱，为冷启动新药提供归纳知识迁移",
+      "canonical_evidence": "通过多分辨率结构锚定将未见分子关联到生物医学知识图谱，为冷启动新药提供归纳知识迁移",
+      "llm_tldr_en": "MolBioKG grounds out-of-graph cold-start molecules into biomedical KGs via multi-resolution structural anchoring (scaffolds, fragments, fingerprints), enabling neighbor traversal without task-specific training to support drug interaction prediction.",
+      "llm_tldr_cn": "现有生物医学知识图谱方法通常要求查询分子已是图谱实体，导致未注册分子无法利用图谱中的丰富关系。作者提出MolBioKG，通过多分辨率结构锚定，将分子骨架、片段、官能团和指纹与2.74M分子索引及960万边知识图谱关联，仅凭SMILES即可检索结构相关的图实体并遍历其生物医学邻域。该方法无需任务特定训练，即可为冷启动新药提供归纳式知识迁移，缓解因缺乏交互历史而无法建模的问题，可为药物相互作用预测等下游任务提供支撑。",
+      "llm_tldr": "现有生物医学知识图谱方法通常要求查询分子已是图谱实体，导致未注册分子无法利用图谱中的丰富关系。作者提出MolBioKG，通过多分辨率结构锚定，将分子骨架、片段、官能团和指纹与2.74M分子索引及960万边知识图谱关联，仅凭SMILES即可检索结构相关的图实体并遍历其生物医学邻域。该方法无需任务特定训练，即可为冷启动新药提供归纳式知识迁移，缓解因缺乏交互历史而无法建模的问题，可为药物相互作用预测等下游任务提供支撑。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "inductive knowledge transfer for new drugs",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.08567v2",
+      "source": "arxiv",
+      "title": "Neural Message Passing on Structural Interaction Graphs for Fully-Inductive Graph Neural Networks",
+      "abstract": "A central obstacle in building graph foundation models is the input heterogeneity in terms of feature space dimensionality, semantics, and structure. Such heterogeneity limits the capability of graph neural networks to generalize to new graphs with unseen feature spaces. We address the transferability challenge with SIGIL, a framework that maps any attributed graph to a unified representation space of fixed dimension. Given a graph, SIGIL lifts it to a structural interaction graph, where nodes are the input feature dimensions and weighted, typed edges encode feature alignment across multiple orders of the graph's connectivity. A relational message-passing network embeds each feature dimension into a shared space, transforming the original node features, of arbitrary dimensionality, into representations transferable to any downstream graph. By construction, SIGIL is equivariant to permutations of nodes, feature dimensions, and labels. Additionally, when the input features are one-hot indicators of discrete relations, SIGIL recovers and strictly generalizes existing foundation models for knowledge graph reasoning. A single SIGIL model, pretrained on one graph, delivers strong fully-inductive link prediction. Also, SIGIL can be used to implement existing knowledge graph foundation models. As such, SIGIL unifies several existing regimes in graph foundation model design under a single framework",
+      "authors": [
+        "Omer Yom-Tov",
+        "Avigdor Gal"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-08-09T08:14:35+00:00",
+      "link": "https://arxiv.org/pdf/2608.08567v2",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "fully-inductive GNN for unseen feature spaces; inductive graph generalization",
+      "llm_evidence_cn": "完全归纳图神经网络；支持未见特征空间的新图泛化",
+      "llm_evidence": "完全归纳图神经网络；支持未见特征空间的新图泛化",
+      "canonical_evidence": "完全归纳图神经网络；支持未见特征空间的新图泛化",
+      "llm_tldr_en": "SIGIL maps any attributed graph to a unified fixed-dimension space via a structural interaction graph and relational message passing, enabling GNNs to generalize to new graphs with unseen feature spaces.",
+      "llm_tldr_cn": "现有图神经网络难以泛化到特征空间维度、语义和结构异构的新图，严重制约图基础模型构建。SIGIL将任意属性图提升为结构交互图，以输入特征维度为节点并用带权类型边编码特征对齐，再通过关系消息传递将各特征维度嵌入统一共享空间，从而支持完全归纳式的新图泛化。实验表明该方法能有效处理未见特征空间，为图基础模型提供通用解决方案。",
+      "llm_tldr": "现有图神经网络难以泛化到特征空间维度、语义和结构异构的新图，严重制约图基础模型构建。SIGIL将任意属性图提升为结构交互图，以输入特征维度为节点并用带权类型边编码特征对齐，再通过关系消息传递将各特征维度嵌入统一共享空间，从而支持完全归纳式的新图泛化。实验表明该方法能有效处理未见特征空间，为图基础模型提供通用解决方案。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "inductive graph generalization on unseen nodes and edges with distribution shift",
+      "matched_requirement_id": "req-40",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2608.12906v1",
+      "source": "arxiv",
+      "title": "EGRL: Edge generation-guided relation-aware learning for RNA-protein interaction prediction",
+      "abstract": "RNA-Protein Interactions (RPIs) are critical for regulating cellular functions. While traditional wet-lab experiments for RPI detection are costly and time-consuming, Deep Learning (DL) methods provide an efficient computational alternative for RPI Prediction (RPIP). In particular, Graph Neural Networks (GNNs) are promising, as they naturally model RPI networks. However, existing GNN-based methods often rely on homogeneous graphs or predefined meta-paths, which limit their ability to handle data sparsity and to generalize to cold-start scenarios involving unknown molecules. To address these limitations, we propose Edge Generation-guided Relation-aware Learning (EGRL), a novel framework with several key components: implicit meta-path learning to capture relational semantics without handcrafted paths; a multi-relation-aware attention mechanism for adaptive fusion of interaction patterns; a graph generator that predicts potential (\"soft\") edges to support cold-start nodes; and a multi-feature fusion predictor for final interaction scoring. EGRL is jointly trained with a primary task loss and an auxiliary generator loss. Comprehensive evaluations on four benchmark datasets demonstrate that EGRL achieves competitive overall performance. More importantly, it exhibits superior generalization in cold-start settings, achieving an Area Under the Receiver Operating Characteristic curve (AUROC) of 0.867 and an Area Under the Precision-Recall curve (AUPR) of 0.861 on unknown molecules, corresponding to improvements of 8.6% in AUROC and 5.0% in AUPR over prior state-of-the-art methods. The code will be released soon.",
+      "authors": [
+        "Danyu Li",
+        "Ling Zhou",
+        "Rubing Huang",
+        "Xian Zhong",
+        "Bin Zou",
+        "Kui Jiang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-08-13T07:47:44+00:00",
+      "link": "https://arxiv.org/pdf/2608.12906v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "cold-start interaction prediction for unknown molecules; inductive transfer via edge generation",
+      "llm_evidence_cn": "面向未知分子的冷启动相互作用预测；边生成驱动的知识迁移",
+      "llm_evidence": "面向未知分子的冷启动相互作用预测；边生成驱动的知识迁移",
+      "canonical_evidence": "面向未知分子的冷启动相互作用预测；边生成驱动的知识迁移",
+      "llm_tldr_en": "EGRL uses implicit meta-paths and edge generation to overcome data sparsity in RNA-protein interaction prediction, explicitly handling cold-start scenarios with unknown molecules, and offers a transferable strategy for interaction networks.",
+      "llm_tldr_cn": "现有基于GNN的RNA-蛋白相互作用预测常依赖同质图或预定义元路径，难以应对数据稀疏和未知分子的冷启动场景。EGRL提出边生成引导的关系感知学习，利用隐式元路径与边生成机制增强关系建模，显式提升对未知分子的泛化能力。实验结果验证了该方法在冷启动条件下预测RPI的有效性，其思想可迁移至药物-药物相互作用等分子交互预测任务。",
+      "llm_tldr": "现有基于GNN的RNA-蛋白相互作用预测常依赖同质图或预定义元路径，难以应对数据稀疏和未知分子的冷启动场景。EGRL提出边生成引导的关系感知学习，利用隐式元路径与边生成机制增强关系建模，显式提升对未知分子的泛化能力。实验结果验证了该方法在冷启动条件下预测RPI的有效性，其思想可迁移至药物-药物相互作用等分子交互预测任务。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "inductive knowledge transfer for new drugs",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2608.05016v1",
+      "source": "arxiv",
+      "title": "Link prediction on multi-relational graphs from an influence propagation perspective",
+      "abstract": "Predicting the existence and type of links (edges) between nodes in a multi-relational graph is key for applications from social interaction prediction to knowledge relationship identification. Enhancing local features with relevant global information is crucial for accurate link prediction, yet it remains challenging. We address this by modeling the relationship between node pairs as node influence. That is, whether the node influence can be propagated and what type of influence is propagated indicates where and what type the edge is, which will be the most relevant local and global information to predict the edges. To this end, we extend the Susceptible-Infectious-Recovered (SIR) epidemic model to capture the influence propagation of nodes on a large scale through sub-graph structures. Subsequently, these sub-graphs are compressed using virtual edges, thereby substantially reducing the computation associated with utilizing the global graph structure. Finally, we propose the Influential Graph Neural Predictor, referred to as IGNP, a link prediction framework guided by influence propagation. Extensive experiments demonstrate the superiority of the proposed method, which outperforms strong baselines by a large margin on the widely used and real-world datasets.",
+      "authors": [
+        "Zidu Yin",
+        "Yuankai Qi",
+        "Dong Gong",
+        "Ehsan Abbasnejad",
+        "Kun Yue",
+        "Javen Qinfeng Shi"
+      ],
+      "primary_category": "cs.SI",
+      "categories": [
+        "cs.SI",
+        "cs.LG"
+      ],
+      "published": "2026-08-05T16:21:46+00:00",
+      "link": "https://arxiv.org/pdf/2608.05016v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "general link prediction on multi-relational graphs via influence propagation, applicable to drug-drug interaction prediction",
+      "llm_evidence_cn": "通过影响力传播进行多关系图链接预测，适用于药物相互作用预测",
+      "llm_evidence": "通过影响力传播进行多关系图链接预测，适用于药物相互作用预测",
+      "canonical_evidence": "通过影响力传播进行多关系图链接预测，适用于药物相互作用预测",
+      "llm_tldr_en": "This paper models link existence and type on multi-relational graphs as node influence propagation, extending the SIR epidemic model to combine local and global structural information for link prediction.",
+      "llm_tldr_cn": "多关系图上的链接预测对社交和知识网络应用至关重要，但局部特征与全局信息的有效融合仍有挑战。论文将节点对间关系建模为影响力传播，用扩展的SIR流行病模型刻画影响能否传播及传播类型，从而同时利用局部与全局信息预测边的存在和类型。实验验证了影响力传播视角在多关系链接预测中的有效性。该方法可直接用于药物-药物相互作用预测等生物医学多关系图任务。",
+      "llm_tldr": "多关系图上的链接预测对社交和知识网络应用至关重要，但局部特征与全局信息的有效融合仍有挑战。论文将节点对间关系建模为影响力传播，用扩展的SIR流行病模型刻画影响能否传播及传播类型，从而同时利用局部与全局信息预测边的存在和类型。实验验证了影响力传播视角在多关系链接预测中的有效性。该方法可直接用于药物-药物相互作用预测等生物医学多关系图任务。",
+      "llm_tags": [
+        "query:cd"
+      ],
+      "matched_query_tag": "query:cd",
+      "matched_query_text": "knowledge graph enhanced drug drug interaction prediction",
+      "matched_requirement_id": "req-33",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.04381v1",
+      "source": "arxiv",
+      "title": "NodeJEPA: Structure-Conditioned Latent Prediction for Node-Level Graph Self-Supervised Learning",
+      "abstract": "Self-supervised learning on graphs is largely shaped by contrastive methods that depend on carefully designed augmentations, and by generative methods that reconstruct node attributes in the input space. Both paradigms can entangle representations with low-level input statistics rather than with relational structure. Joint-embedding predictive architectures (JEPA) instead learn by predicting latent targets rather than reconstructing inputs. Recent work has explored this idea for graph-level representation learning, but how to design JEPA-style objectives for node-level tasks, and which structural signals the predictor should condition on, remains less clear. We present NodeJEPA, a joint-embedding predictive architecture for node-level graph self-supervised learning. NodeJEPA masks structure-aware k-hop ego-subgraphs and trains a context encoder to predict the latent representations of the masked nodes. These targets come from an EMA-updated target encoder with stop-gradient. A structure-conditioned predictor integrates spectral and centrality descriptors through cross-attention. Variance, covariance, and Laplacian spectral regularizers help stabilize the embedding geometry, and an optional curriculum gradually increases masking difficulty during training. Because prediction occurs in latent space, NodeJEPA does not rely on input reconstruction or hand-crafted graph augmentations. We evaluate NodeJEPA on standard node classification benchmarks under linear probing and fine-tuning protocols, and conduct ablations on masking, prediction, and regularization design choices. Our study offers a practical recipe for node-level JEPA-style latent prediction on graphs, and clarifies when structural conditioning helps representation learning. Code, configurations, and evaluation scripts are publicly available at https://github.com/OliverZ-dot/Node-Jepa.",
+      "authors": [
+        "Tinghe Zhang",
+        "Jian Xu",
+        "Jiaheng Chen",
+        "Jiaxing Li",
+        "Yucheng Xiao",
+        "Qiang Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-08-05T02:39:28+00:00",
+      "link": "https://arxiv.org/pdf/2608.04381v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Node-level graph self-supervised learning with latent prediction, transferable to molecular graph pretraining",
+      "llm_evidence_cn": "节点级图自监督学习与潜空间预测，可迁移至分子图预训练",
+      "llm_evidence": "节点级图自监督学习与潜空间预测，可迁移至分子图预训练",
+      "canonical_evidence": "节点级图自监督学习与潜空间预测，可迁移至分子图预训练",
+      "llm_tldr_en": "NodeJEPA presents a joint-embedding predictive architecture for node-level graph self-supervised learning, predicting latent targets conditioned on structural context without input reconstruction, showing strong node representation performance.",
+      "llm_tldr_cn": "现有图自监督方法多依赖对比增强或输入重建，容易纠缠低层统计信息。NodeJEPA提出结构条件下的节点级联合嵌入预测架构，通过预测潜空间目标而非重建输入来学习节点表示。在节点级下游任务上验证了该方法的有效性。该架构可作为分子图或生物医学图自监督预训练的通用模块，支撑冷启动节点表示学习。",
+      "llm_tldr": "现有图自监督方法多依赖对比增强或输入重建，容易纠缠低层统计信息。NodeJEPA提出结构条件下的节点级联合嵌入预测架构，通过预测潜空间目标而非重建输入来学习节点表示。在节点级下游任务上验证了该方法的有效性。该架构可作为分子图或生物医学图自监督预训练的通用模块，支撑冷启动节点表示学习。",
+      "llm_tags": [
+        "query:mgp:composite"
+      ],
+      "matched_query_tag": "query:mgp:composite",
+      "matched_query_text": "Papers central to 请帮我找利用大规模无标签分子数据进行预训练，以提升未见药物预测能力的研究。重点关注分子图预训练、自监督分子表示学习、掩码原子或子结构预测、图对比学习、分子语言模型以及预训练—微调范式。关注预训练模型如何覆盖更广泛的化学空间，并缓解冷启动药物由于训练样本不足或结构新颖造成的表示缺失问题。优先返回在药物相互作用预测、药物属性预测、药物靶点预测和分子分布外泛化任务中验证过的方法。, especially work that connects or combines: molecular graph pretraining on unlabeled data; self-supervised representation learning for molecules; masked atom prediction for molecular pretraining; molecular language model pretraining; pretrain-finetune paradigm for drug discovery; pretrained molecular representation for drug-target interaction prediction; pretrained molecular graph models for drug drug interaction prediction and out of distribution generalization; self supervised learning on large unlabeled molecular data to improve unseen drug property prediction; molecular pretraining methods addressing cold start scenarios with insufficient training samples.",
+      "matched_requirement_id": "req-composite-mgp",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2608.05336v1",
+      "source": "arxiv",
+      "title": "Physics-Based Molecular Fingerprints from Spectral Graph Theory Provide Efficient Geometry-Aware Measures of Chemical Similarity",
+      "abstract": "Molecular representations are essential for the evaluation of molecular similarity and the development of structure-property relationships. Despite the known importance of 3D structure to determine chemical and physical properties, the most widely used molecular fingerprints encode only two-dimensional connectivity. Such representations fail to distinguish similar but distinct stereoisomers and conformers. Alternative 3D methods are typically defined pairwise, making their application to large chemical spaces prohibitive, while deep learning embeddings are expressive but uninterpretable and limited by their training data diversity. Here, we introduce novel physics-inspired molecular fingerprints based on principles from spectral graph theory. We represent molecules as a complete graph in 3D space, with edge weights encoding heuristic physical interactions. Eigenvalue decomposition of the resulting graph Laplacian matrix results in a computationally efficient fixed-length chemical fingerprint that encodes 3D structure while obeying necessary physical symmetries of permutation and E(3) invariance. Spectral fingerprints differentiate between unique molecular structures with identical 2D connectivity, overcoming a limitation of 2D descriptors, while maintaining the low computational cost needed for efficient screening of vast chemical spaces. We evaluate our fingerprints with community detection algorithms and observe strong performance against representative baselines across datasets from organic, inorganic, biological, reticular, and reaction chemistry. Nearest-neighbor property estimation and applicability domain analyses reveal the utility of our molecular representation in machine learning and cheminformatics. We anticipate that spectral fingerprints will serve as generalizable, interpretable, and efficient measures of chemical similarity that incorporate 3D information at minimal cost.",
+      "authors": [
+        "Jacob W. Toney",
+        "Ayleen Y. Farnood",
+        "Samir Darouich",
+        "Heather J. Kulik"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "cs.LG"
+      ],
+      "published": "2026-08-05T18:50:21+00:00",
+      "link": "https://arxiv.org/pdf/2608.05336v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Physics-based molecular fingerprints for efficient geometry-aware chemical similarity measurement",
+      "llm_evidence_cn": "基于物理的分子指纹，用于高效几何感知的化学相似性度量",
+      "llm_evidence": "基于物理的分子指纹，用于高效几何感知的化学相似性度量",
+      "canonical_evidence": "基于物理的分子指纹，用于高效几何感知的化学相似性度量",
+      "llm_tldr_en": "This work introduces novel physics-inspired spectral graph fingerprints that enable efficient geometry-aware chemical similarity measurement, overcoming limitations of 2D connectivity-based fingerprints and expensive 3D pairwise methods, with potential for large-scale drug similarity retrieval and structure-property modeling.",
+      "llm_tldr_cn": "现有二维连接性指纹无法区分立体异构体，而三维方法计算代价高且深度学习嵌入缺乏可解释性。本文基于谱图理论提出物理启发的分子指纹，可高效且几何感知地度量化学相似性。实验表明该方法在保持可解释性的同时显著提升相似性评估效率。该指纹可服务于药物相似性检索与结构性质关系建模，为冷启动药物交互预测提供相似性度量基础。",
+      "llm_tldr": "现有二维连接性指纹无法区分立体异构体，而三维方法计算代价高且深度学习嵌入缺乏可解释性。本文基于谱图理论提出物理启发的分子指纹，可高效且几何感知地度量化学相似性。实验表明该方法在保持可解释性的同时显著提升相似性评估效率。该指纹可服务于药物相似性检索与结构性质关系建模，为冷启动药物交互预测提供相似性度量基础。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "drug molecular structure similarity for DDI",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.10480v1",
+      "source": "arxiv",
+      "title": "Multi-Granular Rationale-Guided Molecular LLM for Property Prediction",
+      "abstract": "Large language models (LLMs) are widely applied across chemical tasks, such as molecular property prediction, which underpins drug discovery. Molecular LLMs represent a molecule through several modalities, notably a 1D SMILES sequence or a 2D molecular graph. Both encode molecular information implicitly, so the contribution of individual substructures remains opaque. Retrieval and augmentation methods add context, but from external sources. However, the cues chemists reason over are the internal substructures that drive a property up or down. We propose MR-MoL, a multi-granular rationale-guided molecular LLM that supplies this evidence directly. A fine-tuned GNN scores each substructure through masking, and the most influential ones are serialized as a ranked, direction-tagged rationale that the LLM reads alongside the SMILES sequence and molecular graph. The rationale spans three levels of granularity: Murcko scaffolds with their side chains, BRICS fragments, and functional groups. This is, to our knowledge, the first method to expose GNN-derived attributions to an LLM as evidence for property prediction. On eight MoleculeNet tasks, MR-MoL achieves the best overall results among generalist models and narrows the gap to specialist models tuned for each task. Five diagnostics further confirm that the model reads the rationale rather than merely benefiting from its presence. Its direction, rank, and substructure each shape the prediction, and its attributions reproduce known structure-property relationships.",
+      "authors": [
+        "Junwoo Park",
+        "Minyoung Shin",
+        "Cheol Soon Lee",
+        "Sujee Lee"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-08-11T04:50:33+00:00",
+      "link": "https://arxiv.org/pdf/2608.10480v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Rationally guided molecular LLM combining GNN substructure scoring with LLM for property prediction",
+      "llm_evidence_cn": "将GNN子结构评分与LLM结合，提升分子性质预测的语义表示",
+      "llm_evidence": "将GNN子结构评分与LLM结合，提升分子性质预测的语义表示",
+      "canonical_evidence": "将GNN子结构评分与LLM结合，提升分子性质预测的语义表示",
+      "llm_tldr_en": "MR-MoL uses a fine-tuned GNN to identify influential molecular substructures and feeds them as rationales to a molecular LLM, improving interpretable property prediction.",
+      "llm_tldr_cn": "分子大语言模型虽然广泛用于化学任务，但子结构对性质的贡献不透明。MR-MoL使用微调GNN通过掩码对每个子结构进行评分，将影响力最高的子结构序列化为提示词输入LLM，从而提供多粒度理由，增强预测的可解释性。实验在分子性质预测任务上验证了该方法能有效提升性能，为药物语义增强与分子表示学习提供了新思路。",
+      "llm_tldr": "分子大语言模型虽然广泛用于化学任务，但子结构对性质的贡献不透明。MR-MoL使用微调GNN通过掩码对每个子结构进行评分，将影响力最高的子结构序列化为提示词输入LLM，从而提供多粒度理由，增强预测的可解释性。实验在分子性质预测任务上验证了该方法能有效提升性能，为药物语义增强与分子表示学习提供了新思路。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "large language model combined with graph neural networks for drug semantic enhancement and knowledge transfer",
+      "matched_requirement_id": "req-41",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2608.06697v1",
+      "source": "arxiv",
+      "title": "3D Molecular Representation Learning for Organic Mixtures: Viscosity and Density Prediction",
+      "abstract": "The viscosity and density of organic mixtures are essential properties for designing lubricants, solvents, and heat transfer fluids. In engineering practice, formulating a functional fluid requires understanding how these properties change with composition and temperature. However, exhaustive experimental characterization across the full parameter space is impractical due to the vast number of possible species and combinations. Here we introduce a mixture-aware 3D molecular representation learning strategy, built upon a pre-trained molecular encoder, that jointly encodes component structures, mole fractions, and temperature to achieve accurate predictions for organic mixtures. Fine-tuning on publicly available datasets covering a wide range of binary organic mixtures yields test-set R2 values of 0.973 for dynamic viscosity and 0.996 for density, significantly outperforming traditional machine learning baselines. Beyond this overall accuracy, the model captures non-monotonic viscosity changes upon mixing, surpassing simple linear or logarithmic mixing rules. The architecture is extendable to ternary and multicomponent mixtures, as verified via preliminary experiments. Using this model, we quantitatively analyze how molecular structure-branching, cycloalkane, and aromatic rings-affects viscosity-temperature behavior, which benefits the design of lubricants with superior viscosity-temperature performance. Altogether, this work provides a practical, data-driven tool for mixture property prediction, accelerating the rational formulation of functional fluids in chemical engineering.",
+      "authors": [
+        "Haicheng Qu",
+        "Yanyi Su",
+        "Ning Wang",
+        "Shangqian Chen",
+        "Zhifeng Gao",
+        "Jun Cheng",
+        "Qi Ou"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph"
+      ],
+      "published": "2026-08-07T01:52:03+00:00",
+      "link": "https://arxiv.org/pdf/2608.06697v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "pre-trained molecular encoder with fine-tuning for property prediction; pretrain-finetune paradigm",
+      "llm_evidence_cn": "预训练分子编码器结合微调进行性质预测；预训练-微调范式",
+      "llm_evidence": "预训练分子编码器结合微调进行性质预测；预训练-微调范式",
+      "canonical_evidence": "预训练分子编码器结合微调进行性质预测；预训练-微调范式",
+      "llm_tldr_en": "A mixture-aware 3D molecular representation learning strategy built on a pre-trained molecular encoder jointly encodes structures, fractions, and temperature to predict viscosity and density of organic mixtures via fine-tuning.",
+      "llm_tldr_cn": "有机混合物性质的传统实验测量难以覆盖广阔的参数空间，计算预测需要高效的分子表示。本文提出面向混合物的3D分子表示学习策略，基于预训练分子编码器，联合编码组分分子结构、摩尔分数和温度，通过微调实现粘度与密度的准确预测。在公开数据集上的结果表明该预训练-微调范式有效，为药物等分子性质预测与迁移提供了参考。",
+      "llm_tldr": "有机混合物性质的传统实验测量难以覆盖广阔的参数空间，计算预测需要高效的分子表示。本文提出面向混合物的3D分子表示学习策略，基于预训练分子编码器，联合编码组分分子结构、摩尔分数和温度，通过微调实现粘度与密度的准确预测。在公开数据集上的结果表明该预训练-微调范式有效，为药物等分子性质预测与迁移提供了参考。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "pretrain-finetune paradigm for drug discovery",
+      "matched_requirement_id": "req-24",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.10595v1",
+      "source": "arxiv",
+      "title": "DegradeQuery: Counterfactual Tuple Pretraining for Context-Aware PROTAC Degradation Prediction",
+      "abstract": "Proteolysis-targeting chimeras (PROTACs) induce protein degradation by recruiting a target protein to an E3 ubiquitin ligase, making degradation a joint outcome of the degrader molecule and its biological context. Although public databases contain thousands of structured molecule-target-E3 records, degradation measurements are available for only a small fraction of them. Existing supervised approaches therefore leave most recorded chemical-biological relationships unused. We introduce DegradeQuery, a context-aware prediction framework that converts these label-missing records into a pretraining signal. Its counterfactual tuple pretraining objective contrasts recorded tuples with alternatives formed by replacing the target, the E3 ligase, or both, enabling the model to learn contextual associations without assigning activity pseudo-labels. The resulting representation is then fine-tuned to predict degradation from the complete molecule-target-E3 context. On the official PROTAC-8K benchmark, DegradeQuery achieves an area under the receiver operating characteristic curve of 0.9065 and an accuracy of 0.8500, outperforming the compared methods. Controlled analyses further show that the improvement is primarily attributable to tuple-level pretraining, can be recovered using only label-missing records, and remains complementary to protein language model representations. These findings demonstrate that incompletely labeled PROTAC databases contain useful relational supervision and provide a practical route for learning context-aware degradation predictors from scarce experimental labels.",
+      "authors": [
+        "Dong Xu",
+        "Zhangfan Yang",
+        "Jiantao Wu",
+        "Zexuan Zhu",
+        "Jianqiang Li",
+        "Junkai Ji"
+      ],
+      "primary_category": "q-bio.BM",
+      "categories": [
+        "q-bio.BM",
+        "cs.AI"
+      ],
+      "published": "2026-08-11T07:25:41+00:00",
+      "link": "https://arxiv.org/pdf/2608.10595v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Counterfactual tuple pretraining on molecule-target-E3 records for self-supervised molecular representation",
+      "llm_evidence_cn": "在分子-靶点-E3记录上进行反事实元组预训练，用于自监督分子表示学习",
+      "llm_evidence": "在分子-靶点-E3记录上进行反事实元组预训练，用于自监督分子表示学习",
+      "canonical_evidence": "在分子-靶点-E3记录上进行反事实元组预训练，用于自监督分子表示学习",
+      "llm_tldr_en": "DegradeQuery uses counterfactual tuple pretraining on label-missing molecule-target-E3 records to learn context-aware representations, improving PROTAC degradation prediction and showcasing self-supervised pretraining for drug discovery.",
+      "llm_tldr_cn": "针对PROTAC降解预测中降解标签稀疏的问题，现有监督模型难以充分利用公开数据库中的大量分子-靶点-E3记录。本文提出DegradeQuery，一种将缺失标签记录转换为预训练信号的上下文感知预测框架。其核心是反事实元组预训练，通过用替代靶点或E3替换构成反例，并与真实记录进行对比，让模型学习上下文相关的分子表示。实验表明，该预训练策略显著提升了PROTAC降解预测的准确性。该工作为利用大规模化学-生物关系数据进行自监督预训练以缓解标签稀缺问题提供了新思路，可迁移至药物相互作用等药物发现任务。",
+      "llm_tldr": "针对PROTAC降解预测中降解标签稀疏的问题，现有监督模型难以充分利用公开数据库中的大量分子-靶点-E3记录。本文提出DegradeQuery，一种将缺失标签记录转换为预训练信号的上下文感知预测框架。其核心是反事实元组预训练，通过用替代靶点或E3替换构成反例，并与真实记录进行对比，让模型学习上下文相关的分子表示。实验表明，该预训练策略显著提升了PROTAC降解预测的准确性。该工作为利用大规模化学-生物关系数据进行自监督预训练以缓解标签稀缺问题提供了新思路，可迁移至药物相互作用等药物发现任务。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "self-supervised representation learning for molecules",
+      "matched_requirement_id": "req-21",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2608.10668v1",
+      "source": "arxiv",
+      "title": "FITTER: Vocabulary-Agnostic Cross-Domain Inference on Temporal Knowledge Graphs",
+      "abstract": "Temporal knowledge graphs are central to many uses of the Semantic Web, but existing completion methods assume the entities, relation names, and timestamps to be reasoned about are already known at training time, restricting each model to a single graph and vocabulary. We propose FITTER, the first fully-inductive structural model for temporal knowledge graph link prediction that supports cross-domain transfer: the inference graph may contain entirely unseen entities, relation names, and timestamps drawn from a different domain. FITTER represents each predicate by its interaction patterns with others and time through encodings of relative rather than absolute ordering; message-passing fuses local and global temporal context to produce vocabulary-agnostic embeddings. We prove the temporal encoding is time-shift invariant and evaluate FITTER on cross-domain, cross-graph transfer over six temporal knowledge graph benchmarks of diverse domains, granularities, and time spans. FITTER consistently outperforms inductive baselines without retraining, indicating that vocabulary-agnostic structural learning is a viable foundation for inference over the heterogeneous knowledge graphs of the Semantic Web.",
+      "authors": [
+        "Jiaxin Pan",
+        "Mojtaba Nayyeri",
+        "Osama Mohammed",
+        "Daniel Hernandez",
+        "Rongchuan Zhang",
+        "Cheng Cheng",
+        "Steffen Staab"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-08-11T08:47:58+00:00",
+      "link": "https://arxiv.org/pdf/2608.10668v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Fully-inductive temporal KG link prediction with unseen entities and relations",
+      "llm_evidence_cn": "完全归纳式时间知识图谱链接预测，支持未见实体与关系",
+      "llm_evidence": "完全归纳式时间知识图谱链接预测，支持未见实体与关系",
+      "canonical_evidence": "完全归纳式时间知识图谱链接预测，支持未见实体与关系",
+      "llm_tldr_en": "FITTER is the first fully-inductive temporal KG completion model supporting unseen entities, relations, and timestamps across domains.",
+      "llm_tldr_cn": "时间知识图谱补全现有方法假设推理实体、关系和时间戳在训练时已知，限制了模型的跨图与跨域泛化。本文提出FITTER，首个完全归纳式的时间知识图谱链接预测模型，支持推理图中出现完全未见的实体、关系名和时间戳。FITTER通过谓词交互模式与相对时间顺序编码表示谓词，并用消息传递融合局部与全局时间上下文，实现词汇无关的跨域推理，为时间知识图谱的归纳式学习提供了新方案。",
+      "llm_tldr": "时间知识图谱补全现有方法假设推理实体、关系和时间戳在训练时已知，限制了模型的跨图与跨域泛化。本文提出FITTER，首个完全归纳式的时间知识图谱链接预测模型，支持推理图中出现完全未见的实体、关系名和时间戳。FITTER通过谓词交互模式与相对时间顺序编码表示谓词，并用消息传递融合局部与全局时间上下文，实现词汇无关的跨域推理，为时间知识图谱的归纳式学习提供了新方案。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "inductive graph generalization on unseen nodes and edges with distribution shift",
+      "matched_requirement_id": "req-40",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.10598v1",
+      "source": "arxiv",
+      "title": "Is Retrieval All You Need? Assessment and Emergence of Novelty in Protein Structure Generation",
+      "abstract": "Protein backbone generation models are often credited with exploring novel fold space based solely on low full-chain similarity to known proteins, yet this cannot distinguish a genuinely new fold from a novel assembly of known structural units. We first ask whether this granularity mismatch alone explains the reported rates, and introduce the Domain Retrieval Rate (DRR), the fraction of generated backbones for which any constituent domain matches a known domain in CATH S40. Applied to eight backbone generation models spanning diffusion and flow-matching paradigms, DRR finds locally alignable known structure in most outputs, while the fraction containing a substantially covered complete domain is considerably smaller and depends on the scoring convention. To calibrate what retrieval alone can achieve, we propose RetFold, a zero-training baseline that constructs backbones by retrieving CATH domains and refining inter-domain connections through geometry-based helix-linker optimization, at two orders of magnitude lower cost on CPU alone.",
+      "authors": [
+        "Tongyue Xu",
+        "Yijie Zhang",
+        "Mutian He",
+        "Lingdong Shen",
+        "Zhihong Liu",
+        "Tianlei Ying",
+        "Cheng Tan"
+      ],
+      "primary_category": "q-bio.BM",
+      "categories": [
+        "q-bio.BM"
+      ],
+      "published": "2026-08-11T07:31:36+00:00",
+      "link": "https://arxiv.org/pdf/2608.10598v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "introduces Domain Retrieval Rate to evaluate structural novelty of generated protein backbones, transferable to scaffold novelty assessment",
+      "llm_evidence_cn": "提出域检索率DRR评估生成蛋白质骨架的结构新颖性，可迁移至分子骨架新颖性评估",
+      "llm_evidence": "提出域检索率DRR评估生成蛋白质骨架的结构新颖性，可迁移至分子骨架新颖性评估",
+      "canonical_evidence": "提出域检索率DRR评估生成蛋白质骨架的结构新颖性，可迁移至分子骨架新颖性评估",
+      "llm_tldr_en": "This paper introduces DRR, a metric that separates true structural novelty from recombined known domains in protein generation, and shows most generated backbones still contain known structural units.",
+      "llm_tldr_cn": "蛋白质结构生成模型常以整体链相似度低来宣称探索了新折叠空间，但这无法区分真正的新折叠与已知结构域的新组合。该论文提出域检索率（DRR），检查生成骨架中是否存在与已知结构域匹配的组成单元。对八个扩散和流匹配模型的分析表明，大多数生成结果仍包含已知结构域，完整域覆盖率则更小。DRR为分子结构新颖性评估和分布外泛化分析提供了更细粒度的方法。",
+      "llm_tldr": "蛋白质结构生成模型常以整体链相似度低来宣称探索了新折叠空间，但这无法区分真正的新折叠与已知结构域的新组合。该论文提出域检索率（DRR），检查生成骨架中是否存在与已知结构域匹配的组成单元。对八个扩散和流匹配模型的分析表明，大多数生成结果仍包含已知结构域，完整域覆盖率则更小。DRR为分子结构新颖性评估和分布外泛化分析提供了更细粒度的方法。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "methods to evaluate molecular scaffold novelty for out-of-distribution generalization",
+      "matched_requirement_id": "req-38",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2608.12403v1",
+      "source": "arxiv",
+      "title": "Black-Box Knowledge Transfer across Distinct Feature Sets",
+      "abstract": "Pre-trained black-box predictive functions encode knowledge distilled from massive datasets and extensive computation. However, when the available input features differ from those the black box expects, direct use is infeasible. We introduce a method for transferring predictive knowledge from the black box to a new, heterogeneous input space. Our approach decomposes the target regression function into a transferable component, which the black box can inform, and a non-transferable component, which captures information unique to the new space. We propose a two-step neural network procedure, estimating the transferable component from abundant unlabeled feature pairs that bridge the two input spaces and the non-transferable component from limited labels. We derive prediction risk bounds that improve on those of a non-transfer alternative when the non-transferable component is small or smooth, and the procedure adapts to either case. Under additional conditions, the worst-case risk of our estimator is of strictly smaller polynomial order than the minimax risk of estimation from the labeled data alone. We extend the framework to multiple black boxes, each on its own input space, and show that aggregation can reduce prediction error relative to the best single black box. Simulated and real data demonstrate the practical value of the method.",
+      "authors": [
+        "Oh-Ran Kwon",
+        "Daeyoung Ham"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG",
+        "stat.ME"
+      ],
+      "published": "2026-08-10T21:08:17+00:00",
+      "link": "https://arxiv.org/pdf/2608.12403v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Generalizable black-box knowledge transfer across feature sets, applicable to inductive drug knowledge transfer",
+      "llm_evidence_cn": "跨特征集的黑盒知识迁移，可应用于归纳式药物知识迁移",
+      "llm_evidence": "跨特征集的黑盒知识迁移，可应用于归纳式药物知识迁移",
+      "canonical_evidence": "跨特征集的黑盒知识迁移，可应用于归纳式药物知识迁移",
+      "llm_tldr_en": "Presents a method to transfer knowledge from a pre-trained black-box to a heterogeneous input space using unlabeled feature pairs and limited labels.",
+      "llm_tldr_cn": "预训练黑盒模型蕴含大规模数据集和计算的精华，但当新任务可用的输入特征与黑盒预期不同时，直接使用变得不可行。本文提出一种跨异质特征集的黑盒知识迁移方法，将目标回归函数分解为可迁移成分与不可迁移成分。前者通过连接两个输入空间的丰富无标签特征对估计，后者利用有限标签拟合，并推导了泛化界。该方法为特征集不一致场景下的知识再利用提供了通用框架。",
+      "llm_tldr": "预训练黑盒模型蕴含大规模数据集和计算的精华，但当新任务可用的输入特征与黑盒预期不同时，直接使用变得不可行。本文提出一种跨异质特征集的黑盒知识迁移方法，将目标回归函数分解为可迁移成分与不可迁移成分。前者通过连接两个输入空间的丰富无标签特征对估计，后者利用有限标签拟合，并推导了泛化界。该方法为特征集不一致场景下的知识再利用提供了通用框架。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "inductive knowledge transfer for new drugs",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

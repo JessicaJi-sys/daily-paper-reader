@@ -1,0 +1,1696 @@
+Title: Link prediction on multi-relational graphs from an influence propagation perspective
+
+URL Source: https://arxiv.org/pdf/2608.05016v1
+
+Published Time: Thu, 06 Aug 2026 01:21:23 GMT
+
+Number of Pages: 27
+
+Markdown Content:
+# Link prediction on multi-relational graphs from an influence propagation perspective ⋆
+
+Zidu Yin a, Yuankai Qi b, Dong Gong c, Ehsan Abbasnejad e, Kun Yue d, ∗, Javen Qinfeng Shi e     
+
+> aSchool of Information Science and Technology, Yunnan Normal University, Kunming, China
+> bSchool of Computing, Macquarie University, Sydney, Australia
+> cSchool of Computer Science and Engineering, The University of New South Wales, Sydney, Australia
+> dSchool of Information Science and Engineering, Yunnan University, Kunming, China
+> eSchool of Computer and Mathematical Sciences, Adelaide University, Adelaide, Australia
+
+Abstract 
+
+Predicting the existence and type of links (edges) between nodes in a multi-relational graph is key for appli-cations from social interaction prediction to knowledge relationship identification. Enhancing local features with relevant global information is crucial for accurate link prediction, yet it remains challenging. We ad-dress this by modeling the relationship between node pairs as node influence. That is, whether the node influence can be propagated and what type of influence is propagated indicates where and what type the edge is, which will be the most relevant local and global information to predict the edges. To this end, we extend the Susceptible-Infectious-Recovered (SIR) epidemic model to capture the influence propagation of nodes on a large scale through sub-graph structures. Subsequently, these sub-graphs are compressed us-ing virtual edges, thereby substantially reducing the computation associated with utilizing the global graph structure. Finally, we propose the Influential Graph Neural Predictor, referred to as IGNP, 1 a link predic-tion framework guided by influence propagation. Extensive experiments demonstrate the superiority of the proposed method, which outperforms strong baselines by a large margin on the widely used and real-world datasets. 
+
+Keywords: Multi-relational graph, Link prediction, Influence propagation, Graph neural network 
+
+1. Introduction 
+
+Link prediction, i.e. to predict the edge existence [1] and types [2], on multi-relational graphs is foun-dational for a wide range of applications including personalized recommendation [3], automatic completion of knowledge graphs [4], and relationship reconstruction in protein interaction networks [5]. The edge to predict is closely related to its neighbors’ edges, as evidenced by numerous studies [6, 7]. Contemporary studies demonstrate that the existence and types of edges are not solely determined by their proximate neigh-bors, since they may also be globally a ff ected by long-range dependencies [8]. The global information is              
+
+> ⋆Accepted manuscript. Published in Pattern Recognition , article 114039, 2026. Formal publication: https://doi.org/10. 1016/j.patcog.2026.114039
+> ©2026. This manuscript version is made available under the CC-BY-NC-ND 4.0 license https://creativecommons.org/ licenses/by-nc-nd/4.0/
+> ∗Corresponding author
+> Email addresses: zidu.yin@ynnu.edu.cn (Zidu Yin), kyue@ynu.edu.cn (Kun Yue)
+> 1The code is available at https://github.com/coodest/gn_link_prediction .arXiv:2608.05016v1 [cs.SI] 5 Aug 2026 Share the photo Share the photo Share the photo
+> Add friends
+> Post a fun photo Post a fun photo
+> Susceptible (S) Infectious (I) Recovered (R)
+
+(a) Influence Propagation in the Social Networks (b) Susceptible-Infectious-Recovered (SIR) Epidemic Model Influence is 
+
+similar to epidemics Figure 1: An example of the influence propagation and epidemic propagation. (a) Influence propagation in the social networks. Red cycles, edge types, and green rectangles denote the user, the action, and the influence exerted by a specific user on the respective edge. (b) The SIR epidemic propagation model. The proportional changes are shown, and di ff erent colors indicate di ff erent types of nodes during the epidemic. 
+
+not supported by many methods [9], due to high computational costs. In addition, existing methods may introduce irrelevant information [10] and ignore critical features [11] while processing global information. Therefore, the main challenge of multi-relational graph link prediction is how to enhance local features by precisely finding and e ffi ciently utilizing the relevant global information. To consider as much relevant information as possible for link prediction, in this paper, we propose a novel propagation model to encapsulate the relevant local and global information into a sub-graph to train the GNN. Through an influence propagation perspective, the influence, originating from the analysis of social networks, of the source node is the e ff ect to make /alter edges of its neighbors with a specific type [12], which will propagate to di ff erent nodes within a range of the influence chain [13]. An example of influence propagation on social networks is shown in Fig. 1(a). The edges from x1 lead to the edges of nearby nodes as chains of reaction, and some chains eventually go back to x1 (x1 - x2 - x4 - x5 - x1 and x1 - x3- x5 - x1
+
+are two paths propagating the influence of x1), i.e. influence propagation . This means the source node x1
+
+externally impacts its surrounding nodes and internally assimilates responses from neighboring nodes, so the influence will subsequently be propagated within a range. Additionally, whether the node influence can be propagated and what type of influence is propagated indicates the edge existence and type. For instance, the edge between x4 and x5 is generated due to the overlapped influence of x1, x2 and x4. Therefore, edges can be predicted via node influence. From the present example, the outward influence propagation demonstrates the analogous nature be-tween the node influence and the epidemic outbreaks, since both of them change the surroundings. The process of epidemic outbreaks can be precisely simulated and replicated, thereby enabling the tracking of node influence as well. Specifically, we observe that in the susceptible-infectious-recovered (SIR) epidemic propagation model [14], the three types of nodes — susceptible, infectious, and recovered — are dynam-ically interchanged. This dynamic interchange helps formulate and track the outward spread of influence from the source until a stable state is reached, which marks the end of the outward influence propagation, as shown in Fig. 1(b). Consequently, we use the SIR model to enclose the outward influence into the sub-graph. Furthermore, it is imperative to consider the nodes’ inward influence propagation that propagates from a broader range encompassing crucial global information. Given this, we further expand the SIR model by introducing an inward propagation module to search the global responses back to their source. Thus, mutual influence propagation paths in both directions should be established in the sub-graph, as they provide all the 2relevant information for predicting the existence and types of edges. More importantly, direct use of global influence within the sub-graph is nearly impossible due to the una ff ordable computational cost, so we compress the sub-graph for a lower computational cost. Inspired by the mean-field theory, which uses the averaged e ff ect to represent the complex group e ff ects [15], we use virtual edges to virtually propagate the inward influences to the source within a sub-graph, thereby forming the virtual sub-graph. The virtual edge compresses global long-distance dependencies to minimize the sub-graph size, thereby reducing the computational costs of model training. Experiments show that it greatly reduces the training cost without sacrificing much performance. In summary, local node features are enhanced with relevant global information precisely identified by extending the SIR model, and we incorporate the enhanced features into the proposed virtual sub-graphs to effi ciently train our Influential Graph Neural Predictor, namely IGNP, for link prediction on multi-relational graphs. Our contributions are: 1. We extend the SIR propagation model to find more relevant local and global node information to enrich the data for better link prediction. 2. We further compress inward influences with virtual edges to significantly reduce the training cost without significant performance degradation. 3. We implement an e ff ective link prediction framework IGNP, which achieves the best accuracy com-pared with baselines from di ff erent categories on di ff erent datasets by processing both local and global node influences e ffi ciently. The rest of the paper is organized as follows. Section 2 briefly reviews related works. Section 3 provides an overview of the methodology and establishes the problem to be addressed. Section 4 introduces the extended SIR propagation model to find the sub-graphs of influence propagation. Section 5 elucidates the IGNP framework, which leverages the sub-graphs derived in Section 4. In Section 6 we present extensive evaluations of the proposed method. The final section concludes this work. 
+
+2. Related work 
+
+2.1. Link prediction 
+
+Most existing link prediction methods are from similarity metrics, latent feature methods, and GNN-based methods [1], with comprehensive benchmarks further examining their evaluation protocols [16]. Early attempts use manually crafted similarity functions, such as Adamic Adar [17], Resource Allo-cation [6], and entropy-enhanced common neighbors [18], to leverage local topology for edge prediction, though they generalize poorly across diverse network structures. Decomposed eigenvalues and eigenvec-tors [19] from the adjacency matrix [20] have also been commonly employed for edge prediction. Instead of directly using the topology data, many methods embed topological features as vectors into a latent space for broader applications. LINE [21] takes neighboring nodes within 2 hops as the context to acquire the node features. Node2vec [22] and Struc2vec [7] produce a local context via the biased random walk to learn the node embeddings. HARP [23] uses an expandable context to enhance the embedding (e.g., Node2vec) iteratively with global information. Ripple2Vec [24] recursively aggregates neighbors via attention, letting influence ripple outward to encode multi-hop structure. Generally, embeddings from latent feature methods store more useful features compared with the raw topology data, but these approaches are intrinsically transductive and are unable to generalize to unseen data [11]. GNN-based link predictors, e.g. SEAL [9], inductively predict the edges, outperforming numerous non-parametric methods across diverse domains [11]. To avoid computation, many GNNs [25] adopt a local 3enclosing sub-graph centered on a pair of nodes to predict the edge between them. But this ignores long-distance dependency, which is more frequently required in realistic scenarios [8]. The exploitation of global information has proved a notable advantage of GNN-based methods, typically achieved through graph sampling [26] or partitioning [10]. (1) Graph sampling. In GraphSAGE [11], the context for the GNN learner is uniformly sampled across each order of neighbors, while GeniePath [27] employs a learned attention function to sample fixed-sized paths. Sampling approaches, however, may omit critical local or global information by neglecting useful nodes. (2) Graph partitioning. To mitigate the computational expense of learning global information, some methods divide non-sparse graphs into dense clusters to limit the context, as in ClusterGCN [10], or partition the graph to extract local and global information separately, as in GPNN [8]. Nevertheless, partition-based methods overlook the valuable global information of bridging structures between clusters. Instead of sampling or partitioning, we introduce virtual edges to compress global information for a lower computational cost, which parallels data augmentation techniques [28]. GAug [28] adds or removes edges deterministically to generalize the model, while GCA [29] generates multiple graph views with random noise to highlight the important connective structures. MotifRGC [30] and LS-GCL [31] further leverage generative-contrastive learning to enrich node embeddings for link prediction. PageRank Bandits (PRB) [32] frames link prediction as interactive network exploration via contextual bandits to capture long range depen-dencies from a di ff erent paradigm. In contrast, our virtual edges compress the real long-distance dependen-cies, incorporating more relevant global information. 
+
+2.2. SIR model 
+
+The SIR model is originally used for epidemic trend analysis [14], but the SIR model and its derivative models are also frequently used in the field of social computing to analyze the information propagation process [33], and maximize information di ff usion [34]. For instance, with the adaptive di ff erential evolution and particle swarm optimization, the SIR model could fit the basis of parameter changes over time to reflect the actual epidemic condition [33]. GLSTM [34] calculates node feature vectors and every node’s individual influence under the susceptible-infected-recovered information di ff usion model for the model to predict the probable influence of every node in the target network. These kinds of research give insight into our method and show examples of how the SIR model can be combined with propagation-based analysis. 
+
+3. Method overview 
+
+We aim to track all the relevant node information by a sub-graph whose shape, according to the proposed propagation model, is determined by the nodes defined in Theorems 1 and 2 which can be approximated using Corollary 1 and Eq. (9) with proper parameters. Next, Algorithm 1 generates the corresponding compressed virtual sub-graph to train the model with reduced training cost, which is analyzed in Theorem 3. How the generated sub-graphs with di ff erent parameters a ff ect the model e ff ectiveness and how the virtual edges improve the model training e ffi ciency are evaluated in the experiment section. The overall influential graph neural predictor framework, namely IGNP, is shown in Fig. 2. The following will introduce the notations and the problem we want to address. A directed graph is defined as G = ⟨X , E⟩ , where X = {x1, . . . , xi, . . . } is the set of nodes for each 
+
+xi ∈ Rd indicates the ith node with the explicit (observable) attributes or (and) the implicit embedding, and 
+
+E = {ei j : Ai j , 0} is the set of edges for each ei j ∈ { 1, . . . , L} that represents an edge from xi to x j with one of L edge types ( L = 1 for the homogeneous graphs without edge types). A is the adjacent matrix of G. For 
+
+xi in a graph G, we denote by Γni its set of neighbors of order n (i.e. n “hops” away along the edge direction) and Γ0 
+
+> i
+
+is xi itself. Pi j represents the set of all the paths from node xi to x j.4Virtual edge (Green) (Blue) Influence Spreading Node 
+
+> Edge
+
+(d) Predict Edges (a) Select Nodes 
+
+> Trained using virtual sub-graphs Virtual sub-graph Edge prediction
+
+(b) Track Influence (c) Compress Influence                        
+
+> Selected nodes
+> Outward influence propagation Inward influence propagation
+> Existence Existence and types
+> ????
+> Recurrent
+> Binary Multi-class
+> GNN Figure 2: The main architecture of IGNP. (a) Select Nodes : We select a pair of nodes to predict the edge between them. (b) Track In-fluence : We find a sub-graph containing the outward-propagated influence Hout
+> sand inward-propagated influence Hin
+> svia an extended propagation model; nodes of Hout and Hin are rendered in distinct colors, and border nodes are outlined (Section 4.1, Section 4.2). (c) Compress Influence : Dashed arrows denote virtual edges that replace paths of inward influence propagation; they are merged with the outward sub-graph to yield the compact virtual sub-graph (Section 5.1). (d) Predict Edges : A recurrent GNN is trained on SF(virtual sub-graph with features) and SL(virtual sub-graph with labels) to predict edge existence and type (Section 5.2).
+
+The task of link prediction is to complete or correct any missing or erroneous edges of G, given the corresponding features. Focusing on a pair of nodes xi and x j, the goal is to obtain F f eat (·) which extracts relevant node information and Flp (·) to predict the edges ei j :
+
+ei j = Flp (F f eat (xi), F f eat (x j)) , (1) More notations of our method are shown in Table 1. 
+
+4. Tracking sub-graph of influence propagation 
+
+All types of the propagated influence of a source node xs will be held in a sub-graph, denoted as Gs ⊂ G .We treat Gs as features of xs to predict edges, i.e., F f eat (xs) = Gs = ⟨H s, {ei j : ei j ∈ E ; xi, x j ∈ H s}⟩ . To find the F f eat (xs) = Gs of xs from G, we extend the SIR model [14] for epidemic spreading to depict the influence propagation as a bi-directional process involving: (1) the node set of outward influence propagation from 
+
+xs, we denote by Hout  
+
+> s
+
+, see Section 4.1, and (2) the node set of inward influence propagation (reversely responding the outward influence back to xs), denoted as Hin  
+
+> s
+
+, see Section 4.2. Our objective is to find nodes in Hs = Hout  
+
+> s
+
+∪ H in  
+
+> s
+
+from each xs. Moreover, we do not distinguish the types of influence at this stage, and the relationship between types of influence and edges will be explored in Section 5. 
+
+4.1. Node set of outward influence: Hout s
+
+Both the epidemic and the influence will propagate over the graph until reaching a stationary state. We use Hout  
+
+> s
+
+to include the nodes of outward influence propagation of xs after the stationary state is reached. According to the SIR model, three types of nodes depict the influence propagation process. Given a state of the propagation from xs at time t, nodes on the graph can be categorized as: (1) susceptible nodes that can be influenced by the infectious nodes. (2) infectious nodes that can propagate such influence to nearby 
+
+susceptible neighbors for some time before transforming to the recovered nodes ( xs is the first infectious 
+
+node at the beginning of influence propagation). (3) recovered nodes that cannot propagate influence to 5Table 1: The notations of our method. 
+
+Notation Description 
+
+G = ⟨X , E⟩ Directed graph including node set X and edge sets E
+
+L Number of edge types or relations 
+
+Γs Set of neighbors of xs
+
+Hout  
+
+> s
+
+Outward influence propagation node set of xs
+
+Hin  
+
+> s
+
+Inward influence propagation node set of xs
+
+XNoticed  
+
+> s
+
+Noticed node set of xs
+
+Bs Border node set of xs
+
+(X, ε, υ s(·)) Entire set of nodes, its σ-field, and the measure of any subset of the σ-field 
+
+S s(·), Is(·), Rs(·) and Us(·) Measures of susceptible , infectious , recovered , and noticed nodes, respectively 
+
+A and D Graph adjacency matrix and diagonal degree matrix, respectively 
+
+Pei j Conditional activation probability 
+
+Pi j All the possible paths from xi to x j
+
+τi Duration for xi converted from infectious to recovered node 
+
+n and q Positive scalars to approximate Rt′ 
+
+> s
+
+(X) and the relative size of Hin  
+
+> s
+
+over Hout  
+
+> s
+
+, respectively 
+
+SF and SL Sub-graphs with features and labels, respectively 
+
+R Number of message passing iterations 
+
+L Loss function to train the model 
+
+Θ and W(l) Model parameters and model weights of l-th layer, respectively 
+
+η Latest 2 α epochs of the evaluations during model training 
+
+ξ Threshold for early stop during model training 
+
+ρ Average number of edges per node 
+
+d Dimension of node features 
+
+b Number of sub-graphs in a mini-batch during model training 
+
+nearby susceptible nodes anymore. Thus, all the infectious and recovered nodes are those that have been influenced. Formally, we consider a measurable space ( X, ε, υ s(·)) where ε is the σ-field on X and υs(·) is a measure on any subset of ε for the number of nodes. Besides, finite measures S s(·), Is(·), and Rs(·), are the measures for the number of susceptible , infectious , and recovered nodes respectively satisfying υts(X) = S ts(X) +
+
+Its(X) + Rts(X) at time t. Then, by considering topology information Ai j ∈ { 0, 1} from the adjacency matrix and conditional activation probability Pei j , which is the probability of x j is influenced by xi given the edge type ei j , we define our graph SIR model in Definition 1. 
+
+Definition 1 (Graph SIR Model). For any node xs, given measures S s(·), Is(·) and Rs(·) on ( X, ε, υ s(·)), the SIR model on graph G over time t ∈ { 0, 1, . . . , ∞} is represented as: 
+
+
+
+ddt S ts(X) = −
+
+X
+
+i∈X 
+
+X
+
+j∈X 
+
+Ai j Pei j Its(i)S ts( j)ddt Its(X) = − ddt S ts(X) − ddt Rts(X)ddt Rts(X) =
+
+X
+
+i∈X 
+
+1
+
+τi
+
+Its(i).
+
+(2) where τi is the duration for xi from infectious to recovered node, and Pei j is the conditional activation prob-ability for any xi, x j ∈ X satisfying Px j∈Γ1 
+
+> i
+
+Pei j = 1. In the graph SIR model, the propagation process, akin to an information cascade reaching saturation in social networks, will reach a stationary state at time t′ > 0. Specifically, Its(X) = 0 when t ≥ t′, and 
+
+υt′
+
+s (X) = S t′
+
+s (X) + Rt′
+
+s (X), which means that the infectious nodes will disappear after t′, leaving only the 
+
+susceptible and recovered nodes. In this stationary state, which starts at t′, the recovered nodes will be the 6set of Hout  
+
+> s
+
+, and |H out  
+
+> s
+
+| = Rt′ 
+
+> s
+
+(X), since the set of the recovered nodes at t′ covers all possible paths for the outward influence propagation outbreaks from xs. The recovered nodes include nodes in Γ1 
+
+> s
+
+and PsE , where 
+
+xE , xs receives the influence of xs and terminates the propagation. Theorem 1 shows the set of Hout  
+
+> s
+
+.
+
+Theorem 1. Given R t′ 
+
+> s
+
+(X), and all possible paths Psi between xs and xi, the most likely set of Hout s of the source xs will be 
+
+Hout sP
+
+−→ 
+
+xi :
+
+X
+
+> m∈P si
+
+Y
+
+> eab ∈m
+
+Peab ≥ 1
+
+Rt′ 
+
+> s
+
+(X)
+
+ . (3) Theorem 1 selects the number of nodes equal to the value of Rt′ 
+
+> s
+
+(X), with the highest probability of receiving the outward influence from the source, as recovered nodes to obtain Hout  
+
+> s
+
+. Detailed proof of Theorem 1 can be found in Appendix B. According to Theorem 1, Rt′ 
+
+> s
+
+(X) is the key to obtain Hout  
+
+> s
+
+. Actually, Pei j is nearly uniform and in-dependent of ei j in many real networks [9], and τi can be chosen as a constant based on the application. Considering the graph topology Ai j , the influence of xs has been propagated only by existing edges to its neighbors Γs, since edges are produced by the influence. Thus, we give the following approximation for 
+
+Rt′ 
+
+> s
+
+(X) to obtain Hout  
+
+> s
+
+in Corollary 1. 
+
+Corollary 1. Given xi, x j ∈ X , let P ei j = p be uniformly distributed, τi = ˆτ be a constant, there will be a proper n to approximate R t′ 
+
+> s
+
+(X):n = arg min 
+
+> n′
+> n′
+
+X
+
+> k=0
+
+Γks − Rt′ 
+
+> s
+
+(X)
+
+s.t. exp( −ˆτ · p · Γ1 
+
+> s
+
+· Rt′ 
+
+> s
+
+(X)
+
+X ) = 1 − Rt′ 
+
+> s
+
+(X)
+
+X , (4) 
+
+which satisfies R t′ 
+
+> s
+
+(X) ≈ Rt′ 
+
+> s
+
+(∪nk=0Γks). Thus, Hout s ≈ ∪ nk=0Γks.
+
+Corollary 1 uses the local neighbor nodes of the source node to approximate the nodes in Hout  
+
+> s
+
+. Corol-lary 1 also explains why methods that employ information from a local range of neighbors exhibit satisfac-tory performance in certain real-world datasets, as these methods typically leverage the outward influence of the source. Detailed proof of Corollary 1 can be found in Appendix C. To consider the node influence completely, we next discuss the propagation of inward influence. 
+
+4.2. Node set of inward influence: Hin s
+
+After the outward influence propagation, some influences of xs continuously propagate outside Hout  
+
+> s
+
+as responses before going back to xs, which still need to be tracked. In this section, we uncover the nodes of inward influence, covering the nodes set Hin  
+
+> s
+
+, which reversely respond to the outward influence from xs.The paths of response will be only within a range of nodes that have noticed xs. In particular, we extend the SIR model by introducing the noticed nodes to include the nodes that are on the paths of response to the influence of the source node. For example, in a social network, noticed nodes are those aware of xs’s influence yet not directly altered by it, among whom some eventually give response to xs, forming Hin  
+
+> s
+
+.We assume that the number of the noticed nodes is positively correlated with the number of the nodes influenced by xs, and we define the measure of the noticed nodes in Definition 2. 7Definition 2 (Measure of the Noticed Nodes). Given a positive term Q < ∞, let Uts(·) be a measure for the number of noticed nodes at t ∈ { 0, 1, . . . , ∞} satisfying Uts(·) = Q · (Its(·) + Rts(·)), and then we have ddt Uts(X) =
+
+X
+
+> i∈X
+
+1 + 1
+
+τi
+
+!
+
+· Q · Its(i). (5) All the paths of response can be covered by the set of noticed nodes, denoted as XNoticed  
+
+> s
+
+. By searching the paths of response in XNoticed  
+
+> s
+
+, we could obtain Hin  
+
+> s
+
+in Theorem 2. 
+
+Theorem 2. Given Px j∈Γ1 
+
+> ∗
+
+Pe∗ j = 1, Psi , and R t′ 
+
+> s
+
+(X), let U t′ 
+
+> s
+
+(X) = Q · (It′ 
+
+> s
+
+(X) + Rt′ 
+
+> s
+
+(X)) = Q · Rt′ 
+
+> s
+
+(X), and m is a single path from Psi , Hin s will be 
+
+Hin s =
+
+[
+
+> j∈B s,i∈X Noticed s
+
+nxk : xk ∈ P ji ; xk , x j; Ais , 0o . (6) 
+
+where XNoticed s is the set of the noticed nodes 
+
+XNoticed sP
+
+−→ 
+
+xi :
+
+> 1(Q+1)
+
+Rt′ 
+
+> s
+
+(X) ≤
+
+X
+
+> m∈P si
+
+Y
+
+> eab ∈m
+
+Peab < 1
+
+Rt′ 
+
+> s
+
+(X)
+
+ . (7) 
+
+Bs in Theorem 2 is defined as the last order neighbors of xs in Hout  
+
+> s
+
+, which split the Hs into Hout  
+
+> s
+
+and 
+
+Hin  
+
+> s
+
+, given in Definition 3. 
+
+Definition 3 (Border Set). Let n satisfy Hout  
+
+> s
+
+≈ ∪ nk=0Γks, and Ps j be all the paths from xs to x j in X, the border set of xs is 
+
+Bs =
+
+(
+
+xi : min 
+
+> m∈P si
+
+|m| = n
+
+)
+
+. (8) 
+
+Theorem 2 determines the noticed node set according to the probability of receiving the inward influence of the source, and finds nodes in the paths back to the source among noticed nodes to obtain Hin  
+
+> s
+
+. In Theorem 2, xk ∈ P ji are the nodes of all possible paths from x j back to xi. Using Theorems 1 and 2, the source node’s influence can be tracked. Detailed proof of Theorem 2 can be found in Appendix D. Using the similar approximation method in Corollary 1, we can approximate XNoticed  
+
+> s
+
+by 
+
+XNoticed  
+
+> s
+
+≈
+
+> n×(q+1)
+
+[
+
+> k=n+1
+
+Γks, (9) where q is a positive scalar to approximate Q that indicates the co-relationship between the node set size of outward and inward influence propagation. Experiments show a proper scalar can be good enough to obtain the XNoticed  
+
+> s
+
+.Consequently, by the approximation of Theorems 1 and 2 using Corollary 1 and Eq. (9) with the proper 
+
+n and q, we filter irrelevant noises and obtain the relevant information from nodes in Hs = Hout  
+
+> s
+
+∪ H in  
+
+> s
+
+to track the influence of xs covered by Gs for link prediction. 85. Sub-graph of influence propagation for link prediction 
+
+In this section, we present our IGNP as Flp (·) to predict the types of the edge with a lower computational cost, by using the virtual sub-graph Si j obtained from Gi j = Gi ∪ G j. To this end, we first replace the paths of inward influence propagation by virtual edges to obtain virtual sub-graphs to reduce the computational costs in Section 5.1. Subsequently, we train a recurrent GNN taking virtual sub-graphs as input to predict edge types in Section 5.2. E ffi ciency analysis of using virtual edges is given in Section 5.3. 
+
+5.1. Virtual sub-graph generation 
+
+Usually, Hin  
+
+> i j
+
+= Hin  
+
+> i
+
+∪ H in  
+
+> j
+
+from Gi j covers a large range and leads to a high computational cost. Thus, we introduce the virtual edges to simulate the paths of influence propagation through Hin  
+
+> i j
+
+to reduce the computational cost. The concept of the virtual edge is derived from the Mean-Field Theory (MFT) [15], which uses the average e ff ect to replace complex group e ff ects in a simplified and computationally e ffi cient manner. Ac-cording to MFT, the expectation of inward influence propagates from nodes in Bi back to xi over Hin  
+
+> i
+
+, i.e. 
+
+Pm∈P bi 
+
+Qe∗∈m E A∗ · Pe∗
+
+ (xb ∈ B i), could be considered as a group e ff ect of E Pebi 
+
+. A virtual edge ebi ,which virtually acts as these paths of inward influence propagation, can replace such a group e ff ect. We focus on the topological reachability from Bi back to xi over Hin  
+
+> i
+
+instead of nodes, since the nodes over Hin 
+
+> i
+
+usually bring much noise due to their less relevant information compared to the source. Besides, we only replace paths over Hin  
+
+> i
+
+rather than H, since the paths over Hin  
+
+> i
+
+carry more relevant information than nodes far from the source. By using virtual edges, the Hi j can be enclosed by Hout  
+
+> i j
+
+, and Gi j will be shrunk to the sub-graph of outward influence propagation augmented with virtual edges, i.e., the virtual sub-graph Si j .Utilizing Si j will not dramatically increase the computational cost, while the relevant global information of 
+
+xi and x j is also reserved. Algorithm 1 converts Gi j into Si j by virtual edge extraction and adds features /labels to Si j to train the edge predictor. We assume that xi and x j are the source and destination of the edge to predict. Algorithm 1 first finds Bi j of Hout  
+
+> i j
+
+and XNoticed  
+
+> i j
+
+. Then for xb in Bi j , we add a virtual edge from xb to xi in Si j only if a path exists in XNoticed  
+
+> i j
+
+connecting these two, enabling us to obtain the structure of Si j . During the path searching, we use node features to guide the search for paths. The process starts by taking any xb ∈ B i j as the first candidate node of Pbi . The greedy search selects the first-order neighbor of the candidate node nearest to xi
+
+as the next candidate, repeating until Pbi is confirmed or refuted; since at most |X Noticed  
+
+> i j
+
+| nodes are traversed and each step requires an O(|X Noticed  
+
+> i j
+
+|) nearest-neighbor scan, the worst-case time complexity of Algorithm 1 is O(|B i j | · |X Noticed  
+
+> i j
+
+|2), reducible to O(|B i j | · |X Noticed  
+
+> i j
+
+| log |X Noticed  
+
+> i j
+
+|) via a min-heap. Once the structure of Si j 
+
+has been obtained, two replicas of it will be made to fill features and labels respectively as SFi j and SLi j for the later model training. Note that the SFi j contains the information of all types of propagated influence and can be utilized by the model. In SFi j , the node feature xi is its implicit or (and) explicit features, and the edge feature Dist i j is a Euclidean or cosine distance between xi and x j. In SLi j , the edge labels are the existence for binary prediction or types for multi-class prediction. We also add node labels to SLi j , which masks the selected nodes xi and x j, to check whether the node category can a ff ect the performance. Notably, the type of the virtual edge is a special type that is di ff erent from all the other types. Fig. 3 gives an example to show 
+
+SF and SL for S in Fig. 2(c). 
+
+5.2. The propagated-influence-based link prediction 
+
+Once we have SF and SL, we train the recurrent GNN [35] to map the features describing all types of influence in SF to their corresponding edge types in SL via message passing. 9Algorithm 1: Virtual sub-graph generation 
+
+Input : G, A, xi (the source) and x j, n, q.
+
+Output: The pair of virtual sub-graphs SFi j and SLi j . 
+
+> 1
+
+Find Hout  
+
+> i
+
+and Hout  
+
+> j
+
+by using G according to Corollary 1.  
+
+> 2
+
+Obtain Si j = Hout  
+
+> i
+
+∪ H out  
+
+> j
+
+. 
+
+> 3
+
+Find Bi j = Bi ∪ B j in Hout  
+
+> i
+
+∪ H out  
+
+> j
+
+according to Eq. (8).  
+
+> 4
+
+Obtain XNoticed  
+
+> i j
+
+= XNoticed  
+
+> i
+
+∪ X Noticed  
+
+> j
+
+using q according to Eq. (9).  
+
+> 5
+
+foreach x b ∈ B i j do  
+
+> 6
+
+Add xb to an empty set C to store candidate nodes.  
+
+> 7
+
+Add Γ1 
+
+> b
+
+to an empty set Z to store visited nodes.  
+
+> 8
+
+while |Z| < |X Noticed i j | do  
+
+> 9
+
+Add xl < C with Dist li = min   
+
+> xk∈Z
+
+(Dist ki ) to C. 
+
+> 10
+
+Add Γ1 
+
+> l
+
+∩ X Noticed  
+
+> i j
+
+to Z. 
+
+> 11
+
+if Z contains xm with Ami = 1 then  
+
+> 12
+
+Add ebi to Si j and search for the next xb. 
+
+> 13
+
+Duplicate Si j into SFi j and SLi j . 
+
+> 14
+
+Assign the feature to eab ∈ S Fi j with Dist ab . 
+
+> 15
+
+Assign the label to xa ∈ S Li j , True if xa ∈ { xi, x j} otherwise False.  
+
+> 16
+
+Return the pair of virtual sub-graphs SFi j and SLi j .
+
+Recurrent GNN. A recurrent GNN performs two steps recurrently in each layer: (1) edges are updated using messages from connected nodes, and (2) nodes are updated using the messages aggregated from their edges. This process can be depicted in Eq. (10). 
+
+X(l+1) = σ(D−1AX(l) W(l) )(0 < l < R) (10) where σ(·) is the update function, the recurrence R indicates the number of message passing iterations, D
+
+is the diagonal degree matrix, and D−1A is the normalized adjacency matrix. X(0) and X(R) are the input feature and final representation of nodes, respectively. A decoder will use the final node representation to generate edge embeddings and output the types of every edge in the virtual sub-graph. Di ff erent R aff ects the learning process, which can be found in the experiments. 
+
+Training. We use the supervised learning scheme to train the recurrent GNN to predict the edges using e31 
+
+> (Dist 31 )
+> e12
+> (Dist 12 )
+> e23
+> (Dist 23 )
+> e24
+> (Dist 24 )
+> e15
+> (Dist 15 )
+> X1
+> (X 1)X2
+> (X 2)X5
+> (X 5)X3
+> (X 3)X4
+> (X 4)
+
+(a) SF (S with features) e12  
+
+> (e12 )
+> e23
+> (e23 )
+> e24
+> (e24 )
+> e15
+> (e15 )
+> X1
+> (True) X2
+> (True) X5
+> (False) X3
+> (False) X4
+> (False)
+> e31
+> (
+> Virtual edge )
+
+(b) SL (S with labels) 
+
+Figure 3: Featured and labeled virtual sub-graphs of the virtual sub-graph in Fig. 2(c) with n = 1 for multi-class prediction. Dashed lines are virtual edges. Features in SF and labels in SL are in green. 
+
+10 SFi j and SLi j obtained by the extended propagation model and Algorithm 1. The recurrent-GNN fulfills the message passing guided by the graph structure of influence propagation from the SFi j , and subsequently outputs the edge existence and type, i.e. ei j . The training process is more e ff ective and e ffi cient given the light but comprehensive global information with long-distance dependencies stored in the virtual sub-graph. To show how edges and nodes information of the virtual sub-graphs contribute to the final prediction results, di ff erent losses derived from a cross-entropy loss LCE [35] are designed concerning model parameters Θ:(1) L0 considering labels of both nodes and edges in Si j in Eq. (11); (2) L1 only considering labels of edges in Si j in Eq. (12); (3) L2 only considering the label of ei j in Eq. (13) which is the original loss for link prediction. The objective of the training process is to minimize the loss. 
+
+L0(Θ) =
+
+X
+
+> ei j ∈E
+
+X
+
+> xa∈S i j
+
+LCE xa, xΘ
+
+> a
+
+ +
+
+X
+
+> eab ∈S i j
+
+LCE eab , eΘ
+
+> ab
+
+ (11) 
+
+L1(Θ) =
+
+X
+
+> ei j ∈E
+
+X
+
+> eab ∈S i j
+
+LCE eab , eΘ
+
+> ab
+
+ (12) 
+
+L2(Θ) =
+
+X
+
+> ei j ∈E
+
+LCE ei j , eΘ
+
+> i j
+
+ (13) 
+
+Besides, we also use Eq. (14) to detect the convergence of the model for an early stop. As such, the last 2α (α ∈ { 0, 1, . . . }) epochs of evaluations (i.e. accuracy), denoted as η ( η ≥ 2α), will be used to stop the training by a designated threshold ξ in Eq. (14). 
+
+1
+
+α
+
+|η|−α
+
+X
+
+> i=
+
+|η|−2α
+
+ηi − 1
+
+α
+
+|η|X
+
+> j=
+
+|η|−α
+
+ηj ≤ ξ. (14) 
+
+Inference. The trained model will process the input sub-graph SFi j , from a test graph G′, with explicit or (and) implicit features of a pair of nodes xi and x j, to make the data-driven prediction for edge existence and type. This can be written as Flp (F f eat (xi), F f eat (x j)) = GNN (SFi j ) = ei j .
+
+5.3. Analysis 
+
+Next, we show the complexity advantage of GNN training after adopting our virtual sub-graphs. We first give the training time complexity of common GNNs in Lemma 1 for the sub-graphs of n order neighbors, whose proof can be found in Appendix E. 
+
+Lemma 1 (Complexity of GNNs). Given the graph sparsity ρ = |E| |X| (the average number of edges per node), the training time complexity of a GNN is O (b · Pni=0 ρi · d2 · R ) where R is the number of GNN layers or recurrence, d is the dimension of node features, n is the order of neighbors, and b is the number of sub-graphs in a mini-batch. 
+
+Next, we discuss the speed-up of GNN training with virtual sub-graphs. Suppose we take as input the nodes within n · (q + 1) order of neighbors for a GNN, the time complexity will be O(b · Pn·(q+1)  
+
+> i=0
+
+ρi · d2 · R ). If we use virtual edges to replace information far from n order of neighbors, the time complexity will drop to 
+
+O(b · Pni=0 ρi · d2 · R ). Consequently, according to Lemma 1, we give the speed improvement after adopting the virtual sub-graph by Theorem 3. The proof of Theorem 3 can be found in Appendix F. 
+
+Theorem 3. By using the virtual sub-graph, the speed of GNN training is    
+
+> Pn·(q+1)
+> i=0ρi
+> Pni=0ρi
+
+times faster. 
+
+Above all, adopting the virtual sub-graph will considerably reduce the computational complexity of training a GNN model. 11 Table 2: Statistics of datasets. |X| and |E| are the number of nodes and edges we used. L is the number of edge types or relations. xi  
+
+> (with ddimensions) is either the pre-trained embeddings or observable features for IGNP.
+
+Dataset |X| |E| L xi for IGNP d
+
+(1) PPI 3000 5273 2 N2V 64 (2) DBLP 317080 1049866 2 N2V 500 (3) BlogCatalog 5196 343486 2 N2V 500 (4) Twitter 179 6741 2 In Dataset 500 (5) WikiData (1k /5k /10k) 1k /5k /10k 369 /1651 /8248 260 /380 /420 W2V 500 
+
+6. Experiments 
+
+We evaluate the performance of our IGNP for multi-class and binary prediction in Section 6.1 and Sec-tion 6.2, respectively. Next, we conduct a rigorous analysis and ablation study in Section 6.3 to show the e ffi ciency and e ff ectiveness improvement by adopting the virtual edges, the e ff ect of inward influence, impacts of di ff erent losses, parameter analysis, and visualization of model training. All experiments are conducted on a server with a 32-core CPU, 96 GB of RAM, and a GeForce RTX 2080 Ti GPU. 
+
+Datasets. The experiments are conducted on popular benchmarks and a real-world dataset. (1) PPI [11] is a protein-protein interaction database. We use the first 3k nodes for the experiment. (2) DBLP [36] is a co-authorship network where two authors are connected if they publish at least one paper together. (3) BlogCatalog [37] is a social network that stores the relationship between bloggers. (4) Twitter [38] consists of many ego networks. An ego network contains an ego user and users to whom this ego user is directly connected. Given that ego networks are largely independent and exhibit minimal interconnection, we focus on using a single ego network in our experiments. (5) WikiData 2 is the knowledge graph for Wikipedia actively maintained by the Wikimedia Foundation. Di ff erent subsets of entities are selected for di ff erent tasks, and all edges whose target entities lie outside the chosen subset are removed accordingly. The resulting isolated nodes are retained for the negative sample generation, thereby increasing the di ffi culty of accurately predicting relationships among nodes. 
+
+Data preparation. The statistics of the used datasets are in Table 2. Di ff erent datasets use di ff erent node features for our IGNP. For datasets (1)–(3), we use Node2vec [22] (N2V) to obtain pre-trained embed-dings as node features. Dataset (4) contains observed browser data where the top 500 frequently appearing attributes are filtered for use. Dataset (5) uses wikipedia2vec [39] (W2V) as the node feature. Following the practice of existing works [23, 9], we equally split datasets (1)–(5) into two parts for training and testing, respectively. The ratio of positive and negative samples was set to 1:1 for balanced label distribution and fairly binary prediction. There are no negative samples for multi-class prediction. The order of the training set is randomized across mini-batches to avoid any training bias. 
+
+Comparison methods. To ensure a rigorous and e ff ective comparison, we comprehensively benchmark both classical and recent approaches under a unified experimental setup. More precisely, we compare our IGNP with similarity metrics including AA [17], RA [6], latent feature methods including Node2vec [22] (N2V), Struc2vec [7] (S2V), HARP [23] (based on Node2vec), Ripple2Vec [24] (R2V), and GNN-based methods including SEAL [9] (based on Node2vec, and n auto-selection is enabled), RGCN [40], HGT [26], GAug [28], GCA [29], BUDDY [41], NCN [42], NCN-di ff [42], NCNC [42], and Refined-GAE [43]. Simi-larity and stochastic metrics indicate the performance of the traditional link prediction. The comparison with 
+
+> 2https://dumps.wikimedia.org/wikidatawiki/entities/
+
+12 e14 
+
+(Dist 14 )
+
+e12 
+
+(Dist 12 )
+
+e13 
+
+(Dist 13 )
+
+e11 
+
+(Dist 11 ) X1
+
+> (X 1)X2
+> (X 2)X5
+> (X 5)X3
+> (X 3)X4
+> (X 4)
+
+e15 
+
+(Dist 15 )(a) SF (S with features) e14 
+
+(
+
+> False
+
+)
+
+e12 
+
+(
+
+> True
+
+)
+
+e13 
+
+(
+
+> False
+
+)
+
+e11 
+
+(
+
+> False
+
+) X1
+
+> (True) X2
+> (True) X5
+> (False) X3
+> (False) X4
+> (False)
+
+e15 
+
+(
+
+> True
+
+) (b) SL (S with labels) 
+
+Figure 4: Examples of the center beam ( CB ) sub-graphs of the input graph in Fig. 2(a) for binary prediction. Table 3: Comparison of multi-class and binary link prediction. – indicates the task is not supported by the method. All baselines are re-evaluated and fine-tuned under our unified experimental setup. Each dataset is equally split into training and test sets. 
+
+Prediction Multi-class (Acc (%) ↑ | Macro-F1 ↑) Binary (Acc (%) ↑ | ROC-AUC ↑ | AP ↑ )Dataset WikiData (1k) WikiData (5k) WikiData (10k) WikiData (10k) Twitter PPI DBLP BlogCatalog 
+
+AA [17] 1.570 |0.031 0.330 |0.007 0.120 |0.003 49.98 |0.5493 |0.5498 47.39 |0.6194 |0.5665 50.30 |0.5605 |0.5583 49.99 |0.6229 |0.6218 49.51 |0.5776 |0.6099 RA [6] 4.590 |0.088 0.210 |0.004 0.300 |0.001 49.98 |0.5499 |0.5499 45.36 |0.6033 |0.5622 50.17 |0.5605 |0.5583 49.99 |0.6228 |0.6217 49.54 |0.5747 |0.6064 N2V [22] 51.53 |0.119 39.93 |0.065 35.46 |0.060 72.11 |0.7437 |0.8297 64.98 |0.7059 |0.7052 61.96 |0.7787 |0.7605 88.04 |0.9587 |0.9535 72.84 |0.8018 |0.8000 S2V [7] 43.83 |0.074 42.26 |0.035 42.96 |0.032 83.75 |0.9178 |0.9206 69.16 |0.7473 |0.7140 73.78 |0.8294 |0.8206 67.23 |0.7381 |0.7464 61.57 |0.6566 |0.6519 HARP [23] 50.31 |0.120 53.05 |0.160 53.73 |0.156 89.81 |0.9447 |0.9189 72.15 |0.7874 |0.7226 64.68 |0.7218 |0.6718 93.11 |0.9811 |0.9550 77.07 |0.8568 |0.8494 R2V [24] 26.28 |0.030 33.15 |0.019 33.10 |0.023 62.16 |0.6548 |0.6221 54.43 |0.5626 |0.5554 66.32 |0.7240 |0.7543 52.84 |0.5404 |0.5345 60.27 |0.6355 |0.6036 SEAL [9] – – – 78.88 |0.8594 |0.8755 76.81 |0.8325 |0.7750 84.09 |0.8552 |0.8688 81.37 |0.8538 |0.8927 78.93 |0.8696 |0.8668 RGCN [40] 38.37 |0.088 48.99 |0.066 47.66 |0.082 50.00 |0.5000 |0.5000 50.00 |0.5000 |0.5000 50.80 |0.6978 |0.7056 68.08 |0.7148 |0.7557 69.10 |0.7605 |0.7476 GCA [29] 58.20 |0.228 56.71 |0.107 56.11 |0.094 89.03 |0.9539 |0.9601 74.18 |0.8167 |0.7998 73.03 |0.8374 |0.8298 87.38 |0.9522 |0.9472 69.79 |0.7659 |0.7582 HGT [26] 14.19 |0.013 12.04 |0.004 16.12 |0.003 50.60 |0.5063 |0.5058 56.10 |0.5928 |0.5818 53.96 |0.5501 |0.5358 50.47 |0.5029 |0.5091 50.06 |0.5036 |0.5030 GAug [28] 18.33 |0.006 21.96 |0.004 18.38 |0.002 50.00 |0.5000 |0.5000 50.00 |0.5000 |0.5000 50.85 |0.6998 |0.7085 68.42 |0.7199 |0.7561 69.32 |0.7620 |0.7489 BUDDY [41] 60.59 |0.571 61.21 |0.589 63.41 |0.611 90.67 |0.9776 |0.9803 82.58 |0.9127 |0.8997 70.65 |0.7773 |0.8066 89.74 |0.9748 |0.9767 82.68 |0.9121 |0.9140 NCN [42] 46.34 |0.075 47.93 |0.046 55.97 |0.067 90.36 |0.9773 |0.9762 83.29 |0.9219 |0.9097 61.69 |0.7901 |0.8108 86.89 |0.9665 |0.9700 77.07 |0.8892 |0.8879 NCN-di ff [42] 45.71 |0.071 50.78 |0.082 61.43 |0.133 90.23 |0.9772 |0.9735 59.88 |0.9153 |0.8996 59.78 |0.8050 |0.8187 88.20 |0.9694 |0.9714 80.32 |0.8944 |0.8926 NCNC [42] – – – 94.45 |0.9851 |0.9856 83.54 |0.9182 |0.9084 68.17 |0.8216 |0.8471 86.74 |0.9673 |0.9713 80.06 |0.8874 |0.8865 Refined-GAE [43] 48.94 |0.090 45.09 |0.239 38.53 |0.115 89.90 |0.9591 |0.9568 72.47 |0.8688 |0.8228 60.88 |0.8039 |0.8061 94.09 |0.9807 |0.9840 84.42 |0.9237 |0.9186 IGNP (Ours) 78.75 |0.576 81.58 |0.535 87.38 |0.625 95.22 |0.9879 |0.9859 84.51 |0.9140 |0.8930 90.88 |0.9641 |0.9571 95.33 |0.9934 |0.9938 92.27 |0.9772 |0.9713 
+
+Relative Gain (%) +30.0 |+0.88 +33.3 |-9.17 +37.8 |+2.29 +0.82 |+0.28 |+0.03 +1.16 |-0.86 |-1.84 +8.07 |+12.7 |+10.2 +1.32 |+1.25 |+1.00 +9.30 |+5.79 |+5.74 
+
+latent feature methods evaluates the global feature extraction ability of our method. We also include GNN-based methods, emphasis on di ff erent functionalities, to compare the learning ability among deep models. See Appendix A for more baseline details. For ablation studies, we implement two variants of IGNP using di ff erent approaches to generate sub-graphs. The first variant uses the center-beam sub-graph structure ( CB ), shown in Fig. 4, which only con-siders the embedding distance between xs and nodes in Hout , neglecting neighbor structure. CB tries to learn a distance threshold to predict the edge, similar to methods that utilize features in a latent space. CB 
+
+also demonstrates whether embeddings can restore graph structure. Another variant uses the plain sub-graph structure ( PL ), which covers Hout with the original graph structure and node features, similar to SEAL [9]. For comparison, our IGNP utilizes nodes from both Theorems 1 and 2. 
+
+Evaluation metrics. To comprehensively demonstrate the performance, we adopt accuracy, ROC-AUC, and average precision (AP) for binary prediction, and accuracy (Acc) and macro-F1 for multi-class predic-tion. Except for e ffi ciency experiments, all results are obtained using early stop defined by Eq. (14) with 
+
+α = 10 and ξ = 1e − 4. When compared with other methods, all results are averaged over three runs. 
+
+6.1. Multi-class prediction 
+
+The accuracy and macro-F1 for 1k, 5k, and 10k nodes from WikiData with about 260, 380, and 420 edge types for multi-class link prediction are shown in Table 3 (edge types are not considered by SEAL and NCNC), and the trend with the number of classes increases is in Fig. 5. We observe that IGNP outperforms all baselines by 30%–37% and consistently achieves the best accuracy, which further improves as the number of classes increases. For IGNP, relevant local and global information from both Hout and Hin is well utilized by the sub-graph with virtual edges. Additionally, more data provides diversified sub-graphs, which bring additional supervision signals of each class to improve the results even as the number of classes increases. 13 260 280 300 320 340 360 380 400 420   
+
+> Number of Classes
+> 020 40 60 80 100
+> Acc (%)
+> AA RA N2V S2V HARP R2V RGCN GCA HGT GAug BUDDY NCN NCN-diff Refined-GAE IGNP (Ours) Figure 5: Accuracy for multi-class prediction on Wikidata with 1k, 5k, and 10k entities. The number of classes for prediction expands in proportion to the entity size. All baselines are re-evaluated and fine-tuned under our unified experimental setup.
+
+In general, most latent feature methods and GNN-based approaches outperform traditional similarity metrics. Specifically, methods such as AA, RA, N2V, S2V, RGCN, GAug, GCA, and Refined-GAE primarily rely on local node features and topological information from Hout . As the number of relations increases, the prediction of these methods becomes more challenging, resulting in sub-optimal performance. Notably, the performance of HARP, R2V, BUDDY, NCN, and NCN-di ff improves with larger datasets due to their ability to implicitly or explicitly incorporate global information from higher orders of neighbors to refine local embeddings. However, this process is less e ffi cient and may introduce additional noise. 
+
+6.2. Binary prediction 
+
+The accuracy, ROC-AUC, and AP results for binary prediction of edge existence are shown in Table 3. We observe that IGNP achieves the best accuracy on all datasets, outperforming the baselines by up to 9%. Our IGNP enriches the local features with real long-distance connectivity via global graph searching to improve performance, which especially benefits the results on WikiData (10k) where nodes across the entire graph are frequently connected. Edges in Twitter , DBLP , BlogCatalog , and PPI record interactions among a group of people or proteins from parts of the graph, which can be better predicted with global information. Besides, results from Twitter indicate that IGNP can also learn to e ff ectively predict the existence of edges using observable attributes of the nodes. Meanwhile, focusing on local topology, the performance of similarity metrics, RGCN, and SEAL is limited. HARP utilizes global information from Hout ∪ X Noticed with q → ∞ and outperforms other latent feature methods, including N2V, R2V, and S2V, demonstrating its capability to reconstruct edge existence in graphs with stable patterns, such as PPI , where proteins within the same category exhibit numerous shared properties. GNN-based baselines generally outperform latent feature methods on di ff erent datasets. Compared with baselines of latent feature methods and similarity metrics, NCN, NCN-di ff , and NCNC are better on WikiData (10k) and Twitter ; SEAL is better on PPI , and Refined-GAE is better on larger datasets including DBLP and BlogCatalog . GCA and GAug augment the data with random noise to obtain a more general model, during which the model might also be confused by the induced noise. 14 Table 4: Accuracy comparison of di ff erent sub-graph structures, loss functions, and order of neighbors. Each dataset is equally split into training and test sets.                                                                                                                                          
+
+> Acc (%) ↑-CB PL IGNP (q=5) Task Dataset n(n∗)0120120 (1) 1 (6) 2 (12)
+> L088.24 93.20 86.12 88.20 94.77 93.09 90.55 94.82 93.74 Binary WikiData L189.46 92.52 89.02 90.37 94.98 93.70 90.80 95.22 94.22 (10k) L262.14 71.42 68.90 64.78 69.19 68.27 69.45 64.49 70.22
+> L081.00 75.77 79.42 81.16 71.37 50.84 81.99 64.22 74.24 Binary Twitter L180.39 76.62 78.93 80.10 70.94 49.60 80.36 61.62 73.81
+> L258.08 59.97 51.40 55.64 63.42 68.70 61.41 56.57 72.21
+> L073.77 65.15 64.42 67.27 75.61 70.60 71.63 75.88 68.77 Binary PPI L171.99 66.07 62.85 73.45 79.54 73.30 73.76 90.88 68.99
+> L258.95 61.30 63.52 59.00 65.06 56.50 58.62 58.80 58.36
+> L076.26 70.36 50.21 78.34 82.01 79.89 77.08 79.24 74.15 Multi-class WikiData L178.84 68.19 51.83 78.76 83.20 78.71 72.51 81.63 79.69 (10k) L229.31 32.93 32.98 33.12 31.06 39.54 36.08 33.56 35.97
+
+6.3. Method analysis and ablation study 6.3.1. E ff ectiveness of inward influence 
+
+To show the performance when utilizing inward influence from nodes defined in Theorem 2, i.e. rele-vant global information, we compare the accuracy of IGNP and its variants, which use di ff erent sub-graph structures, shown in Table 4. Let n∗ be the max order of utilized neighbors, and then n∗ of IGNP, CB , and 
+
+PL will be max ( n · (q + 1) , 1), n, and n respectively, where n is the order of neighbors of the sub-graphs. We can find that IGNP achieves the best results in all cases for binary and multi-class prediction. Since CB ignores the neighboring graph structure, it prefers very small n (i.e. n = 0) to reduce infor-mation, and the performance is therefore capped. We can see CB reaches its best on Twitter and PPI when 
+
+n = 0, and it cannot handle more information when n > 0. By considering the graph structure of nodes in Hout , the performance of PL increases dramatically compared with the results of CB . Although compared with IGNP, PL shares the same GNN network structure and hyperparameters, the absence of information in virtual edges capped the performance of PL .To summarize, using the local structure information from Hout improves the performance, as shown by 
+
+CB and PL . Nonetheless, we find that only using Hout is not su ffi cient, and a larger range of neighborhoods with relevant global information should also be considered, such as nodes in Hin . The virtual edges provide more global information in Hin . By combining Hout , more supervision signals will improve the IGNP for link prediction. 
+
+6.3.2. E ff ectiveness of virtual edges 
+
+To compare the e ff ectiveness of virtual edges, we compared the accuracy of binary prediction using the entire sub-graph of influence propagation (IGNP-NoVE), virtual sub-graph (IGNP), and plain sub-graph (PL ). Results of di ff erent q after 20 epochs of training are shown in Table 5. We set n∗ as 2, 3, 6, 11, thus 
+
+PL uses n = 2, 3, 6, 11 to generate sub-graphs whereas IGNP constantly uses n = 1 with q = 1, 2, 5, 10. We can see from the results that the accuracy of using and not using the virtual edges is almost identical, but with a slight performance regression. It is a fact that both of them utilize the information from the sub-graph of influence propagation, and the use of virtual edges does not lose a lot of global information for link prediction. Thus, the virtual edge does not considerably a ff ect the performance. From the result of PL when 
+
+n∗ = 2 and the result of IGNP when n∗ = 3 to n∗ = 11, we can see a 1.5 to 2.0 percentage performance improvement, which indicates the inward influence is beneficial for the link prediction. Besides, due to the irrelevant noise, the performance of PL becomes worse compared with IGNP and IGNP-NoVE. 15 Table 5: The binary prediction accuracy using IGNP, IGNP-NoVE, and PL under di ff erent n∗ on WikiData (10k) with equally split training /test sets. 
+
+Acc (%) ↑ n∗ = 2 n∗ = 3 n∗ = 6 n∗ = 11 (q = 1) (q = 2) (q = 5) (q = 10) IGNP 94.93 95.45 95.09 95.05 IGNP-NoVE 95.33 95.41 94.84 95.20 
+
+PL 93.50 92.88 91.35 87.99 2 3 6 11 n* 10 1      
+
+> 10 2
+> 10 3
+> 10 4
+> Time (s)
+> Sub-graph, PL GNN, PL Overall, PL Sub-graph, IGNP GNN, IGNP Overall, IGNP
+> Figure 6: The execution time of IGNP and PL for binary prediction under di ff erent n∗on WikiData (10k).
+
+6.3.3. E ffi ciency of virtual edge 
+
+To show the e ffi ciency advantage of using virtual edges, we fix the n of IGNP and change q to utilize a larger range of nodes. We set n∗ as 2, 3, 6, 11, thus PL uses n = 2, 3, 6, 11 to generate sub-graphs whereas IGNP constantly uses n = 1 with q = 1, 2, 5, 10. For fairness, PL and IGNP use the same settings to train the model for 50 epochs without the early stop. The execution (wall clock) time of sub-graph generation, GNN model training, and overall procedure of IGNP and PL for binary prediction are shown in Fig. 6. The execution time of PL is increasing exponentially with n∗ becoming larger, which gives the practical evidence for Lemma 1 in Section 5.3. On the contrary, the execution time of IGNP increases slightly and approximately satisfies Theorem 3 compared with PL . Although searching a larger range, the guided traverse in Algorithm 1 reduces the time of generating virtual sub-graphs. Due to the sub-graph size not considerably changing, the training time of IGNP slowly increases. Overall, IGNP shows considerable time e ffi ciency compared with common GNN-based link prediction methods when learning the feature. 
+
+6.3.4. Comparison of di ff erent losses 
+
+Table 4 shows how di ff erent loss functions defined in Section 5.2 a ff ect the performance of di ff erent sub-graph structures and datasets. We can find L0 is better on Twitter , L1 is better in most cases on WikiData 
+
+(10k) and PPI , and L2 is the worst loss. That L0 is better on Twitter is probably because neighbor information is not very important, and the model should concentrate on the selected pair of nodes. On Twitter , the ego user has the edge over all of his friends, but few friends of him have the edge over each other. Using L0 with n = 0 to ignore the 16 Table 6: Accuracy of di ff erent size of entities for binary prediction of IGNP using L1. Each dataset is equally split into training and test sets. 
+
+Acc (%) ↑ n = 0 n = 1 n = 2
+
+WikiData (1k) 80.61 87.75 82.35 
+
+WikiData (5k) 86.62 92.75 90.40 
+
+WikiData (10k) 90.80 95.22 94.22 1 2 5 10 q70 75 80 85 90 95 100 Acc (%)       
+
+> n=0, Binary n=1, Binary n=2, Binary n=0, Multi-class n=1, Multi-class n=2, Multi-class
+> Figure 7: Accuracy comparison of di ff erent qand non WikiData (10k).
+
+neighborhood information will make the performance generally better on Twitter , which is in accordance with the results. For CB , L0 is better on PPI because CB cannot utilize neighborhood information well. 
+
+L1 focuses on the interaction among the sub-graph. It treats all the influences within a sub-graph com-prehensively, and di ff erent patterns of influence propagation can be recognized. WikiData (10k) and PPI 
+
+have more interaction information, thus L1 works well with most cases and obtains better results. 
+
+L2 only utilizes labels of ei j , which is not enough to learn all the patterns of influence propagation. 
+
+6.3.5. Parameter analysis Varying n for binary and multi-class prediction. A larger n does not guarantee a better result according to Table 4. Using CB with n = 0 and using PL , IGNP with n = 1 is more likely to produce good results. Note that when n = 0, the di ff erence between the structure of CB and PL will be the loop edge of xi, and that between PL and IGNP will be the virtual edges. When n > 0, neighborhood information can be incorporated to boost the performance of IGNP and PL . Nevertheless, an overly large n introduces excessive irrelevant information and thus degrades performance. This trend is evaluated with the first 1k, 5k, and 10k entities of 
+
+WikiData under di ff erent n, in Table 6. 
+
+Varying q on WikiData (10k). We show the comparison of di ff erent q under di ff erent n in Fig. 7. We observe a clear optimum for the values q = 5 and n = 1 in both binary and multi-class prediction. 
+
+Message passing iterations. We examine the training accuracy of IGNP ( q = 5) with L1 loss on WikiData 
+
+(10k) with the di ff erent number of iterations, i.e. recurrence R, of the GNN in Fig. 8. As we can observe in binary prediction, the model with a larger R converges faster than those with a smaller R and achieves a slightly better accuracy after 20 epochs of training. Such a trend continues after that. The same observation holds for varying values of n. As to multi-class prediction, a smaller R performs better at first, but the 17 5 10 15 20 
+
+> Epoch Number
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7
+> Loss
+> recurrence=1 recurrence=5 recurrence=10
+
+(a) Binary Loss ( n = 0) (b) Binary Acc ( n = 0)5 10 15 20  
+
+> Epoch Number
+> 01234
+> Loss
+> recurrence=1 recurrence=5 recurrence=10
+
+(c) Multi-class Loss ( n = 0) (d) Multi-class Acc ( n = 0)5 10 15 20 
+
+> Epoch Number
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7
+> Loss
+> recurrence=1 recurrence=5 recurrence=10
+
+(e) Binary Loss ( n = 1) (f) Binary Acc ( n = 1)5 10 15 20  
+
+> Epoch Number
+> 01234
+> Loss
+> recurrence=1 recurrence=5 recurrence=10
+
+(g) Multi-class Loss ( n = 1) (h) Multi-class Acc ( n = 1)5 10 15 20 
+
+> Epoch Number
+> 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7
+> Loss
+> recurrence=1 recurrence=5 recurrence=10
+
+(i) Binary Loss ( n = 2) (j) Binary Acc ( n = 2)5 10 15 20  
+
+> Epoch Number
+> 01234
+> Loss
+> recurrence=1 recurrence=5 recurrence=10
+
+(k) Multi-class Loss ( n = 2) (l) Multi-class Acc ( n = 2)
+
+Figure 8: Training loss and accuracy curves on WikiData (10k). The model achieves a slighter lower loss (higher accuracy) with 
+
+R = 10. 
+
+advantage decreases and disappears after about 15 epochs of training, and the accuracy for R = 10 surpasses other settings after 20 epochs of training. 
+
+6.3.6. Visualization of training 
+
+Fig. 9 shows the advantages of using the virtual sub-graph to generate edge embeddings by utilizing more information from the global structure. Predicting the types of edges will be easier given more global information, which helps the model generate more distinguishable edge embeddings as shown in Fig. 9a. Given the virtual sub-graphs, IGNP learns to predict the types of all the edges, and the performance rapidly increases during the training process, shown in Fig. 9b. 
+
+7. Conclusions 
+
+In this study, we model relevant information for link prediction through the lens of node influence, and enclose the influence between any pair of nodes within sub-graphs by extending the classical SIR propaga-tion model. We further compress the influences into much smaller sub-graphs by the virtual edges, derived from mean-field theory, to significantly reduce the computation when using the global graph structure. These compressed structures are then utilized to extract relevant local and global information for link prediction. 18 Sub-graph of Influence propagation Edge embedding from the model Virtual sub-grpah Plain sub-graph (IGNP) (IGNP-NoVE) (PL) PL IGNP    
+
+> Outward ( ) / intward ( ) influence from the source nodes ( )
+
+(a) Different sub-graphs and their edge embeddings Child of Child of Studied by Different from Child of Child of Studied by Different from Child of Subclass of Has cause Studied by Different from Has cause Subclass of Instance of Subclass of Subclass of Wisdom Knowledge Data Information Epistemology Understanding Virtue 
+
+> Original graph Epoch 20 66.6 % correct Epoch 10 33.3 % correct Epoch 2 0 % correct
+
+(b) Training results after 2, 10, and 20 epochs and original graph 
+
+Figure 9: Visualization of the training for multi-class prediction on WikiData (10k). 
+
+Our analysis reveals a strong correlation between node influence and the relevant information for link pre-diction, as substantiated by extensive empirical evaluations. The proposed IGNP framework consistently outperforms representative baselines across multiple benchmark datasets, o ff ering novel insights into link prediction through the paradigm of influence propagation. A limitation of our IGNP is that it is designed to predict relations within static graphs. Nonetheless, the dynamics of relational changes, a common occurrence in numerous real-world applications, remain unad-dressed by the IGNP framework. The node influence propagation is also applicable in dynamic scenarios, as influence continuously spreads over time. Consequently, building upon the findings of our investigation, the prediction of relations within dynamic graphs represents a potential direction for future research. 
+
+CRediT authorship contribution statement Zidu Yin : Writing – original draft, Visualization, Validation, Software, Methodology, Investigation, Formal analysis, Conceptualization. Yuankai Qi : Writing – original draft, Methodology, Investigation. 
+
+Dong Gong : Writing – original draft, Methodology, Investigation. Ehsan Abbasnejad : Writing – original draft, Investigation. Kun Yue : Writing – original draft, Supervision, Funding acquisition. Javen Qinfeng Shi : Writing – original draft, Supervision, Project administration, Methodology, Investigation. 19 Declaration of competing interest 
+
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper. 
+
+Acknowledgments 
+
+This work was supported by the Joint Key Project of the National Natural Science Foundation of China (U23A20298), the Yunnan Fundamental Research Project (202301AU070147), and the Open Project Pro-gram of Yunnan Key Laboratory of Intelligent Systems and Computing (ISC24Y08). Yuankai Qi is not supported by the aforementioned funds. 
+
+Data availability 
+
+Data will be made available on request. 
+
+References 
+
+[1] V. Martínez, F. Berzal, J. C. C. Talavera, A survey of link prediction in complex networks, ACM Comput. Surv. 49 (4) (2017) 69:1–69:33. [2] H. Wang, G. Liu, P. Hu, TDAN: transferable domain adversarial network for link prediction in hetero-geneous social networks, Trans. Knowl. Discov. Data 18 (1) (2024) 11:1–11:22. [3] J. Gong, Y. Zhao, J. Zhao, J. Zhang, G. Ma, S. Zheng, S. Du, J. Tang, Personalized recommendation via inductive spatiotemporal graph neural network, Pattern Recognit. 145 (2024) 109884. [4] J. Wang, W. Li, F. Liu, Z. Wang, A. M. Luvembe, Q. Jin, Q. Pan, F. Liu, Conee: Global and lo-cal context-enhanced embedding for inductive knowledge graph completion, Expert Syst. Appl. 246 (2024) 123116. [5] V. Altuntas, Di ff usion alignment coe ffi cient (DAC): A novel similarity metric for protein-protein inter-action network, Trans. Comput. Biol. Bioinform. 20 (2) (2023) 894–903. [6] T. Zhou, L. Lü, Y.-C. Zhang, Predicting missing links via local information, Eur. Phys. J. B 71 (4) (2009) 623–630. [7] L. F. R. Ribeiro, P. H. P. Saverese, D. R. Figueiredo, struc2vec : Learning node representations from structural identity, in: Proceedings of the 23rd International Conference on Knowledge Discovery and Data Mining (SIGKDD), 2017, pp. 385–394. [8] R. Liao, M. Brockschmidt, D. Tarlow, A. L. Gaunt, R. Urtasun, R. S. Zemel, Graph partition neural networks for semi-supervised classification, in: Proceedings of the 6th International Conference on Learning Representations (ICLR) Workshop Track, 2018. [9] M. Zhang, Y. Chen, Link prediction based on graph neural networks, in: Proceedings of the 32nd Annual Conference on Neural Information Processing Systems (NeurIPS), 2018, pp. 5171–5181. 20 [10] W. Chiang, X. Liu, S. Si, Y. Li, S. Bengio, C. Hsieh, Cluster-gcn: An e ffi cient algorithm for training deep and large graph convolutional networks, in: Proceedings of the 25th International Conference on Knowledge Discovery and Data Mining (SIGKDD), 2019, pp. 257–266. [11] W. L. Hamilton, Z. Ying, J. Leskovec, Inductive representation learning on large graphs, in: Proceed-ings of the 31st Annual Conference on Neural Information Processing Systems (NeurIPS), 2017, pp. 1024–1034. [12] D. Cercel, S. Trausan-Matu, Opinion propagation in online social networks: A survey, in: Proceedings of the 4th International Conference on Web Intelligence, Mining and Semantics (WIMS), 2014, pp. 11:1–11:10. [13] S. Peng, Y. Zhou, L. Cao, S. Yu, J. Niu, W. Jia, Influence analysis in social networks: A survey, J. Netw. Comput. Appl. 106 (2018) 17–32. [14] T. Harko, F. S. N. Lobo, M. K. Mak, Exact analytical solutions of the susceptible-infected-recovered (SIR) epidemic model and of the SIR model with equal death and birth rates, Appl. Math. Comput. 236 (2014) 184–194. [15] R. Pastor-Satorras, C. Castellano, P. Van Mieghem, A. Vespignani, Epidemic processes in complex networks, Rev. Mod. Phys. 87 (3) (2015) 925. [16] J. Li, H. Shomer, H. Mao, S. Zeng, Y. Ma, N. Shah, J. Tang, D. Yin, Evaluating graph neural net-works for link prediction: Current pitfalls and new benchmarking, in: Proceedings of the 37th Annual Conference on Neural Information Processing Systems (NeurIPS), 2023, pp. 3853–3866. [17] L. A. Adamic, E. Adar, Friends and neighbors on the web, Soc. Netw. 25 (3) (2003) 211–230. [18] Z. Zhou, G. Wan, B. Du, Common neighbor completion with information entropy for link prediction in social networks, Data Sci. Eng. 10 (1) (2025) 40–53. [19] A. Agibetov, Neural graph embeddings as explicit low-rank matrix factorization for link prediction, Pattern Recognit. 133 (2023) 108977. [20] L. Yan, W. Yu, Non-negative matrix factorization for link prediction preserving row and column spaces, in: Proceedings of 23rd International Conference on Data Mining, (ICDM), 2023, pp. 1451–1456. [21] J. Tang, M. Qu, M. Wang, M. Zhang, J. Yan, Q. Mei, LINE: large-scale information network embed-ding, in: Proceedings of the 24th International Conference on World Wide Web (WWW), 2015, pp. 1067–1077. [22] A. Grover, J. Leskovec, node2vec: Scalable feature learning for networks, in: Proceedings of the 22nd International Conference on Knowledge Discovery and Data Mining (SIGKDD), 2016, pp. 855–864. [23] H. Chen, B. Perozzi, Y. Hu, S. Skiena, HARP: hierarchical representation learning for networks, in: Proceedings of the 32nd AAAI Conference on Artificial Intelligence (AAAI), 2018, pp. 2127–2134. [24] J. zhou Luo, S. Xiao, S. Jiang, H. Gao, Y. Xiao, ripple2vec: Node embedding with ripple distance of structures, Data Sci. Eng. 7 (2022) 156 – 174. 21 [25] L. Shi, B. Hu, D. Zhao, J. He, Z. Zhang, J. Zhou, Structural information enhanced graph representation for link prediction, in: Proceedings of the 38th AAAI Conference on Artificial Intelligence (AAAI), 2024, pp. 14964–14972. [26] Z. Hu, Y. Dong, K. Wang, Y. Sun, Heterogeneous graph transformer, in: Proceedings of the Interna-tional Conference on World Wide Web (WWW), 2020, pp. 2704–2710. [27] Z. Liu, C. Chen, L. Li, J. Zhou, X. Li, L. Song, Y. Qi, Geniepath: Graph neural networks with adaptive receptive paths, in: Proceedings of the 33rd AAAI Conference on Artificial Intelligence (AAAI), 2019, pp. 4424–4431. [28] T. Zhao, Y. Liu, L. Neves, O. J. Woodford, M. Jiang, N. Shah, Data augmentation for graph neural networks, in: Proceedings of the 33rd AAAI Conference on Artificial Intelligence (AAAI), 2021, pp. 11015–11023. [29] Y. Zhu, Y. Xu, F. Yu, Q. Liu, S. Wu, L. Wang, Graph contrastive learning with adaptive augmentation, in: Proceedings of the 30th International Conference on World Wide Web (WWW), 2021, pp. 2069– 2080. [30] L. Sun, Z. Huang, Z. Wang, F. Wang, H. Peng, P. S. Yu, Motif-aware riemannian graph neural net-work with generative-contrastive learning, in: Proceedings of the 38th AAAI Conference on Artificial Intelligence (AAAI), 2024, pp. 9044–9052. [31] K. Yang, Y. Liu, Z. Zhao, P. Ding, W. Zhao, Local structure-aware graph contrastive representation learning, Neural Netw. 172 (2024) 106083. [32] Y. Ban, J. Zou, Z. Li, Y. Qi, D. Fu, J. Kang, H. Tong, J. He, Pagerank bandits for link prediction, in: Proceedings of the 38th Annual Conference on Neural Information Processing Systems (NeurIPS), 2024, pp. 21342–21376. [33] W. K. Wong, F. H. Juwono, Estimating e ff ective reproduction number for SIR compartmental model: A stochastic evolutionary approach, J. Soc. Comput. 3 (2) (2022) 182–189. [34] S. Kumar, A. Mallik, B. S. Panda, Influence maximization in social networks using transfer learning via graph-based LSTM, Expert Syst. Appl. 212 (2023) 118770. [35] P. W. Battaglia, J. B. Hamrick, V. Bapst, et al., Relational inductive biases, deep learning, and graph networks, arXiv preprint arXiv:1806.01261(2018). [36] J. Yang, J. Leskovec, Defining and evaluating network communities based on ground-truth, in: Pro-ceedings of the 12th International Conference on Data Mining (ICDM), 2012, pp. 745–754. [37] R. Yang, J. Shi, X. Xiao, Y. Yang, J. Liu, S. S. Bhowmick, Scaling attributed network embedding to massive graphs, Proceedings VLDB Endow. 14 (1) (2020) 37–49. [38] J. J. McAuley, J. Leskovec, Learning to discover social circles in ego networks, in: Proceedings of the 26th Annual Conference on Neural Information Processing Systems (NeurIPS), 2012, pp. 548–556. [39] I. Yamada, H. Shindo, H. Takeda, Y. Takefuji, Joint learning of the embedding of words and entities for named entity disambiguation, in: Proceedings of the 20th Conference on Computational Natural Language Learning (SIGNLL), 2016, pp. 250–259. 22 [40] M. S. Schlichtkrull, T. N. Kipf, P. Bloem, R. van den Berg, I. Titov, M. Welling, Modeling relational data with graph convolutional networks, in: Proceedings of the 15th European Semantic Web Confer-ence (ESWC), 2018, pp. 593–607. [41] B. P. Chamberlain, S. Shirobokov, E. Rossi, F. Frasca, T. Markovich, N. Hammerla, M. M. Bronstein, M. Hansmire, Graph neural networks for link prediction with subgraph sketching, in: Proceedings of the 11th International Conference on Learning Representations (ICLR), 2023, pp. 14079–14105. [42] X. Wang, H. Yang, M. Zhang, Neural common neighbor with completion for link prediction, in: Pro-ceedings of the 12th International Conference on Learning Representations (ICLR), 2024, pp. 27546– 27562. [43] W. Ma, Y. Wang, X. Wang, M. Zhang, Reconsidering the performance of gae in link prediction, in: Pro-ceedings of the 34th International Conference on Information and Knowledge Management (CIKM), ACM, 2025, pp. 2052–2062. [44] E. M. Stein, R. Shakarchi, Real analysis: measure theory, integration, and Hilbert spaces, Princeton Univ. Press, Princeton, NJ, USA, 2009. [45] G. Lan, Stationary distribution of sir model for non-uniform population, Biomathematics 26 (2011) 93–98. 
+
+Appendix A. Details of baselines 
+
+The o ffi cial code or widely recognized implementations, based on the original papers, are adopted for all baselines. To be specific, we use the o ffi cial code for baselines including N2V, S2V, LINE, HARP, SEAL, GAug, HGT, RGCN, GCA, BUDDY, NCN, NCN-di ff , NCNC, and Refined-GAE. AA and RA are implemented by NetworkX, 3 the software for complex networks. All baselines were first reproduced the original results on their respective datasets reported in their original papers if applicable, before adapting them to our experimental setup. Each datasets are pre-processed identically for di ff erent baselines, and the split of the datasets to train and evaluate the model is the same. Meanwhile, the grid search was conducted on the most critical hyperparameters of di ff erent baselines to ensure we obtained the best results for all baselines. More detailed hyperparameters of di ff erent baselines are listed in Table A.7. 
+
+Appendix B. Proof of Theorem 1 Proof. Let Xi be the event for xi been influenced by xs, and Xi(k) be the times for xi been influenced by xs
+
+after k independent propagations. Given the fact that the edges are from the influences of the node, but not all the edges are from the influence of xs. The influence of xs will propagate over the existing edges with a probability Pei j , and the expectation of Xi will be 
+
+E[Xi] =
+
+X
+
+> m∈P si
+
+Y
+
+> eab ∈m
+
+Peab . (B.1) 
+
+> 3https://networkx.org/
+
+23 Table A.7: Key hyperparameters of baseline methods. 
+
+Method Key hyperparameters 
+
+N2V, S2V Default hyperparameters (yield the best performance). HARP Node feature model: N2V. SEAL Neighbor auto-detection enabled. GAug α=0.13; β=3.2; temperature =1.0. HGT Layers =2; heads =4. RGCN Dropout =0.2; lr =1e −2; grad norm =1.0; bases =4. GCA lr =1e −2; hidden =256; activation =prelu; drop edge rates 1 /2=0.3 /0.4; τ=0.4. BUDDY lr =1e −4 (no decay); hidden channels =1024; epochs =100. NCN /NCN-di ff/ NCNC GNN dropout =0.7; predictor dropout =0.05; α=1.0. Refined-GAE lr =1e −3; GNN layers =4; dropout =0.6. 
+
+Note that the total number of the influenced nodes will be the recovered nodes of xs at t′, i.e. Rt′ 
+
+> s
+
+(X). Rt′ 
+
+> s
+
+(X) ·
+
+E[Xi] indicates the number of influenced nodes xi contributes. If Rt′ 
+
+> s
+
+(X) · E[Xi] ≥ 1, xi will be influenced by xs. Thus, let dHout be the expected set of influence of xs which is 
+
+
+
+xi : Pm∈P si 
+
+Qeab ∈m Peab ≥ 1 
+
+> Rt′
+> s(X)
+
+
+
+. On the other hand, lim k→∞ E
+
+
+
+Hout \ dHout 
+
+
+
+= 0. Thus, Hout will be converged in probability to dHout .
+
+Appendix C. Proof of Corollary 1 
+
+To prove Corollary 1, we first introduce the Radon–Nikodym Theorem. 
+
+Lemma 2 (Radon–Nikodym Theorem [44]). Given a measurable space (X, ε, υ s(·)) and a set C ∈ ε, there will be a function r ts(·) of the recovered nodes on C such that Rts(C) =
+
+X
+
+> i∈C
+
+rts(i)υts(i). (C.1) Integrating over the entire node set X using Lemma 2, we have 
+
+Rts(X) =
+
+X
+
+> i∈X
+
+rts(i)υts(i). (C.2) Note that Rts(X) = Pi∈X Rts(i) 
+
+> υts(i)
+
+υts(i), and thus 
+
+rts(X) = Rts(X)
+
+υts(X) = Rts(X)
+
+|X| , (C.3) which shows rts(X) is the density of the recovered nodes. Lemma 3 gives the relationship what rts(X)satisfies. 
+
+Lemma 3 (Equation of rts(X)). Given the adjacency matrix Ai j , conditional activation probability P ei j , the basic reproduction kernel M : X × ε → [0 , ∞], and M ⊤ is the dual of M in L-2-space of X in relation to υs
+
+(L 2(υs)), let i 0(X) be the Radon–Nikodym derivative of I 0 
+
+> s
+
+(X) at t = 0, r ts(X) is the solution of 
+
+(1 − i0(X)) exp ( −M⊤(s, X) · rts(X)) = 1 − rts(X), (C.4) 
+
+and for ∀xs ∈ X and ∀C ∈ ε, the equation M (s, C) = τs
+
+Pi∈C Asi · Pesi · υs(i) holds. 
+
+24 Proof. SIR model can be represented by the Radon–Nikodym derivatives sts(·), its(·) and rts(·) as 
+
+
+
+ddt sts( j) = −
+
+X
+
+> i∈X
+
+Ai j · Pei j · sts( j)its(i)υs(i)ddt its( j) =
+
+X
+
+> i∈X
+
+Ai j · Pei j · sts( j)its(i)υs(i)
+
+− 1
+
+τ j
+
+its( j)ddt rts( j) = 1
+
+τ j
+
+its( j).
+
+(C.5) By inserting the third equation into the first one, the latter is transformed into ddt sts( j) = −
+
+X
+
+> i∈X
+
+Ai j · Pei j · sts( j) ddt rts(i)τiυs(i). (C.6) Suppose sts( j) > 0, dsts( j) sts( j) = −dt 
+
+X
+
+> i∈X
+
+Ai j · Pei j · ddt rts(i)τiυs(i). (C.7) Integrating both sides with respect to t, we can obtain ln sus ( j) − ln s0 
+
+> s
+
+( j) = −
+
+X
+
+> i∈X
+
+Ai j · Pei j · ddt rts(i)τiυs(i). (C.8) According to Fubini theory [44] to change the order of integration, and note that r0(·) ≡ 0, we get ln sus ( j) − ln s0 
+
+> s
+
+( j) = −
+
+X
+
+> i∈X
+
+Ai j · Pei j · rus (i)τiυs(i). (C.9) By Eq. (C.5), sus ( j) and rus (i) are the bounded and convergent function of u, so 
+
+s∞( j) = lim  
+
+> u→∞
+
+sus ( j), r∞ 
+
+> s
+
+(i) = lim  
+
+> u→∞
+
+rus (i). (C.10) Let L1(υs) and L2(υs) be the L-1 and L-2 space of X in relation to υs. Then, 0 ≤ rus (i) ≤ 1, and τi ∈ L2(υs) ⊆
+
+L1(υs). According to the dominated convergence theorem, we let u → ∞ and get ln s∞ 
+
+> s
+
+( j) − ln s0( j) = −
+
+X
+
+> i∈X
+
+Ai j · Pei j · r∞ 
+
+> s
+
+(i)τiυs(i). (C.11) We can easily find r∞ 
+
+> s
+
+(i) ∈ L2(υs). Note that M can be a linear operator on L2(υs) and 
+
+M f (i) = τi
+
+X
+
+> j∈X
+
+Ai j · Pei j · f ( j)υs( j), (C.12) where f is any measurable function on ε. The dual of M on L2(υs) is M⊤
+
+M⊤ f ( j) =
+
+X
+
+> i∈X
+
+τi · Ai j · Pei j · f (i)υs(i), (C.13) 25 and then we have ln s∞ 
+
+> s
+
+( j) − ln s0 
+
+> s
+
+( j) = −M⊤r∞ 
+
+> s
+
+(·). (C.14) On the other hand, since 0 ≤ sus (i) ≤ 1, ∀C ∈ ε, we have 
+
+S us (C) =
+
+X
+
+> i∈C
+
+sus (i)υs(i). (C.15) Let u → ∞ and using the dominated convergence theorem, we get 
+
+S ∞ 
+
+> s
+
+(C) =
+
+X
+
+> i∈C
+
+s∞ 
+
+> s
+
+(i)υs(i), ∀C ∈ ε. (C.16) Thus, s∞ 
+
+> s
+
+(·) and r∞ 
+
+> s
+
+(·) are the Radon–Nikodym derivative of S ∞ 
+
+> s
+
+(·) and R∞ 
+
+> s
+
+(·) respectively. Given I0 
+
+> s
+
+(X) = 0, 
+
+S 0 
+
+> s
+
+(X) + I0 
+
+> s
+
+(X) = υs(X), and S ∞ 
+
+> s
+
+(X) + R∞ 
+
+> s
+
+(X) = υs(X), thus s0 
+
+> s
+
+(X) = 1 − i0 
+
+> s
+
+(X), s∞ 
+
+> s
+
+(X) = 1 − rts(X), and 
+
+r∞ 
+
+> s
+
+= rts(X). Substitute it into Eq. (C.14), we get ln (1 − rts(X)) − ln (1 − i0(X)) = −M⊤rts(X). (C.17) Taking the exponential on both sides, we can obtain Eq. (C.4). Similar proofs can be found [45]. For the single source xs, I0 
+
+> s
+
+(X) = 1 which leads to its density i0 
+
+> s
+
+(X) = 1
+
+|X| ≈ 0. Thus, let C → X , rts(X) will be the solution of exp ( −M⊤(s, X) · rts(X)) = 1 − rts(X). (C.18) Next, based on Lemmas 2 and 3, we give the proof of Corollary 1. 
+
+Proof. Given uniformly distributed Pes∗ = p, then M⊤(s, X) = ˆτ · p Pi∈X Asi υs(i), thus Eq. (C.18) can be rewritten as exp( −ˆτ · p · Γ1 
+
+> s
+
+· rt′ 
+
+> s
+
+(X)) = 1 − rt′ 
+
+> s
+
+(X), (C.19) where there is not closed form solution for rt′ 
+
+> s
+
+(X), but it is determined by the constant value ˆ τ · p · | Γ1 
+
+> s
+
+|. Once 
+
+Pes∗ = p is constant, we could use a proper n to approximate rt′ 
+
+> s
+
+(X) by 1
+
+> |X|
+
+Pnk=0 |Γks|, since the influence will only propagate on the edges to the neighbors. That means Rt′ 
+
+> s
+
+(X) = Pnk=0 |Γks| and Hout  
+
+> s
+
+will be nodes in 
+
+∪nk=0Γks. This gives us the solution for Corollary 1. 
+
+Appendix D. Proof of Theorem 2 Proof. Given the number of noticed nodes Ut′ 
+
+> s
+
+(X) = Rt′ 
+
+> s
+
+(X) · Q. Based on the proof of Theorem 1, the node set that includes noticed nodes will be 
+
+
+
+xi : Pm∈P si 
+
+Qeab ∈m Peab ≥ 1 
+
+> Rt′
+> s(X)( Q+1)
+
+
+
+. In addition, the noticed 
+
+nodes also satisfy 
+
+
+
+xi : Pm∈P si 
+
+Qeab ∈m Peab < 1 
+
+> Rt′
+> s(X)
+
+
+
+, since they are not the nodes of outward influence prop-agation. Thus, the expected noticed node set \XNoticed  
+
+> s
+
+will be 
+
+
+
+xi : 1  
+
+> Rt′
+> s(X)( Q+1)
+
+≤ Pm∈P si 
+
+Qeab ∈m Peab < 1 
+
+> Rt′
+> s(X)
+
+
+
+.Again, lim k→∞ E
+
+
+
+XNoticed  
+
+> s
+
+\ \XNoticed 
+
+> s
+
+
+
+= 0. Hence XNoticed  
+
+> s
+
+will be converged in probability to \XNoticed  
+
+> s
+
+.Once we have the XNoticed  
+
+> s
+
+, the Hin  
+
+> s
+
+will be the nodes from the paths of response in XNoticed  
+
+> s
+
+, which will be 
+
+S j∈B s,i∈X Noticed 
+
+> s
+
+nxk : xk ∈ P ji ; xk , x j; Ais , 0o.26 Appendix E. Proof of Lemma 1 Proof. For the time complexity of training, a GNN needs to compute the embeddings of all the nodes in a mini-batch for R times due to the R layers of the GNN. Since each node embedding update involves a matrix multiplication X(l)W(l) with W(l) ∈ Rd×d , the cost per node per layer is O(d2). With graph sparsity ρ, the kth hop contributes on average ρk nodes, so the total node count in an n-order sub-graph is Pni=0 ρi. Therefore, we obtain the training time complexity of GNNs as O(b · Pni=0 ρi · d2 · R ). 
+
+Appendix F. Proof of Theorem 3 Proof. The time complexity of GNN training with and without virtual edges is O(b · Pni=0 ρi · d2 · R ) and 
+
+O(b · Pn·(q+1)  
+
+> i=0
+
+ρi · d2 · R ) respectively, so using virtual edges will be b·Pn·(q+1)    
+
+> i=0ρi·d2·R
+> b·Pni=0ρi·d2·R
+
+=   
+
+> Pn·(q+1)
+> i=0ρi
+> Pni=0ρi
+
+times faster. 27
