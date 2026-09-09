@@ -1,0 +1,304 @@
+Title: SwapRec: Warming Up Cold Items Through Training-Time Swaps
+
+URL Source: https://arxiv.org/pdf/2609.00913v1
+
+Published Time: Wed, 02 Sep 2026 01:18:22 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+# SwapRec: Warming Up Cold Items Through Training-Time Swaps 
+
+Marta Moscati 1,2 ,*, Jan Malte Lichtenberg, Davide Abbattista 1, Antonio De Candia 1,Laura Boggia 1 and Matteo Ruffini 1
+
+> 1
+
+Albatross AI 
+
+> 2
+
+Johannes Kepler University Linz, Linz, Austria 
+
+Abstract 
+
+Interactions with cold items negatively impact real-time personalization of ID-based recommender systems. This is because the use of such interactions degrades user preference estimates, whereas excluding cold items from the user profile prevents real-time recommendation updates. In industrial scenarios, one heuristic often applied to address this shortcoming at inference time is to replace, i. e., “swap”, cold-start items by their most similar “warm” neighbor, where similarity is inferred from the items’ side information. In this paper, we demonstrate that sequential models, most often used for real-time personalization, are not robust to such swaps, and propose SwapRec, an approach to address this issue. SwapRec relies on using the same swap heuristics already at training time. We apply SwapRec to state-of-the-art models for sequential recommendation and analyze its impact by means of quantitative experiments in three recommendation domains (online shopping, movie, music). The experimental results show that, irrespective of the underlying sequential architecture, our easy-to-implement SwapRec approach allows for substantially more accurate recommendations when in presence of interactions with cold items, simultaneously leading to a larger percentage of cold items in the recommendation lists. 
+
+Keywords 
+
+Item Cold Start, Sequential Recommendation, Real-Time Personalization 
+
+# 1. Introduction 
+
+Recommender Systems (RS) are nowadays ubiquitous and help users in selecting products from the large catalogs of online providers. Most RS are ID-based and optimize a separate embedding for each catalog item based on behavioral user data. One challenge for ID-based RS is handling cold items, i.e., items that have been interacted by few or no users. Item cold-start negatively impacts both users and content producer. From the user perspective, a click on a cold item can degrade real-time personalization of ID-based RS since a click on an item with no previous interactions typically leads to inaccurate recommendations, but simply disregarding this click prevents real-time updates of recommendations. From the content producer perspective, ID-based RS are unable to surface cold items and, as a consequence, newly added items are never recommended. These issues of item cold-start are typically addressed with hybrid RS that leverage item content representations alongside behavioral data. However, these approaches are more complex than models relying solely on behavioral data, require more resources, or a more demanding hyperparameter tuning. As a consequence, industrial RS application choose simpler solutions that replace clicks on a cold item with clicks on the most similar warm item. Figure 1 shows a real-world example of this approach when applied to music streaming. Blue cards represent interactions with warm items ( Youngblood ,
+
+Jumpsuit , ...), and the purple card represents an interaction with a cold item ( Good Day ). This item is swapped with its most similar warm catalog item ( Dark Heart News ) shown below it, where similarity is 
+
+DaQuaMRec @ RecSys 2026: Second International Workshop on Data Quality-Aware Multimodal Recommendation 
+
+> *
+
+Corresponding author. 
+
+$ marta@usealbatross.ai (M. Moscati); davide@usealbatross.ai (D. Abbattista); antonio@usealbatross.ai (A. D. Candia); laura@usealbatross.ai (L. Boggia); matteo@usealbatross.ai (M. Ruffini) 
+
+ 0000-0002-5541-4919 (M. Moscati); 0000-0002-7140-2520 (J. M. Lichtenberg); 0009-0008-7683-0533 (D. Abbattista); 0000-0002-9924-7489 (L. Boggia); 0000-0003-0738-2198 (M. Ruffini)  
+
+> © 2026 Copyright for this paper by its authors. Use permitted under Creative Commons License Attribution 4.0 International (CC BY 4.0). CEUR Workshop Proceedings (CEUR-WS.org). Figure 1: Example of a test sequence from the Music4All-Onion dataset showing that SwapRec renders recom-mendation robust to inference-time similarity swaps. The swap map is computed as described in Section 4.
+
+inferred from the audio signal. This swapped sequence can now be seamlessly used as input to ID-based RS, since it only constitutes of warm items. Approaches based on this heuristic are widely employed since they allow using the already-deployed RS without the need to switch to a content-based approach or to train an additional component for semantic ID generation. However, swapping items at inference time relies on the implicit assumption that the underlying RS is robust to such swaps. This assumption is unrealistic, since semantically similar warm and cold items are likely to be interacted with by different users or within different sequences, for instance because the items were added to the catalog at different times, or because a less popular item occurs in fewer interaction sequences. This leads to a decrease in accuracy of ID-based RS when users interact with cold items and those are swapped with similar ones. In the example shown in Figure 1, this effect is reflected in the fact that the top-5 recommendation list of the ID-based RS SASRec does not include the next item the user will interact with (Target item, green card, One of The Drunks ). In this paper we propose to make ID-based RS robust to inference-time item swaps by intro-ducing such swaps already during training and develop SwapRec, a new training strategy that makes ID-based RS robust to interactions with cold items. In the example shown in Figure 1, we see that the next item interacted with by the user is included in the top-5 recommendation list of SwapRec. In order to quantitatively evaluate our proposed SwapRec approach, we pose the following research questions (RQ): 
+
+RQ1: Overall Model Performance. How does SwapRec compare to standard training strategies of ID-based RS in terms of overall recommendation accuracy? 
+
+RQ2: Robustness to Cold-Item Interactions. Does SwapRec mitigate the performance deteriora-tion of sequential ID-based RS when interactions with cold items are present in the input sequence? 
+
+RQ3: Cold Items Recommended. Do SwapRec’s recommendations surface cold items more often in recommendation lists, compared to ID-based RS? Compared to previous works addressing item cold-start, SwapRec can be seamlessly integrated into ID-based RS, without the need to change the model architecture nor to train additional external components, hence allowing to address item cold-start without additional model complexity. We test SwapRec on top of well-established transformer-based and ID-based sequential RS. Our experiments in three recommendation domains (movie, music, and online shopping) show that, irre-spective of the underlying sequential architecture, our easy-to-implement SwapRec approach allows for substantially more accurate recommendations in presence of interactions with cold items and surfaces more cold items; these results, combined with SwapRec’s simplicity, make SwapRec a favorable solution to item cold-start for users, content producers, as well as platform providers. 
+
+# 2. Related Work 
+
+Item cold-start, i. e., providing accurate recommendations even for items that have not been interacted with by any user, is a major challenge for RS [1]. Several works [2, 3, 4, 5, 6] showed that this challenging situation can be tackled with multimodal RS, that complement behavioral data such as user clicks, with multiple item representations. In ID-based RS, the negative impact of clicks on cold item originates from the fact that IDs of items with no clicks in the training data do not get updated during training. To address these limitations, previous works proposed methods to infer items behavioral IDs from items side information [7, 8, 9] or to replace behavioral IDs with (pre-constructed) IDs that are “semantic”, i. e., representative of the item side information [10, 11, 12]. Therefore, in real-world applications, where ID-based sequential RS are most often used for real-time personalization [13, 14, 15, 8], companies often choose to handle sequences including cold items with simple heuristics. These simpler approaches are the focus of our work. To give concrete examples, providers in the domain of housing marketplace [16] and e-commerce [17] at inference time use as proxies for cold-start item embeddings the average embeddings of the most similar “warm” items, defining similarity in terms of side information. In other terms, they “swap” cold items with their most similar warm ones. More recent approaches leverage similar heuristics and substitute the item encoding layer of sequential RS with the weighted average of proxies based on item side information [17]. Therefore, a model trained solely on behavioral data struggles in learning that semantically similar items should be treated similarly [18], leading to a performance deterioration when the swap heuristic is applied to cold items at inference time. Compared to previous works leveraging multimodal item representations to address item cold-start scenarios, SwapRec can be seamlessly integrated into ID-based RS, without the need to change the model architecture nor to train additional external components. Compared to previous works which apply inference-time swaps to replace cold-start item embeddings, SwapRec leverages the content-based similarity swaps already during training; this renders ID-based recommendations more robust to such swaps for item cold-start and allows surfacing a larger portion of catalog items. 
+
+# 3. Methodology 
+
+3.1. Preliminaries 
+
+Given the set of users 𝒰 and of items ℐ, for each 𝑢 ∈ 𝒰 , sequential RS represent the user 𝑢 interaction history as chronologically ordered sequence of ℓ interactions s𝑢 = ( 𝑠 1, . . . , 𝑠 ℓ), 𝑠 𝑘 ∈ ℐ .Each item 𝑖 ∈ ℐ , will occur 𝑛 train times in the training data; this value therefore distinguishes cold items from warm ones. Items for which 𝑛 train = 0 correspond to a strict cold start; items for which 
+
+𝑛 train < 𝑛 cold are considered cold. 1
+
+Each 𝑖 ∈ ℐ is associated with side information (e.g. description, image) encoded in a space with a notion of similarity sim( 𝑖, 𝑗 ) between two items 𝑖, 𝑗 ∈ ℐ . This metric space induces a nearest-neighbor (NN) map 
+
+𝜑 (𝑖 ) = arg max 
+
+> 𝑗 ∈ℐ∖{ 𝑖 }
+
+sim( 𝑖, 𝑗 ) (1) associating each item 𝑖 with its NN. 
+
+3.2. SwapRec 
+
+SwapRec is based on the intuition that ID-based RS trained solely on behavioral data struggle to encode semantic similarities [18]. To solve this, SwapRec treats semantically similar items in the same way during training. The goal is to make item embeddings robust to swaps between semantically similar items. To do so, the information encoded in the embeddings at the end of SwapRec training combines behavioral patterns and item semantics, injecting item side information into behavioral ID embeddings.  
+
+> 1We refer the reader to Sec. 4 for the choice of 𝑛 cold .
+
+SwapRec Training. During training, SwapRec leverages the NN map 𝜑 to swap items in the sequence with the most similar ones. For each position 𝑘 in s𝑢 , we independently randomly sample 𝑟 𝑘 ∼ 𝒰 (0 , 1) and substitute 𝑠 𝑘 with 
+
+˜𝑠 𝑘 , where 
+
+˜𝑠 𝑘 =
+
+⎧⎪⎨⎪⎩
+
+𝜑 (𝑠 𝑘 ) if 𝑟 𝑘 < 𝑝 swap and 
+
+> 𝑘
+
+∑︁ 
+
+> 𝑖 =1
+
+1[˜ 𝑠 𝑖 ̸ = 𝑠 𝑖 ] < 𝑀 swap ,𝑠 𝑘 otherwise. The swap-augmented sequence ˜s = (˜ 𝑠 1, . . . , ˜𝑠 ℓ) is used to train the backbone sequential RS. Notice that the item swaps affect both the training targets and the input sequences. Figure 2 provides an overview of SwapRec when applied to the transformer-based architecture SASRec [19]. To provide an intuition behind SwapRec’s training, the two parameters 𝑝 swap and 𝑀 swap adjusts the amount of training swaps. Each sequence item is swapped with probability 𝑝 swap and only if less than 
+
+𝑀 swap items were previously swapped for the same sequence. Notice that these swaps occur irrespective of the number of training interactions 𝑛 train of the target item in the sequence. Since cold items have fewer interactions in the training data, they are less likely to occur in unswapped training sequences. Therefore swaps are likely to exchange warm items with cold ones. This implies more ID embedding updates for cold items, when those are selected as items to be swapped with. Enforcing 𝑀 swap as maximum number of swaps allows to control the extent to which SwapRec modifies 𝑢 ’s true behavioral data. Since all subsequences of ˜s𝑢 are used for training (i. e., each 𝑠 𝑘 , 𝑘 > 1
+
+is used once as target), 𝑀 swap also implies that swaps occur earlier in the training sequences, further increasing the number of ID embedding updates for cold items. Both 𝑝 swap and 𝑀 swap are treated as hyperparameters, as discussed in the Section on the Experimental Setup. 
+
+SwapRec Inference. At inference time, SwapRec swaps cold item 𝑠 𝑘 in the input sequence with its most similar one according to the NN map 𝜑 (𝑠 𝑘 ). Notice that at inference the swap does not affect the target item, i. e., the one to be recommended. 
+
+𝑠 1 𝑠 2 𝑠 3 𝑠 4 𝑠 5 𝑠 ℓ−1 𝑠 ℓ     
+
+> Raw sequence
+> NN swap? NN swap? NN swap? NN swap? NN swap?
+
+· · · NN swap? NN swap? 
+
+𝑢 𝑘 < 𝑝 swap 
+
+swaps < 𝑀 swaps 
+
+> AND
+
+˜𝑠 1 ˜𝑠 2 ˜𝑠 3 ˜𝑠 4 ˜𝑠 5
+
+· · · ˜𝑠 ℓ−1 ˜𝑠 ℓ      
+
+> No Yes No Yes Yes No Yes
+
+˜e1 ˜e2 ˜e3 ˜e4 ˜e5
+
+· · · 
+
+˜eℓ−1 ˜eℓItem Emb.     
+
+> Tr. Block Tr. Block Tr. Block Tr. Block Tr. Block
+
+· · ·  
+
+> Tr. Block Tr. Block
+
+˜𝑠 ℓ ?Prediction 
+
+Figure 2: SwapRec applied to SASRec. Input sequence items 𝑠 𝑘 are either left unchanged or swapped (both as target and input) with 𝜑 (𝑠 𝑘 ), with probability 𝑝 swap and if the number of total swaps has not exceeded 𝑀 swaps .4. Experimental Setup 
+
+4.1. Datasets and Preprocessing 
+
+We carry out experiments on three recommendation domains: music streaming, online shopping, and movie ratings. 
+
+Music4All-Onion [20] is a multimodal dataset for music recommendation based on the tracks of Music4All [21] and on the interaction data of LFM-2b [22]. Following Li et al. [23], we restrict the dataset to the interactions happening in 2018. As item side information, we use the representations of the audio signals extracted with a pre-computed instance of MusiCNN [24, 25] and provided by Peintner et al. [26]. 
+
+Amazon [27, 28] is a dataset of user reviews for purchases on the Amazon online shopping platform. We use the All_Beauty reviews of the 2023 version of the dataset, with the concatenated text of product title and description as side information. Following Spillo et al. [29], the concatenated text is embedded using the pre-trained all-MiniLM-L6-v2 SentenceTransformer model [30] from HuggingFace. 2
+
+ML-20M is the 20-millions version of the MovieLens movie ratings dataset [31]. This dataset was recently enriched with multimodal item side information by Spillo et al. [32]. As side information, we take the movie IMDB 3 plot, encoded with a pre-trained all-mpnet-base-v210 SentenceTransformer model [30], as provided by Spillo et al. [32]. 
+
+Preprocessing. Following best practices in sequential recommendation [33, 34], we split the data using a global temporal split strategy, requiring 20% of the interactions in the test set. For test interactions, the last item of each sequence is treated as target, while the preceding interactions of the same sequence (including those at timestamps preceding the global split timestamp), form the input. This setup better reflects real-world usage and prevents leakage of future data [33]. We set the maximum sequence length to ℓ = 40 and partition longer sequences into chunks of length 
+
+40 , using all chunks occurring at timestamps preceding the global split timestamp for training. This allows us to fully exploit the available training data without discarding interactions. We apply iterative 𝑘 -core filtering to train interactions; since we are interested in item cold-start scenarios, we reduce the typical [35] value of 𝑘 = 5 to 𝑘 = 2 . We use cosine similarity to compute the NN map 𝜑 .               
+
+> # users # items # interactions Item Side Information Onion 20,455 53,377 17,285,525 Track audio (MusiCNN [24, 25]) Amazon 12,594 7,105 500,095 Product title and description (all-MiniLM-L6-v2 [30]) ML-20M 112,329 11,687 19,919,743 Movie plot (all-mpnet-base-v210 [30, 32])
+> Table 1
+> Summary of datasets after pre-processing.
+
+4.2. Evaluation 
+
+RQ1: Overall Model Performance. We evaluate the overall accuracy of RS on Hit-Rate for lists of 10 recommendations (HR@10), as commonly done for sequential recommendation [36, 33, 34], reporting mean and standard error (SE) over test sequences. 
+
+> 2https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
+> 3https://www.imdb.com/
+
+RQ2: Robustness to Cold-Item Clicks. RQ2 focuses on the negative impact of clicks on cold items, i. e., from users’ perspective. To test model robustness to item cold-start scenarios, as well as to heuristics used to address those situations, we split evaluation sequences according to the number 𝑛 train of train interactions of the last item before the target one. We focus exclusively on the last item since for sequential models the latest interaction is expected to influence recommendations more substantially than earlier interactions [19, 37]. For both the full set of test sequences and test sequences ending with cold items ( 𝑛 train < 𝑛 cold ), we evaluate model performance with and without swapping the last item in the input sequence. Additionally, to mimic the strict-cold-start scenarios, we compare models performance when treating the last input item in the following ways. 
+
+No swap: the item is kept as-is. 
+
+Swap: the item is swapped with its NN according to 𝜑 .
+
+Init: the item is assigned a randomly-initialized token embedding, with the same initialization of the underlying ID-based RS, hence mimicking strict cold-start. 
+
+Drop: the item is dropped entirely from the input sequence, another technique often used to address strict-item-cold-start scenarios in sequential recommendation. Notice that the evaluations in the last settings (drop), requires input test sequences to consist of at least two items. For input test sequences consisting of a single item, dropping it would leave the model without interactions to compute recommendations on, i.e., in a user cold-start scenario, which is beyond the scope of the current work. We therefore limit the “drop” model comparison for cold-start to input sequences of at least two items. 
+
+RQ3: Cold Items Recommended. RQ3 focuses on the negative impact of item cold-start on content producers, i. e., the underexposure of cold items in recommendation lists. To compare the extent to which models are able to represent cold items in recommendations, we measure the empirical cumulative distribution function (CDF) of top-𝑘 recommendations over 𝑛 train . In other words, for each observed value of 𝑛 train , we measure which fraction of items in the top-𝑘 recommendations have fewer than 
+
+𝑛 train training interactions. Furthermore, we compute the catalog coverage [38], i. e., the fraction of distinct items that appear at least once in the top-𝑘 recommendation lists. 
+
+4.3. Sequential Backbones. 
+
+We employ two state-of-the-art sequential, transformer-based RS as backbones to SwapRec. 
+
+BERT4Rec [39] : This model is based on the BERT architecture [40] and consists of a transformer optimized through bidirectional self-attention. 
+
+SASRec [19] : This model’s architecture consists of a transformer optimized through causal self-attention. We select these backbone sequential RS since they are often used in industrial scenarios and, more importantly, demonstrate state-of-the-art performance across several recommendation domains and evaluation setups [15, 13, 41]. 
+
+4.4. Non-Sequential Baselines. 
+
+We compare overall model performance with well-established collaborative filtering RS, covering three different RS paradigms. 
+
+MultVAE [42] is based on a variational autoencoder architecture applied to the user interaction profile, and is considered among the strongest non-sequential neural-network-based architectures. Table 2 
+
+Test HR@10 before and after swapping the last input item at inference time, overall and for sequences ending with cold items ( 𝑛 train ≤ 10 ). CF baselines (bottom block of each dataset) do not support swap inference or cold-item evaluation. Bold: best per dataset and column; subscript: standard error. Overall Cold ( 𝑛 train ≤ 10 )
+
+Dataset Model no swap swap no swap swap Onion SASRec .3183 .0039 .0422 .0017 .2269 .0386 .1176 .0297 
+
+SASRec w. SwapRec .3104 .0039 .2404 .0036 .2353 .0390 .1849 .0357 
+
+BERT4Rec .2838 .0038 .1402 .0029 .2269 .0386 .1597 .0337 
+
+BERT4Rec w. SwapRec .2830 .0038 .2009 .0034 .2185 .0380 .1597 .0337 
+
+MultVAE .1092 .0026 — — —Item-𝑘 NN .0577 .0019 — — —ALS .0510 .0019 — — —Amazon SASRec .0517 .0029 .0098 .0013 .0095 .0018 .0026 .0009 
+
+SASRec w. SwapRec .0518 .0029 .0454 .0027 .0099 .0018 .0082 .0016 
+
+BERT4Rec .0510 .0029 .0262 .0021 .0086 .0017 .0046 .0012 
+
+BERT4Rec w. SwapRec .0511 .0029 .0322 .0023 .0089 .0017 .0049 .0013 
+
+MultVAE .0010 .0004 — — —Item-𝑘 NN .0071 .0011 — — —ALS .0215 .0019 — — —ML-20M SASRec .1185 .0020 .0524 .0014 .0098 .0069 .0196 .0097 
+
+SASRec w. SwapRec .1202 .0020 .1102 .0020 .0049 .0049 .0147 .0084 
+
+BERT4Rec .0978 .0018 .0799 .0017 .0049 .0049 .0245 .0109 
+
+BERT4Rec w. SwapRec .0996 .0019 .0967 .0018 .0098 .0069 .0245 .0109 
+
+MultVAE .0408 .0013 — — —Item-𝑘 NN .0504 .0014 — — —ALS .0363 .0012 — — —
+
+Item-𝑘 NN [43] provides recommendations based on a item-nearest-neighbor approach, computing similarity based on the item interaction profile; it has been shown to often outperform neural-network-based approaches despite its simplicity [44]. 
+
+ALS [45] is a matrix-factorization-based RS that updates the user and item matrices by alternately holding one matrix fixed and updating the other, and is included as factorization-based baseline. 
+
+# 5. Results 
+
+RQ1: Overall performance. We start by evaluating the overall model performance on the full dataset without inference-time swaps. The results are reported on the left side of Table 2. All sequential models (SASRec, BERT4Rec, with and without SwapRec) reach higher HR than non-sequential models (MultVAE, Item-𝑘 NN, ALS) on all datasets. For ML-20M and Amazon, this is in agreement with previous observations [36] reporting that for these datasets, interaction timestamps are informative for recommendation. For Onion, we attribute this to the importance of sequentiality in music streaming [46, 47, 48]. We observe that SASRec variants outperform both BERT4Rec variants on all dataset, also in agreement with previous work [15]. Finally, we observe that SASRec w. SwapRec reaches the best performance on two datasets, indicating that our SASRec w. SwapRec, designed for item cold-start, improves recommendation accuracy even in a standard, warm scenario. Table 3 
+
+HR@10 for different ways of handling strict-cold items: swap (replace with 𝜑 (𝑠 𝑘 )), init (randomly initialize ID embedding), and drop (remove from sequence). Evaluation restricted to input sequences of at least two items. Bold: best per dataset; subscript: standard error. 
+
+Dataset Model swap init drop Onion BERT4Rec .1407 .0029 .1646 .0031 .2112 .0034 
+
+BERT4Rec w. SwapRec .2015 .0034 .1735 .0032 .2124 .0035 
+
+SASRec .0423 .0017 .0681 .0021 .2197 .0035 
+
+SASRec w. SwapRec .2405 .0036 .0813 .0023 .2097 .0034 
+
+Amazon BERT4Rec .0360 .0054 .0310 .0050 .0301 .0049 
+
+BERT4Rec w. SwapRec .0335 .0052 .0293 .0049 .0310 .0050 
+
+SASRec .0126 .0032 .0033 .0017 .0301 .0049 
+
+SASRec w. SwapRec .0494 .0063 .0126 .0032 .0310 .0050 
+
+ML-20M BERT4Rec .0799 .0017 .0804 .0017 .0714 .0016 
+
+BERT4Rec w. SwapRec .0967 .0019 .0802 .0017 .0740 .0017 
+
+SASRec .0524 .0014 .0701 .0016 .0871 .0018 
+
+SASRec w. SwapRec .1102 .0020 .0747 .0017 .0894 .0018 
+
+RQ2: Robustness to Cold-Item Clicks. Moving on to the main focus of this work, i. e., item cold-start recommendation, the right side of Table 2 shows results for sequential models and includes the performance when the last item in the input sequence is swapped with its most-similar one. The columns “ Cold ” refer to test sequences ending with a cold item with 𝑛 train < 𝑛 cold . We first observe that all models experience a lower performance when the last item is cold (“ Overall-no swap ” vs. “ Cold-no swap ”), demonstrating the expected performance deterioration in cold-start scenarios. We see that in both cases (“ Overall ” and “ Cold ”), when looking at model performance after applying the swap at inference time (“ swap ”), models experience a performance deterioration. This is expected, especially on the full dataset, where the learned token embedding of the last item is more representative of the session than the swapped one. However, the performance deterioration is less remarked when models were trained with SwapRec, demonstrating that SwapRec makes models more robust to the item swap heuristic often used to address cold-start scenarios. Table 3 reports results in the strict item cold-start scenarios, i. e., when 𝑛 train = 0 . For each sequential model, we include three ways of handling strict-cold-start items: keeping the randomly initialized token embedding (“ init ”), dropping the strict-cold-start item from the input (“ drop ”), and swapping it at inference time with its most similar warm item (“ swap ”). We observe that for models without SwapRec, swapping the cold item with the warm one at inference time can result in a worse performance than other ways of addressing item cold-start. This is the case especially on Onion, and we attribute this to the fact that since music streaming often occurs in sessions, sequences tend to be longer as compared to other domains such as movie streaming or online shopping, and hence the model can “fall back” on the information from the other items in the input sequence. We also observe that models trained with SwapRec often reach a better performance than the model trained without, indicating the effectiveness of SwapRec to render models more robust to item cold-start 
+
+irrespective of the strategy used to address it; we attribute this to the ID embedding updates of cold items that happen due to swaps during training. As expected, SwapRec also allows models to reach their best item-cold-start performance when swapping is used at inference time. To summarize, the results in Tables 2 and 3 indicate that inference-time swaps of cold items with their most content-similar ones can negatively impact model performance, and that by leveraging these swaps during training, SwapRec renders models more robust to item cold-start. We further analyze the impact of 𝑛 train . For conciseness, we carry out the analysis on the best performing sequential model (SASRec), with and without SwapRec, as summarized in Figure 3. As expected, we see that all models reach a lower performance for sequences ending with cold items (𝑛 train < 10 ), demonstrating that such sequences can harm real-time recommendation. In almost all 00.10.20.30.4 SASRec overall SASRec w. SwapRec overall 
+
+> HR@10
+
+No swap Swap No swap w. SwapRec Swap w. SwapRec 
+
+(a) Onion 
+
+00.10.2
+
+> SASRec overall SASRec w. SwapRec overall
+> HR@10
+
+(b) Amazon 
+
+≤10 11–20 21–100 ≥101 
+
+00.10.2
+
+> SASRec overall SASRec w. SwapRec overall
+
+Interactions in train set HR@10 
+
+(c) ML-20M 
+
+Figure 3: HR@10 by number of interactions of the last input item. Error bars: ±1 SE. Dashed lines: overall HR@10. 
+
+cases, models experience a performance deterioration when swapping the last item in the sequence, and we attribute this to the fact that, considering the short-head long-tail distribution of interaction data, items are likely to be mapped to cold items when the swaps are applied at inference time. When applying SwapRec, the deterioration mostly decreases as 𝑛 train decreases; this is a further indication of SwapRec’s effectiveness in handling cold-start items: SwapRec allows having a valid representation for cold items, avoiding staticity when interactions with these items occur. Overall, we see that when trained with SwapRec, the performance deterioration in presence of interactions with cold items is less pronounced, irrespective of the number of training interactions of the swapped item and of the strategy used to handle those interactions. 
+
+RQ3: Cold Items Recommended. RQ3 focuses on SwapRec’s positive effect for content producers, i. e., its ability to expose cold items more often in recommendation lists. Figure 4 shows the empirical CDF of 𝑛 train appearing in the aggregated top-10 recommendation lists for Amazon test sequences. For the same aggregated top-10 recommendations, Table 4 shows the percentage of cold items with 𝑛 train < 𝑛 cold , as well as the catalog coverage, for both the strongest comparison model (SASRec) and its variant leveraging SwapRec. SwapRec’s curve is always above SASRec, indicating that SwapRec recommends less popular items.. We see that SwapRec improves on both the percentage of cold items recommended, as well as the overall catalog coverage. Figure 3 shows Table 4        
+
+> Cold-start impact metrics for Amazon. Bold coverage values highlight SwapRec relative to SASRec. Model Cold-% [95% CI] Coverage SASRec 30.7% [30.3, 31.1] 0.5779 SwapRec 31.8% [31.4, 32.2] 0.6322
+> Figure 4: Empirical CDF of training-set frequency ( 𝑛 train ) among top-10 recommended items for Amazon test sequences. SwapRec’s curve is always above SASRec, indicating that SwapRec recommends less popular items.
+
+the CDF of top-𝑘 Amazon recommendations over 𝑛 train . We observe that SwapRec’s CDF is always above its underlying backbone SASRec, indicating that SwapRec leads to less popular recommendations, and that the higher percentage of cold recommendations is not an artifact of how the threshold 𝑛 cold is defined. We attribute both the larger catalog coverage and the higher percentage of cold-items recommen-dations to the fact that through training-time swaps, SwapRec leads to more frequent updates of cold item ID embeddings, as compared to the underlying backbone. 
+
+# 6. Conclusions and Future Work 
+
+This work focused on mitigating the negative impact of clicks on cold items on sequential recommenda-tion. We showed that exchanging cold items with their most similar item, an approach used to ensure real-time personalization in industry environments, is only effective if also applied during training. We hence proposed SwapRec, which applies training-time swapping to transformer-based sequential recommenders, demonstrating that SwapRec mitigates the performance deterioration in item cold-start and leads to a larger percentage of cold-item occurrences in recommendation lists. There are several limitations to our work. We limited item swaps during evaluation to the last item in the sequence. We developed SwapRec limiting the map exclusively to the most similar warm item. We did not investigate the impact of multiple inference-time swaps, different swap positions, or different swap maps. We think that the use of contrastive losses – like in natural language processing for synonyms – could further improve models’ robustness to swaps. Finally, we did not investigate the impact of SwapRec on the structure of the ID embedding space. We leave these extensions for future research. 
+
+# Declaration on Generative AI 
+
+The authors used Claude Code during the development of SwapRec and to generate the figures of the paper. After using these tools, the authors reviewed and edited the code as needed and take full responsibility for the content produced. 
+
+# References 
+
+[1] F. Ricci, L. Rokach, B. Shapira (Eds.), Recommender Systems Handbook, Springer US, New York, NY, 2022. [2] C. Ganhör*, M. Moscati*, A. Hausberger, S. Nawaz, M. Schedl, A multimodal single-branch embedding network for recommendation in cold-start and missing modality scenarios, in: Proc. of ACM RecSys, 2024. [3] Y. Wei, X. Wang, Q. Li, L. Nie, Y. Li, X. Li, T.-S. Chua, Contrastive learning for cold-start recom-mendation, in: Proc. of ACM Multimedia, 2021, pp. 5382–5390. [4] M. Volkovs, G. Yu, T. Poutanen, Dropoutnet: Addressing cold start in recommender systems, in: Proc. of NeurIPS, 2017. [5] D. Malitesta, G. Cornacchia, C. Pomo, F. A. Merra, T. Di Noia, E. Di Sciascio, Formalizing multimedia recommendation through multimodal deep learning, Transactions on Recommender Systems (2024). [6] C. Ganhör, M. Moscati, A. Hausberger, S. Nawaz, M. Schedl, Single-branch network architectures to close the modality gap in multimodal recommendation, ACM Transactions on Recommender Systems (2025). [7] J. M. Lichtenberg, M. Ruffini, Sequential recommenders and multimodal inputs: Mitigating data quality issues in industry-scale recommenders, in: Proc. of DaQuaMRec Workshop at ACM RecSys, 2025. [8] J. M. Lichtenberg, A. De Candia, M. Ruffini, Denserec: Revisiting dense content embeddings for sequential transformer-based recommendation, in: Proc. of EARL Workshop at ACM RecSys, 2025. [9] A. Pembek, A. Fatkulin, A. Klenitskiy, A. Vasilev, Let it go? not quite: Addressing item cold start in sequential recommendations with content-based initialization, in: Proc. of ACM RecSys, RecSys ’25, 2025. [10] A. Singh, T. Vu, N. Mehta, R. Keshavan, M. Sathiamoorthy, Y. Zheng, L. Hong, L. Heldt, L. Wei, D. Tandon, E. Chi, X. Yi, Better generalization with semantic ids: A case study in ranking for recommendations, in: Proc. of ACM RecSys, 2024. [11] S. Rajput, N. Mehta, A. Singh, R. Keshavan, T. Vu, L. Heidt, L. Hong, Y. Tay, V. Q. Tran, J. Samost, M. Kula, E. H. Chi, M. Sathiamoorthy, Recommender systems with generative retrieval, in: Proc. of NeurIPS, 2023. [12] L. Yang, F. Paischer, K. Hassani, J. Li, S. Shao, Z. G. Li, Y. He, X. Feng, N. Noorshams, S. Park, B. Long, R. D. Nowak, X. Gao, H. Eghbalzadeh, Unifying generative and dense retrieval for sequential recommendation, Transactions on Machine Learning Research (2025). [13] V. H. Koneru, X. Neufeld, S. Loth, A. Grün, Enhancing recommendation quality of the sasrec model by mitigating popularity bias, in: Proc. of ACM RecSys, RecSys ’24, 2024. [14] V. H. Koneru, X. Neufeld, S. Loth, A. Grün, Sasrec in action: Real-world adaptations for zdf streaming service, in: Proc. of ACM RecSys, RecSys ’25, 2025. [15] A. Klenitskiy, A. Vasilev, Turning dross into gold loss: is bert4rec really better than sasrec?, in: Proc. of ACM RecSys, RecSys ’23, 2023. [16] M. Grbovic, H. Cheng, Real-time personalization using embeddings for search ranking at airbnb, in: Proc. of ACM SIGKDD, 2018. [17] J. Seol, M. Gang, S.-g. Lee, J. Park, Proxy-based item representation for attribute and context-aware recommendation, in: Proc. of ACM WSDM, 2024. [18] L. Collins, B. Kumar, C. M. Ju, T. Zhao, D. Loveland, L. Neves, N. Shah, Exploiting id-text comple-mentarity via ensembling for sequential recommendation, 2026. arXiv:2512.17820 .[19] W.-C. Kang, J. McAuley, Self-attentive sequential recommendation, in: Proc. of IEEE ICDM, 2018. [20] M. Moscati, E. Parada-Cabaleiro, Y. Deldjoo, E. Zangerle, M. Schedl, Music4all-onion - A large-scale multi-faceted content-centric music recommendation dataset, in: Proc. of ACM CIKM, 2022. [21] I. A. P. Santana, F. Pinhelli, J. Donini, L. Catharin, R. B. Mangolin, V. D. Feltrim, M. A. Domingues, et al., Music4all: A new music database and its applications, in: Proc. of IWSSIP, 2020. [22] M. Schedl, S. Brandl, O. Lesota, E. Parada-Cabaleiro, D. Penz, N. Rekabsaz, Lfm-2b: A dataset of enriched music listening events for recommender systems research and fairness analysis, in: Proc. of ACM CHIIR, 2022. [23] Z. Li, G. Escobedo, M. Moscati, O. Lesota, M. Schedl, Adaptive autoguidance for item-side fairness in diffusion recommender systems, in: Proc. of ACM SIGIR, 2026. [24] J. Pons, O. Nieto, M. Prockup, E. M. Schmidt, A. F. Ehmann, X. Serra, End-to-end learning for music audio tagging at scale, in: Proc. of ISMIR, 2018. [25] J. Pons, X. Serra, musicnn: pre-trained convolutional neural networks for music audio tagging, in: Late-breaking/demo session in 20th International Society for Music Information Retrieval Conference (LBD-ISMIR2019), 2019. [26] A. Peintner, M. Moscati, Y. Kinoshita, R. Vogl, P. Knees, M. Schedl, H. Strauss, M. Zenter, E. Zangerle, Nuanced music emotion recognition via a semi-supervised multi-relational graph neural network, Trans. of ISMIR 8 (2025). [27] J. Ni, J. Li, J. McAuley, Justifying recommendations using distantly-labeled reviews and fine-grained aspects, in: Proc. of EMNLP, 2019. [28] Y. Hou, J. Li, X. Fu, Z. He, A. Yan, X. Chen, J. McAuley, Bridging language and items for retrieval and recommendation: Benchmarking LLMs as semantic encoders, in: Proc. of ACL, San Diego, California, USA, 2026. [29] G. Spillo, C. Musto, M. Polignano, P. Lops, M. de Gemmis, G. Semeraro, Combining graph neural networks and sentence encoders for knowledge-aware recommendations, in: Proc. of ACM UMAP, UMAP ’23, 2023. [30] N. Reimers, I. Gurevych, Sentence-bert: Sentence embeddings using siamese bert-networks, in: Proc. of EMNLP, 2019. [31] F. M. Harper, J. A. Konstan, The movielens datasets: History and context, ACM Transactions on Interactive Intelligent Systems 5 (2015). [32] G. Spillo, A. Petruzzelli, C. Musto, M. d. Gemmis, P. Lops, G. Semeraro, Binge Watch: Reproducible Multimodal Benchmarks Datasets for Large-Scale Movie Recommendation on MovieLens-10M and 20M, 2026. arXiv:2602.15505 .[33] D. Gusak, A. Volodkevich, A. Klenitskiy, A. Vasilev, E. Frolov, Time to split: Exploring data splitting strategies for offline evaluation of sequential recommenders, in: Proc. of ACM RecSys, 2025. [34] D. Gusak, N. Sukhorukov, E. Frolov, Recommendation is a dish better served warm, in: Proc. of ACM RecSys, 2025. [35] A. B. Melchiorre, N. Rekab-saz, E. Parada-Cabaleiro, S. Brandl, O. Lesota, M. Schedl, Investigating gender fairness of recommendation algorithms in the music domain, Information Processing and Management 58 (2021). [36] A. Klenitskiy, A. Volodkevich, A. Pembek, A. Vasilev, Does it look sequential? an analysis of datasets for evaluation of sequential recommendations, in: Proc. of ACM RecSys, RecSys ’24, 2024. [37] J. Oh, S. Cho, Measuring recency bias in sequential recommendation systems, in: Proc. of CONSEQUENCES Workshop at ACM RecSys, 2024. [38] A. Gunawardana, G. Shani, S. Yogev, Evaluating recommender systems, in: F. Ricci, L. Rokach, B. Shapira (Eds.), Recommender Systems Handbook, Springer US, New York, NY, 2022, pp. 547–602. [39] F. Sun, J. Liu, J. Wu, C. Pei, X. Lin, W. Ou, P. Jiang, Bert4rec: Sequential recommendation with bidirectional encoder representations from transformer, in: Proc. of ACM CIKM, 2019. [40] J. Devlin, M.-W. Chang, K. Lee, K. Toutanova, Bert: Pre-training of deep bidirectional transformers for language understanding, in: North American Chapter of the Association for Computational Linguistics, 2019. URL: https://api.semanticscholar.org/CorpusID:52967399. [41] F. Betello, A. Purificato, F. Siciliano, G. Trappolini, A. Bacciu, N. Tonellotto, F. Silvestri, Areproducible analysis of sequential recommender systems, IEEE Access 13 (2025). [42] D. Liang, R. G. Krishnan, M. D. Hoffman, T. Jebara, Variational autoencoders for collaborative filtering, in: Proc. of WWW, 2018. [43] M. Deshpande, G. Karypis, Item-based top-n recommendation algorithms, ACM Transactions on Information Systems 22 (2004). [44] M. Ferrari Dacrema, P. Cremonesi, D. Jannach, Are we really making much progress? a worrying analysis of recent neural recommendation approaches, in: Proc. of ACM RecSys Systems, 2019. [45] Y. Hu, Y. Koren, C. Volinsky, Collaborative filtering for implicit feedback datasets, in: Proc. of IEEE ICDM, 2008. [46] D. Abbattista, V. W. Anelli, T. Di Noia, C. Macdonald, A. V. Petrov, Enhancing sequential music recommendation with personalized popularity awareness, in: Proc. of ACM RecSys, 2024. [47] M. Moscati, C. Wallmann, M. Reiter-Haas, D. Kowald, E. Lex, M. Schedl, Integrating the act-r framework with collaborative filtering for explainable sequential music recommendation, in: Proc. of ACM RecSys, 2023. [48] P. Seshadri, S. Shashaani, P. Knees, Enhancing sequential music recommendation with negative feedback-informed contrastive learning, in: Proc. of ACM RecSys, 2024.

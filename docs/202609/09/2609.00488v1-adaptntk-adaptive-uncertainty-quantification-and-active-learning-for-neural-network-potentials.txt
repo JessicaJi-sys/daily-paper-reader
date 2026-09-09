@@ -1,0 +1,558 @@
+Title: AdaptNTK: Adaptive Uncertainty Quantification and Active Learning for Neural Network Potentials
+
+URL Source: https://arxiv.org/pdf/2609.00488v1
+
+Published Time: Wed, 02 Sep 2026 00:35:12 GMT
+
+Number of Pages: 19
+
+Markdown Content:
+# AdaptNTK: Adaptive Uncertainty Quantification and Active Learning for Neural Network Potentials 
+
+Prajwal Ananth 1 and Shuwen Yue 2,* 1Center for Applied Mathematics, Cornell University, Ithaca, NY, USA 
+
+> 2
+
+R. F. Smith School of Chemical and Biomolecular Engineering, Cornell University, Ithaca, NY, USA 
+
+> *
+
+Corresponding author: shuwen.yue@cornell.edu 
+
+Abstract 
+
+Machine learning interatomic potentials bridge the gap between quantum chemical precision and classical computational speed, enabling molecular dynamics simulations with first-principles accuracy. Their reliability is often improved through active learning, which iteratively expands the training set by identifying uncertain, out-of-distribution configurations. Existing uncertainty-quantification methods often involve a trade-off between computational cost and reliability, and generally cannot account for redundancy as an acquisition batch is assembled. Here, we introduce AdaptNTK, a single-model framework that measures uncertainty as a regularized Mahalanobis distance in empirical neural tangent kernel (NTK) feature space. With the NTK features fixed during acquisition, the uncertainty depends on the acquired configurations but not their reference labels. This allows the uncertainty to be updated recursively after each selection without retraining, reducing redundancy within an acquisition batch. On held-out rMD17 data, AdaptNTK achieves the highest mean correlations with force errors (Spearman 0 .68, Pearson 0.71) and matches a three-member ensemble in error retention. In active learning experiments, AdaptNTK achieves the lowest force errors across rMD17 and Transition-1X, with particularly strong performance on transition-state configurations in Transition-1X. AdaptNTK is 2 .6×
+
+faster per Transition-1X cycle than the ensemble, providing efficient single-model uncertainty estimation with sequential updates for data-efficient active learning. 
+
+# 1 Introduction 
+
+Molecular dynamics (MD) simulations are widely used to study chemical processes at atomistic resolution. Their accuracy and range, however, have traditionally been limited by a trade-off between computational cost and the quality of the underlying potential-energy surface (PES). Electronic-structure methods accurately describe bond breaking, charge redistribution, and small energy differences but remain computationally costly, whereas empirical force fields can access larger length and timescales but often do not generalize to new chemical environments. Machine learning interatomic potentials (MLIPs) address this limitation by learning potentials from reference calculations and approximating first-principles energies and forces at computational costs that can scale linearly with system size (Behler and Parrinello, 2007; Bartók et al., 2010; Unke et al., 2021; Batzner et al., 2022; Batatia et al., 2022; Musaelian et al., 2023). Despite their efficiency, MLIPs are strongly dependent on their training data. They generally interpolate well within regions of configuration space represented in the training set, but their 1arXiv:2609.00488v1 [cs.LG] 31 Aug 2026 predictions can deteriorate when trajectories encounter configurations outside these regions. Such extrapolation errors can lead to inaccurate forces and, consequently, incorrect trajectories. Reli-able uncertainty estimates are therefore important for identifying configurations for which model predictions may not be trustworthy. Gaussian-process (GP) potentials naturally provide uncertainty estimates through their posterior variance, which depends on the training configurations but not their reference labels. This enables uncertainty to be evaluated and updated analytically as the training set changes. Neural-network potentials, on the other hand, are more expressive but generally lack comparable closed-form uncertainty estimates. Their uncertainty is typically approximated using ensembles (Seung et al., 1992; Smith et al., 2018) or approximate Bayesian methods (Gal and Ghahramani, 2016; Maddox et al., 2019; Amini et al., 2020; Soleimany et al., 2021), which can be computationally expensive or unreliable outside the training distribution. Developing reliable and efficient uncertainty estimates for a single trained MLIP therefore remains an important challenge. Active learning is a natural downstream application of uncertainty quantification. Configu-rations with high uncertainty can be selected for reference labeling and added to the training set (Podryabinkin and Shapeev, 2017; Smith et al., 2018; Vandermause et al., 2020; Zhang et al., 2020). When multiple configurations are selected in a batch, however, uncertainty estimates computed only once at the beginning of the batch do not account for configurations that have already been selected, potentially leading to redundant acquisitions. GP posterior variance naturally supports updating the uncertainty after each selection without requiring the corresponding reference label (Vandermause et al., 2020). Achieving a similar capability for neural-network potentials is more challenging, because conventional uncertainty estimates generally require additional model fitting or retraining to incorporate newly selected configurations. Parameter-gradient features associated with the neural tangent kernel (NTK) (Jacot et al., 2018) provide a principled framework for recovering this GP-like capability in trained neural-network potentials. Here we introduce AdaptNTK, a framework for uncertainty quantification and active learning in neural-network potentials. AdaptNTK represents each configuration using the gradient of its predicted energy with respect to all model parameters and assigns a regularized distance from the training data in this tangent-feature space. Because the uncertainty depends on the selected configurations but not their reference labels, it can be updated analytically after each selection without retraining the network while the acquisition batch is being assembled. Our contributions are as follows: • We connect regularized empirical-NTK uncertainty to feature-space geometry, evaluate its ranking, retention, and calibration, and prove a Gaussian-sketch guarantee controlled by the ridge effective dimension. • We use a label-free rank-one update to condition the remaining uncertainty scores after each selection, reducing within-batch redundancy without additional model retraining. • We benchmark AdaptNTK’s force-error ranking, error retention, uncertainty calibration, and active-learning performance against ensemble and single-model baselines on rMD17 (Christensen and von Lilienfeld, 2020) and Transition-1X (Schreiner et al., 2022). Overall, AdaptNTK achieves the highest mean correlations with force error among the evaluated uncertainty quantification methods and the lowest force errors in the active-learning experiments on rMD17 and Transition-1X. Its normalized risk–coverage performance is comparable to that of a three-member ensemble, while its wall-clock cost is less than half that of the ensemble in the reported Transition-1X timing experiment. Together, these results show that sketched empirical-NTK uncertainty provides a practical single-model foundation for data-efficient active learning of neural-network potentials. 22 Related Work 
+
+Several uncertainty-quantification methods have been developed for estimating predictive uncertainty in deep neural networks (Seung et al., 1992; Gal and Ghahramani, 2016; Lakshminarayanan et al., 2017; Maddox et al., 2019; Amini et al., 2020; Soleimany et al., 2021). These approaches have also been adapted to atomistic machine learning, particularly through ensembles and query-by-committee (QBC) methods (Smith et al., 2018; Podryabinkin and Shapeev, 2017; Zhang et al., 2020; Kahle and Zipoli, 2022). More recent work has developed single-model or reduced-cost alternatives based on dropout and learned-feature distributions (Wen and Tadmor, 2020; Zhu et al., 2023; Bigi et al., 2024; Chong et al., 2025), evidential regression (Xu et al., 2026), shared-backbone ensembles (Kellner and Ceriotti, 2024; Beck et al., 2025), variational inference (Coscia et al., 2026; Mamun et al., 2026), and post-hoc uncertainty estimation and calibration (Vita et al., 2025; Perez et al., 2025; Ho et al., 2026). However, these approaches often involve a trade-off between computational scalability and the reliability of their uncertainty estimates (Tan et al., 2023; Bilbrey et al., 2025). More recently, Wilson et al. (2025) showed that uncertainty quantification based on empirical neural tangent kernels (NTKs) can match or outperform deep ensembles at substantially lower computational cost in general regression settings. Their approach is post-hoc and sampling-based, constructing ensembles through gradient-descent sampling of linearized networks, whereas our uncertainty estimate is obtained directly from a closed-form regularized quadratic form in empirical NTK feature space. Batch active-learning methods have also been extensively studied across machine-learning applications, including image classification and tabular regression. Last-layer and gradient-feature representations are commonly paired with diversity criteria for batch acquisition (Holzmüller et al., 2023; Ash et al., 2020; Sener and Savarese, 2018), with related approaches developed for interatomic potentials (Zaverkin et al., 2022). Concurrent work by Varga-Umbrich et al. (2026a) and Varga-Umbrich et al. (2026b) also uses neural tangent kernel features and diversity-aware selection for active learning in MLIPs. These works demonstrate the utility of feature-based representations and within-batch diversification for selecting informative training data. Their primary focus, however, is fixed-budget acquisition, where feature scores are used to rank candidates rather than to provide a quantitative, calibrated uncertainty for each configuration. Our focus is complementary: we use empirical NTK features to construct a pointwise uncertainty measure that can be calibrated and updated adaptively as configurations are acquired. This distinction is important for molecular simulations, where uncertainty needs to be evaluated on individual configurations as the trajectory evolves. Such estimates can identify departures from the training distribution, provide stopping criteria for data acquisition, and indicate when model predictions may not be reliable during long-running simulations. 
+
+# 3 Background 
+
+3.1 Gaussian processes 
+
+A Gaussian Process (GP) defines a prior over functions f : Rd → R with mean function m(·)and covariance kernel k(·, ·) (Rasmussen and Williams, 2006). Given a dataset D = ( X, y) with observation noise σ2, the posterior predictive distribution at a test input x⋆ is Gaussian with variance Σ( x⋆) = k(x⋆, x⋆) − kx⋆,X
+
+> (
+
+KX,X + σ2I
+
+> )−1
+
+kX,x⋆
+
+In this work, we focus on the predictive variance, which serves as a measure of uncertainty and forms the basis for our acquisition strategy. 33.2 Neural tangent kernels 
+
+Consider a neural network f (·; θ) : Rd → R parameterized by θ ∈ RP . Its neural tangent feature map at parameters θ is ϕθ(x) = ∇θf (x; θ) ∈ RP , which induces the empirical neural tangent kernel (NTK) Kθ(x, x′) = ϕθ(x)⊤ϕθ(x′). In the infinite-width limit, the NTK converges to a deterministic kernel, and, under standard assumptions, neural-network training can be described by the corresponding kernel dynamics (Jacot et al., 2018; Lee et al., 2019). Here, we instead use the empirical NTK of a finite, trained network. Treating this kernel as a Gaussian-process covariance yields a predictive uncertainty that can be written directly in terms of the tangent-feature matrix Φ ∈ Rn×P . This construction corresponds to a local linearization around the learned parameters and does not assume that the model operates in the infinite-width regime. 
+
+# 4 Methods 
+
+4.1 Motivation and theoretical analysis 
+
+We first develop a geometric interpretation of predictive uncertainty by relating Gaussian-process (GP) variance induced by the empirical neural tangent kernel (NTK) to distances in NTK feature space. Let Φ ∈ Rn×P denote the empirical NTK feature matrix for the training dataset, where each row corresponds to the tangent feature representation of a training configuration. Treating the empirical NTK as the covariance kernel of the locally linearized neural network, the predictive variance at a query point x is given by 
+
+V[f (x)] = ϕ(x)⊤ϕ(x) − ϕ(x)⊤Φ⊤ (
+
+ΦΦ ⊤ + σ2In
+
+> )−1
+
+Φϕ(x), (1) where σ2 > 0 denotes the GP observation-noise or regularization parameter. While Eq. (1) is expressed in the data space, it can be expressed in an equivalent formulation in the parameter space. Using the Woodbury identity in its push-through form, we rewrite the predictive variance as 
+
+V[f (x)] = ϕ(x)⊤
+
+> [
+
+IP − F
+
+> (
+
+F + σ2IP
+
+> )−1]
+
+ϕ(x), (2) where F = Φ⊤Φ ∈ RP ×P is the empirical feature covariance matrix. Equation (2) motivates a direct geometric interpretation in the interpolative limit σ2 → 0+. In this limit, 
+
+F
+
+> (
+
+F + σ2IP
+
+> )−1
+
+−→ P∥ = F+F, (3) where F+ denotes the Moore–Penrose pseudoinverse and P∥ is the orthogonal projector onto the subspace spanned by the training features. Consequently, the residual operator converges to the orthogonal projector onto the complementary subspace, P⊥ = IP − P∥. Substituting this limiting form into Eq. (2) gives lim  
+
+> σ2→0+
+
+V[f (x)] = ϕ(x)⊤P⊥ϕ(x) = ∥P⊥ϕ(x)∥22 .
+
+Thus, in the noiseless limit, GP predictive uncertainty corresponds to the squared Euclidean distance of the query feature ϕ(x) from the subspace spanned by the training features in NTK feature space. A query whose tangent representation lies entirely within this subspace has vanishing uncertainty, 4whereas components orthogonal to the training-feature subspace contribute directly to the predictive variance. For any finite σ2 > 0, Eq. (2) can equivalently be written as 
+
+V[f (x)] = σ2ϕ(x)⊤ (
+
+F + σ2IP
+
+> )−1
+
+ϕ(x). (4) The quadratic form in Eq. (4) can be interpreted as a regularized squared Mahalanobis norm of the feature representation ϕ(x), with the metric determined by the regularized empirical feature covariance matrix. This provides a continuous extension of the subspace-distance interpretation above: feature-space directions that are weakly represented by the training data contribute more strongly to the uncertainty, whereas directions that are well represented are increasingly suppressed. Motivated by this form, we define the empirical NTK uncertainty as 
+
+U (x) = λϕ (x)⊤ (F + λIP )−1 ϕ(x), (5) where λ > 0 is a tunable regularization parameter. For conservative neural-network potentials, we take ϕ(x) = ∇θE(x; θ) where E(x; θ) denotes the predicted energy and θ the model parameters. Since forces are obtained by differentiating the predicted energy with respect to atomic coordinates, these energy-gradient features encode the structure-dependent sensitivity of the learned potential-energy surface to perturbations in parameter space. Although they do not directly represent force errors, we empirically find that the resulting uncertainty correlates strongly with force prediction error. Direct evaluation of Eq. (5) in the full parameter space is computationally expensive because 
+
+ϕ(x) ∈ RP is high-dimensional for over-parametrized neural-network potentials. We therefore introduce a randomized sketch that projects the NTK feature map into a lower-dimensional space while approximately preserving the geometry relevant to the uncertainty score. 
+
+Theorem 4.1 (Regularization-aware preservation of NTK uncertainty) . Let Φ ∈ Rn×P have rows 
+
+ϕ(xi)⊤, let F = Φ ⊤Φ, and let X be a fixed set of m queries. For each x ∈ X , let Zx be Φ with the row ϕ(x)⊤ appended, and define 
+
+dλ = max  
+
+> x∈X
+
+tr 
+
+> [
+
+ZxZ⊤
+
+> x
+> (
+
+ZxZ⊤ 
+
+> x
+
++ λI n+1 
+
+> )−1]
+
+.
+
+Let S ∈ Rp×P have independent Sij ∼ N (0 , 1/p ), set ˜ϕ(x) = Sϕ (x) and ˜F = SF S ⊤, and define 
+
+> ˜
+
+U (x) = λ ˜ϕ(x)⊤( ˜F + λI p)−1 ˜ϕ(x). There is an absolute constant C such that, for 0 < ϵ < 1, if 
+
+p ≥ Cϵ −2
+
+> (
+
+dλ + log mδ
+
+> )
+
+,
+
+then with probability at least 1 − δ, simultaneously for all x ∈ X ,
+
+| ˜U (x) − U (x)| ≤ ϵ(λ + U (x)).
+
+Theorem 4.1 shows that, for a fixed set of queries, a Gaussian sketch of dimension controlled by the ridge effective dimension is sufficient to preserve the full-space NTK uncertainty uniformly, up to a regularization-aware error of order ϵ(λ + U (x)). The effective dimension is a sum of shrinkage factors s2 
+
+> j
+
+/(s2 
+
+> j
+
++ λ) and may be far below both P and the feature rank. This allows U (x)to be evaluated in a substantially lower-dimensional space while closely preserving the full-space uncertainty. 5Corollary 4.2 (AdaptNTK decision stability) . For a B-step full-space greedy path, augment Φ with previously selected features and let dAL  
+
+> λ
+
+be the maximum ridge effective dimension over all steps and remaining candidates. Replace m by Bm and dλ by dAL  
+
+> λ
+
+in Theorem 4.1. If U (1)  
+
+> t
+
+and U (2)  
+
+> t
+
+are the two largest full-space scores at step t and 
+
+min 
+
+> t<B
+
+U (1)  
+
+> t
+
+− U (2) 
+
+> t
+
+2λ + U (1)  
+
+> t
+
++ U (2) 
+
+> t
+
+> ϵ, 
+
+then the sketched and full-space rules select the same ordered batch. 
+
+Corollary 4.2 gives the corresponding active-learning consequence. Once the sketch error is smaller than the relevant gaps between acquisition scores, the sketched and full-space rules select the same ordered batch. Thus, beyond a sufficient sketch dimension, increasing p need not change the selected configurations, consistent with our experiments (Table 3). Full proofs are provided in Appendix A. 
+
+4.2 Sequential acquisition with rank-one updates 
+
+Common uncertainty-based active-learning (AL) strategies, such as query-by-committee (QBC), score candidate configurations using uncertainty estimates from the current model. Selecting the top-B configurations according to these fixed scores does not account for redundancy among selected points, since acquiring an informative configuration can reduce the uncertainty of nearby configurations. This issue is particularly relevant for trajectory-generated candidate pools, where configurations are often strongly correlated. Accounting for this reduction after each acquisition would require updating the uncertainty estimate sequentially, which for conventional neural-network uncertainty methods generally entails repeated model fitting or inference and can be computationally expensive. We address this limitation with a greedy acquisition strategy that updates uncertainty after each selected configuration without retraining the network. Our approach builds on the Mahalanobis characterization of predictive uncertainty in NTK feature space (Section 4.1), which provides a geometric description of how uncertainty changes as configurations are incorporated. Directly recomputing this quantity after every selection would require repeated inversion of the feature covariance matrix, with O(p3) cost per update. Instead, we exploit the rank-one structure induced by each newly selected configuration and derive an efficient recursive update using the Sherman– Morrison identity. Let Ck = Fk + λIP denote the regularized feature covariance at iteration k. The predictive uncertainty for a query x is estimated as Uk(x) = λϕ (x)⊤C−1 
+
+> k
+
+ϕ(x), where λ is calibrated on the validation set. Upon acquiring a new point xnew , the covariance updates as 
+
+Ck+1 = Ck + ϕ(xnew )ϕ(xnew )⊤.
+
+Applying the Sherman–Morrison identity yields: 
+
+C−1 
+
+> k+1
+
+= C−1 
+
+> k
+
+− C−1 
+
+> k
+
+ϕ(xnew )ϕ(xnew )⊤C−1
+
+> k
+
+1 + ϕ(xnew )⊤C−1 
+
+> k
+
+ϕ(xnew ) . (6) Substituting into the definition of Uk+1 (x) gives the recursive update: 
+
+Uk+1 (x) = Uk(x) − ˜Uk(x, xnew )2
+
+λ + Uk(xnew ) , (7) 6where ˜Uk(x, xnew ) = λϕ (x)⊤C−1 
+
+> k
+
+ϕ(xnew ). This yields an O(p2) update for sequential active learning, where uncertainty is reduced according to the squared geometric correlation between the query and the newly acquired configuration. Updating C−1 
+
+> k
+
+costs O(p2). Once C−1 
+
+> k˜
+
+ϕ(xnew ) is computed, rescoring a pool of m remaining configurations requires only O(mp ). 
+
+# 5 Experiments 
+
+We first demonstrate that NTK-based uncertainty identifies large prediction errors, retains low-error predictions under selective retention, and can be calibrated. We then use AdaptNTK to show that this uncertainty remains effective when used as a sequential acquisition rule, followed by analyses of sketch size and computational cost. All methods use the same MACE architecture and training loss. For the active-learning comparisons, we use a fixed data split and random seeds shared across methods. Full experimental protocols are provided in Appendix C. 
+
+5.1 Uncertainty quantification 
+
+To evaluate uncertainty quality, we compare the NTK-based uncertainty with standard approaches based on deep ensembles, Monte Carlo dropout (MCD), evidential deep learning (EDL), and stochastic weight averaging-Gaussian (SWAG) on held-out configurations from the rMD17 dataset. For each method, the estimated uncertainty is compared with the per-configuration force RMSE of the corresponding model. Table 1 reports error correlation, error-retention performance, and post-hoc calibration.                                                                     
+
+> Table 1: Performance of uncertainty-quantification methods on held-out configurations from the rMD17 dataset. Metrics are computed against each method’s corresponding model and averaged across molecules. AURC nis normalized by oracle and random retention orderings, and ENCE is computed after out-of-fold recalibration; both are therefore comparable across rows. Bold indicates the best value in each column. Method Spearman ( ρs)Pearson ( ρp)AURC n↓ENCE ↓
+> NTK 0.683 ±0.018 0.706 ±0.021 0.312 ±0.014 0.0125 ±0.0018 Ensemble 0.642 ±0.022 0.661 ±0.024 0.310 ±0.013 0.0153 ±0.0021 MCD 0.348 ±0.031 0.330 ±0.034 0.633 ±0.027 0.0105 ±0.0015
+> EDL 0.302 ±0.028 0.262 ±0.032 0.735 ±0.031 0.0238 ±0.0034 SWAG 0.463 ±0.026 0.471 ±0.029 0.547 ±0.024 0.0476 ±0.0052
+
+The NTK-based uncertainty shows the strongest linear and rank association with prediction error ( ρp = 0 .706, ρs = 0 .683). Its rank correlation is slightly higher than that of the three-member ensemble (0 .642), while its AURC n is comparable (0 .312 versus 0 .310). These results indicate that a single trained network can provide uncertainty discrimination comparable to an ensemble. The differences relative to SWAG, MCD, and EDL are larger for both correlation and error-retention performance. Calibration and discrimination measure different properties. MCD achieves the best ENCE after two-parameter recalibration, yet its ρs = 0 .348 and AURC n = 0 .633 indicate substantially weaker ranking performance. A low ENCE can therefore coexist with limited acquisition utility, since recalibration can correct the overall uncertainty scale but does not alter the ranking. The NTK-based uncertainty is the only method that ranks among the top two for both discrimination metrics and ENCE. Figure 1 further illustrates that the NTK-based uncertainty and the ensemble maintain a broader and more ordered spread of uncertainty values. 70.78 1 1.4 1.8 2.4 
+
+Predicted Uncertainty 
+
+> 0.5 0.8 123
+> Force Error (kcal mol −1  Å−1 )
+
+ρs = 0.670 (a) NTK 0.6 0.82 1.1 1.5 2.1 
+
+Predicted Uncertainty 
+
+> 0.4 0.7 123
+> Force Error (kcal mol −1  Å−1 )
+
+ρs = 0.656 (b) Ensemble 1 1.2 1.4 1.6 1.8 
+
+Predicted Uncertainty 
+
+> 0.6 0.9 124
+> Force Error (kcal mol −1  Å−1 )
+
+ρs = 0.345 (c) MC dropout 0.3 0.5 1 2 5
+
+Predicted Uncertainty 
+
+> 0.5 0.8 123
+> Force Error (kcal mol −1  Å−1 )
+
+ρs = 0.309 
+
+(d) Evidential 1 1.2 1.3 1.5 1.6 
+
+> Predicted Uncertainty
+> 0.5 0.8 123
+> Force Error (kcal mol −1  Å−1 )
+
+ρs = 0.455 (e) SWAG 
+
+Figure 1: Per-configuration force error versus predicted uncertainty on held-out aspirin configurations from rMD17. Each point is one configuration; both axes are logarithmic and in kcal mol −1 Å−1, the uncertainty having been recalibrated onto the error scale, so the dashed line marks y = x. Insets give the Spearman correlation ρs, which is invariant to calibration. Panel (d) uses a scale-only calibration (Appendix C.5), and each method is scored against its own trained model. 
+
+5.2 Comparison of data efficiency 
+
+Figure 2: Active-learning performance for atomic force prediction. AdaptNTK is compared with established active-learning baselines (QBC, MCD, EDL, and SWAG) for four molecules from the rMD17 dataset. The y-axis (log scale) shows force RMSE (kcal mol −1 Å−1) on a holdout set as the training-set size increases. Shaded areas represent standard deviations in force errors averaged across three runs. AdaptNTK achieves faster convergence and lower absolute error than the baseline methods in all cases. 
+
+85.2.1 Active learning on rMD17 
+
+We next evaluate AdaptNTK’s greedy sequential updates for active-learning acquisition. For each rMD17 molecule, 25,000 configurations are held out for testing, 50 fixed configurations initialize the training set, and the remaining configurations form the candidate pool. We report 20 checkpoints, including the initial model, as the labeled set grows from 50 to 1,000 configurations in increments of 50. All methods use the same fixed seeds, data split, architecture, and optimization schedule. Across acquisition budgets, AdaptNTK attains the lowest mean force RMSE for aspirin, naphthalene, paracetamol, and salicylic acid (Figure 2). Its advantage is largest at small and intermediate label budgets, where accounting for redundancy among selected configurations is most beneficial. The gap narrows at 1,000 labels, as all methods obtain broader coverage of the candidate pool. 
+
+5.2.2 Reactive configurations in Transition-1X 
+
+The rMD17 candidate pool and test set are drawn from the same molecular trajectories. To evaluate whether AdaptNTK can identify rare reactive configurations and support generalization across diverse molecules, we test performance on the Transition-1X dataset. We report results on both the general test split and a transition-state split, which isolates configurations near chemical transitions whose errors can be obscured when averaged over the broader test distribution. AdaptNTK reduces force error most rapidly across the acquisition budget (Figure 3a). It reaches a force RMSE of approximately 4 kcal mol −1Å−1 with about 450 labeled configurations; QBC requires close to 1,000, while the remaining baselines do not reach this level within the displayed budget. At 1,000 configurations, AdaptNTK reaches approximately 1 kcal mol −1 Å−1, compared with roughly 4 for QBC, 6–7 for MCD and SWAG, and 11 for EDL. Performance on the transition-state split shows the same ordering for both energy and force errors (Figure 3b). Values quoted here are rounded from the plotted curves for readability; all evaluations use the corresponding unrounded values.         
+
+> (a) Learning curves (b) Transition-state metrics
+> Figure 3: Active-learning performance on Transition-1X. AdaptNTK outperforms standard uncertainty-based active-learning methods, reaching comparable accuracy with less than half the labeled data required by the competing approaches. Transition-state error metrics are shown at 1,000 training configurations. The logarithmic vertical axes report force RMSE in kcal mol −1˚A−1and energy MAE in kcal mol −1on the held-out test set.
+
+95.2.3 Ablations 
+
+To assess the contribution of recursive uncertainty updates, we compare AdaptNTK with a non-adaptive top-B baseline that scores the candidate pool once per 50-configuration batch and does not update uncertainty after selection. Sequential AdaptNTK performs consistently better throughout acquisition on Transition-1X, reaching a force RMSE of approximately 1 .2 versus 3 kcal mol −1 Å−1
+
+for the non-adaptive baseline (Figure 4 in Appendix B). The non-adaptive variant also consistently outperforms QBC at nearly all acquisition budgets, reflecting the stronger correlation between NTK uncertainty and prediction error. Random acquisition performs worse than both variants and QBC throughout the acquisition budget. We also vary the sketch dimension from p = 128 to 2048. Final force RMSE ranges from 1.22 to 1 .34 kcal mol −1 Å−1, with overlapping one-standard-deviation intervals and no monotonic improvement at larger sketch dimensions (Table 3 in Appendix B), consistent with Corollary 4.2. 
+
+5.3 Computational overhead 
+
+AdaptNTK completes the reported timing run in 2,423 s, compared with 6,225 s for QBC, corre-sponding to a 2 .57 × reduction in total runtime. This saving is driven primarily by model training and uncertainty evaluation: training a single model and computing its tangent features requires 1,748 s, whereas training the three-member QBC ensemble and evaluating all three models on every candidate structure requires 6,063 s. The label-free rank-one updates require no additional model fitting, and sequentially rescoring a candidate pool of approximately 75,000 structures after each selection requires only 676 s. Despite performing these adaptive updates throughout acquisition, AdaptNTK remains computationally competitive with other single-model approaches: its total runtime is within 6% of MCD and 2% of SWAG, while substantially reducing the cost relative to QBC. Combined with the stronger learning curves in Figures 2 and 3a, these results show that AdaptNTK achieves improved data efficiency while retaining the computational advantages of a single-model approach.                    
+
+> Table 2: Computational overhead of active-learning methods. Execution time (in seconds) for pretraining and uncertainty quantification (UQ), batch selection, and the total active-learning cycle on the Transition-1X dataset. Method Pretraining + UQ (s) Batch selection (s) Total (s) AdaptNTK 1747.50 675.84 2423.34 QBC 6062.56 162.59 6225.15 MCD 2144.71 144.60 2289.31 EDL 1013.73 113.72 1127.45 SWAG 2214.60 178.63 2393.23
+
+# 6 Limitations 
+
+The experiments have several important limitations. First, we evaluate uncertainty quality and active-learning performance for gas-phase molecules; extending this analysis to periodic systems is an important next step. Second, the uncertainty is constructed from energy-gradient features, which relate to force errors only indirectly. Features based on force-parameter Jacobians would provide a more direct representation, but are substantially larger. Third, force errors can be poor indicators of downstream simulation performance, and the relationship between uncertainty in 10 predicted forces and uncertainty in simulation observables remains to be characterized. Finally, our active-learning comparisons focus on uncertainty-based methods and do not include dedicated diversity-based or chemistry-informed acquisition strategies. Diversity could, for example, be incorporated after uncertainty filtering by clustering or selecting diverse structures among the most uncertain configurations. Thus, our experiments demonstrate that NTK-based uncertainty provides an effective signal for active learning, rather than establishing AdaptNTK as superior to acquisition strategies that incorporate chemical intuition or other post-hoc selection heuristics. 
+
+# 7 Conclusion 
+
+The NTK-based uncertainty converts a trained neural potential into a post-hoc, pointwise uncertainty estimate without a committee or learned uncertainty head. It achieves the strongest error correlations across the four rMD17 molecules and nearly matches the three-member ensemble in error retention. AdaptNTK provides the downstream active-learning demonstration: the same uncertainty can be updated within an acquisition batch without reference labels or additional model fitting, and achieves the lowest reported errors in the rMD17 and Transition-1X studies. The top-B ablation supports the value of sequential updates, while the sketch-dimension sweep shows no observed benefit beyond p = 128. Comparisons with broader acquisition baselines and extensions to periodic systems remain important directions for future work. 
+
+# Acknowledgments 
+
+We acknowledge startup funding from Cornell University and computing resources provided by the Cornell University Center for Advanced Computing (CAC). 
+
+# References 
+
+Alexander Amini, Wilko Schwarting, Ava Soleimany, and Daniela Rus. Deep evidential regression. In Advances in Neural Information Processing Systems , volume 33, pages 14927–14937, 2020. Jordan T. Ash, Chicheng Zhang, Akshay Krishnamurthy, John Langford, and Alekh Agarwal. Deep batch active learning by diverse, uncertain gradient lower bounds. In International Conference on Learning Representations (ICLR) , 2020. Albert P. Bartók, Mike C. Payne, Risi Kondor, and Gábor Csányi. Gaussian approximation potentials: The accuracy of quantum mechanics, without the electrons. Physical Review Letters ,104(13):136403, 2010. Ilyes Batatia, Dávid Péter Kovács, Gregor N. C. Simm, Christoph Ortner, and Gábor Csányi. MACE: Higher order equivariant message passing neural networks for fast and accurate force fields. In Advances in Neural Information Processing Systems , volume 35, pages 11423–11436, 2022. Simon Batzner, Albert Musaelian, Lixin Sun, Mario Geiger, Jonathan P. Mailoa, Mordechai Kornbluth, Nicola Molinari, Tess E. Smidt, and Boris Kozinsky. E(3)-equivariant graph neural networks for data-efficient and accurate interatomic potentials. Nature Communications , 13:2453, 2022. 11 Hubert Beck, Pavol Simko, Lars L. Schaaf, Ondrej Marsalek, and Christoph Schran. Multi-head committees enable direct uncertainty prediction for atomistic foundation models. The Journal of Chemical Physics , 163(23):234103, 2025. Jörg Behler and Michele Parrinello. Generalized neural-network representation of high-dimensional potential-energy surfaces. Physical Review Letters , 98(14):146401, 2007. Filippo Bigi, Sanggyu Chong, Michele Ceriotti, and Federico Grasselli. A prediction rigidity formalism for low-cost uncertainties in trained neural networks. Machine Learning: Science and Technology , 5(4):045018, 2024. Jenna A. Bilbrey, Jesun S. Firoz, Mal-Soon Lee, and Sutanay Choudhury. Uncertainty quantification for neural network potential foundation models. npj Computational Materials , 11:109, 2025. Sanggyu Chong, Filippo Bigi, Federico Grasselli, Philip Loche, Matthias Kellner, and Michele Ceriotti. Prediction rigidities for data-driven chemistry. Faraday Discussions , 256:322–344, 2025. Anders S. Christensen and O. Anatole von Lilienfeld. Revised MD17 dataset (rMD17). https: //doi.org/10.24435/materialscloud:wy-kn , 2020. Materials Cloud Archive 2020.82. Dario Coscia, Pim De Haan, and Max Welling. BLIPs: Bayesian learned interatomic potentials. In 
+
+Forty-third International Conference on Machine Learning , 2026. Yarin Gal and Zoubin Ghahramani. Dropout as a Bayesian approximation: Representing model uncertainty in deep learning. In Proceedings of the 33rd International Conference on Machine Learning (ICML) , volume 48 of PMLR , pages 1050–1059, 2016. Cheuk Hin Ho, Christoph Ortner, and Yangshuai Wang. Flexible uncertainty calibration for machine-learned interatomic potentials. npj Computational Materials , 2026. doi: 10.1038/ s41524-026-02080-3. arXiv:2510.00721. David Holzmüller, Viktor Zaverkin, Johannes Kästner, and Ingo Steinwart. A framework and benchmark for deep batch active learning for regression. Journal of Machine Learning Research ,24(164):1–81, 2023. URL https://www.jmlr.org/papers/v24/22-0937.html .Arthur Jacot, Franck Gabriel, and Clément Hongler. Neural tangent kernel: Convergence and generalization in neural networks. In Advances in Neural Information Processing Systems ,volume 31, 2018. Leonid Kahle and Federico Zipoli. Quality of uncertainty estimates from neural network potential ensembles. Physical Review E , 105(1):015311, 2022. doi: 10.1103/PhysRevE.105.015311. Matthias Kellner and Michele Ceriotti. Uncertainty quantification by direct propagation of shallow ensembles. Machine Learning: Science and Technology , 5(3):035006, 2024. doi: 10.1088/2632-2153/ ad594a. Vladimir Koltchinskii and Karim Lounici. Concentration inequalities and moment bounds for sample covariance operators. Bernoulli , 23(1):110–133, 2017. doi: 10.3150/15-BEJ730. URL 
+
+https://doi.org/10.3150/15-BEJ730 .Balaji Lakshminarayanan, Alexander Pritzel, and Charles Blundell. Simple and scalable predictive uncertainty estimation using deep ensembles. In Advances in Neural Information Processing Systems , volume 30, 2017. 12 Jaehoon Lee, Lechao Xiao, Samuel S. Schoenholz, Yasaman Bahri, Roman Novak, Jascha Sohl-Dickstein, and Jeffrey Pennington. Wide neural networks of any depth evolve as linear models under gradient descent. In Advances in Neural Information Processing Systems , volume 32, 2019. Wesley J. Maddox, Pavel Izmailov, Timur Garipov, Dmitry P. Vetrov, and Andrew Gordon Wilson. A simple baseline for Bayesian uncertainty in deep learning. In Advances in Neural Information Processing Systems , volume 32, 2019. Osman Mamun, Chenlu Yang, and Shuwen Yue. Deep graph kernel learning for material & atomic level uncertainty quantification in adsorption energy prediction. Digital Discovery , 5(4):1568–1578, 2026. doi: 10.1039/D6DD00020G. Albert Musaelian, Simon Batzner, Anders Johansson, Lixin Sun, Cameron J. Owen, Mordechai Kornbluth, and Boris Kozinsky. Learning local equivariant representations for large-scale atomistic dynamics. Nature Communications , 14:579, 2023. doi: 10.1038/s41467-023-36329-y. Danny Perez, Anirudh Prabhu Subramanyam, Ivan Maliyov, and Thomas D. Swinburne. Uncer-tainty quantification for misspecified machine learned interatomic potentials. npj Computational Materials , 2025. doi: 10.1038/s41524-025-01758-4. Evgeny V. Podryabinkin and Alexander V. Shapeev. Active learning of linearly parametrized interatomic potentials. Computational Materials Science , 140:171–180, 2017. doi: 10.1016/j. commatsci.2017.08.031. Carl Edward Rasmussen and Christopher K. I. Williams. Gaussian Processes for Machine Learning .MIT Press, 2006. Mathias Schreiner, Arghya Bhowmik, Tejs Vegge, Jonas Busk, and Ole Winther. Transition1x — a dataset for building generalizable reactive machine learning potentials. Scientific Data , 9(1):779, 2022. doi: 10.1038/s41597-022-01870-w. Ozan Sener and Silvio Savarese. Active learning for convolutional neural networks: A core-set approach. In International Conference on Learning Representations (ICLR) , 2018. H. Sebastian Seung, Manfred Opper, and Haim Sompolinsky. Query by committee. In Proceedings of the Fifth Annual Workshop on Computational Learning Theory (COLT) , pages 287–294, 1992. doi: 10.1145/130385.130417. Justin S. Smith, Ben Nebgen, Nicholas Lubbers, Olexandr Isayev, and Adrian E. Roitberg. Less is more: Sampling chemical space with active learning. The Journal of Chemical Physics , 148(24): 241733, 2018. doi: 10.1063/1.5023802. Ava P. Soleimany, Alexander Amini, Samuel Goldman, Daniela Rus, Sangeeta N. Bhatia, and Connor W. Coley. Evidential deep learning for guided molecular property prediction and discovery. 
+
+ACS Central Science , 7(8):1356–1367, 2021. doi: 10.1021/acscentsci.1c00546. Aik Rui Tan, Shingo Urata, Samuel Goldman, Johannes C. B. Dietschreit, and Rafael Gómez-Bombarelli. Single-model uncertainty quantification in neural network potentials does not consistently outperform model ensembles. npj Computational Materials , 9:225, 2023. doi: 10.1038/s41524-023-01180-8. 13 Oliver T. Unke, Stefan Chmiela, Huziel E. Sauceda, Michael Gastegger, Igor Poltavsky, Kristof T. Schütt, Alexandre Tkatchenko, and Klaus-Robert Müller. Machine learning force fields. Chemical Reviews , 121(16):10142–10186, 2021. doi: 10.1021/acs.chemrev.0c01111. Jonathan Vandermause, Steven B. Torrisi, Simon Batzner, Yu Xie, Lixin Sun, Alexie M. Kolpak, and Boris Kozinsky. On-the-fly active learning of interpretable bayesian force fields for atomistic rare events. npj Computational Materials , 6:20, 2020. doi: 10.1038/s41524-020-0283-z. Eszter Varga-Umbrich, Shikha Surana, Paul Duckworth, Jules Tilly, Olivier Peltre, and Zachary Weller-Davies. Pretrained model representations as acquisition signals for active learning of MLIPs. arXiv preprint arXiv:2605.03964 , 2026a. URL https://arxiv.org/abs/2605.03964 .Eszter Varga-Umbrich, Zachary Weller-Davies, Paul Duckworth, Jules Tilly, Olivier Peltre, and Shikha Surana. Force-aware neural tangent kernels for scalable and robust active learning of MLIPs, 2026b. Joshua A. Vita, Amit Samanta, Fei Zhou, and Vincenzo Lordi. LTAU-FF: Loss trajectory analysis for uncertainty in atomistic force fields. Machine Learning: Science and Technology , 6(1):015048, 2025. Mingjian Wen and Ellad B. Tadmor. Uncertainty quantification in molecular simulations with dropout neural network potentials. npj Computational Materials , 6:124, 2020. doi: 10.1038/ s41524-020-00390-8. Joseph Wilson, Chris van der Heide, Liam Hodgkinson, and Fred Roosta. Uncertainty quantification with the empirical neural tangent kernel. In The Thirty-ninth Annual Conference on Neural Information Processing Systems , 2025. Han Xu, Taoyong Cui, Chenyu Tang, Jinzhe Ma, Dongzhan Zhou, Yuqiang Li, Xiang Gao, Xingao Gong, Wanli Ouyang, Shufei Zhang, and Mao Su. Evidential deep learning for interatomic potentials. Nature Communications , 17:937, 2026. doi: 10.1038/s41467-025-67663-y. Viktor Zaverkin, David Holzmüller, Ingo Steinwart, and Johannes Kästner. Exploring chemical and conformational spaces by batch mode deep active learning. Digital Discovery , 1(5):605–620, 2022. doi: 10.1039/D2DD00034B. Yuzhi Zhang, Haidi Wang, Weijie Chen, Jinzhe Zeng, Linfeng Zhang, Han Wang, and Weinan E. DP-GEN: A concurrent learning platform for the generation of reliable deep learning based potential energy models. Computer Physics Communications , 253:107206, 2020. doi: 10.1016/j. cpc.2020.107206. Albert Zhu, Simon Batzner, Albert Musaelian, and Boris Kozinsky. Fast uncertainty estimates in deep learning interatomic potentials. The Journal of Chemical Physics , 158(16):164111, 2023. doi: 10.1063/5.0136574. 14 Supplementary Information 
+
+Appendix A gives the complete proof of the Gaussian-sketch theorem and its active-learning corollary. Appendix B separates the effect of sequential score updates from that of the sketch dimension. Appendix C records the data splits, active-learning protocol, model and training settings, uncertainty baselines, evaluation metrics, calibration procedure, and timing protocol. 
+
+# A Proof of the sketch-preservation result 
+
+This appendix proves Theorem 4.1 and Corollary 4.2. Fix x ∈ X , abbreviate Z = Zx, and set 
+
+K = ZZ ⊤, M = K + λI, H = M −1/2Z. 
+
+Writing the rows of S as g⊤ 
+
+> j
+
+/√p with gj ∼ N (0 , I P ) gives 
+
+M −1/2(ZS ⊤SZ ⊤ − K)M −1/2 = H(S⊤S − IP )H⊤
+
+= 1
+
+p
+
+> p
+
+∑
+
+> j=1
+
+(Hg j )( Hg j )⊤ − HH ⊤. (8) The vectors Hg j are Gaussian with covariance Σ = HH ⊤ = M −1/2KM −1/2. Its eigenvalues lie in [0 , 1], and tr(Σ) = tr 
+
+[
+
+K(K + λI )−1]
+
+=: dλ(Z).
+
+Gaussian sample-covariance concentration in effective dimension (Koltchinskii and Lounici, 2017) therefore implies, for an absolute constant C, that 
+
+p ≥ Cϵ −2
+
+(
+
+dλ(Z) + log 1
+
+η
+
+)
+
+=⇒
+
+∥∥∥H(S⊤S − IP )H⊤∥∥∥2 ≤ ϵ
+
+with probability at least 1 − η. Taking η = δ/m and a union bound yields this event simultaneously for all x ∈ X . Equivalently, with ˜K = ZS ⊤SZ ⊤ and ˜M = ˜K + λI ,(1 − ϵ)M ⪯ ˜M ⪯ (1 + ϵ)M. (9) It remains to translate (9) into a score bound. The rows of Z except the last are Φ; write 
+
+K =
+
+[
+
+K0 kx
+
+k⊤ 
+
+> x
+
+κx
+
+]
+
+, K0 = ΦΦ ⊤, kx = Φ ϕ(x), κx = ∥ϕ(x)∥22.
+
+The Woodbury identity gives 
+
+κx − k⊤ 
+
+> x
+
+(K0 + λI )−1kx = λϕ (x)⊤(Φ ⊤Φ + λI P )−1ϕ(x) = U (x).
+
+Hence the Schur complement of the upper-left block of M is s = λ + U (x); the corresponding sketched Schur complement is ˜s = λ + ˜U (x). Inverting (9), taking its last diagonal entry, and using (M −1)−1,−1 = s−1 yields (1 − ϵ)s ≤ ˜s ≤ (1 + ϵ)s. 
+
+After subtracting λ, this is exactly 
+
+| ˜U (x) − U (x)| ≤ ϵ(λ + U (x)) ,
+
+15 which proves Theorem 4.1. □
+
+For Corollary 4.2, fix the ordered greedy path obtained with the full features. At step t, augment Φ with the previously selected features and apply the preceding argument to every remaining candidate. A union bound over at most Bm step–candidate pairs, together with the definition of 
+
+dAL  
+
+> λ
+
+, gives the same score bound everywhere along this fixed path. Let x⋆t be its maximiser. Then 
+
+˜UAt (x⋆t ) ≥ U (1)  
+
+> t
+
+− ϵ(λ + U (1)  
+
+> t
+
+),
+
+max 
+
+> x̸=x⋆t
+
+˜UAt (x) ≤ U (2)  
+
+> t
+
++ ϵ(λ + U (2)  
+
+> t
+
+).
+
+The first quantity is strictly larger whenever the stated normalised gap exceeds ϵ. Induction on t
+
+then shows that the sketched procedure follows the full-space ordered path. □
+
+# B Ablation studies 
+
+We report two controlled analyses: one isolates the contribution of the sequential update, and the other tests sensitivity to the Gaussian-sketch dimension. 
+
+Figure 4: Sequential-update ablation on Transition-1X. AdaptNTK updates all remaining scores after each selection. “NTK” denotes the non-adaptive top-B ablation: it uses the same NTK score but selects the 50 highest-scoring configurations without within-batch updates. QBC and Random baselines are included as context. All curves use the same initial 50 configurations, fixed transition-state-only test split, fixed seeds and 20-checkpoint budget ending at 1,000 labels. Shaded areas represent standard deviation in force errors averaged across 3 runs. 
+
+Table 3: Gaussian-sketch ablation on Transition-1X. Final force RMSE on the test split after the same 20-checkpoint active-learning protocol, with every setting ending at N = 1 ,000. Sketch dimension p Force RMSE (kcal mol −1 Å−1)128 1.22 ± 0.10 256 1.23 ± 0.08 512 1.27 ± 0.12 1,024 1.34 ± 0.10 2,048 1.32 ± 0.08 
+
+The maximum difference among point estimates is 0 .12 kcal mol −1 Å−1, and the ordering is non-monotone. Thus the reported run provides no evidence that a larger sketch improves final force 16 error beyond p = 128. This empirical plateau is consistent with Corollary 4.2: acquisition becomes insensitive to p once sketch error is below the relevant score gaps. 
+
+# C Experimental details 
+
+C.1 Datasets and splits 
+
+Uncertainty-quality experiments use four rMD17 molecular datasets: aspirin, naphthalene, paraceta-mol, and salicylic acid. Each dataset contains configurations sampled from an ab initio molecular-dynamics trajectory. Energies are reported in kcal mol −1 and forces in kcal mol −1 Å−1. For each molecule, we draw 1,000 training configurations and 100 validation configurations. From the remaining configurations, we draw disjoint fixed evaluation and calibration subsets of 2,000 configurations each. All partitions use the same fixed seeds, every method is evaluated on identical configurations, and we verify disjointness by hashing coordinates. For active learning, 25,000 configurations are held out once for testing, 50 fixed configurations initialize training, and every remaining configuration forms the initial acquisition pool. The 20 plotted checkpoints include this initial fit and then add 50 configurations at a time, ending at 1,000 labeled configurations. For Transition-1X, an additional evaluation set is constructed from the dataset’s transition-state split. These configurations are excluded from pretraining. This deliberately tests whether the acquisition strategy improves the region of chemical space most relevant to reactivity, rather than allowing the metric to be dominated by more numerous non-transition configurations. The learning curves use the same fixed seeds and are reported through 1,000 labeled configurations. 
+
+C.2 Active-learning loop 
+
+At every checkpoint, the current training set is used to fit the potential and the method-specific uncertainty estimator. Each method then selects the next 50 configurations from its remaining pool. AdaptNTK constructs the batch sequentially: after each choice it applies Eq. (7) to the remaining scores, but does not use the selected configuration’s label. The baselines rank the pool under their fitted uncertainty and take the highest-scoring batch. Once the batch is complete, its dataset labels are revealed, appended to the training set, and the potential is retrained. The data split, initial configurations, random seed, architecture, label budget, and evaluation set are held fixed across methods; only the acquisition rule changes. For the top-B ablation, the same NTK-based score is evaluated once at the beginning of each acquisition batch and the 50 largest values are selected without applying Eq. (7). For the sketch ablation, only p changes; the data, model, regularization, acquisition budget, and fixed seed are unchanged. 
+
+C.3 Interatomic potential and training 
+
+All methods use the same MACE architecture (Batatia et al., 2022) ( ScaleShiftMACE ): a 6.0 Å cutoff, hidden irreps 128 × 0e + 128 × 1o, two interaction layers, correlation order 3, 8 Bessel radial basis functions, polynomial cutoff order 5, and ℓmax = 3, giving 724,240 parameters. Models are trained for 500 epochs with AdamW at a constant learning rate of 10 −4 and batch size 16, minimizing 0 .01 LE + 0 .99 LF where both terms are mean squared errors. The checkpoint with the lowest validation loss is retained. Energy shift and scale are set from the per-atom training energy statistics. 17 C.4 Uncertainty methods 
+
+Each method reduces a configuration to a single scalar uncertainty u.
+
+NTK-based uncertainty: Energy gradients ϕ(x) = ∇θE(x; θ) are extracted from the trained model and projected to p = 512 dimensions with a fixed Gaussian sketch (Theorem 4.1). The score is the regularized Mahalanobis form U (x) = λ ˜ϕ(x)⊤( ˜F + λI p)−1 ˜ϕ(x), where ˜F is the sketched feature covariance of the training set. 
+
+Ensemble (QBC): Three models are trained with identical settings, but different random seeds. The score is the standard deviation of predicted force components across members, averaged over atoms and Cartesian directions. The error target for this method uses the ensemble-mean forces. 
+
+MCD: The model is trained with dropout ( p = 0 .1), applied after the non-linearity of each readout block, and dropout remains active at inference time. The uncertainty score is the standard deviation of the predicted forces across 20 stochastic forward passes. 
+
+SWAG: Weight snapshots are collected over the final 25% of training epochs (at most 20 retained) to form a Gaussian posterior with diagonal plus low-rank covariance. The score is the across-sample standard deviation of predicted forces over 30 posterior draws. 
+
+Evidential: A normal-inverse-gamma head is fitted post hoc on the frozen backbone, mapping mean-pooled invariant ( ℓ = 0) node features to ( γ, ν, α, β ) by minimizing the NIG negative log-likelihood with evidence regularization. Targets and features are standardised before fitting; without this the likelihood is minimized by ν → 0, which inflates the epistemic term by many orders of magnitude while leaving it nearly constant across configurations. The score is the epistemic variance 
+
+β/ (ν(α − 1)). 
+
+C.5 Error target and metrics 
+
+For each configuration i the error is the force RMSE over all atoms and Cartesian components, ei = 
+
+> [13N
+> ∑
+> a,c
+
+(F pred  
+
+> ac
+
+− F true  
+
+> ac
+
+)2]1/2, in kcal mol −1 Å−1. Each method is evaluated against the predictions of the model it is defined on; consequently the mean error differs by method. Spearman and Pearson coefficients are computed between u and e.
+
+AURC n. Configurations are ranked by u and progressively removed in decreasing order of uncertainty. The RMSE of the retained set is tracked against the retained fraction, and AURC is the area under this curve. Because a more accurate model lowers this area irrespective of uncertainty quality, we report the normalised quantity AURC n = (AURC − AURC oracle )/(AURC random −
+
+AURC oracle ), where the oracle ranks by true error and the random baseline averages five permutations, both computed from the same e. Thus 0 denotes a perfect ranking and 1 no better than chance, and the measure is comparable across methods whose models differ in accuracy. 
+
+Recalibration and ENCE. Raw scores are not commensurate with the error: some are variances, some standard deviations, and the NTK-based score carries an arbitrary scale through λ. We therefore fit σ2 = a u + b2 by minimizing the χ2 negative log-likelihood ∑ 
+
+> i
+
+log σ2 
+
+> i
+
++ e2 
+
+> i
+
+/σ 2 
+
+> i
+
+, in which 
+
+a absorbs the unit conversion and b2 captures the irreducible error a purely epistemic term cannot 18 represent. Parameters are fitted by two-fold cross-fitting within the scored set and applied only to the held-out fold, so the reported ENCE is not self-graded. ENCE is the mean over ten equal-count 
+
+σ bins of |RMV − RMSE |/RMV. For evidential regression, the fitted floor b = 1 .19 is close to the mean error 1 .23 and compresses the display; Figure 1d therefore uses σ2 = a u for display only. This monotone change leaves ranks unchanged, while Table 1 uses the two-parameter ENCE. All timing measurements in Table 2 use one NVIDIA A100 GPU per method. The reported wall-clock components cover pretraining plus uncertainty construction and batch selection. They exclude the cost of obtaining reference labels, which is identical for a fixed acquisition count but is the quantity reduced when one method reaches a target error with fewer acquisitions. 19

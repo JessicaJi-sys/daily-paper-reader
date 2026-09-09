@@ -1,0 +1,579 @@
+Title: GraphNOSE: A Graph Transformer in Olfaction
+
+URL Source: https://arxiv.org/pdf/2609.05694v1
+
+Published Time: Wed, 09 Sep 2026 00:19:17 GMT
+
+Number of Pages: 50
+
+Markdown Content:
+# GraphNOSE : A Graph Transformer in Olfaction 
+
+## Mrityunjay Sharma, ∗,†,‡,¶,# Sarabeshwar Balaji, §,# Valentina Parma, ∥,⊥ and Ritesh Kumar ∗,†,‡
+
+†CSIR- Central Scientific Instruments Organisation, Sector 30-C, Chandigarh-160030, India 
+
+‡Academy of Scientific and Innovative Research (AcSIR), Ghaziabad-201002, India 
+
+¶Department of Higher Education,Himachal Pradesh,Shimla -171001,India 
+
+§Indian Institute of Science Education and Research Bhopal(IISERB), Madhya Pradesh-462066,India 
+
+∥Monell Chemical Senses Center, Philadelphia, Pennsylvania, USA 19104 
+
+⊥Department of Otolaryngology, Head and Neck Surgery, University of Pennsylvania, Philadelphia, Pennsylvania, USA 19104 
+
+#These authors contributed equally to this work. 
+
+E-mail: mrityunjay.csio24j@acsir.res.in; riteshkr.csio@csir.res.in 
+
+Abbreviations: 1-Weisfeiler-Lehman (1-WL) isomorphism test, atoms in molecule localization and delocalization matrices (AIMLDM), area under the receiver operating charac-teristic curve (AUROC), Chemistry Bidirectional Encoder Representations from Transform-ers (ChemBERTa), Chemical European Molecular Biology Laborator (ChEMBL), physico-chemical deviance score (D phys ), Geometric Ensemble of Molecules (GEOM), graph convo-lutional network (GCN), graph isomorphism Network (GIN), graph isomorphism network with edge features (GINE), graph neural network (GNN), general, powerful and scalable (GPS), graph positional and structural encoder (GPSE), GraphNOSE model utilizing lin-1arXiv:2609.05694v1 [cs.LG] 4 Sep 2026 ear transformer (GraphNOSE lin ), GraphNOSE model utilizing standard self-attention with quadratic complexity (GraphNOSE trans ), curated GoodScents-Leffingwell dataset (GS-LF), graph transformer (GT), kernel density estimation (KDE), K-nearest neighbor (KNN), Laplacian positional encodings (LapPE), limited-memory Broyden-Fletcher-Goldfarb-Shanno (LBFGS), electron localization-delocalization matrix (LDM), DMPNN + LDM (LDM DMPNN ), GCN + LDM (LDM GCN ) , Molecular ACCess System (MACCS), median absolute deviation for feature i (MAD i), Multi-Layer Perceptron (MLP), Molecular Language Transformer (Mol-Former), Message Passing Neural Network (MPNN), out-of-distribution (OOD), open-source counterpart of POM (OpenPOM), Principal Odor Map (POM), Positional and structural encoding (PSE), Receiver Operating Characteristic curve (ROC), Random-walk structural encodings (RWSE), simplified molecular-input line-entry system (SMILES), topological polar surface area (TPSA), XAI (explainable AI) 
+
+Abstract 
+
+Predicting olfactory qualities from molecular structure is an open problem in chemo-informatics. Although linear models can link molecular features to odor descriptors, they often fail when extrapolating to novel chemical scaffolds, extreme molecular weights, or complex odor mixtures. To address this, we introduce GraphNOSE , an open-source graph transformer framework that predicts multi-label odor descriptors from simplified molecular-input line-entry system (SMILES) strings for single molecules and binary mixtures. By integrating positional and structural encodings within a transformer-based graph architecture, GraphNOSE achieves strong performance with six times fewer parameters than standard graph neural network (GNN) baseline while consistently out-performing linear models, molecular language model embeddings, molecular fingerprints, and baseline GNNs by an average area under the ROC curve (AUROC) margin of 4.52% (p < 0.01). GraphNOSE achieves an AUROC of 84% on out-of-distribution compounds (OODs). This exceeds the current state-of-the-art GNN for OOD in olfaction (Open-POM: 81%, p < 0.001), and identifies conditions under which linear models empirically fail. Finally, we apply XAI (explainable AI) methods to identify which substructures 
+
+2and molecular features drive odor predictions, yielding insights consistent with chemical intuition and grounded in the model’s learned representations. Together, these results establish GraphNOSE as a scalable and interpretable architecture for olfactory predic-tion that generalizes to structurally distinct compounds underrepresented in current perceptual databases. 
+
+# Introduction 
+
+Predicting human odor perception from molecular structure remains an open and challenging problem in cheminformatics. Olfaction plays a crucial role in human survival and thriving, shaping physiological regulation, 1,2 feeding behavior, 3 and social mating choices, 4 and it underpins the multibillion-dollar food, flavor, and fragrance industries. 5 Translating physico-chemical properties into perceptual space is particularly complex in olfaction, as structurally similar molecules may evoke qualitatively different odors, revealing a disconnect between molecular structure and perceived odor 6 (see Supplementary Material, Figure S1). Linear machine learning approaches can nevertheless link molecular features to odor descriptors 7,8 and show strong predictive power for odorous molecules dominated by isolated functional groups (e.g., aldehydes or thiols). 9 Although these models reach a reasonable performance ceiling ( ≈ 80% AUROC), 10 they fail to predict molecules with physico-chemical properties different from those included in the training set. For example, linear classifiers show a marked performance degradation when evaluating structurally novel molecules, 7,10 
+
+particularly those with extreme molecular weights. In addition, these models fail to generalize to mixtures unseen during training, 11 limiting their utility for ecological olfactory stimuli. 12–17 
+
+A compounding bottleneck in overcoming these predictive limitations is the fragmentation and lack of standardization in publicly available olfactory databases. 18 Odor datasets that combine chemical features and odor descriptors are typically small, often on the order of 10 2 to 10 3 molecules, 19 compared to the millions of samples commonly used in other machine learning domains. 20 Even when aggregation efforts exist, such as Pyrfume library, 19 
+
+3which integrates olfaction data from multiple sources, 12–17 annotations remain sparse and inconsistent, particularly with respect to human perceptual descriptors and functional chemical group labels. Despite these limitations, Pyrfume has catalyzed the development of predictive models evaluated on shared benchmarks through initiatives such as the DREAM Olfaction Challenges. 8,21 These efforts enabled the first models to systematically map chemical structure to perceptual space by leveraging predefined, high-dimensional representations of molecular features (i.e., chemical fingerprints 22,23 ), thereby facilitating supervised learning of odor descriptors. However, while these aggregated repositories significantly increase the number of odorant-label pairs available for model training, they still lack critical dimensions needed to capture the ecological validity of odor perception, most notably stimulus intensity. Odor quality is not a static property of molecular structure but varies with concentration, with some molecules exhibiting qualitative perceptual shifts across intensity ranges. For instance, furanol is described as strawberry-like at low concentrations but as caramel-like at higher concentrations. 24 As a result, descriptors as fixed labels independent of concentration impose a fundamental limitation on current predictive models, which fail to account for the dynamic and context-dependent nature of olfactory perception. 8,10,19 
+
+To overcome the limitations of fingerprint-based odor prediction, researchers initially augmented structural descriptors with mass spectra data, 25 and subsequently the field shifted from predefined chemical features toward learned representations, in which deep neural networks discover structure-odor mapping directly from the data. 26 Deep learning models have demonstrated strong predictive capability in the field of molecular property prediction by employing graph based approaches, such as message passing neural networks (MPNNs), which represent molecules as atoms (nodes) and bonds (edges). 27 Through iterative message passing, atoms exchange information with their neighbors, integrating learned molecular representations to capture structural features and non-linear relationships, enabling more accurate prediction of such properties as drug efficacy, toxicity, and receptor binding, 28 across 4domains including quantum chemistry 27 and drug discovery. 29 This transition is substantial: while predefined fingerprints record the presence of isolated chemical substructures, graph-based approaches preserve exact molecular topology. By allowing atoms to iteratively exchange information with their neighbors, the model dynamically learns specific geometric arrangements while explicitly incorporating localized node and edge features, such as formal charge, valence, and structural degree. In computational olfaction, the most prominent application of these graph-based models is the Principal Odor Map (POM) 10 and its open-source counterpart, OpenPOM. 30 These models successfully map 2D molecular graphs of single molecules directly to latent perceptual dimensions. Although recent frameworks like PharmaGNN 31 incorporate static pharma-cophore features to capture 3D spatial alignments, all these monomolecular approaches remain critically insufficient for real-world applications, as they do not extend to multi-component odor mixtures. While MPNNs excel at capturing local chemical environments (e.g., functional groups and bonding patterns that impact reactivity), they are constrained by a limited receptive field: information propagates only between neighboring atoms at each step, so many layers are required to propagate information across distant parts of the molecule. 32 
+
+Deep learning architectures with global receptive fields directly address this aggregation bottleneck by allowing every element to attend to every other in a single step. Such models have proven powerful at capturing long-range dependencies, namely, relationships between elements that are far apart in sequence or space, such as a pronoun and the noun it refers to earlier in a sentence 33 or two residues that are distant in a protein’s sequence yet adjacent once it folds. 34 Global architectures, particularly graph transformers (GTs), 35,36 have not yet been applied to structure–odor prediction, even though odor descriptors depend on the molecule’s overall geometry and topology rather than on isolated functional groups alone. 37 Even small structural variations (e.g., the exact distance between functional groups or the specific branching of a carbon chain) can dictate receptor binding and evoke different perceptual outcomes. 38 The position of an ester’s carbonyl group, for instance, more strongly 5governs which olfactory receptors it activates than does the identity of the functional group itself. 39 Similarly, while molecules can differ only in the position of a single substituent on the ring, such as carvacrol and thymol, they may trigger the distinctly different odors of oregano and thyme, respectively. This specificity underscores that odor prediction depends on spatial distribution of features across the entire molecule, not on their presence alone. By combining local atomic features into a single global structure, GTs directly mimic how the biological olfactory system integrates receptor signals into the brain. 4 This spatial awareness is necessary to predict labels for both single molecules and mixture odors. Traditional GTs allow every atom in a molecule to attend to every other atom at once, but they typically treat the molecule as a disconnected “bag of atoms,” ignoring its geometric structure. In other words, they are geometry-blind, failing to capture molecular topology or spatial organization. Positional and structural encodings (PSEs) bridge this gap by providing geometric context: where an atom sits and how its neighborhood is arranged. By injecting these geometric rules directly into the attention mechanism, PSEs force the model to evaluate the molecule as a 3D architecture with explicit topological and geometric information rather than as a mere collection of atoms. Despite several types of PSEs [e.g., random-walk structural encodings (RWSEs) and Laplacian positional encodings (LapPEs) 32 ]to select from, no principled guideline optimizes PSE selection for a specific downstream task. Naively concatenating a variety of different PSEs introduces computational overhead (time spend managing rather than doing a task) while often failing to yield proportional performance gains. To bypass the manual selection of specific PSEs, Cantürk et al. 40 proposed the highly transferable Graph Positional and Structural Encoder (GPSE). Rather than relying on domain-specific chemical attributes, GPSE derives highly transferable encodings from graph connectivity alone. These representations can augment any GNN and generalize across graphs of varying sizes, connectivity patterns, and modalities, including both MPNNs and GTs. Here, we present GraphNOSE , an open-source GT-based architecture that combines global 6attention with GPSE to predict multi-label odor prediction across both single molecules and binary mixtures. We trained and evaluated the model using the largest benchmark dataset available for olfaction (4,983 molecules, 138 descriptors). 10,30 We hypothesized that (a) GPSE will provide more informative positional and structural information than commonly used positional/structural encodings, yielding systematically higher predictive performance on odor-relevant descriptors across attention architectures. Furthermore, we hypothesize that (b) GraphNOSE , a GT architecture equipped with GPSE-based spatial encodings, will outperform state-of-the-art MPNNs for molecular odor prediction, as measured by the area under the ROC curve (AUROC) on held-out test data, generalization to out-of-distribution (OOD) molecules, and robustness under reduced training set sizes. Our experiments were organized to directly test these two hypotheses and to answer four main questions: • Q1 Which GPSE pretraining corpus provides the most effective inductive bias for 
+
+GraphNOSE , as a model designed for molecular odor prediction? • Q2 How does GraphNOSE compare to existing GNN-based baselines, particularly under extreme physico-chemical out-of-distribution (OOD) conditions and in the low-data regime? • Q3 Does the learned odor space preserve known hierarchical relationships across odor labels and reflect perceptual similarity beyond mere structural similarity? • Q4 How effectively does GraphNOSE generalize to binary odor mixtures? Our experiments are organized to directly test our two hypotheses and to answer questions Q1–Q4 through four groups of analyses: (i) GPSE pretraining corpora and inductive bias (Q1); (ii) benchmark comparisons, OOD generalization, and data efficiency (Q2); (iii) structure of the learned odor space and its alignment with perceptual hierarchies (Q3); and (iv) generalization to binary odor mixtures (Q4). 7Methods 
+
+## Dataset and Molecular Graphs 
+
+This work uses a molecular odor dataset derived from the publicly available version of POM, 10 
+
+namely the OpenPOM release by Barsainyan et al. 30 The dataset contains 4,983 molecules and remains the benchmark for representation learning in olfaction, as each molecule is annotated with up to 138 expert-labeled odor descriptors (e.g., meaty, sweet; listed in Supplementary Material, Table S1), allowing each odorant to be associated with multiple odor descriptors. Importantly, this is the dataset curated from GoodScents 41 and Leffingwell PMP (2001) 42 datasets 30 (hereafter jointly referred to as the GS-LF dataset), which were also used to train the original POM model, 10 ensuring direct comparability with prior work. In the GS-LF dataset odor descriptor annotations are binary rather than continuous, indicating the presence or absence of a given perceptual quality but not its intensity, and they exhibit a highly imbalanced label distribution (see Supplementary Material, Figure S2a), where highly frequent descriptors like fruity (1,902 molecules) and sweet (1,429 molecules) significantly outnumber rare perceptual qualities such as musk (98 molecules) and garlic (120 molecules), posing significant challenges for model generalization and minority class learning. To construct molecular graphs,we employed a custom featurizer on DeepChem 44 (version 2.8.0), utilizing RDKit 43 (version 2025.03.6) for SMILES parsing and feature extraction, converting SMILES strings into undirected graphs, where atoms are nodes and bonds are edges. Because we employ the pre-validated OpenPOM dataset, 30 all SMILES strings pass standard RDKit sanitization without any removals. For each node we extract 92 atomic attributes, and for each edge we extract 7 bond attributes (Table 1). These features include standard chemoinformatics descriptors such as atomic number, valence, formal charge, hybridization state, aromaticity, and bond order. As the OpenPOM dataset utilizes a strictly non-isomeric SMILES, stereochemical information is not encoded in the model’s input features. In other words, molecules that differ only in 3D configuration share identical input representations, 8Figure 1: Overview of the GraphNOSE framework architecture for multi-label molecular odor prediction. (A) Raw- input SMILES strings are processed through a custom featurizer using RDKit 43 and DeepChem, 44 constructing undirected molecular graphs G(V, E, X n, X e), where atoms and bonds represent nodes and edges, respectively. 
+
+(B) The structural graph and node features are augmented using a graph positional and structural encoder (GPSE) pre-trained on diverse molecular and graph datasets (e.g., ZINC, ChEMBL, GEOM, PCQM4Mv2, MolPCBA) or standard baseline (RWSE, LapPE) to gen-erate comprehensive spatial representations ( X′
+
+> n
+
+). (C) The enriched graph representations are fed into a hybrid GraphGPS 32 backbone that integrates local message-passing neural networks (MPNNs) for near-neighbor functional group interactions with global self-attention mechanisms for long-range molecular topology. (D) Finally, the model predicts labels for the input molecule from the 138 odor descriptors (e.g., fruity, sweet, musky, garlic). 9and odor descriptors of enantiomers will not be distinguishable. The overall GraphNOSE pipeline is illustrated in Figure 1: raw SMILES strings are converted into molecular graphs via the custom featurizer; node embeddings are augmented with GPSE-based positional and structural encodings, and the resulting representations are processed by GT to yield multi-label odor predictions. Table 1: Node (atomic) and edge (bond) features used in molecular graphs. All features are one-hot encoded and concatenated into a single bit vector. UNK denotes unknown values and serves as a catch-all category.             
+
+> Feature Categories
+> Atomic number 1 (H) to 54 (I), UNK Valence 0, 1, 2, 3, 4, 5, 6, UNK Degree 0, 1, 2, 3, 4, 5, UNK Formal charge −2,−1, 0, 1, 2, UNK Number of hydrogens 0, 1, 2, 3, 4, 5, 6, 7, 8, UNK Hybridization sp, sp 2, sp 3, sp 3d, sp 3d2, UNK
+> Edge features Categories
+> Bond type single, double, triple, aromatic, UNK Is conjugated true, false In ring true, false
+
+## Model 
+
+A fundamental limitation of many GT models is their restricted use of edge information, which can limit their ability to capture local chemical environments. 35 In these architectures, bond features typically only indirectly influence how information is aggregated across the graph, rather than driving explicit, edge-conditioned updates of node representations. While some GT variants, such as SAN 45 and Graphormer, 36 inject edge features into the mechanism that determines how strongly nodes weight information from their neighbors, edge attributes still do not directly control the feature updates applied to individual atoms. Rampášek et al 32 
+
+therefore proposed the General, Powerful and Scalable (GPS) architecture, which combines local message passing with global attention. In GPS, edges play a central role in updating node representations via the message-passing pathway, making the architecture well suited 10 for olfactory modeling, where both local functional groups and global molecular geometry are crucial. 
+
+GraphNOSE adopts the GPS architecture 32 to integrate local and global molecular information within each layer. GPS processes node features through two parallel branches: a local MPNN and a global attention module. The MPNN pathway captures localized functional groups and near-neighbor interactions, which are primary drivers for odor prediction, 10 while the global self-attention pathway models long-range dependencies across the entire molecular graph. Formally, at each layer ℓ, the node features are updated by aggregating the output of the local MPNN and global attention branches. For a graph with N nodes, adjacency matrix A ∈ RN ×N , edge feature matrix E, and the dℓ-dimensional node and edge features 
+
+Xℓ ∈ RN ×dℓ and E ∈ RE×7, the state transition for the (ℓ + 1) -th layer is defined as 
+
+Xℓ+1 = GPS ℓ(Xℓ, E, A ), (1) with the following decomposition: 
+
+Xℓ+1  
+
+> M
+
+= MPNN ℓe(Xℓ, E, A ) (2) 
+
+Xℓ+1  
+
+> T
+
+= GlobalAttn ℓ(Xℓ) (3) 
+
+Xℓ+1 = MLP ℓ(Xℓ+1  
+
+> M
+
++ Xℓ+1  
+
+> T
+
+) (4) Here, MPNN ℓe denotes a message-passing network that explicitly uses edge features to model local chemical environments, and GlobalAttn ℓ denotes a global attention mechanism operating on all node pairs. The fused node embeddings are passed through a two-layer multi-layer perceptron (MLP ℓ). In GraphNOSE , edge features are updated and used exclusively within the MPNN component, while global attention operates on node embeddings. This modular design allows the choice of specific MPNN and attention implementations to be tailored to the task. 11 The core model consists of 4 GPS layers with a hidden dimensionality of 64, utilizing residual connections and layer normalization within each layer to stabilize training. Node features are updated through two parallel branches: a graph isomorphism network with edge features (GINE) for local message passing, where edge attributes are exclusively updated, and single-head attention for global dependencies. Finally, node representations are aggregated via mean pooling and passed through a 512-dimensional MLP classifier for graph-level odor prediction. For detailed model architecture and hyper-parameter configurations, see Supplementary Material, Table S3. We instantiate two architectural variants: GraphNOSE lin 
+
+uses a linear transformer 46 for global attention, while GraphNOSE trans uses standard self-attention 33 with quadratic complexity. GraphNOSE lin is primarily employed to avoid the heavy computational overhead associated with standard quadratic attention. 
+
+## Positional and Structural Encoding 
+
+Standard MPNNs are upper-bounded in expressivity by the 1-Weisfeiler-Lehman (1-WL) isomorphism test. 47 To enhance their ability to capture complex molecular topology and to restore structural inductive biases that may be attenuated in global attention, we employ PSEs (positional and structural encodings). These encodings are concatenated with node features, allowing the model to incorporate global structural information into its learned representations. Random-walk structural encodings (RWSE) have proven effective for molecular prediction tasks, while Laplacian positional encodings (LapPE) are well suited to capturing long-range dependencies. 32,48 Because no single PSE is universally optimal across tasks, we adopted the graph positional and structural encoder (GPSE) 40 as a pre-trained structural backbone. GPSE is a self-supervised model trained to predict a suite of PSEs, which include RWSE, LapPE, 49 heat kernel diagonals, Laplacian eigenvalues, cycle counting, and electrostatic potential encodings. Canturk et al 40 showed that latent representations from GPSE can be used to augment both GNNs and GTs as rich positional and structural features. In GraphNOSE , we use the pre-trained GPSE latent embeddings as additional node 12 features and systematically evaluate the impact of different GPSE pre-training corpora on odor prediction. Specifically, we consider GPSE variants pre-trained on high-dimensional biological assays (MolPCBA), 50 large-scale quantum properties (PCQM4Mv2), 51 confor-mational ensembles (GEOM-Drugs), 52 and drug-like chemical space (ZINC/ChEMBL). 53,54 
+
+All positional and structural encodings are first projected to a fixed dimensionality via an MLP and then concatenated with node attributes during training. The pre-trained GPSE parameters are kept completely frozen during this process. 
+
+## Training 
+
+We partitioned the GS-LF dataset using an 80:20 train/test split, following the protocol of Lee et al .10 Within the 80% training portion, we reserved 20% as a validation set for hyperparameter optimization. Due to the multi-label nature of the dataset, we employed iterative stratified splitting to preserve the distribution of label combinations across training, validation, and test sets. No data augmentation techniques (e.g., SMILES enumeration or 3D conformer sampling) are utilized. The model parameters are selected via Bayesian optimization using the Optuna framework 55 (the final configuration is summarized in Supplementary Table S3). Specifically, the network is trained using the Adam optimizer with an initial learning rate of 6.82 × 10 −4 and a batch size of 16 for a maximum of 150 epochs. To address label imbalance, we optimize an imbalance-weighted binary cross-entropy loss, 56 where the contribution of each odor descriptor is weighted inversely to its frequency in the training set. This ensures that rare odor labels are not overwhelmed by more frequent classes. All reported performance metrics, including the area under the ROC curve (AUROC), are calculated as macro-averages to provide an unbiased assessment across the diverse odor label space. To rigorously assess performance differences, paired t-tests were performed on seed-matched runs, treating random seeds as paired observations rather than independent samples; p-values were reported uncorrected for multiple comparisons. 13 Physico-chemical Out-of-Distribution Splitting 
+
+Out-of-distribution (OOD) evaluation assesses whether a model can generalize to molecules that differ substantially from those seen during training, rather than merely interpolating within the observed chemical space. To test GraphNOSE under pronounced distribution shift, we constructed an OOD split of the GS-LF dataset based on physico-chemical properties. We consider 11 physico-chemical features: molecular weight, logP, hydrogen-bond donors, hydrogen-bond acceptors, topological polar surface area (TPSA), number of rotatable bonds, number of aromatic rings, number of heteroatoms, ring count, number of saturated rings, and number of aliphatic rings. For each molecule, we compute a physico-chemical deviance score (D phys ) that quantifies its displacement from the dataset median across all properties: Dphys = 111 
+
+> 11
+
+X
+
+> i=1
+
+|xi − median i|
+
+MAD i
+
+(5) where MAD i represents the median absolute deviation for feature i. Molecules are ranked by Dphys , and we define a 65:35 train/test split by assigning the most physico-chemically extreme 35% forming the test set. This is unlike 80:20 iterative stratified split used for training, which randomly samples across the chemical space to preserve odor label balance in training and test sets. 
+
+# Results and Discussion 
+
+## GPSE pre-training corpora and inductive bias (Q1) 
+
+We investigated the impact of augmenting PSEs such as RWSE, 49 LapPE, and learned representations from GPSE 40 to our GT model. We evaluated these encodings with respect to two architectural variant of our model: GraphNOSE lin and GraphNOSE trans . GraphNOSE lin 
+
+utilizes a linear transformer (Performer 46 ) as the global attention, whereas, GraphNOSE trans 
+
+uses self-attention 33 for the global attention mechanism, which has quadratic complexity. 14 Table 2: Different PSE augmentations. These macro AUROC scores are averaged over five random seeds. Positional and structural encodings (PSEs) are explicitly augmented to the node features to provide topological context to the global attention mechanism. GraphNOSE lin uses a linear transformer 46 for global attention, while GraphNOSE trans uses standard self-attention 33 with quadratic complexity. Significance levels ( ∗ denote paired t-test comparisons relative to the GPSE MolPCBA ): ∗∗∗ p < 0.001 , ∗∗ p < 0.01 , and ∗p < 0.05 .
+
+PSE GraphNOSE lin GraphNOSE trans 
+
+RWSE 87 .356 ± 0.15 ∗∗∗ 84 .474 ± 1.04 ∗∗∗ 
+
+LapPE 87 .796 ± 0.13 ∗∗∗ 88 .378 ± 0.06 ∗∗∗ 
+
+GPSE ChEMBL 88 .864 ± 0.08 89 .084 ± 0.07 
+
+GPSE GEOM 88 .916 ± 0.05 89 .124 ± 0.13 
+
+GPSE PCQM4Mv2 88 .930 ± 0.12 88 .990 ± 0.09 
+
+GPSE ZINC 88 .958 ± 0.18 89 .026 ± 0.10 
+
+GPSE MolPCBA 89 .024 ± 0.16 89 .146 ± 0.08 
+
+Table 2 demonstrates that the GPSE trained on varied chemical datasets consistently outperforms explicitly constructed PSEs. While GraphNOSE achieves its highest numerical performance with MolPCBA pre-training, the framework exhibits robust performance across all evaluated pre-training corpora, indicating that GraphNOSE is not overly sensitive to the selection of the underlying training domain. Although we hypothesize that this minor numerical advantage may stem from a favorable alignment between MolPCBA biological assay targets and olfactory receptor-binding mechanisms, the differences across corpora remain largely statistically indistinguishable. From a theoretical perspective, linear transformers like Performer 46 are characterized by lower expressivity compared to self-attention mechanisms. Across most positional and structural encodings, GraphNOSE lin and GraphNOSE trans perform equivalently, showing negligible performance gaps ( ≤ 0.12% ) with overlapping standard deviations. An exception is observed with RWSE, where GraphNOSE trans degrades markedly in performance relative to GraphNOSE lin (Table 2, line 1). The performance degradation may be attributed to the attention collapse in RWSE, where the model pays more attention to the local structural features, and this leads to an attention matrix, which is often sparse. This does not persist in Performers ,46 which handles the attention matrix by the low-rank kernel approximation, 15 or in LapPE, which constructs it from a graph Laplacian matrix that encodes global graph geometry. Table 3: Baselines . Models are grouped into descriptor-based methods, LLM embedding approaches, standard GNN architectures, other GNN variants, and the proposed method. Linear models using the limited-memory Broyden-Fletcher-Goldfarb-Shanno (LBFGS) solver are deterministic and therefore do not report standard deviations, paired p-values, or effect sizes. Significance levels and effect sizes ( ∗ denote paired t-test comparisons and Cohen’s d
+
+relative to the GraphNOSE lin baseline): ∗∗∗ p < 0.001 , ∗∗ p < 0.01 , and ∗p < 0.05 . LR, logistic regression; RF, random forest. 
+
+Class Model ROC (%) p-value Cohen’s d
+
+Linear [logistic regression (LR)] LR (TopTorsion) 57 80 .82 – –LR (RDKit) 43 82 .05 – –LR (AtomPair) 58 82 .83 – –LR (Morgan_ECFP4) 59 83 .56 – –LR (MACCS) 60 84 .76 – –LLM embedding ChemBERTa 61 84 .78 ± 0.04 ∗∗∗ 4.93 × 10 −7 26 .40 
+
+MoLFormer 62 84 .97 ± 0.09 ∗∗∗ 3.12 × 10 −8 52 .66 
+
+Fingerprint RF-bFP 59 85 .00 ± 0.08 ∗∗∗ 9.67 × 10 −7 22 .31 
+
+RF-cFP 59 85 .01 ± 0.09 ∗∗∗ 1.81 × 10 −6 19 .08 
+
+RF-Mordred 22 85 .81 ± 0.15 ∗∗∗ 2.27 × 10 −6 18 .01 
+
+GNN LDM DMPNN 63 86 .60 ± 0.25 ∗∗∗ 8.34 × 10 −5 7.28 
+
+LDM GCN 63 86 .91 ± 0.15 ∗∗∗ 3.73 × 10 −5 8.92 
+
+OpenPOM 64 87 .14 ± 0.57 ∗∗ 2.77 × 10 −3 2.94 
+
+Graph transformer GraphNOSE lin 89 .02 ± 0.16 – –GraphNOSE trans 89 .15 ± 0.08 – –
+
+## Benchmark comparisons, OOD generalization, and data efficiency (Q2) 
+
+To compare the predictive performance of GraphNOSE , we benchmarked it against various state-of-the-art GNNs, chemical language models, and classical chemoinformatics fingerprint-based methods. For traditional machine learning baselines, we evaluated both linear and non-linear architectures. Linear baselines utilized logistic regression paired with traditional 2D molecular fingerprints [Morgan (Extended-Connectivity Fingerprint, diameter 4), 23,59 RDKit, MACCS, 60 
+
+AtomPair, 58 and TopTorsion 57 ] to establish the foundational performance boundary. For our advanced non-linear baselines, we utilized random forests, LLM embeddings augmented by 16 multi-layer perceptrons (MLPs), and inherently non-linear graph neural networks (GNNs). To ensure that the performance comparison was fair, all baseline models were trained and evaluated using the exact same GS-LF dataset splits as for training and the extreme physico-chemical OOD split as described above (see Physico-chemical Out-of-Distribution Splitting in Methods, above). All data splits and baseline evaluation scripts are publicly accessible from our GitHub repository. 
+
+LLM embedding-based methods As representations derived from pre-trained LLMs align closely with perceptual representation of odors, 65 we incorporated embeddings of chemistry-informed LLM models ChemBERTa (768 dimensions) 61 and MoLFormer (768 dimensions) 66 in the baselines. We fed the embeddings into a robust MLP classifier optimized via Optuna 55 and trained with the same weighted loss function to have fair comparision with our model. 
+
+GNN-based methods We compared GraphNOSE with several inherently non-linear, state-of-the-art architectures optimized specifically for olfaction. Primarily we compared it with OpenPOM, 30 the publicly available version of the model proposed by Lee et al .10 OpenPOM uses a custom featurizer and utilizes MPNN to map chemical structures to perceptually meaningful latent space. We compared the model with two variants of a GNN that utilizes the atoms in molecule localization and delocalization matrices (AIMLDM) 67 approach for odor prediction and incorporates quantum-informed electron density distributions into the graph’s adjacency matrix: 63 GCN + LDM (LDM GCN ) and DMPNN + LDM (LDM DMPNN ). Table 4: Parameter counts for single molecule odor prediction models , reported in thousands (K) and millions (M).      
+
+> Model Parameters
+> OpenPOM 2M LDM DMPNN 674K LDM GCN 671K
+> GraphNOSE 314K
+
+17 The results for model performances on the held-out test dataset are displayed in Table 3. To establish a foundational performance boundary, linear models achieved a maximum AUROC of 84.76% (logistic regression with MACCS). GraphNOSE significantly outperformed OpenPOM (paired t-test, p = 0 .0028 , d = 2 .94 ), LDM GCN (p = 3 .73 × 10 −5, d = 8 .92 ), and LDM DMPNN (p = 8 .34 × 10 −5, d = 7 .28 ), while using only 314K parameters, compared to OpenPOM (2M parameters) and LDM baselines ( ≈ 670 K parameters) (Table 4). Though the performance of GNNs may appear marginal in absolute terms compared to fingerprint-based methods, these gains are significant when considering the high-dimensional sparsity and long-tailed label distribution inherent in the GS-LF dataset (see Supplementary Figure S2a). The GraphNOSE lin and GraphNOSE trans results in Table 3 are derived using GPSE MolPCBA 
+
+augmentation, as evaluation across pre-trained corpora identified it as yielding the highest numerical performance (Table 2). The same was used in subsequent experiments. 
+
+Figure 2: Impact of training set size on model performance: Mean predictive per-formance on the held-out test set as a function of the training data proportion. Error bars represent the standard deviation across 5 random seeds. While all architectures exhibit performance gains as the training set size increases, both GraphNOSE variants consistently outperform baseline GNNs (OpenPOM and LDM variants) across all sampling rates, demon-strating superior data efficiency even in low-data regimes. 
+
+GraphNOSE outperforms GNNs in low-data regimes We evaluated the performance of our model on data-constrained conditions. This can be visualized by measuring performance 18 on the held-out test dataset (Figure 2). Both GraphNOSE variants (GraphNOSE lin and GraphNOSE trans ) consistently outperformed other GNN baselines across the entire spectrum of data availability (30–90%, p < 0.05 to p < 0.001 ; see Supplementary Tables S4–S6). The performance margin is largest in the 30-50% regime, where the baseline performance diminishes. We hypothesize that the parameter efficiency of the proposed model, coupled with the strong structural priors provided by GPSE, facilitates this generalization. Table 5: Out-of-distribution (OOD) training results for molecule odor prediction across five random seeds . As linear models using the LBFGS solver are deterministic, they do not report standard deviations, paired p-values, or effect sizes. The best-performing score is highlighted in bold. LR, logistic regression. Significance levels ( ∗ denote paired t-test comparisons relative to the GraphNOSE lin baseline): ∗∗∗ p < 0.001 , ∗∗ p < 0.01 , and ∗p < 0.05 .                                                  
+
+> Model AUROC (%) p-value Cohen’s d
+> GraphNOSE trans 84 .34 ±0.18 ––GraphNOSE lin 84 .26 ±0.33 ––OpenPOM 80 .84 ±0.35 ∗∗∗ 4.39 ×10 −727 .19
+> LDM GCN 79 .13 ±0.44 ∗∗∗ 1.52 ×10 −511 .18
+> LDM DMPNN 79 .03 ±0.73 ∗∗∗ 5.63 ×10 −58.04
+> LR (MACCS) 78.46 ––LR (Morgan_ECFP4) 77.31 ––LR (TopTorsion) 75.77 ––LR (AtomPair) 75.47 ––LR (RDKit) 74.52 ––
+
+GraphNOSE outperforms GNNs in extreme out-of-distribution (OOD) setting 
+
+To evaluate the generalization capacity of GraphNOSE , performance was tested under a severe distribution shift using the physico-chemical-based split of the GS-LF dataset (see Physico-chemical Out-of-Distribution Splitting, above). Rather than evaluating with molecules structurally similar to the training data, the models were tasked with predicting odor labels for the most physico-chemically extreme compounds. For reproducibility, we provide the exact OOD training and test splits in the GitHub repository. Despite this challenging setup, both GraphNOSE variants outperform the baseline GNNs by an average margin of 
+
+4.65% (p < 0.001 , paired t-test). For context, the strongest linear baseline performance on this extreme split topped out at an AUROC of 78.46% (logistic regression with MACCS; see 19 Table 5). GraphNOSE ’s superior performance can be hypothesized to stem from the global attention mechanism that captures the long-range dependencies between distant functional groups that remain consistent even when the local scaffold changes (see Table 5). Alternative explanations for this performance might include the robust structural priors injected via GPSE and the parameter-efficient modeling ( ∼314K parameters). 
+
+Figure 3: Nearest neighbor retrieval for a reference molecule.a) Reference molecule 
+
+b) Top five nearest neighbors retrieved using cosine similarity on GraphNOSE continuous embeddings. c) Top five nearest neighbors retrieved using Tanimoto distance on bit-based Morgan fingerprints (serving as the established baseline in chemo-informatics 68 ). 
+
+## Structure of the learned odor space and its alignment with perceptual hierarchies (Q3) 
+
+We examined the learned space of GraphNOSE lin (chosen for its computational efficiency via linear attention while yielding performance comparable to GraphNOSE trans as detailed in Table 2) by employing the activations from the penultimate layer of the model (512 dimensions). This analysis follows the experiments by Lee et al .10 
+
+Perceptually similar molecules cluster together To evaluate the representational quality of the learned embedding space, we assessed whether local proximity also corresponds to perceptual similarity. Five nearest neighbors were identified from the learned space of GraphNOSE lin and compared with those neighbors identified via Tanimoto similarity on bit-based Morgan fingerprints (Figure 3). To provide a descriptive diagnostic of the local 20 neighborhood structure, a K-nearest neighbor (KNN) classifier ( k = 50 ) was trained on a single evaluation split of the penultimate-layer embeddings of GraphNOSE lin and compared against bit-based Morgan fingerprints. 23 This descriptive evaluation yields an AUROC of 86.91% for GraphNOSE lin versus 79.73% for Morgan fingerprints, illustrating how the embedding space efficiently captures perceptual similarity in local neighborhoods. 
+
+Odor-label semantics are preserved in embedding space The presence of neighbor-hoods consisting of molecules exhibiting similar odor profiles is necessary but not sufficient for an optimal odor space. The distribution of molecules in the embedding space must indicate the logical hierarchies between the odor labels. The learned space should preserve logical hierarchies and semantic relationships between odor labels. Figure 4a illustrates the kernel density estimation (KDE) plots derived from Morgan fingerprints, where the boundaries between different odor categories are largely indistinct. This highlights the limitations of purely structural representations in capturing perceptual organization. In contrast, the KDE of the true labels (see Supplementary Material, Figure S3), serves as a benchmark, demonstrating both the separation of dissimilar odors (e.g., floral vs. meaty) and the hierarchical relationships within categories (e.g., jasmine, lavender, and muguet within floral). Figure 4c presents the embeddings learned by our model, where the global odor space exhibits clear separation between distinct odor families while also preserving their hierarchical structure. In particular, GraphNOSE successfully distinguishes between broad perceptual classes while simultaneously capturing fine-grained relationships among subcategories. These results suggest that GraphNOSE learns a perceptually relevant latent representation that more closely reflects human odor perception than conventional fingerprint-based embeddings. 
+
+## Explainability: Structure-Odor Relationship 
+
+Integrated gradients 69 analysis reveals that the GT model consistently focuses on canonical odor-bearing functional groups for each class. Figure 5a shows that alcoholic odors show 21 (a) (b) 
+
+> (c)
+
+Figure 4: Analysis of odor space: Kernel density estimation (KDE) plots for Morgan fingerprint (a) and predicted labels by OpenPOM (b) and GraphNOSE (c) Shaded and contoured areas are kernel density estimates of the distribution of labeled data. Colors denote odor categories, with shaded areas for broad classes and contours for specific descriptors (e.g., lavender, roasted). 22 (a) Alcohol (b) Fruity (c) Ketonic   
+
+> (d) Musk (e) Phenolic (f) Sulfurous
+
+Figure 5: Explainability through integrated gradients 69 of different odor descrip-tors. The visualizations highlight the molecular features most important for predicting each odor category. Green highlights atom-level contributions; red highlights bond-level contribu-tions. Node and edge importance are visualized by the opacity and are proportional to the values. For more examples in each category, see Supplementary Material, Figure S4. high attribution on hydroxyl (O–H and C–O) groups, whereas Figure 5e shows that phenolic odors emphasize the phenolic OH and adjacent aromatic carbons. The molecules for which the model prediction was sulfurous odors highlight sulfur atoms and adjacent carbon chains (Figure 5f). Ketonic odors emphasize carbonyl (C=O) groups and α-carbons in conjugated systems (Figure 5c). The musk odor label highlights the importance of constituent called muscone, a macrocyclic ketone (Figure 5d). Fruity odor labels revealed that the ester groups were key contributors (Figure 5b). These patterns are consistent with chemical intuition regarding the functional groups that influence olfaction. This is consistent with the model learning chemically meaningful structure–odor relationships. The insights gained increase confidence in model predictions. 
+
+## Generalization to binary odor mixtures (Q4) 
+
+Odor mixing is intricate rather than being a simple additive process. It is characterized by complex interactions where existing odors are often suppressed and entirely new olfactory 23 Table 6: Results for binary odor mixture prediction. Scores are macro AUROC scores averaged over five random seeds. Linear models (LR, logistic regression) are deterministic and therefore do not report standard deviations, paired p-values, or effect sizes. Significance levels ( ∗ denote paired t-test comparisons relative to GPSE MolPCBA ): ∗∗∗ p < 0.001 , ∗∗ p < 0.01 ,and ∗p < 0.05 .
+
+Model PSE / Features ROC (%) p-value Cohen’s d
+
+GraphNOSE lin 
+
+GPSE MolPCBA 77 .96 ± 0.58 – –GPSE ChEMBL 77 .84 ± 0.54 0.778 0.14 
+
+GPSE pcqmv2 77 .64 ± 0.99 0.349 0.47 
+
+GPSE zinc 77 .58 ± 0.67 0.396 0.42 
+
+LapPE 77 .54 ± 1.24 0.601 0.25 
+
+GPSE Geom 77 .24 ± 0.63 ∗ 0.038 1.36 
+
+RWSE 74 .66 ± 1.13 ∗∗ 5.00 × 10 −3 2.50 
+
+MPNN-GNN - 76 .64 ± 0.06 ∗∗ 8.31 × 10 −3 2.17 
+
+LR (Morgan_ECFP4) - 74.05 – –LR (TopTorsion) - 73.74 – –LR (MACCS) - 72.91 – –LR (AtomPair) - 72.87 – –LR (RDKit) - 71.28 – –
+
+qualities emerge. 70 We evaluated the capability of GraphNOSE lin to generalize to binary mixtures. To process these binary mixtures computationally, the SMILES strings of the two constituent molecules were concatenated using a standard dot (.) separator. This generates a single, disconnected molecular graph as input. We adopted exactly the same "graph carving" train/test split (50:50) proposed by Sisson et al. ,70 which partitions the dataset on the basis of unseen molecular structures and not unseen combinations of known molecules. This strict separation (44,000 training pairs and 40,000 test pairs) prevents data leakage and learns representations for novel chemical structures with 74 odor labels. The MPNN framework proposed by Sisson et al. 70 outperformed other baselines (including GIN, support vector machine (SVM), and random forest) on this specific split. We benchmarked our model directly against this state-of-the-art MPNN baseline and linear models (Table 6). We used the same optimal hyperparameters chosen for the single-molecule model, increasing only the training epochs that significantly reduced the computational overhead. 24 GraphNOSE lin utilizing MolPCBA pre-training significantly outperforms the MPNN architecture, 70 the best-performing model to date on this dataset (paired t-test, p = 0 .0083 
+
+with only 281K parameters compared to the MPNN’s 2M parameters; other GPSE variants are numerically higher but untested (Table 6). Notably, linear models maintain highly competitive baseline scores for mixtures, with logistic regression utilizing Morgan fingerprint reaching an AUROC of 74.05%. Overall, these results demonstrate that GraphNOSE generalizes effectively to binary mixtures under a structure-disjoint split while remaining highly parameter efficient. In summary, in this work we systematically resolved four open questions in computational olfaction. First, we demonstrated that augmenting graph transformers with learned GPSE representations significantly outperforms hand-crafted structural encodings (RWSE, LapPE). Furthermore, while the choice of GPSE pre-training corpus does not significantly alter predictive performance, MolPCBA was selected as the numerically optimal configuration and used throughout (Q1). Second, GraphNOSE achieves robust performance in low-data regimes (30% –90% training data) and strong generalization under extreme physico-chemical OOD shifts, outperforming baseline GNNs despite operating with a parameter-efficient footprint (Q2). Third, learned space neighborhood analysis and label distribution density estimations confirmed that the model’s continuous latent space preserves hierarchical label clustering and perceptual similarities (Q3). Finally, by processing concatenated molecular graph pairs, 
+
+GraphNOSE successfully generalizes to binary odor mixtures, under a structure-disjoint split (Q4). Together, these empirical findings directly validate our initial hypotheses, confirming both that GPSE-derived spatial encodings deliver a superior inductive bias relative to hand-crafted encodings (hypothesis a) and that GraphNOSE outperforms state-of-the-art MPNNs in structural generalization, low-data sample efficiency, and multi-label olfactory prediction (hypothesis b). These findings substantially improve the accuracy–parameter trade-off in computational olfaction, balancing computational overhead with structural generalization and ecological 25 validity. By integrating structural priors (GPSE MolPCBA ) with global attention in a parameter-efficient architecture, GraphNOSE proves that superior predictive performance does not require massive computational overhead or static high-dimensional chemical fingerprints. By integrating single-molecule topology, binary mixture dynamics, and human perceptual space, this framework delivers a scalable and interpretable foundation for robust odor prediction. Nevertheless, we observe sensitivity of the framework to variations in hyperparameter settings. As our model considers only the 2D representation, it assigns identical predictions to chiral enantiomers (mirror-image structures) that have distinct odors. Future work could address this limitation by incorporating explicit stereochemical features into node or edge representations. Furthermore, though we utilize exclusively the Performer based linear transformer, alternative sparse attention models such as BigBird, can be implemented in future work to assess potential gains in expressive capacity. Additionally, while highly computational, inherently non-linear deep learning models currently dominate predictive accuracy, there remains significant potential to improve classical linear models. Future work could focus on engineering richer, more expressive chemical descriptors that might allow these computationally lightweight, deterministic models to bridge the performance gap and potentially rival deep learning frameworks. Finally, the model was evaluated on curated GS-LF dataset. Future work is required to validate its scalability across larger, more diverse olfactory repositories to address open questions regarding robustness against label noise and the integration of concentration-dependent perceptual shifts that cannot be resolved using static binary datasets. 
+
+# Conclusions 
+
+In this work, we have introduced GraphNOSE , a parameter-efficient graph transformer (GT) framework that bridges the complex non-linear gap between molecular structure and odor perception. We demonstrate that pre-trained structural and positional embeddings provide significantly richer inductive biases than do traditional explicitly constructed encodings. By 26 combining chemical priors with a global attention mechanism, GraphNOSE establishes a new benchmark by outperforming existing message passing architectures and quantum informed models while requiring significantly fewer parameters. Crucially, this framework not only offers a scalable solution for single molecules through the use of linear attention mechanisms but also successfully generalizes to the challenging task of prediction of binary odor mixtures and extrapolating to physico-chemically novel compounds. Ultimately, GraphNOSE paves the way for future research in computational olfaction, serving as a foundational architecture for highly generalizable predictive modeling. 
+
+## Data and Software Availability 
+
+The source code, Python scripts of charts, and other forms of analysis are available at the GitHub repository: https://github.com/CSIO-FPIL/GraphNOSE .
+
+## Acknowledgments 
+
+The authors acknowledge and are thankful to Council of Scientific and Industrial Re-search–Central Scientific Instruments Organisation (CSIR–CSIO), Sector 30, Chandigarh, for providing access to CSIR-4PI supercomputer. No external funding was involved in this project. 
+
+## Notes 
+
+The authors declare no competing financial interests. 27 Supplementary Material 
+
+# GraphNOSE : A Graph Transformer in Olfaction 
+
+# Contents 
+
+## S1. The Complex Relationship Between Molecular Structure and Odor 
+
+Figure S1: Structural similarity does not imply perceptual similarity 
+
+## S2. Dataset Analysis 
+
+Figure S2: Dataset insights Table S1: Odor labels used in the curated dataset 
+
+## S3. Model Architecture S4. Loss Function S5. Baselines S6. Positional and Structural Encoding S7. Pre-training Dataset 
+
+Table S2: Summary of molecular datasets used in pre-training of GPSE 
+
+## S8. Hyper-parameter Search 
+
+Table S3: Hyper-parameters for GraphNOSE 
+
+## S9. Training data efficiency and comparative GNN performance 
+
+Table S4: OpenPOM comparison in low-data regime Table S5: LDM GCN comparison in low-data regime Table S6: LDM DMPNN comparison in low-data regime 
+
+## S10. KDE Plot for True Labels 
+
+Figure S3: Analysis of odor space: KDE plot for true label 
+
+28 S11. Explainability Analysis of Compounds 
+
+Figure S4: Explainability through integrated gradients for different odor descriptors 
+
+# S1. The Complex Relationship Between Molecular Struc-ture and Odor 
+
+Figure S1: Structural similarity does not imply perceptual similarity. Perceptual odor similarity to a reference molecule (here, m-cresol, a) can be observed among some structurally related molecules (e.g., o-cresol, b) but not others (e.g., 3-methylcyclohexanol, 
+
+c) , and structurally dissimilar molecules (e.g., a complex bicyclic ketone, d) can show odor similarity. Molecules sourced from the GF-LS dataset. 41,42 
+
+29 S2. Dataset Analysis 
+
+(a) 
+
+(b) 
+
+Figure S2: Dataset insights: (a) Frequency distribution of the top 30 odor labels among 138. (b) Number of labels per molecule in the GS-LF dataset 30 (total n = 4983). 30 Table S1: Odor labels used in the curated dataset. 
+
+1. alcoholic 2. aldehydic 3. alliaceous 4. almond 5. amber 6. animal 7. anisic 8. apple 9. apricot 10. aromatic 11. balsamic 12. banana 13. beefy 14. bergamot 15. berry 16. bitter 17. black currant 18. brandy 19. burnt 20. buttery 21. cabbage 22. camphoreous 23. caramellic 24. cedar 25. celery 26. chamomile 27. cheesy 28. cherry 29. chocolate 30. cinnamon 31. citrus 32. clean 33. clove 34. cocoa 35. coconut 36. coffee 37. cognac 38. cooked 39. cooling 40. cortex 41. coumarinic 42. creamy 43. cucumber 44. dairy 45. dry 46. earthy 47. ethereal 48. fatty 49. fermented 50. fishy 51. floral 52. fresh 53. fruit skin 54. fruity 55. garlic 56. gassy 57. geranium 58. grape 59. grapefruit 60. grassy 61. green 62. hawthorn 63. hay 64. hazelnut 65. herbal 66. honey 67. hyacinth 68. jasmine 69. juicy 70. ketonic 71. lactonic 72. lavender 73. leafy 74. leathery 75. lemon 76. lily 77. malty 78. meaty 79. medicinal 80. melon 81. metallic 82. milky 83. mint 84. muguet 85. mushroom 86. musk 87. musty 88. natural 89. nutty 90. odorless 91. oily 92. onion 93. orange 94. orange flower 95. orris 96. ozone 97. peach 98. pear 99. phenolic 100. pine 101. pineapple 102. plum 103. popcorn 104. potato 105. powdery 106. pungent 107. radish 108. raspberry 109. ripe 110. roasted 111. rose 112. rummy 113. sandalwood 114. savory 115. sharp 116. smoky 117. soapy 118. solvent 119. sour 120. spicy 121. strawberry 122. sulfurous 123. sweaty 124. sweet 125. tea 126. terpenic 127. tobacco 128. tomato 129. tropical 130. vanilla 131. vegetable 132. vetiver 133. violet 134. warm 135. waxy 136. weedy 137. winey 138. woody 
+
+# S3. Model Architecture 
+
+GraphNOSE model has been built along the lines of the GraphGPS architecture 32 using 
+
+PyTorch Geometric .71 The important difference in our implementation is that we don’t update the edge attributes. Each node in the input graph has an attribute and positional and structural encoding (PSE) associated with it. Each edge in the graph is associated with a edge attribute. The PSE is projected using a multi-layer perceptron (MLP) to the projection dimension. The result is concatenated to the original node features and processed through 31 a linear layer that maps it to a hidden dimension. Each edge attribute is also mapped to the hidden dimension using a linear layer. This graph with updated node and edge features is passed through 4 layers of GPS (General, Powerful and Scalable architecture) 32 layers. A readout layer of global mean pooling is used on the final node embeddings. This pooled embedding is finally passed through an MLP for the final multi-label classification. During the hyperparameter search for GraphNOSE, the global attention type in GPS layer was fixed to Performer. 46 The search results showed that GPSE pre-trained on MoLPCBA was the optimal PSE setting. This exact architecture was used while evaluating other PSEs described in the main text of this paper. More information about the hyper-parameter tuning of GraphNOSE can be found in Section S8. The exact values of the above-mentioned hyperparameters can be found in Table S3 in that section.. 
+
+# S4. Loss Function 
+
+Whenever we work on a multi-label odor dataset, the distribution of the label sets and degree of data imbalance play vital roles in model generalizability and predictive accuracy. In highly imbalanced datasets, models often exhibit high micro-averaged ROC scores but suffer from a low macro-averaged ROCs as the model fails to generalize to under-represented descriptors. Though various measures help to deal with this issue, such as the co-occurrence level measure and the imbalance measures, this study employs imbalance ratio per label 56 to analyze the label-wise distribution. Formally, let D be a multi-label dataset with a label set L, where Yi represents the label set for the ith instance. The IRLbl for a specific label λ ∈ L is defined as the ratio of the frequency of the most common label to the frequency of label λ.
+
+IRLbl (λ) = max λ′∈L
+
+Pmi=1 h(λ′, Y i)
+
+Pmi=1 h(λ, Y i) (6) 32 where the indicator function h(λ, Y i) is defined as: 
+
+h(λ, Y i) = 
+
+
+
+1 if λ ∈ Yi
+
+0 if λ / ∈ Yi
+
+(7) Under this metric, the most frequent label receives an IRLbl of 1; higher values signify a greater degree of imbalance for that specific descriptor. Motivated by POM, 10 we implemented a loss which is weighted by of log (1 + class _imbalance ratio )
+
+# S5. Baselines 
+
+## OpenPOM 
+
+OpenPOM 64 is a publicly available version of the Principal Odor Map paper 10 and integrates with Deepchem. 72 It uses a mono molecular odor dataset consisting of 4983 molecules 30 
+
+curated by merging samples from two expert sources: GoodScents 41 and Leffingwell PMP 2001. 42 OpenPOM addresses the problem of multi-label classification for the 138 odor labels of molecules represented as SMILES strings. The model predicts the probability for each of the 138 possible odor descriptors corresponding to a given molecule by utilizing a message-passing neural network (MPNN), which maps chemical structures to perceptually meaningful latent space. The MPNN sends messages between nodes to understand the local chemical neighborhood and then pools the node features into a global molecular embedding. The embedding so obtained is fed into a feed-forward network with a sigmoid activation layer at the end to output probabilities for the 138 odor labels. OpenPOM uses a custom featurizer, with 134 node features, which include hydrogen count, valence, formal charge, degree, hybridization, atomic number; and 6 edge features, which include aromaticity, degree, and whether it is in a ring. All these features are one-hot encoded (i.e., represented as binary vectors where a single active bit indicates the presence of a specific feature while all other elements are 33 zero). OpenPOM provides a standardized benchmark that bridges chemical structure to odor perception. 
+
+## Models Based on Atoms in Molecule Localization and Delocalization Matrices (AIMLDM) 
+
+This work by Saha et al 63 is a paradigm shift where the quantum mechanical features are employed as the node and edge features along with the chemically grounded featurizers. The model is trained on 4872 molecules, a subset of the curated OpenPOM dataset, 30 using a summed binary cross-entropy loss weighted by imbalance ratio per label (IRLbl) 56 for training. 
+
+LDM DMPNN 
+
+In this methodology the dataset goes through two featurization pipelines. The first is constructed through the quantum features using the AIMLDM approach. In this approach localization indices (diagonal terms) and delocalization indices (off diagonal terms) are taken as node features and edge features, respectively. The second featurization pipeline employs DMPNN Featurizer,12 which captures 133 node and 14 edge features. Consequently, the model incorporates the chemical features, bond connectivity, and atom types, as well as the quantum features, representing electron density distribution. Of the two MPNNs, the one with chemical features is processed by utilizing the Set2Set readout, and the other with quantum features is processed through global sum pooling to obtain a global molecular embedding for each of the pipelines. The embeddings from both branches are concatenated and fed into a feed-forward neural network. The training process employs the Adam optimizer with exponential learning rate decay and uses the AUROC metric to evaluate the performance. 34 LDM GCN 
+
+This methodology also utilizes the same graph neural network (GNN) architecture as LD-MDMPNN. The architecture is same, except that it employs the MolGraph-ConvFeaturizer 73 
+
+featurizer and has 30 node and 11 edge features. As reported in the main text, LDMGCN achieves a better performance than the odor prediction model that employs the LDM matrix coupled with MPNN. 
+
+## MPNN model: Aroma Blend Prediction 
+
+The MPNN model proposed by Sisson et al 70 utilizes exactly the same node and edge attributes employed by OpenPOM (134 node and 6 edge attributes)8. Molecular structures for pairs of binary odor mixture molecules were grouped into a unified two-component graph. The aggregation layer treats all the atoms as if they belong to the same molecule and generates a final permutation invariant embedding. The model aggregates molecular embeddings using a Set2Set readout function. Training is performed using a summed binary cross-entropy loss weighted by the imbalance ratio per label (IRLbl) to address class imbalance. To evaluate the performance on the binary mixture molecules, it applies a “graph carving” technique that creates a 50:50 train/test split by maximizing the usable samples and minimizing the distribution shift. It evaluates the model on 74 shared odor labels and strictly prevents data leakage by ensuring no individual molecule appears in both partitions. Our work also uses the same split as proposed in the Sisson et al. model. 
+
+# S6. Positional and structural encoding 
+
+We employ two complementary types of node-level encodings to capture the local and global topology of the molecular graphs: random-walk structural encodings (RWSE) and Laplacian positional encodings (LapPE). 35 Random-walk structural encodings (RWSE) 
+
+RWSE characterizes the local neighborhood of a node i by observing the probability that a random walker returns to the starting node after k steps. For a graph with adjacency matrix 
+
+A and degree matrix D, the random walk transition matrix is defined as P = D−1A. The RWSE for node i is a vector defined by RWSE (i) = [ P 1
+
+> ii
+
+, P 2
+
+> ii
+
+, . . . , P kii ] (8) This encoding identifies local structural motifs, such as aromatic rings and functional groups, by capturing the density of local cycles. For our experiment k = 16 .
+
+## Laplacian Eigenvector Positional Encodings (LapPE) 
+
+The Laplacian eigenvector positional encodings (LapPE) are derived from the eigen decom-position of the graph Laplacian matrix L.40 For a simple undirected and unweighted graph 
+
+G = ( V, E ), the Laplacian is defined as 
+
+L = D − M (9) where D ∈ Nn×n is the diagonal degree matrix with Dii = deg (vi), and M ∈ { 0, 1}n×n is the symmetric adjacency matrix. The real symmetric matrix L admits a full eigen decomposition: 
+
+L = U ΛU ⊤ (10) where Λii = λi and U[: ,i ] = ui represent the i-th eigenvalue and eigenvector, respectively. Following standard convention, these are indexed such that 0 = λ1 ≤ λ2 ≤ · · · ≤ λn.We use the 8 non-trivial eigenvectors of the graph Laplacian as the positional encoding. 36 S7. Pre-training datasets 
+
+Table S2: Summary of molecular datasets used in pretraining of GPSE. 
+
+Dataset Primary Source License Unique Graphs 
+
+MolPCBA MoleculeNet  
+
+> 50
+
+MIT 323,555 ZINC ZINC Database  
+
+> 54
+
+Apache 2.0 License 249,455 GEOM Axelrod & Gomez-Bombarelli  
+
+> 52
+
+CC0 1.0 169,925 ChEMBL Gaulton et al.  
+
+> 53
+
+CC BY-SA 3.0 970,963 PCQM4Mv2 PubChemQC  
+
+> 51
+
+CC BY 4.0 273,920 
+
+# S8. Hyperparameter Search 
+
+For random forest (RF) baseline methods, we tuned the number of estimators, maximum depths of each tree, minimum number of samples required to split an internal node, minimum number of samples required to be a leaf node, and number of features to consider when looking for the best split. We also tune the fingerprinting parameters such as radius and length. For the k-nearest-neighbor (KNN) models, we tuned the value of k for both GraphNOSE and Mordred embeddings setups. For the Mordred setup, we additionally tuned the radius and length of the fingerprint. The KNN predictions are distance weighted. For the LLM baselines, we derive the embeddings of SMILES using the pre-trained weights of MoLFormer 66 and ChemBERTa. 61 We tune the hidden dimension of the MLP classifier along with the other common hyperparameters such as batch size, learning rate and weight decay. 37 Table S3: Hyperparameters for GraphNOSE 
+
+Hyperparameter Search Space Optimal Value 
+
+Architecture Parameters 
+
+Hidden dimension {64, 128, 256, 288, 352, 512} 64 Classifier dimension {128, 256, 512, 1024} 512 Heads {1, 2, 4} 1No. of GPS layers {4, 5, 6, 7} 4Dropout [0.0, 0.5] 0.440 Local GNN {gatv2, resgate, gine} gine Activation function {relu, gelu, elu, silu} relu 
+
+Positional Encoding Parameters 
+
+PSE {random_walk_pe, laplacian_pe, gpse_molpcba gpse_zinc, gpse_chembl, gpse_molpcba, gpse_pcqm4mv2, gpse_geom} Projection dimension {4, 8, 16, 32} 16 
+
+Training Parameters 
+
+Learning rate [1e-5, 1e-2], log scale 6.82e-4 Weight decay [1e-6, 1e-3], log scale 9.43e-5 Batch size {16, 32, 64, 128} 16 Minimum learning rate [1e-7, 1e-5], log scale 1.98e-7 Optimizer {adam, adamw, sgd} adam 
+
+38 S9. Training data efficiency and comparative GNN perfor-mance 
+
+Table S4: AUROC on the held-out test set across five random seeds and paired t-test p-values comparing OpenPOM against GraphNOSE lin and GraphNOSE trans across training data proportions (30% – 90%). Significance levels ( ∗ denote paired t-test comparison): 
+
+∗∗∗ p < 0.001 , ∗∗ p < 0.01 , and ∗p < 0.05 .
+
+Sampled Train Seed 1 Seed 10 Seed 100 Seed 21 Seed 42 p-val (vs. GraphNOSE lin )
+
+p-val (vs. GraphNOSE trans )
+
+30% 82.32 81.88 82.62 80.55 82.40 1.51 × 10 −3 ∗∗ 1.43 × 10 −3 ∗∗ 
+
+40% 83.91 83.52 84.12 84.01 84.06 4.39 × 10 −4 ∗∗∗ 1.55 × 10 −4 ∗∗∗ 
+
+50% 84.35 84.35 84.01 84.95 84.56 2.95 × 10 −4 ∗∗∗ 1.06 × 10 −4 ∗∗∗ 
+
+60% 85.01 85.54 85.38 85.15 85.20 3.00 × 10 −5 ∗∗∗ 2.80 × 10 −5 ∗∗∗ 
+
+70% 86.72 86.96 86.58 86.90 86.51 7.59 × 10 −4 ∗∗∗ 1.10 × 10 −4 ∗∗∗ 
+
+80% 87.03 87.07 86.92 87.48 86.65 2.87 × 10 −4 ∗∗∗ 5.70 × 10 −4 ∗∗∗ 
+
+90% 87.50 87.03 86.90 87.27 86.48 9.18 × 10 −4 ∗∗∗ 1.87 × 10 −4 ∗∗∗ 
+
+Table S5: AUROC on the held-out test set across five random seeds and paired t-test p-values comparing LDM GCN against GraphNOSE lin and GraphNOSE trans across training data proportions (30% – 90%). Significance levels ( ∗ denote paired t-test comparison): ∗∗∗ p < 0.001 ,
+
+∗∗ p < 0.01 , and ∗p < 0.05 .
+
+Sampled Train Seed 1 Seed 10 Seed 100 Seed 21 Seed 42 p-val (vs. GraphNOSE lin )
+
+p-val (vs. GraphNOSE trans )
+
+30% 82.71 77.31 80.97 82.09 81.56 1.50 × 10 −2 ∗ 1.29 × 10 −2 ∗
+
+40% 83.57 83.45 82.74 83.24 83.85 5.10 × 10 −5 ∗∗∗ 3.60 × 10 −5 ∗∗∗ 
+
+50% 83.80 84.80 83.87 84.97 84.72 2.79 × 10 −4 ∗∗∗ 2.11 × 10 −4 ∗∗∗ 
+
+60% 84.68 84.91 83.83 84.43 85.10 1.38 × 10 −4 ∗∗∗ 1.80 × 10 −4 ∗∗∗ 
+
+70% 85.01 85.30 85.85 85.31 85.56 1.60 × 10 −5 ∗∗∗ 2.30 × 10 −5 ∗∗∗ 
+
+80% 86.16 86.18 86.13 86.08 86.56 1.00 × 10 −5 ∗∗∗ 2.31 × 10 −7 ∗∗∗ 
+
+90% 86.32 86.49 86.50 86.77 86.68 2.10 × 10 −5 ∗∗∗ 6.50 × 10 −5 ∗∗∗ 
+
+Table S6: AUROC on the held-out test set across five random seeds and paired t-test p-values comparing LDM DMPNN against GraphNOSE lin and GraphNOSE trans across training data proportions (30% – 90%). Significance levels ( ∗ denote paired t-test comparison): 
+
+∗∗∗ p < 0.001 , ∗∗ p < 0.01 , and ∗p < 0.05 .
+
+Sampled Train Seed 1 Seed 10 Seed 100 Seed 21 Seed 42 p-val (vs. GraphNOSE lin )
+
+p-val (vs. GraphNOSE trans )
+
+30% 81.76 82.40 82.10 81.81 81.67 3.00 × 10 −6 ∗∗∗ 1.66 × 10 −6 ∗∗∗ 
+
+40% 83.96 83.90 83.39 81.82 83.69 1.70 × 10 −3 ∗∗ 2.55 × 10 −3 ∗∗ 
+
+50% 83.87 83.30 82.95 83.58 84.03 3.71 × 10 −4 ∗∗∗ 1.62 × 10 −4 ∗∗∗ 
+
+60% 85.49 84.76 84.70 85.02 84.86 5.20 × 10 −5 ∗∗∗ 3.40 × 10 −5 ∗∗∗ 
+
+70% 85.88 85.63 85.46 85.74 83.94 1.46 × 10 −3 ∗∗ 1.06 × 10 −3 ∗∗ 
+
+80% 85.94 86.08 86.32 85.70 86.12 7.50 × 10 −5 ∗∗∗ 1.90 × 10 −5 ∗∗∗ 
+
+90% 86.27 86.36 86.64 86.42 86.46 9.00 × 10 −6 ∗∗∗ 1.50 × 10 −5 ∗∗∗ 
+
+39 S10. KDE Plot for True Labels 
+
+Figure S3: Analysis of odor space: KDE plot for true label. Shaded and contoured areas are kernel density estimates of the distribution of labeled data. Colors denote odor categories, with shaded areas for broad classes and contours for specific descriptors (e.g., lavender, roasted). 40 S11. Explainability Analysis of Compounds 
+
+(a) 
+
+(b) 
+
+(c) 
+
+(d) 
+
+(e) 
+
+(f) 
+
+Figure S4: Explainability through integrated gradients 69 for different odor de-scriptors: (a) alcohol, (b) sulfurous, (c) phenolic, (d) fruity, (e) musk, and (f) ketonic. Green indicates atom-level contributions; red, bond-level contributions. Opacity indicates node and edge importance and is proportional to the values. 41 References 
+
+(1) Tarumi, W.; Iwanaga, R.; Nakahata, Y. Physiological mechanisms of social odor percep-tion and their implications for Autism Spectrum Disorders. Acta Psychologica 2026 ,
+
+262 , 106124. (2) Boesveldt, S.; Parma, V. The importance of the olfactory system in human well-being, through nutrition and social behavior. Cell and tissue research 2021 , 383 , 559–567. (3) Boone, M. H.; Liang-Guallpa, J.; Krashes, M. J. Examining the role of olfaction in dietary choice. Cell reports 2021 , 34 .(4) Blazing, R. M.; Franks, K. M. Odor coding in piriform cortex: mechanistic insights into distributed coding. Current opinion in neurobiology 2020 , 64 , 96–102. (5) Chen, Y.; Liu, Y.; Feng, X. Food Perception: Taste, Smell and Flavour. 2023. (6) Sell, C. S. On the unpredictability of odor. Angewandte Chemie International Edition 
+
+2006 , 45 , 6254–6261. (7) Schicker, D.; Singh, S.; Freiherr, J.; Grasskamp, A. T. OWSum: algorithmic odor prediction and insight into structure-odor relationships. Journal of Cheminformatics 
+
+2023 , 15 , 51. (8) Keller, A.; Gerkin, R. C.; Guan, Y.; Dhurandhar, A.; Turu, G.; Szalai, B.; Mainland, J. D.; Ihara, Y.; Yu, C. W.; Wolfinger, R.; others Predicting human olfactory perception from chemical features of odor molecules. Science 2017 , 355 , 820–826. (9) Sanchez-Lengeling, B.; Wei, J. N.; Lee, B. K.; Gerkin, R. C.; Aspuru-Guzik, A.; Wiltschko, A. B. Machine learning for scent: Learning generalizable perceptual repre-sentations of small molecules. arXiv preprint arXiv:1910.10685 2019 ,42 (10) Lee, B. K.; Mayhew, E. J.; Sanchez-Lengeling, B.; Wei, J. N.; Qian, W. W.; Little, K. A.; Andres, M.; Nguyen, B. B.; Moloy, T.; Yasonik, J.; others A principal odor map unifies diverse tasks in olfactory perception. Science 2023 , 381 , 999–1006. (11) Ravia, A.; Snitz, K.; Honigstein, D.; Finkel, M.; Zirler, R.; Perl, O.; Secundo, L.; Laudamiel, C.; Harel, D.; Sobel, N. A measure of smell enables the creation of olfactory metamers. Nature 2020 , 588 , 118–123. (12) Arctander, S. Perfume and flavor materials of natural origin ; Lulu. com, 2017. (13) Kumar, Y.; Prakash, O.; Tripathi, H.; Tandon, S.; Gupta, M. M.; Rahman, L.-U.; Lal, R. K.; Semwal, M.; Darokar, M. P.; Khan, F. AromaDb: a database of medicinal and aromatic plant’s aroma molecules with phytochemistry and therapeutic potentials. 
+
+Frontiers in plant science 2018 , 9, 1081. (14) Garg, N.; Sethupathy, A.; Tuwani, R.; Nk, R.; Dokania, S.; Iyer, A.; Gupta, A.; Agrawal, S.; Singh, N.; Shukla, S.; others FlavorDB: a database of flavor molecules. 
+
+Nucleic acids research 2018 , 46 , D1210–D1216. (15) Ruddigkeit, L.; Awale, M.; Reymond, J.-L. Expanding the fragrance chemical space for virtual screening. Journal of Cheminformatics 2014 , 6, 1–12. (16) Hastings, J.; Owen, G.; Dekker, A.; Ennis, M.; Kale, N.; Muthukrishnan, V.; Turner, S.; Swainston, N.; Mendes, P.; Steinbeck, C. ChEBI in 2016: Improved services and an expanding collection of metabolites. Nucleic acids research 2016 , 44 , D1214–D1219. (17) Sharma, A.; Saha, B. K.; Kumar, R.; Varadwaj, P. K. OlfactionBase: a repository to explore odors, odorants, olfactory receptors and odorant–receptor interactions. Nucleic Acids Research 2022 , 50 , D678–D686. (18) Parma, V.; Mainland, J. D.; Hwang, L.-D.; Kedziora, R. J.; Pineau, N.; Gerkin, R. C.; 43 Niv, M. Y. FAIR Chemosensory Data: Unlocking AI for Flavour, Food and Health. 
+
+Trends in Food Science & Technology 2026 , 105545. (19) Hamel, E. A.; Castro, J. B.; Gould, T. J.; Pellegrino, R.; Liang, Z.; Coleman, L. A.; Patel, F.; Wallace, D. S.; Bhatnagar, T.; Mainland, J. D.; others Pyrfume: A window to the world’s olfactory data. Scientific Data 2024 , 11 , 1220. (20) Deng, J.; Dong, W.; Socher, R.; Li, L.-J.; Li, K.; Fei-Fei, L. Imagenet: A large-scale hierarchical image database. 2009 IEEE conference on computer vision and pattern recognition. 2009; pp 248–255. (21) Satarifard, V.; Sisson, L.; Han, Y.; Ilídio, P.; Hladiš, M.; Lalis, M.; Song, X.; Yin, W.; Ravia, A.; Zheng, C. X.; others High-Fidelity Tuning of Olfactory Mixture Distances in the Perceptual Space of Smell Through a Community Effort. biorxiv 2025 , 2025–12. (22) Moriwaki, H.; Tian, Y.-S.; Kawashita, N.; Takagi, T. Mordred: a molecular descriptor calculator. Journal of cheminformatics 2018 , 10 , 4. (23) Morgan, H. L. The generation of a unique machine description for chemical structures-a technique developed at chemical abstracts service. Journal of chemical documentation 
+
+1965 , 5, 107–113. (24) Zabetakis, I.; Gramshaw, J.; Robinson, D. 2, 5-Dimethyl-4-hydroxy-2H-furan-3-one and its derivatives: Analysis, synthesis and biosynthesis—A review. Food chemistry 1999 ,
+
+65 , 139–151. (25) Nozaki, Y.; Nakamoto, T. Odor impression prediction from mass spectra. PLoS One 
+
+2016 , 11 , e0157030. (26) Zhou, T.; Ma, J.; He, Z.; He, C.; Zhang, X.; Wu, X.; Li, H.; Xie, X.; Chen, L.; Chen, X. Advances in predicting human olfactory perception: from data acquisition to computational models. RSC advances 2025 , 15 , 45359–45375. 44 (27) Gilmer, J.; Schoenholz, S. S.; Riley, P. F.; Vinyals, O.; Dahl, G. E. Neural message passing for quantum chemistry. International conference on machine learning. 2017; pp 1263–1272. (28) Li, Z.; Jiang, M.; Wang, S.; Zhang, S. Deep learning methods for molecular representation and property prediction. Drug Discovery Today 2022 , 27 , 103373. (29) Wang, C.; Kumar, G. A.; Rajapakse, J. C. Drug discovery and mechanism prediction with explainable graph neural networks. Scientific Reports 2025 , 15 , 179. (30) Barsainyan, A. A.; Kumar, R.; Saha, P.; Schmuker, M. Multi-Labelled SMILES Odors dataset. 2023; https://www.kaggle.com/dsv/6447845 .(31) Liu, Y.; Song, Q.; Shoaib, M.; Nan, X.; Ma, J.; Cui, K.; Shang, Y.; Song, J. PharmaGNN: a model for odor prediction based on graph neural networks. Journal of the Science of Food and Agriculture 2026 ,(32) Rampášek, L.; Galkin, M.; Dwivedi, V. P.; Luu, A. T.; Wolf, G.; Beaini, D. Recipe for a general, powerful, scalable graph transformer. Advances in Neural Information Processing Systems 2022 , 35 , 14501–14515. (33) Vaswani, A.; Shazeer, N.; Parmar, N.; Uszkoreit, J.; Jones, L.; Gomez, A. N.; Kaiser, Ł.; Polosukhin, I. Attention is all you need. Advances in neural information processing systems 2017 , 30 .(34) Jumper, J.; Evans, R.; Pritzel, A.; Green, T.; Figurnov, M.; Ronneberger, O.; Tunya-suvunakool, K.; Bates, R.; Žídek, A.; Potapenko, A.; others Highly accurate protein structure prediction with AlphaFold. nature 2021 , 596 , 583–589. (35) Dwivedi, V. P.; Bresson, X. A generalization of transformer networks to graphs. arXiv preprint arXiv:2012.09699 2020 ,45 (36) Ying, C.; Cai, T.; Luo, S.; Zheng, S.; Ke, G.; He, D.; Shen, Y.; Liu, T.-Y. Do transformers really perform badly for graph representation? Advances in neural information processing systems 2021 , 34 , 28877–28888. (37) Amoore, J. E.; Johnston, J. W.; Rubin, M. The stereochemical theory of odor. Scientific American 1964 , 210 , 42–49. (38) Uchida, N.; Takahashi, Y. K.; Tanifuji, M.; Mori, K. Odor maps in the mammalian olfactory bulb: domain organization and odorant structural features. Nature neuroscience 
+
+2000 , 3, 1035–1043. (39) Poivet, E.; Tahirova, N.; Peterlin, Z.; Xu, L.; Zou, D.-J.; Acree, T.; Firestein, S. Functional odor classification through a medicinal chemistry approach. Science advances 
+
+2018 , 4, eaao6086. (40) Cantürk, S.; Liu, R.; Lapointe-Gagné, O.; Létourneau, V.; Wolf, G.; Beaini, D.; Ram-pášek, L. Graph positional and structural encoder. arXiv preprint arXiv:2307.07107 
+
+2023 ,(41) Luebke, W. The Good Scents Company Information System. http://www. thegoodscentscompany.com , 2019. (42) Leffingwell, J. C. Leffingwell & Associates. http://www.leffingwell.com , 2005. (43) Landrum, G.; Tosco, P.; Kelley, B.; Rodriguez, R.; Cosgrove, D.; Vianello, R.; Gedeck, P.; Jones, G.; Kawashima, E.; Nealschneider, D.; others rdkit/rdkit: 2025_03_1 (Q1 2025) Release. Zenodo 2025 ,(44) Ramsundar, B.; Eastman, P.; Walters, P.; Pande, V.; Leswing, K.; Wu, Z. Deep Learning for the Life Sciences ; O’Reilly Media, 2019; https://www.amazon.com/ Deep-Learning-Life-Sciences-Microscopy/dp/1492039837 .46 (45) Kreuzer, D.; Beaini, D.; Hamilton, W.; Létourneau, V.; Tossou, P. Rethinking graph transformers with spectral attention. Advances in Neural Information Processing Systems 
+
+2021 , 34 , 21618–21629. (46) Choromanski, K.; Likhosherstov, V.; Dohan, D.; Song, X.; Gane, A.; Sarlos, T.; Hawkins, P.; Davis, J.; Mohiuddin, A.; Kaiser, L.; others Rethinking attention with performers. arXiv preprint arXiv:2009.14794 2020 ,(47) Xu, K.; Hu, W.; Leskovec, J.; Jegelka, S. How powerful are graph neural networks? 
+
+arXiv preprint arXiv:1810.00826 2018 ,(48) Dwivedi, V. P.; Luu, A. T.; Laurent, T.; Bengio, Y.; Bresson, X. Graph neural networks with learnable structural and positional representations. arXiv preprint arXiv:2110.07875 
+
+2021 ,(49) Dwivedi, V. P.; Joshi, C. K.; Luu, A. T.; Laurent, T.; Bengio, Y.; Bresson, X. Bench-marking graph neural networks. Journal of Machine Learning Research 2023 , 24 , 1–48. (50) Hu, W.; Fey, M.; Zitnik, M.; Dong, Y.; Ren, H.; Liu, B.; Catasta, M.; Leskovec, J. Open graph benchmark: Datasets for machine learning on graphs. Advances in neural information processing systems 2020 , 33 , 22118–22133. (51) Hu, W.; Fey, M.; Ren, H.; Nakata, M.; Dong, Y.; Leskovec, J. Ogb-lsc: A large-scale challenge for machine learning on graphs. arXiv preprint arXiv:2103.09430 2021 ,(52) Axelrod, S.; Gomez-Bombarelli, R. GEOM, energy-annotated molecular conformations for property prediction and molecular generation. Scientific Data 2022 , 9, 185. (53) Gaulton, A.; Bellis, L. J.; Bento, A. P.; Chambers, J.; Davies, M.; Hersey, A.; Light, Y.; McGlinchey, S.; Michalovich, D.; Al-Lazikani, B.; others ChEMBL: a large-scale bioac-tivity database for drug discovery. Nucleic acids research 2012 , 40 , D1100–D1107. 47 (54) Gómez-Bombarelli, R.; Wei, J. N.; Duvenaud, D.; Hernández-Lobato, J. M.; Sánchez-Lengeling, B.; Sheberla, D.; Aguilera-Iparraguirre, J.; Hirzel, T. D.; Adams, R. P.; Aspuru-Guzik, A. Automatic chemical design using a data-driven continuous represen-tation of molecules. ACS central science 2018 , 4, 268–276. (55) Akiba, T.; Sano, S.; Yanase, T.; Ohta, T.; Koyama, M. Optuna: A next-generation hyper-parameter optimization framework. Proceedings of the 25th ACM SIGKDD international conference on knowledge discovery & data mining. 2019; pp 2623–2631. (56) Tarekegn, A. N.; Giacobini, M.; Michalak, K. A review of methods for imbalanced multi-label classification. Pattern Recognition 2021 , 118 , 107965. (57) Nilakantan, R.; Bauman, N.; Dixon, J. S.; Venkataraghavan, R. Topological torsion: a new molecular descriptor for SAR applications. Comparison with other descriptors. 
+
+Journal of Chemical Information and Computer Sciences 1987 , 27 , 82–85. (58) Carhart, R. E.; Smith, D. H.; Venkataraghavan, R. Atom pairs as molecular features in structure-activity studies: definition and applications. Journal of Chemical Information and Computer Sciences 1985 , 25 , 64–73. (59) Rogers, D.; Hahn, M. Extended-connectivity fingerprints. Journal of chemical informa-tion and modeling 2010 , 50 , 742–754. (60) Durant, J. L.; Leland, B. A.; Henry, D. R.; Nourse, J. G. Reoptimization of MDL keys for use in drug discovery. Journal of chemical information and computer sciences 2002 ,
+
+42 , 1273–1280. (61) Chithrananda, S.; Grand, G.; Ramsundar, B. ChemBERTa: large-scale self-supervised pretraining for molecular property prediction. arXiv preprint arXiv:2010.09885 2020 ,(62) Wu, F.; Radev, D.; Li, S. Z. Molformer: Motif-based transformer on 3d heterogeneous 48 molecular graphs. Proceedings of the AAAI Conference on Artificial Intelligence. 2023; pp 5312–5320. (63) Saha, P.; Sharma, M.; Balaji, S.; Barsainyan, A. A.; Kumar, R.; Steuber, V.; Schmuker, M. Dense Sense: a novel approach utilizing electron density augmented machine learning paradigm to understand the complex odour landscape. Digital Discov-ery 2025 , 4, 3339–3350. (64) Barsainyan, A. A.; Kumar, R.; Saha, P.; Schmuker, M. OpenPOM - Open Principal Odor Map. 2023; https://github.com/BioMachineLearning/openpom .(65) Taleb, F.; Vasco, M.; Ribeiro, A.; Björkman, M.; Kragic, D. Can transformers smell like humans? Advances in Neural Information Processing Systems 2024 , 37 , 72032–72060. (66) Ross, J.; Belgodere, B.; Chenthamarakshan, V.; Padhi, I.; Mroueh, Y.; Das, P. Large-scale chemical language representations capture molecular structure and properties. 
+
+Nature Machine Intelligence 2022 , 4, 1256–1264. (67) Sumar, I.; Cook, R.; Ayers, P. W.; Matta, C. F. AIMLDM: a program to generate and analyze electron localization–delocalization matrices (LDMs). Computational and Theoretical Chemistry 2015 , 1070 , 55–67. (68) Jasial, S.; Hu, Y.; Vogt, M.; Bajorath, J. Activity-relevant similarity values for finger-prints and implications for similarity searching. F1000Research 2016 , 5, Chem–Inf. (69) Sundararajan, M.; Taly, A.; Yan, Q. Axiomatic attribution for deep networks. Interna-tional conference on machine learning. 2017; pp 3319–3328. (70) Sisson, L.; Barsainyan, A. A.; Sharma, M.; Kumar, R. Deep learning for odor prediction on aroma-chemical blends. ACS omega 2025 , 10 , 8980–8992. (71) Fey, M.; Lenssen, J. E. Fast graph representation learning with PyTorch Geometric. 
+
+arXiv preprint arXiv:1903.02428 2019 ,49 (72) Barsainyan, A. A.; Kumar, R.; Saha, P.; Schmuker, M. Predict Multi-Label Odor Descriptors using OpenPOM. https://github.com/deepchem/deepchem/blob/ master/examples/tutorials/Predict_Multi_Label_Odor_Descriptors_using_ OpenPOM.ipynb , 2023; DeepChem tutorial. (73) Kearnes, S.; McCloskey, K.; Berndl, M.; Pande, V.; Riley, P. Molecular graph convolu-tions: moving beyond fingerprints. Journal of computer-aided molecular design 2016 ,
+
+30 , 595–608. 50

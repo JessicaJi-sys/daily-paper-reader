@@ -1,0 +1,534 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-09T21:59:57.251259+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 5,
+    "deep_divecandidates": 1,
+    "deep_cap": 10,
+    "deep_selected": 1,
+    "quick_candidates": 10,
+    "quick_skim_target": 15,
+    "quick_selected": 10
+  },
+  "deep_dive": [
+    {
+      "id": "2609.04261v1",
+      "source": "arxiv",
+      "title": "Self-Supervised Pretraining of Molecular Graph Encoders with LeJEPA",
+      "abstract": "Self-supervised pretraining has transformed language and vision, but its value for molecular graph neural networks remains contested. We ask whether pretraining on a large unlabelled corpus improves molecular property prediction. We adapt LeJEPA, a predictor-free joint-embedding predictive architecture regularised by Sketched Isotropic Gaussian Regularisation (SIGReg), to molecular graphs, evaluating GPS and Chemprop-style D-MPNN encoders on the Wong et al. [1] antibiotic-activity dataset and ogbg-molhiv using a multi-seed, bootstrap-based protocol. Pretraining improves learned representations but does not robustly improve finetuning. A frozen probe on pretrained embeddings exceeds random initialisation on both tasks (ogbg-molhiv ROC-AUC 0.788 vs 0.665; +0.123), reaching the published self-supervised band, but this does not translate into finetuning gains. On the antibiotic scaffold split, a canonical partition is significant (delta AUPRC +0.041, p = 0.010), but the effect vanishes across five partitions (pooled +0.013, p = 0.095). Finetuning is null on the random split, ogbg-molhiv, and D-MPNN. The representational edge is nevertheless recoverable. Embeddings saturate at ~16-32 effective dimensions, whereas Morgan fingerprints improve to 1024 bits. At matched dimensionality, fingerprints lead validation (0.799 vs 0.782 at 128 dimensions) but trail shifted test scaffolds (0.759 vs 0.788). Truncating embeddings and combining them with a 1024-bit Morgan fingerprint raises ogbg-molhiv ROC-AUC from 0.805 to 0.832 (delta +0.027; 95% CI [+0.003, +0.054]; p = 0.014); an untrained encoder gains nothing (delta -0.003). Thus, pretraining supplies complementary information best realised through feature-level combination, while finetuning gains are weak and partition-dependent.",
+      "authors": [
+        "Michał Kulczykowski",
+        "Rafał Łabędzki"
+      ],
+      "primary_category": "q-bio.QM",
+      "categories": [
+        "q-bio.QM",
+        "cs.LG",
+        "stat.ML"
+      ],
+      "published": "2026-09-02T12:08:23+00:00",
+      "link": "https://arxiv.org/pdf/2609.04261v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "self-supervised molecular graph representation learning via predictor-free joint embedding pretraining; evaluated on molecular property prediction",
+      "llm_evidence_cn": "研究无标签分子图的自监督预训练表示学习，并在分子性质预测任务上评估效果",
+      "llm_evidence": "研究无标签分子图的自监督预训练表示学习，并在分子性质预测任务上评估效果",
+      "canonical_evidence": "研究无标签分子图的自监督预训练表示学习，并在分子性质预测任务上评估效果",
+      "llm_tldr_en": "Adapts predictor-free joint embedding pretraining (LeJEPA with SIGReg) to molecular graph encoders, evaluated on antibiotic activity and ogbg-molhiv. Pretraining improves representations for frozen probing but not robust finetuning.",
+      "llm_tldr_cn": "分子图神经网络的自监督预训练是否有价值仍存争议。作者将免预测器的联合嵌入预测架构LeJEPA及其SIGReg正则化适配到分子图编码器，评估GPS与D-MPNN在抗生素活性和ogbg-molhiv任务上的表现。结果表明预训练能改进学到的表示，但并未稳定提升微调效果；而在冻结编码器上探测预训练嵌入，其性能显著优于随机初始化。这说明自监督预训练更适合借此获得更好的转移表示，而非简单依赖微调获得端到端增益。",
+      "llm_tldr": "分子图神经网络的自监督预训练是否有价值仍存争议。作者将免预测器的联合嵌入预测架构LeJEPA及其SIGReg正则化适配到分子图编码器，评估GPS与D-MPNN在抗生素活性和ogbg-molhiv任务上的表现。结果表明预训练能改进学到的表示，但并未稳定提升微调效果；而在冻结编码器上探测预训练嵌入，其性能显著优于随机初始化。这说明自监督预训练更适合借此获得更好的转移表示，而非简单依赖微调获得端到端增益。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "self-supervised representation learning for molecules",
+      "matched_requirement_id": "req-21",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.00913v1",
+      "source": "arxiv",
+      "title": "SwapRec: Warming Up Cold Items Through Training-Time Swaps",
+      "abstract": "Interactions with cold items negatively impact real-time personalization of ID-based recommender systems. This is because the use of such interactions degrades user preference estimates, whereas excluding cold items from the user profile prevents real-time recommendation updates. In industrial scenarios, one heuristic often applied to address this shortcoming at inference time is to replace, i.e., \"swap\", cold-start items by their most similar \"warm\" neighbor, where similarity is inferred from the items' side information. In this paper, we demonstrate that sequential models, most often used for real-time personalization, are not robust to such swaps, and propose SwapRec, an approach to address this issue. SwapRec relies on using the same swap heuristics already at training time. We apply SwapRec to state-of-the-art models for sequential recommendation and analyze its impact by means of quantitative experiments in three recommendation domains (online shopping, movie, music). The experimental results show that, irrespective of the underlying sequential architecture, our easy-to-implement SwapRec approach allows for substantially more accurate recommendations when in presence of interactions with cold items, simultaneously leading to a larger percentage of cold items in the recommendation lists.",
+      "authors": [
+        "Marta Moscati",
+        "Jan Malte Lichtenberg",
+        "Davide Abbattista",
+        "Antonio De Candia",
+        "Laura Boggia",
+        "Matteo Ruffini"
+      ],
+      "primary_category": "cs.IR",
+      "categories": [
+        "cs.IR",
+        "cs.MM"
+      ],
+      "published": "2026-09-01T08:41:58+00:00",
+      "link": "https://arxiv.org/pdf/2609.00913v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "cold-start recommendation swaps cold items with similar warm neighbor using side information; transferable to similarity-based neighbor aggregation for cold-start DDI",
+      "llm_evidence_cn": "冷启动推荐通过相似热邻居交换为冷物品升温，可迁移到冷启动DDI的相似药物经验聚合",
+      "llm_evidence": "冷启动推荐通过相似热邻居交换为冷物品升温，可迁移到冷启动DDI的相似药物经验聚合",
+      "canonical_evidence": "冷启动推荐通过相似热邻居交换为冷物品升温，可迁移到冷启动DDI的相似药物经验聚合",
+      "llm_tldr_en": "Tackles cold-item interactions in recommender systems by moving the swap-cold-item-to-similar-warm-neighbor heuristic into training time, making sequential models robust and warming up cold items; transferable to neighbor-based cold-start DDI.",
+      "llm_tldr_cn": "针对基于ID的推荐系统中冷物品交互降低用户偏好估计的问题，SwapRec将工业常用的推理期\"把冷物品换成最相似热邻居\"启发式前移至训练阶段，利用物品侧信息构造置换样本，使序列模型对这类交换更鲁棒。实验证明该方法可提高冷物品的实时推荐效果。该思路不依赖具体物品领域，可迁移到冷启动DDI预测，即基于化学结构与功能相似性，为新药检索并聚合已知相似药物的交互经验。",
+      "llm_tldr": "针对基于ID的推荐系统中冷物品交互降低用户偏好估计的问题，SwapRec将工业常用的推理期\"把冷物品换成最相似热邻居\"启发式前移至训练阶段，利用物品侧信息构造置换样本，使序列模型对这类交换更鲁棒。实验证明该方法可提高冷物品的实时推荐效果。该思路不依赖具体物品领域，可迁移到冷启动DDI预测，即基于化学结构与功能相似性，为新药检索并聚合已知相似药物的交互经验。",
+      "llm_tags": [
+        "query:ddi-transfer"
+      ],
+      "matched_query_tag": "query:ddi-transfer",
+      "matched_query_text": "Cold start recommendation and drug repositioning approaches transferable to cold start DDI prediction",
+      "matched_requirement_id": "req-19",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.00488v1",
+      "source": "arxiv",
+      "title": "AdaptNTK: Adaptive Uncertainty Quantification and Active Learning for Neural Network Potentials",
+      "abstract": "Machine learning interatomic potentials bridge the gap between quantum chemical precision and classical computational speed, enabling molecular dynamics simulations with first-principles accuracy. Their reliability is often improved through active learning, which iteratively expands the training set by identifying uncertain, out-of-distribution configurations. Existing uncertainty-quantification methods often involve a trade-off between computational cost and reliability, and generally cannot account for redundancy as an acquisition batch is assembled. Here, we introduce AdaptNTK, a single-model framework that measures uncertainty as a regularized Mahalanobis distance in empirical neural tangent kernel (NTK) feature space. With the NTK features fixed during acquisition, the uncertainty depends on the acquired configurations but not their reference labels. This allows the uncertainty to be updated recursively after each selection without retraining, reducing redundancy within an acquisition batch. On held-out rMD17 data, AdaptNTK achieves the highest mean correlations with force errors (Spearman 0.68, Pearson 0.71) and matches a three-member ensemble in error retention. In active learning experiments, AdaptNTK achieves the lowest force errors across rMD17 and Transition-1X, with particularly strong performance on transition-state configurations in Transition-1X. AdaptNTK provides a 2.6-fold speedup per Transition-1X cycle relative to the ensemble, providing efficient single-model uncertainty estimation with sequential updates for data-efficient active learning.",
+      "authors": [
+        "Prajwal Ananth",
+        "Shuwen Yue"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "physics.chem-ph"
+      ],
+      "published": "2026-08-31T23:34:29+00:00",
+      "link": "https://arxiv.org/pdf/2609.00488v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Single-model uncertainty quantification and active learning for out-of-distribution molecular configurations; useful for molecular OOD detection and cold-start sample selection.",
+      "llm_evidence_cn": "面向分布外分子构象的单模型不确定性量化与主动学习，可用于分子OOD识别与冷启动样本筛选。",
+      "llm_evidence": "面向分布外分子构象的单模型不确定性量化与主动学习，可用于分子OOD识别与冷启动样本筛选。",
+      "canonical_evidence": "面向分布外分子构象的单模型不确定性量化与主动学习，可用于分子OOD识别与冷启动样本筛选。",
+      "llm_tldr_en": "AdaptNTK proposes single-model uncertainty quantification and active learning, using regularized Mahalanobis distance in empirical NTK feature space to identify out-of-distribution molecular configurations efficiently.",
+      "llm_tldr_cn": "机器学习势能面模型的主动学习需要识别分布外构象，但现有不确定性方法常面临计算成本与可靠性之间的权衡，也难以处理批量采集冗余。AdaptNTK提出单模型框架，在经验神经正切核特征空间中使用正则化马氏距离作为不确定性度量，并对采集批次中的冗余信息进行考量。该框架在单个模型下稳定地为分子OOD构象提供排序与筛选依据，降低主动学习成本。此类不确定性估计策略对于判断新药是否位于已知化学空间之外以及挑选补充训练样本具有借鉴价值。",
+      "llm_tldr": "机器学习势能面模型的主动学习需要识别分布外构象，但现有不确定性方法常面临计算成本与可靠性之间的权衡，也难以处理批量采集冗余。AdaptNTK提出单模型框架，在经验神经正切核特征空间中使用正则化马氏距离作为不确定性度量，并对采集批次中的冗余信息进行考量。该框架在单个模型下稳定地为分子OOD构象提供排序与筛选依据，降低主动学习成本。此类不确定性估计策略对于判断新药是否位于已知化学空间之外以及挑选补充训练样本具有借鉴价值。",
+      "llm_tags": [
+        "query:drug-ood-gen:composite"
+      ],
+      "matched_query_tag": "query:drug-ood-gen:composite",
+      "matched_query_text": "Papers central to 分子分布外泛化和生物医学图分布外泛化相关研究，重点关注分子骨架新颖性、指纹距离、分子表示空间距离、化学空间外推、scaffold split，以及图层面的节点分布偏移、局部邻域变化、关系类型变化、子图结构差异、Graph OOD检测和归纳式图泛化。同时涵盖不确定性估计、置信度校准以及LLM与Graph结合进行药物语义增强、知识补充或分布差异判断的方法。, especially work that connects or combines: methods to evaluate molecular scaffold novelty for out-of-distribution generalization; graph out-of-distribution detection methods for identifying novel subgraph structures; inductive graph generalization on unseen nodes and edges with distribution shift; large language model combined with graph neural networks for drug semantic enhancement and knowledge transfer; knowledge transfer across molecular distributions for out-of-distribution generalization; How to determine sufficient structural or semantic similarity between novel and training drugs for molecular out of distribution generalization?; Graph out of distribution detection for biomedical graphs considering node distribution shift, local neighborhood changes, and subgraph structure differences.; Combining large language models with graph neural networks for drug semantic enhancement, knowledge supplementation, and distribution discrepancy assessment..",
+      "matched_requirement_id": "req-composite-drug-ood-gen",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.02216v1",
+      "source": "arxiv",
+      "title": "PEARL: Path-Entity Aligned Relational Learning with Contextual Subgraphs for Inductive Knowledge Graph Completion",
+      "abstract": "Inductive knowledge graph completion (IKGC) aims to predict missing links involving entities unseen during training, requiring models to learn transferable relational and structural patterns. Existing subgraph- and path-based approaches often encode relational paths independently of their surrounding query subgraphs, although the predictive relevance of a path may vary across structural contexts. We propose PEARL, a Path-Entity Aligned Relational Learning framework that models paths as context-conditioned reasoning signals. PEARL constructs a query-specific contextual subgraph from the union of the query entities' neighborhoods and uses a large language model (LLM)-guided retriever to distill semantically relevant paths. It then builds a bipartite interaction graph over paths, contextual entities, and a global subgraph representation, allowing path embeddings to adapt to local and global structural evidence. To suppress noise introduced by the enlarged context, PEARL employs a dual-view contrastive objective that promotes representation consistency under stochastic contextual perturbations. Experiments on WN18RR, FB15k-237, and NELL-995 show that PEARL obtains the best average Hits@10 among the compared IKGC methods on all three benchmarks. Ablation studies, efficiency analyses, and case studies further validate the contributions of contextual subgraph modeling, semantic path retrieval, path-entity interaction, and contrastive regularization.",
+      "authors": [
+        "Yunchi Yang",
+        "Longlong Li",
+        "Cunquan Qu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-09-02T07:29:42+00:00",
+      "link": "https://arxiv.org/pdf/2609.02216v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Inductive KG completion predicts links for unseen entities; PEARL uses contextual subgraphs and LLM-guided retrieval, transferable to unseen-drug relation prediction.",
+      "llm_evidence_cn": "面向未见实体的归纳式图谱补全，结合上下文子图与LLM检索，可迁移到冷启动药物关系预测。",
+      "llm_evidence": "面向未见实体的归纳式图谱补全，结合上下文子图与LLM检索，可迁移到冷启动药物关系预测。",
+      "canonical_evidence": "面向未见实体的归纳式图谱补全，结合上下文子图与LLM检索，可迁移到冷启动药物关系预测。",
+      "llm_tldr_en": "For inductive KG completion, PEARL builds query-specific contextual subgraphs and an LLM-guided retriever, modeling relational paths as context-conditioned reasoning signals to improve transferability to unseen entities.",
+      "llm_tldr_cn": "归纳式知识图谱补全需预测未见实体的链接，但现有方法常将关系路径与查询子图割裂编码，忽略了路径在不同结构上下文中的作用。PEARL构造查询特定上下文子图，并用LLM引导的检索器蒸馏语义相关的路径，再将路径建模为依赖上下文的条件化推理信号。该框架通过强化结构和关系模式的可迁移性，使模型能够对未见过实体完成链接预测；这类路径-实体对齐的归纳学习策略可为没有交互历史的新药预测提供直接的方法借鉴。",
+      "llm_tldr": "归纳式知识图谱补全需预测未见实体的链接，但现有方法常将关系路径与查询子图割裂编码，忽略了路径在不同结构上下文中的作用。PEARL构造查询特定上下文子图，并用LLM引导的检索器蒸馏语义相关的路径，再将路径建模为依赖上下文的条件化推理信号。该框架通过强化结构和关系模式的可迁移性，使模型能够对未见过实体完成链接预测；这类路径-实体对齐的归纳学习策略可为没有交互历史的新药预测提供直接的方法借鉴。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "inductive graph generalization on unseen nodes and edges with distribution shift",
+      "matched_requirement_id": "req-40",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.00518v1",
+      "source": "arxiv",
+      "title": "Learning Task-Specific Antibody Representations via Function-Aware Masking",
+      "abstract": "Antibody-specific language models pretrained via masked language modeling (MLM) learn representations that are critical for downstream sequence design and property prediction tasks. Yet, the corruption process itself is rarely leveraged as a source of inductive bias during pretraining. While preferentially masking complementarity-determining regions (CDRs) improves binding-related predictions, antibodies possess diverse biological priors over a variety of functions. Herein, we introduce function-aware masking, a family of pretraining algorithms that align mask placement with specific functional priors (e.g., from IMGT annotations or structure predictions) to shape the learned representation space. We show that these specialist masking strategies significantly improve performance on their respective objectives, yielding up to a 14% gain on structure-related tasks and up to a 5.9x improvement on CDR-related tasks. To further improve performance across multiple functional axes, we develop hybrid masking strategies that integrate multiple priors, balancing reconstruction over binding, structural, and biophysical objectives. Our results demonstrate that informed mask placement provides a parameter-free mechanism for imposing functional inductive biases in antibody language model training.",
+      "authors": [
+        "Ayan Goel",
+        "Thomas A. Walton",
+        "Amirali Aghazadeh"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-bio.BM"
+      ],
+      "published": "2026-09-01T00:37:56+00:00",
+      "link": "https://arxiv.org/pdf/2609.00518v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "antibody language model pretraining with function-aware masked language modeling guided by functional priors; related to molecular language model pretraining",
+      "llm_evidence_cn": "抗体语言模型的功能感知掩码预训练与分子语言模型预训练方法相关",
+      "llm_evidence": "抗体语言模型的功能感知掩码预训练与分子语言模型预训练方法相关",
+      "canonical_evidence": "抗体语言模型的功能感知掩码预训练与分子语言模型预训练方法相关",
+      "llm_tldr_en": "Proposes function-aware masking that aligns MLM pretraining mask placement with functional priors such as CDRs and predicted structure, shaping antibody representation spaces for better downstream property prediction.",
+      "llm_tldr_cn": "抗体语言模型常用掩码语言建模预训练，但掩码本身很少被当作归纳偏置来利用。该文提出功能感知掩码，根据IMGT注释或结构预测等生物学先验安排掩码位置，为不同抗体功能塑造表示空间。实验显示这类专科化掩码能够改善结合相关下游性质预测，说明将功能先验融入无监督掩码预训练是可行的，对面向未见生物分子表征的预训练研究具有借鉴意义。",
+      "llm_tldr": "抗体语言模型常用掩码语言建模预训练，但掩码本身很少被当作归纳偏置来利用。该文提出功能感知掩码，根据IMGT注释或结构预测等生物学先验安排掩码位置，为不同抗体功能塑造表示空间。实验显示这类专科化掩码能够改善结合相关下游性质预测，说明将功能先验融入无监督掩码预训练是可行的，对面向未见生物分子表征的预训练研究具有借鉴意义。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "molecular language model pretraining",
+      "matched_requirement_id": "req-23",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.06779v1",
+      "source": "arxiv",
+      "title": "DrugReason: Dynamic Multi-View Reasoning over Knowledge Graph and Language Evidence for Drug Repurposing",
+      "abstract": "Drug repurposing aims to identify new therapeutic uses for existing compounds and, compared with de novo drug discovery, offers a faster and more cost-effective path to clinical translation. However, the space of candidate drug-disease pairs is enormous and their underlying relationships often depend on complex multi-hop biological mechanisms, making it difficult to reliably predict which pairs represent true therapeutic relationships. Existing approaches tackle this from two directions: knowledge graph-based methods organize curated biomedical evidence into structured relational networks for grounded multi-hop reasoning, while LLM-based methods leverage pretrained knowledge to generate flexible mechanistic rationales. Yet neither is sufficient alone - KGs are confined to observed graph structure while LLMs lack factual grounding and risk hallucination. To address this gap, we propose DrugReason, a multi-view reasoning framework that integrates grounded KG reasoning with LLM-generated mechanistic inference for drug repurposing. DrugReason adaptively routes diverse reasoning paths to specialized experts conditioned on the query context, while a cross-expert distillation objective enables knowledge sharing without sacrificing expert specialization. Experiments on PharmaDB, DDInter, and DrugBank show that DrugReason improves average performance over strong single-view reasoning baselines and achieves competitive or superior results compared with graph-based alternatives, while providing interpretable routing-based predictions.",
+      "authors": [
+        "Zijie Liu",
+        "Hongxuan Li",
+        "Zhen Tan",
+        "Jinhao Duan",
+        "Baixiang Huang",
+        "Zunpeng Liu",
+        "Kai Shu",
+        "Tianlong Chen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-06T18:54:26+00:00",
+      "link": "https://arxiv.org/pdf/2609.06779v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Drug repurposing via dynamic reasoning over biomedical knowledge graph and language evidence",
+      "llm_evidence_cn": "基于生物医学知识图谱与语言证据动态多视角推理的药物重定位",
+      "llm_evidence": "基于生物医学知识图谱与语言证据动态多视角推理的药物重定位",
+      "canonical_evidence": "基于生物医学知识图谱与语言证据动态多视角推理的药物重定位",
+      "llm_tldr_en": "DrugReason combines structured knowledge-graph evidence with LLM-generated mechanistic rationales for drug repurposing, using dynamic multi-view reasoning over drug-disease candidates. Though the target is repurposing, this KG+LLM fusion is transferable to cold-start DDI where novel drugs lack interaction history.",
+      "llm_tldr_cn": "药物重定位面临候选药物-疾病对空间巨大且依赖复杂多跳生物机制的问题，单靠知识图谱或大语言模型均有局限。论文提出DrugReason，将知识图谱中的结构化关系事实与大语言模型生成的机制性解释进行动态多视角融合，对候选关联进行联合推理。该方法利用非DDI的多种生物医学关联弥补单一模态短板，形成可解释的重定位判断。其对知识图谱和语言证据的融合思路可迁移到无历史新药的冷启动DDI预测中，增强新药表示与知识外推。",
+      "llm_tldr": "药物重定位面临候选药物-疾病对空间巨大且依赖复杂多跳生物机制的问题，单靠知识图谱或大语言模型均有局限。论文提出DrugReason，将知识图谱中的结构化关系事实与大语言模型生成的机制性解释进行动态多视角融合，对候选关联进行联合推理。该方法利用非DDI的多种生物医学关联弥补单一模态短板，形成可解释的重定位判断。其对知识图谱和语言证据的融合思路可迁移到无历史新药的冷启动DDI预测中，增强新药表示与知识外推。",
+      "llm_tags": [
+        "query:cd"
+      ],
+      "matched_query_tag": "query:cd",
+      "matched_query_text": "biomedical knowledge graph representation learning for drug target interaction and drug repositioning",
+      "matched_requirement_id": "req-36",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.00915v1",
+      "source": "arxiv",
+      "title": "Element priors and target support shape chemical transfer in materials graph networks",
+      "abstract": "Materials graph neural networks must often transfer to chemical regions weakly represented in training data. Such transfer can rely on predefined relations among elements or supervised evidence from target-containing structures, but these pathways are usually entangled. Here, held-out-element splits and incremental target support separate their roles. Without target-containing training structures, formation-energy errors depend strongly on the element representation, particularly for H, O and F. Matched perturbations show that representation-induced sharing matters beyond input dimension or numerical form, while a label-free similarity-graph prior reduces selected zero-shot errors. Adding a few target-containing structures sharply lowers errors and contracts differences among one-hot, k-hot and continuous inputs across ALIGNN and CGCNN. Calibration explains only part of this recovery, and freezing the initial element projection preserves most gains in five of six ALIGNN splits. Target support therefore shifts chemical transfer from reliance on static element relations toward learning from target-containing environments.",
+      "authors": [
+        "Ran Zhao",
+        "Kangming Li"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-09-01T08:43:15+00:00",
+      "link": "https://arxiv.org/pdf/2609.00915v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Zero-shot element transfer and similarity-graph prior in graph networks model out-of-distribution generalization, though domain is materials rather than drug-drug interaction.",
+      "llm_evidence_cn": "图网络在留出元素上的零样本迁移与相似图先验刻画了分布偏移泛化，但试验领域为材料而非药物相互作用。",
+      "llm_evidence": "图网络在留出元素上的零样本迁移与相似图先验刻画了分布偏移泛化，但试验领域为材料而非药物相互作用。",
+      "canonical_evidence": "图网络在留出元素上的零样本迁移与相似图先验刻画了分布偏移泛化，但试验领域为材料而非药物相互作用。",
+      "llm_tldr_en": "Materials graph networks often need to transfer to chemical regions underrepresented in training; this paper separates element-prior effects from target supervision and shows label-free similarity-graph priors reduce zero-shot errors, with few target structures sharply improving transfer.",
+      "llm_tldr_cn": "材料图神经网络常需向训练数据中表现不足的化学区域迁移，但元素先验与目标结构监督两条路径常被混淆。本文利用留出元素划分和逐步增加目标支撑分离两者，并通过匹配扰动与无标签相似图先验控制变量，揭示元素表示诱导的共享机制对迁移误差的决定作用。实验表明在无目标结构训练时形成能误差受元素表示影响显著，相似图先验能降低部分零样本误差，少量目标结构即可大幅改善迁移。这为分子或材料图模型的分布外泛化提供了可借鉴的分析与验证框架。",
+      "llm_tldr": "材料图神经网络常需向训练数据中表现不足的化学区域迁移，但元素先验与目标结构监督两条路径常被混淆。本文利用留出元素划分和逐步增加目标支撑分离两者，并通过匹配扰动与无标签相似图先验控制变量，揭示元素表示诱导的共享机制对迁移误差的决定作用。实验表明在无目标结构训练时形成能误差受元素表示影响显著，相似图先验能降低部分零样本误差，少量目标结构即可大幅改善迁移。这为分子或材料图模型的分布外泛化提供了可借鉴的分析与验证框架。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "knowledge transfer across molecular distributions for out-of-distribution generalization",
+      "matched_requirement_id": "req-42",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.02056v1",
+      "source": "arxiv",
+      "title": "HyGRAIL: Cost-Aware and Evidence-Grounded Scientific Hypothesis Discovery over Knowledge Graphs",
+      "abstract": "Scientific knowledge graphs organize entities and relations extracted from scientific literature, but they remain inherently incomplete. Missing typed links in such graphs can therefore represent plausible scientific hypotheses, such as unexplored associations between materials and applications. However, scientific hypothesis discovery is challenging because true discoveries are extremely sparse among typed candidate pairs: graph neural networks (GNNs) are efficient but unreliable for ambiguous cases, while large language models (LLMs) are knowledgeable but too costly to apply exhaustively and are not naturally grounded in graph structures. We propose HyGRAIL, a cost-aware and evidence-grounded framework that combines heterogeneous GNN triage with LLM-based hypothesis review. HyGRAIL first uses a GNN to score candidate hypotheses and identify a validation-calibrated ambiguous region, routing only graph-uncertain cases to LLM review. For each routed hypothesis, HyGRAIL retrieves node-level associations and multi-hop relational paths from the knowledge graph (KG), then converts this structured evidence into natural language through template-based or LLM-based naturalization. An LLM review agent finally judges each hard hypothesis using the naturalized evidence and validation-selected decision criteria. On MatKG, HyGRAIL achieves the best F1 score of 0.429, improving over the strongest prior baseline by 0.242 F1 points and over the GNN-only baseline by 0.322. Meanwhile, GNN triage reduces the LLM call rate by 54.36% on average. Ablation studies further show that retrieved graph evidence is crucial for reliable hypothesis verification and that compact, two-sided evidence is more effective than simply increasing retrieval quantity.",
+      "authors": [
+        "Yihang Sun",
+        "Zhihan Zhu",
+        "Zhiyuan Jiang",
+        "Jingyi Ge",
+        "Zixuan Li",
+        "Jiaxuan You"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-09-02T03:34:21+00:00",
+      "link": "https://arxiv.org/pdf/2609.02056v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Combines heterogeneous GNNs and LLMs for evidence-grounded link discovery on knowledge graphs; transferable to KG-based drug semantic enhancement and interaction prediction.",
+      "llm_evidence_cn": "以证据锚定方式融合异构图神经网络与LLM在知识图谱上发现缺失关系，可迁移至药物KG语义增强与交互预测。",
+      "llm_evidence": "以证据锚定方式融合异构图神经网络与LLM在知识图谱上发现缺失关系，可迁移至药物KG语义增强与交互预测。",
+      "canonical_evidence": "以证据锚定方式融合异构图神经网络与LLM在知识图谱上发现缺失关系，可迁移至药物KG语义增强与交互预测。",
+      "llm_tldr_en": "HyGRAIL addresses missing typed links in scientific knowledge graphs by combining heterogeneous GNNs with cost-aware, evidence-grounded LLM reasoning, reducing cost while improving reliability of hypothesis discovery.",
+      "llm_tldr_cn": "科学知识图谱中许多潜在关系缺失，可视为待发现假设，但GNN对模糊样例不可靠，LLM有知识却成本高且缺乏图结构锚定。HyGRAIL将异构图神经网络与LLM结合，采用成本感知和证据锚定策略对候选关系进行筛选和推理，在稀疏真候选条件下兼顾大规模搜索效率与解释性。该框架能够在知识图谱上进行结构化证据链接发现，为药物知识图谱中利用LLM补全DDI关系并增强药物语义提供了可迁移的工程范式。",
+      "llm_tldr": "科学知识图谱中许多潜在关系缺失，可视为待发现假设，但GNN对模糊样例不可靠，LLM有知识却成本高且缺乏图结构锚定。HyGRAIL将异构图神经网络与LLM结合，采用成本感知和证据锚定策略对候选关系进行筛选和推理，在稀疏真候选条件下兼顾大规模搜索效率与解释性。该框架能够在知识图谱上进行结构化证据链接发现，为药物知识图谱中利用LLM补全DDI关系并增强药物语义提供了可迁移的工程范式。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "Combining large language models with graph neural networks for drug semantic enhancement, knowledge supplementation, and distribution discrepancy assessment.",
+      "matched_requirement_id": "req-45",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.02209v1",
+      "source": "arxiv",
+      "title": "Prototype-guided transfer of sparse literature knowledge for electrolyte additive discovery",
+      "abstract": "Electrolyte additive discovery remains challenging because experimentally validated molecules are sparse, whereas accessible chemical spaces are vast and largely unlabeled. This challenge is amplified in lithium-ion batteries, where additive performance arises from coupled interfacial reactions rather than a single molecular property. Here, we develop a prototype-guided molecular intelligence, ProtoMI, a literature-driven framework that learns transferable structural priors from reported electrolyte additives and uses them to prioritize candidates in unlabeled chemical space. For boron-containing additives, ProtoMI combines 126 literature-reported molecules with 179,977 unlabeled candidates. Graph contrastive learning identifies seven chemically interpretable prototypes from the reported additives, and prototype guided semi-supervised contrastive learning adapts these prototypes to the candidate space under source-target distribution mismatch. In retrospective temporal validation, ProtoMI achieves enrichment factors of 9.2-45.6 while screening less than 2% of the candidate space. A subsequent translation step identifies four commercially accessible candidates. One representative candidate, 4,4,5,5-Tetramethyl-2-[10-(1naphthyl)anthracen-9-yl]-1,3,2-dioxaborolane (TNDB), improves high-temperature LiFePO4||graphite cycling at 55 °C by 34.93% relative to the baseline electrolyte. An arsenal of characterizations and operando optical fiber Fourier transform infrared spectroscopy suggest that TNDB forms B-containing, F/P/O-modified inorganic interphases, suppresses solvent decomposition and reduces Fe deposition on graphite. This case study shows how sparse literature knowledge can guide experimentally efficient molecular discovery in data-scarce battery-additive spaces.",
+      "authors": [
+        "Weixiang Hong",
+        "Hongting Du",
+        "Jiayue Tang",
+        "Ruifeng Tan",
+        "Yangjian Quan",
+        "Jia Li",
+        "Jiaqiang Huang"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "cs.LG"
+      ],
+      "published": "2026-09-02T07:21:47+00:00",
+      "link": "https://arxiv.org/pdf/2609.02209v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "graph contrastive learning and prototype-guided transfer on sparse labeled plus 179,977 unlabeled molecules for candidate prioritization, analogous to cold-start molecular prediction",
+      "llm_evidence_cn": "在图对比学习基础上以原型引导迁移稀疏文献知识，并结合十七万余未标注分子对候选物排序，与冷启动分子预测目标相通",
+      "llm_evidence": "在图对比学习基础上以原型引导迁移稀疏文献知识，并结合十七万余未标注分子对候选物排序，与冷启动分子预测目标相通",
+      "canonical_evidence": "在图对比学习基础上以原型引导迁移稀疏文献知识，并结合十七万余未标注分子对候选物排序，与冷启动分子预测目标相通",
+      "llm_tldr_en": "ProtoMI tackles sparse experimental labels for molecules by combining prototype-guided transfer with graph contrastive learning, using 126 literature molecules and 179,977 unlabeled candidates to create transferable structural priors and prioritize new candidates.",
+      "llm_tldr_cn": "电解质添加剂发现面临实验验证分子稀缺、化学空间巨大且性能由耦合界面反应决定的问题。论文提出原型引导分子智能框架ProtoMI，从文献报道的稀疏分子中学习可迁移结构先验，并结合图对比学习在未标注化学空间中优先筛选高潜力分子。在含硼添加剂实验中，ProtoMI融合126个已知分子与179,977个未标注候选物，验证了稀疏文献知识到未知化学空间迁移的有效性。该思路可为冷启动药物预测中原型学习与自监督分子表示的应用提供借鉴。",
+      "llm_tldr": "电解质添加剂发现面临实验验证分子稀缺、化学空间巨大且性能由耦合界面反应决定的问题。论文提出原型引导分子智能框架ProtoMI，从文献报道的稀疏分子中学习可迁移结构先验，并结合图对比学习在未标注化学空间中优先筛选高潜力分子。在含硼添加剂实验中，ProtoMI融合126个已知分子与179,977个未标注候选物，验证了稀疏文献知识到未知化学空间迁移的有效性。该思路可为冷启动药物预测中原型学习与自监督分子表示的应用提供借鉴。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "self supervised learning on large unlabeled molecular data to improve unseen drug property prediction",
+      "matched_requirement_id": "req-27",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.05694v1",
+      "source": "arxiv",
+      "title": "GraphNOSE: A Graph Transformer in Olfaction",
+      "abstract": "Predicting olfactory qualities from molecular structure is an open problem in chemoinformatics. Although linear models can link molecular features to odor descriptors, they often fail when extrapolating to novel chemical scaffolds, extreme molecular weights, or complex odor mixtures. To address this, we introduce GraphNOSE, an open-source graph transformer framework that predicts multi-label odor descriptors from simplified molecular-input line-entry system (SMILES) strings for single molecules and binary mixtures. By integrating positional and structural encodings within a transformer-based graph architecture, GraphNOSE achieves strong performance with six times fewer parameters than standard graph neural network (GNN) baseline while consistently outperforming linear models, molecular language model embeddings, molecular fingerprints, and baseline GNNs by an average area under the ROC curve (AUROC) margin of 4.52% (p < 0.01). GraphNOSE achieves an AUROC of 84% on out-of-distribution compounds (OODs). This exceeds the current state-of-the-art GNN for OOD in olfaction (Open-POM: 81%, p < 0.001), and identifies conditions under which linear models empirically fail. Finally, we apply XAI (explainable AI) methods to identify which substructures and molecular features drive odor predictions, yielding insights consistent with chemical intuition and grounded in the model's learned representations. Together, these results establish GraphNOSE as a scalable and interpretable architecture for olfactory prediction that generalizes to structurally distinct compounds underrepresented in current perceptual databases.",
+      "authors": [
+        "Mrityunjay Sharma",
+        "Sarabeshwar Balaji",
+        "Valentina Parma",
+        "Ritesh Kumar"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-04T20:02:48+00:00",
+      "link": "https://arxiv.org/pdf/2609.05694v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "molecular graph transformer that specifically targets extrapolation to novel chemical scaffolds",
+      "llm_evidence_cn": "面向新型化学骨架外推的分子图Transformer",
+      "llm_evidence": "面向新型化学骨架外推的分子图Transformer",
+      "canonical_evidence": "面向新型化学骨架外推的分子图Transformer",
+      "llm_tldr_en": "This paper addresses poor molecular property generalization to novel scaffolds and complex mixtures, and proposes GraphNOSE, a graph transformer that learns from SMILES with positional and structural encodings to predict odor descriptors, outperforming GNN and linear baselines with fewer parameters.",
+      "llm_tldr_cn": "现有分子性质预测模型在遇到新颖化学骨架、大分子量或复杂混合物时外推能力不足。针对嗅觉预测任务提出GraphNOSE，将SMILES分子转化为图Transformer表征，并整合位置编码与结构编码预测多标签气味描述符。结果显示其参数比标准图神经网络少约六倍，却稳定超越线性模型与GNN基线。该工作展示了一种轻量且外推友好的分子图建模方案，可迁移到药物性质与相互作用预测任务。",
+      "llm_tldr": "现有分子性质预测模型在遇到新颖化学骨架、大分子量或复杂混合物时外推能力不足。针对嗅觉预测任务提出GraphNOSE，将SMILES分子转化为图Transformer表征，并整合位置编码与结构编码预测多标签气味描述符。结果显示其参数比标准图神经网络少约六倍，却稳定超越线性模型与GNN基线。该工作展示了一种轻量且外推友好的分子图建模方案，可迁移到药物性质与相互作用预测任务。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "methods to evaluate molecular scaffold novelty for out-of-distribution generalization",
+      "matched_requirement_id": "req-38",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.07531v1",
+      "source": "arxiv",
+      "title": "Simulation-Supervised Foundation Models for Retention Time Prediction in High-Performance Liquid Chromatography beyond Experimental Data Coverage",
+      "abstract": "Accurate prediction of high-performance liquid chromatography (HPLC) retention times (RTs) across diverse molecules and chromatographic methods remains challenging because experimental training data cover only a limited region of chemical and method spaces. Here, we develop FUSE-RT (Foundation model Unifying Simulation and Experimental supervision for Retention Time), a multitask foundation model that integrates RT data from 179 chromatographic methods and adapts to unseen molecules and methods using limited target-domain data. To extend transferability beyond experimental coverage, we introduce simulation-to-real (Sim2Real) transfer learning, in which molecular representations learned from large-scale computational data are transferred to experimental RT prediction. Specifically, we use PolyOmics, comprising 39 properties for approximately 21,400 molecules generated by molecular dynamics and density-functional theory calculations, as auxiliary supervision. We evaluate generalization under molecular, method, and joint molecular--method distribution shifts. Simulation-derived supervision substantially improves transfer beyond the experimental molecular domain, particularly under pronounced coverage gaps and few-shot adaptation. Moreover, RT-prediction error decreases systematically with increasing simulation-data size, following a significant power-law relationship. These results establish Sim2Real transfer as a scalable strategy for extending RT prediction beyond the finite coverage of experimental chromatographic data.",
+      "authors": [
+        "Stephen Wu",
+        "Yufeng Han",
+        "Yasuhiro Mito",
+        "Yoshiyuki Watabe",
+        "Yoshihiro Hayashi",
+        "Hikaru Takaya",
+        "Takuya Kubo",
+        "Ryo Yoshida"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "stat.AP"
+      ],
+      "published": "2026-09-07T14:09:39+00:00",
+      "link": "https://arxiv.org/pdf/2609.07531v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Molecular foundation model with simulation-to-real transfer learning adapts to unseen molecules and methods beyond experimental data coverage; relevant to knowledge transfer across molecular distributions for out-of-distribution generalization.",
+      "llm_evidence_cn": "通过模拟到真实迁移学习使分子表示适应未见过分子与方法，突破实验覆盖范围，属于跨分子分布的分布外泛化。",
+      "llm_evidence": "通过模拟到真实迁移学习使分子表示适应未见过分子与方法，突破实验覆盖范围，属于跨分子分布的分布外泛化。",
+      "canonical_evidence": "通过模拟到真实迁移学习使分子表示适应未见过分子与方法，突破实验覆盖范围，属于跨分子分布的分布外泛化。",
+      "llm_tldr_en": "FUSE-RT builds a multitask foundation model from retention-time data of 179 chromatographic methods and uses simulation-to-real transfer learning to adapt to unseen molecules and methods under limited target data, overcoming experimental coverage limits for molecular property prediction.",
+      "llm_tldr_cn": "实验训练数据只覆盖有限的化学空间与方法空间，保留时间预测难以推广到未见过分子。FUSE-RT整合179种色谱方法的保留时间数据，引入模拟到真实（Sim2Real）迁移学习，使分子表示能在仅有少量目标域数据时适应新分子与新方法。实验显示其外推能力可突破已有实验数据覆盖范围。该策略展示了在冷启动与小样本条件下预测未见过分子属性的可行路径。",
+      "llm_tldr": "实验训练数据只覆盖有限的化学空间与方法空间，保留时间预测难以推广到未见过分子。FUSE-RT整合179种色谱方法的保留时间数据，引入模拟到真实（Sim2Real）迁移学习，使分子表示能在仅有少量目标域数据时适应新分子与新方法。实验显示其外推能力可突破已有实验数据覆盖范围。该策略展示了在冷启动与小样本条件下预测未见过分子属性的可行路径。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "knowledge transfer across molecular distributions for out-of-distribution generalization",
+      "matched_requirement_id": "req-42",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

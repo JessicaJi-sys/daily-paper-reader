@@ -1,0 +1,4417 @@
+Title: 2609.02209v1.pdf
+
+URL Source: https://arxiv.org/pdf/2609.02209v1
+
+Published Time: Thu, 03 Sep 2026 00:40:53 GMT
+
+Number of Pages: 79
+
+Markdown Content:
+1
+
+# Prototype -guided transfer of sparse literature knowledge 
+
+# for electrolyte additive discovery 
+
+Weixiang HONG 1,5, Hongting DU 1,5, Jiayue TANG 1, Ruifeng TAN 1, Yangjian QUAN 2,
+
+Jia LI 3,* , Jiaqiang HUANG 1,4,*  
+
+> 1
+
+Sustainable Energy and Environment Thrust  and  Guangzhou Municipal Key Laboratory of 
+
+Materials Informatics, The Hong Kong University of  Science and Technology (Guangzhou), 
+
+Nansha, Guangzhou, 511400,  Guangdong, P.R. China  
+
+> 2
+
+Department of Chemistry, The Hong Kong University of Science and Technology, Clear Water Bay, 
+
+Kowloon, Hong Kong SAR, P.R. China  
+
+> 3
+
+Data Science and Analytics Thrust  and  Guangzhou Municipal Key Laboratory of Materials 
+
+Informatics, The Hong Kong University of Science and Technology (Guangzhou), Nansha, 
+
+Guangzhou, 511400, Guangdong, P.R. China  
+
+> 4
+
+Academy of Interdisciplinary Studies, The Hong Kong University of Science and Technology, Clear 
+
+Water Bay, Kowloon,  Hong Kong SAR, P.R. China  
+
+> 5
+
+These authors contributed equally: Weixiang HONG, Hongting DU 
+
+* Corresponding author s:
+
+J. Huang:  seejhuang@ hkust -gz.edu.cn 
+
+J. Li:  jialee@ hkust -gz.edu.cn 2
+
+## Abstract 
+
+Electrolyte additive discovery remains challenging because experimentally validated 
+
+molecules are sparse, whereas accessible chemical spaces are vast and largely 
+
+unlabeled.  This challenge is amplified in lithium -ion batteries, where additive 
+
+performance arises from coupled interfacial reactions rather than a single molecular 
+
+property.  Here, we  develop  a prototype -guided molecular intelligence, ProtoMI, a 
+
+literature -driven framework that learns transferable structural priors from reported 
+
+electrolyte additives and uses them to prioritize candidates in unlabeled chemical 
+
+space.  For boron -containing additives, ProtoMI  combines 126 literature -reported 
+
+molecules with 179,977 unlabeled candidates. Graph contrastive learning identifies 
+
+seven chemically interpretable prototypes from the reported additives, and prototype -
+
+guided semi -supervised contrastive learning adapts the se prototypes to the candidate 
+
+space under source -target distribution mismatch.  In retrospective temporal validation, 
+
+ProtoMI achieves enrichment factors of 9.2 -45.6 while screening less than 2% of the 
+
+candidate space. A subsequent translation step identifies four commercially accessible 
+
+candidates.  One representative candidate,  4,4,5,5 -Tetramethyl -2-[10 -(1 -
+
+naphthyl)anthracen -9-yl] -1,3,2 -dioxaborolane (TNDB) , improves high -temperature 
+
+LiFePO 4||graphite cycling at 55 °C by  34.93%  relative to the baseline electrolyte.  An 
+
+arsenal of characterizations and  operando  optical fiber  Fourier  transform  infrared 
+
+spectroscopy  suggest that TNDB forms B-containing,  F/P/O -modified inorganic 
+
+interphases , suppresses solvent decomposition and reduces Fe deposition on 
+
+graphite. This case study shows how sparse literature knowledge can guide 
+
+experimentally efficient molecular discovery in data -scarce battery -additive spaces. 
+
+## Introduction 
+
+Lithium -ion batteries (LIBs) underpin electrified transport, grid storage and portable 
+
+electronics, and their deployment is expected to expand substantially as electrification 
+
+accelerates 1,2 . As LIBs are pushed toward longer lifetimes, higher power operation and 
+
+harsher operating environments,  battery degradation  is increasingly governed by the 
+
+stability of electrochemical interfaces, where electrolyte decomposition, interphase 
+
+evolution and transition -metal crossover can trigger coupled degradation processes 3-
+
+> 5
+
+. Electrolyte additives provide a practical and manufacturable route to regulate such 
+
+interfaces. Even at low concentrations, additives can alter solvation structures, 
+
+undergo preferential interfacial reactions, scavenge reactive impurities and promote 
+
+stabi lizing solid -electrolyte interphase (SEI) and cathode -electrolyte interphase (CEI) 6.
+
+However, additive discovery remains largely empirical because additive efficacy 
+
+emerges from the coupled effects of molecular stability, salt -solvent coordination, ion 3
+
+transport, decomposition pathways and interphase growth, none of which can be 
+
+reliably captured by a single molecular descriptor 3-6.
+
+Recent advances in artificial intelligence (AI), molecular representation learning 
+
+and data -driven optimization have accelerated the exploration of high -dimensional 
+
+chemical spaces 7,8 . In battery -electrolyte research, data -driven strategies have been 
+
+used 9 to predict molecular and electrolyte properties 10 , screen electrolyte 
+
+components 11  with theoretical calculations 12 -16  or curated datasets 17,18 , and guide 
+
+electrolyte optimization workflows 18 -20 . Active -learning approaches have further 
+
+reduced experimental burden by iteratively updating models with new 
+
+measurements 20 , while physics -informed and solvation -aware models have 
+
+introduced thermodynamic, transport and molecular -interaction constraints into 
+
+electrolyte design 21,22 . These studies have demonstrated the value of data -driven 
+
+electrolyte discovery. Nevertheless, most existing approaches are formulated around 
+
+supervised prediction or iterative optimization once target labels, simulation outputs or 
+
+experimental feedback are  available. This creates a mismatch for electrolyte additive 
+
+discovery, where experimentally validated molecules are sparse, literature reports are 
+
+heterogeneous and most accessible candidate molecules have no measured battery -
+
+relevant labels. 
+
+Under such severe label scarcity, the central challenge shifts from predicting the 
+
+performance of individual molecules to prioritizing chemically promising regions of an 
+
+unlabeled molecular space under limited experimental budgets.  Reported electrolyte 
+
+additives are not merely isolated successful examples . Instead,  they may encode 
+
+recurring structural organization and shared interfacial regulation strategies 6, including 
+
+anion reception 23 , reactive -species scavenging 24 , solvation regulation 25  and 
+
+interphase construction 24,26 . If these recurring patterns can be learned as prototype -
+
+level priors rather than as molecule -level labels, they may guide exploration beyond 
+
+the local neighborhoods of known additives.  Representation learning provides a route 
+
+to extract structured molecular embeddings from sparse data 27 , while prototype -based 
+
+alignment 28,29  and semi -supervised learning 30  offer mechanisms to transfer such 
+
+organization into unlabeled domains . Together, these advances suggest an alternative 
+
+discovery paradigm: instead of directly predicting additive performance from scarce 
+
+labels, sparse literature -derived success patterns can be converted into transferable 
+
+molecular prototypes that guide effici ent candidate selection  (Fig. 1a,b ).
+
+Here we develop prototype -guided molecular intelligence (ProtoMI), a literature -4
+
+driven framework for molecular discovery under sparse positive knowledge and large 
+
+unlabeled candidate spaces. ProtoMI treats reported additives as a positive molecular 
+
+knowledge source rather than as a conventional supervised training set. The 
+
+framework p roceeds through three stages  (Fig. 1 c). First, literature -reported additive 
+
+molecules are extracted and curated to construct a positive molecular dataset,  and the 
+
+unsupervised graph contrastive learning is used to identify prototype -level chemical 
+
+organization within the reported additives.  Second , prototype -guided semi -supervised 
+
+contrastive learning adapts these prototypes to a large unlabeled molecular space 
+
+under source -target distribution mismatch.  Third, a  subsequent knowledge -guided 
+
+translation step incorporates chemical feasibility and experimental accessibility 
+
+constraints to convert model recommendations into testable candidates. 
+
+As a case study, we focus on boron -containing electrolyte additives.  Boron -
+
+containing additives provide a suitable testbed because their Lewis -acidic and 
+
+borate/boronate chemistries are well documented in electrolyte interphase regulation, 
+
+yet remain sparsely explored across the broader boron -containing chemical space 23 -
+
+> 26
+
+. This combination of established chemical relevance and large unexplored 
+
+molecular diversity creates a stringent test for ProtoMI : whether sparse literature -
+
+reported successes can be transformed into transferable prototype priors for efficient 
+
+candidate selection. In this work, ProtoMI integrates 126 literature -reported boron -
+
+containing additives with 179,977 unlabeled boron -contain ing candidates from 
+
+PubChem 31 . Retrospective temporal validation shows that the framework recovers 
+
+future -reported additives with enrichment factors of 9.2 -45.6 while screening less than 
+
+2% of the candidate space. A knowledge -guided translation  step  further prioritizes four 
+
+commercially accessible candidates for high -temperature LiFePO 4||graphite cells, a 
+
+system in which elevated -temperature cycling stability remains an important practical 
+
+challenge 32,33 . One representative candidate, 4,4,5,5 -tetramethyl -2-[10 -(1 -
+
+naphthyl)anthracen -9-yl] -1,3,2 -dioxaborolane (TNDB), improves capacity retention by 
+
+34.93%  relative to the baseline electrolyte during cycling at 55 °C. Post -mortem and 
+
+operando characterizations indicate that TNDB participates in forming B -containing, 
+
+F/P/O -modified  interphases that suppress solvent decomposition and reduce Fe 
+
+deposition on graphite. These results demonstrate that sparse literature -derived 
+
+molecular successes can be transformed into transferable prototype priors for efficient 
+
+electrolyte additive disc overy under severe data scarcity. 5
+
+Fig. 1 |  Overview of the ProtoMI framework for prototype -guided discovery of boron -containing 
+
+electrolyte additives . a ,b, Conceptual comparison between traditional molecular exploration and 
+
+prototype -guided exploration.  Conventional  exploration ( a) searches the molecular space largely 
+
+through local trial -and -error optimization, whereas prototype -guided exploration ( b) first identifies 
+
+representative prototype regions from reported additives and subsequently explores structurally distinct 
+
+regions of the molecular landscape through prototype -level knowledge transfer . c, Overview of the 
+
+ProtoMI molecular discovery workflow . Experimentally reported boron -containing additives are first 
+
+collected from the literature using a large -language -model -assisted data -mining pipeline to construct a 
+
+curated molecular dataset.  An unsupervised  graph  contrastive learning model then extracts prototype -
+
+level chemical knowledge from reported additives. These prototypes are transferred to a large unlabeled 
+
+molecular space by prototype -guided semi -supervised contrastive learning, yielding adapted prototype 
+
+regions and recommended candidates. A knowledge -guided translation  step  further incorporates 
+
+chemical feasibility and practical accessibility constraints to generate experimentally actionable 
+
+candidates for validation. 
+
+## Results 
+
+Dataset construction reveals source -target mismatch in boron -additive chemical space 
+
+We first formulated boron -containing electrolyte additive discovery as a sparse -
+
+positive molecular exploration problem. To define the target search space, we 
+
+collected 179,977 boron -containing candidate molecules from PubChem 31 . In parallel, 
+
+we constructed a positive dataset of 126 experimentally reported boron -containing 
+
+electrolyte additives extracted from Web of Science articles using a large  language 
+
+model  (LLM) -assisted heuristic pipeline ( Fig. 2a  and  Methods M1 ). This design reflects 
+
+a realistic discovery setting: successful additives are sparsely reported in the literature, 
+
+whereas the accessible boron -containing chemical space is orders of magnitude larger 6
+
+and remains largely unlabeled. 
+
+To evaluate whether unstructured literature could provide reliable positive 
+
+molecular knowledge, we manually verified the extracted information across multiple 
+
+battery -relevant fields. The extraction pipeline achieved high accuracy for chemically 
+
+important  categories, including 94% accuracy for additive identification, while requiring 
+
+approximately 11 s per article and less than 60 CNY in total processing cost ( Fig. 2b ). 
+
+These results indicate that LLM -assisted literature extraction can provide an efficient 
+
+route to constructing a curated positive molecular set for downstream prototype 
+
+learning. Overall dataset statistics are summarized in  Supplementary Table S1 .
+
+The resulting datasets reveal a pronounced source -target distribution mismatch 
+
+between literature -reported additives and the unlabeled boron -containing candidate 
+
+space. Uniform manifold approximation and projection (UMAP) 34  based on Morgan 
+
+fingerprint 35  representations shows that reported additives occupy restricted regions 
+
+within the broader unlabeled molecular landscape rather than being uniformly 
+
+distributed across it ( Fig. 2c ). Hierarchical clustering 36  dendrogram  further suggests 
+
+that the reported additives contain recurring molecular patterns rather than isolated 
+
+successful examples ( Supplementary Fig. S1 ). Consistently, the molecular -weight –
+
+synthetic accessibility (SA) 37  map shows that positive molecules are concentrated 
+
+mainly in low -to -moderate molecular -weight regions with moderate SA scores, 
+
+whereas the unlabeled candidates span a much broader and more heterogeneous 
+
+chemical space ( Fig. 2d ). 
+
+Graph -level descriptors provide additional evidence for population -level 
+
+differences between the positive and unlabeled sets. Reported additives and 
+
+unlabeled candidates differ in molecular size and connectivity, as reflected by shifts in 
+
+atom number, bond  number, average degree, graph density and degree entropy ( Fig. 
+
+2e  and  Methods M2 ). Node -feature composition analysis further reveals feature -level 
+
+differences between the two populations, suggesting that reported additives are 
+
+enriched in specific local chemical environments. Representative shifted node 
+
+features include scaled van der  Waals radius (N67), scaled covalent radius (N68), 
+
+aromaticity indicator (N65), sp 2 hybridization (N59) and carbon atom identity (N00) 
+
+(Fig. 2f  and  Supplementary Table S2 ). 
+
+Together, these analyses define both the challenge and the opportunity of data -
+
+scarce additive discovery. Experimentally reported additives are too sparse and 
+
+distributionally biased to support exhaustive or purely supervised screening, yet they 7
+
+exhibit non -random structural organization that may encode transferable chemical 
+
+priors. We therefore next asked whether this organization could be learned as 
+
+prototype -level knowledge and used to guide exploration of the broader unlabeled 
+
+candidate space. 
+
+Fig. 2 |  Dataset construction and source -target mismatch in boron -additive chemical space . a, 
+
+Workflow for constructing the molecular datasets. The unlabeled search space consists of 179,977 
+
+boron -containing candidate molecules collected from PubChem, whereas the positive dataset contains 
+
+126 literature -reported boron -containing electrolyte additiv es extracted from Web of Science articles 
+
+using an LLM -assisted heuristic pipeline . b,  Manual validation of the extraction pipeline across battery -
+
+relevant fields, showing reliable extraction of chemically important information . c,  UMAP projection of 
+
+Morgan fingerprint representations. Positive molecules are localized within restricted regions of the a
+
+# c d
+
+# e fb
+
+65 70 75 80 85 95 90 
+
+Additives Positive Electrodes 
+
+Electrolytes 
+
+Negative Electrodes Interphases Formats 60 CNY in total 
+
+11 second/paper 
+
+Accuracy (%) SA Score 
+
+0 1000 2000 3000 4000 6000 5000 
+
+Molecular weight (g/mol) 
+
+> Unlabeled samples density
+
+10 0
+
+10 1
+
+10 2
+
+10 3
+
+10 4
+
+246810 
+
+N67 N68 N65 N59 N00 N74 N64 N73 N60 N04 N46 
+
+N45 
+
+N52 N44 N02 
+
+> Node Features
+
+Positive Unlabeled 
+
+0.100 0.050 0.000 0.050 0.100 
+
+Node feature composition ratio 
+
+-10 -5 0 5 10 15 
+
+UMAP-1 
+
+0510 15 20 
+
+> Unlabeled samples density
+
+10 0
+
+10 1
+
+10 2
+
+Positive, n = 126 Unlabeled, n = 179,977 
+
+> UMAP-2 Atoms Bonds Average
+> degree
+> Graph
+> density
+> Degree
+> entropy
+
+1.0 Positive Unlabeled 0 50 100 150 200 50 100 150 200 0.52 1.04 1.56 2.08 0.2 0.4 0.6 0.8 0.6 0.7 0.8 0.9 02.60 1.0 0.5 0.0 250 0.00 
+
+Graph-level descriptor value 
+
+250  
+
+> +B(OCCC#N ...
+
+Search by keywords 
+
+126 Electrolytes Additives 
+
+> Interphases
+
+179,977 
+
+Collect the positive molecule dataset Collect the unlabeled molecule dataset Positive, n = 126 Unlabeled, n = 179,977 8                 
+
+> unlabeled molecular landscape, while background hexagons represent the logarithmic density of
+> unlabeled candidates .d, Molecular -weight and SA distribution of positive and unlabeled molecules.
+> Positive additives are enriched in low -to -moderate molecular -weight regions with moderate SA scores,
+> whereas unlabeled candidates cover a broader chemical space .Molecular weights are shown within 0 -
+> 6,000 g mol -1, as higher values are extremely rare (<0.1% of the dataset) .e, Graph -level descriptor
+> distributions reveal differences in molecular size (Atoms and Bonds) , connectivity (Average degree )
+> and topology (Graph density and Degree entropy) between the two molecular populations. f, Mirrored
+> dumbbell plot showing normalized composition ratios of the most shifted node features, highlighting
+> feature -level differences between positive and unlabeled molecules.
+
+Reported additives encode transferable molecular prototypes 
+
+The clustered organization of the positive dataset suggests that successful boron -
+
+containing additives may share recurring structural principles rather than represent 
+
+isolated molecular examples. To extract this organization, we applied an unsupervised 
+
+graph  contrastive learning (UCL) model 38  to learn prototype -level representations from 
+
+the 126 reported additives. Reported molecules were converted into molecular graphs 
+
+and expanded into augmented graph views using graph augmentation operations 39 -43 ,
+
+generating 756 augmented graph samples from the original positive set ( Fig. 3a  and 
+
+Methods M3 ). Paired graph views were then encoded by a graph neural -network 
+
+encoder and optimized with the InfoNCE  loss to learn augmentation -invariant 
+
+molecular representations. The encoder consisted of repeated GINEConv, 
+
+GraphNorm, ReLU and dropout layers for hierarchical graph representation extraction 
+
+(Fig. 3b ). 
+
+We first compared different molecular representation methods using clustering 
+
+quality and computational cost as evaluation metrics (Fig. 3d ). Conventional 
+
+fingerprint -based 44  and SMILES -based 45  representations produced relatively low 
+
+silhouette scores 46  of 0.258 -0.337, indicating limited separation of reported additive 
+
+groups in representation space. Graph -based encoders, including graph convolutional 
+
+networks (GCN) 47 , graph attention networks (GAT) 48  and graph isomorphism networks 
+
+with edge features (GINE) 49 , substantially improved cluster separability, with silhouette 
+
+scores of 0.751 -0.832. Augmentation -enhanced graph representations further 
+
+improved embedding organization relative to the corresponding non -augmented 
+
+encoders. Among all tested methods, GINE+ achieved the highest silhouette scores 
+
+using both K -Means 50  clustering and hierarchical clustering, with values of 0.853 and 
+
+0.881, respectively. These results indicate that augmentation -invariant graph 
+
+representations capture hidden structural organization within the reported additive set. 
+
+Hierarchical clustering of the learned GINE+ representation space identified 
+
+seven molecular prototypes (Fig. 3c  and  Supplementary Figs. S2,S3 ). These 9
+
+prototypes displayed non -uniform motif distributions ( Fig. 3e ), indicating that they are 
+
+organized by distinct combinations of recurring boron -related molecular fragments. 
+
+For example, P3 was enriched in oxalate -containing and tetra -alkoxy frameworks, 
+
+whereas P2 preferentially contained fluorinated aromatic fragment s. P4 was 
+
+characterized by catechol -derived structures, while P6 and P7 were dominated by 
+
+fluorinated alkoxy and tri -alkoxy frameworks, respectively. These motif -level 
+
+differences suggest that the learned prototypes capture chemically meaningful 
+
+structural  preferences rather than arbitrary clusters ( Supplementary Tables S3,S4 ). 
+
+To further interpret the prototype space, we annotated the learned clusters using 
+
+literature -supported functional categories and representative molecules ( Fig. 3c, 
+
+Supplementary Fig. S4  and  Table S5 ). P1 showed relatively balanced contributions 
+
+from interphase formation, solvation regulation and polymer strengthening, 
+
+represented by the boron -containing heterocycle DiOB -Py, which has been reported 
+
+to act as a mild anion receptor and facilitate interf acial charge transfer 25 . P2 combined 
+
+Lewis acidity, solvation regulation and interphase formation, represented by 
+
+tris(pentafluorophenyl)borane, whose fluorinated aromatic framework supports anion 
+
+reception and interfacial stabilization 23 . P3 displayed a strong interface -engineering 
+
+signature, represented by  Lithium difluoro(oxalato)borate  (LiDFOB ), which is known 
+
+to form F - and B -rich interphases that suppress parasitic reactions and stabilize 
+
+electrode surfaces 26 . P4 -P6 showed complementary stabilization -oriented profiles, 
+
+represented by  lithium bis[1,2 -benzenediolato(2 -)-O,O']borate (LBBB) , 3-
+
+Pyridinecarbonitrile BF (PCN)  and  tris(2,2,2 -trifluoroethyl)borate (TTFEB) , which 
+
+illustrate weakly coordinating borate chemistry, Lewis acid -base interactions and 
+
+fluorinated anion -receptor behavior 51 -53 . P7 was associated with solvation regulation 
+
+and polymer strengthening, represented by tributyl borate, which promotes salt 
+
+dissociation and boron -rich interphase formation in polymerized electrolyte systems 54 .
+
+These results show that the positive additive set can be converted into a prototype 
+
+library that captures both recurring structural motifs and literature -supported functional 
+
+tendencies. Importantly, the prototypes are learned without direct performance la bels, 
+
+making them suitable as transferable priors for candidate exploration under severe 
+
+label scarcity. We therefore used this prototype library as the source knowledge for 
+
+adaptation to the unlabeled boron -containing molecular space. 10 
+
+Fig. 3 |  Interpretable molecular prototypes emerge from reported boron -containing electrolyte 
+
+additives . a, Workflow of the unsupervised  graph  contrastive learning model.  Reported additives are 
+
+converted from SMILES strings into molecular graphs and expanded into multiple augmented graph 
+
+views  using five graph augmentation strategies . Paired graph views are encoded by graph neural -
+
+network encoders and projection heads, followed by InfoNCE optimization to learn augmentation -
+
+invariant molecular representations . b, Structure of the molecular  graph  encoder.  The encoder consists ae
+
+# c
+
+N×
+
+GINEConv GraphNorm ReLU Dropout 
+
+Input Graph Graph Embeddings 
+
+# b
+
+> B(C1=CC(=CC=C1)...
+
+SMILES 
+
+126 Samples 
+
+Graph Augmentation 
+
+756 Samples 
+
+> (2) Edge Perturbation (1) Original Graph
+
+Encoder 1 
+
+Encoder 2 
+
+Projection 1 
+
+Projection 2 
+
+InfoNCE Loss 
+
+×6
+
+# d
+
+0.0 0.2 0.4 0.6 
+
+0.8 
+
+> Silhouette score
+
+050 100 150 200 
+
+250 
+
+> Time cost (s)
+
+300 1.0 
+
+Representations 
+
+KMeans silhouette 
+
+Hierarchical silhouette Hierarchical time KMeans time 
+
+P1 P3 
+
+P4 
+
+P5 P6 P7 
+
+Prototype 5 | 8.2%  
+
+> Aryl –BF 3complexes
+> PCN e.g. Functional bias profile
+
+Prototype 7 | 15.5% 
+
+> Trivalent boron species
+> TBB e.g. Functional bias profile
+
+P2 Prototype 6 | 13.0% 
+
+> Perfluorinated boron species
+> TTFEB e.g.
+> Functional bias profile
+
+Prototype 4 | 21.9% 
+
+> Aromatic borate anion
+> LBBB e.g. Functional bias profile
+
+Prototype 3 | 18.1% 
+
+> Inorganic borate anion
+> LiDFOB e.g. Functional bias profile
+
+Prototype 2 | 9.2% 
+
+> Fluorinated aromatic boron compounds
+> TPFPB e.g. Functional bias profile
+
+Prototype 1 | 14.1% 
+
+> Boron-containing heterocycles
+> DiOB-Py e.g. Functional bias profile
+> Solvation & desolvation
+> Lewis acid & anion receptor LiF & B-O interface
+> SEI/CEI formation
+> Thermal & corrosion stability
+> Polymer & gel strengthening
+> HF & H 2Oscavenging
+> Prototypes
+
+P1-SM 
+
+14 21 64 19 6 12 12 38 12 40 5 45 5 5 29 29 39 441 53 636 48 12 5 81 14 4
+
+Relative motif composition (%) 
+
+0 20 40 60 80 100 P1 P2 P3 P4 P5 P6 P7 P2-SM P3-SM P4-SM P5-SM P6-SM P7-SM SM: “shared motif” 
+
+8-SM 11                                 
+
+> of repeated GINEConv, GraphNorm, ReLU and dropout layers, producing graph -level embeddings for
+> clustering and prototype discovery .In this work, the repeated 𝑁 equals 3. c, Functional interpretation of
+> the learned prototype space. Seven chemically distinct prototypes are identified from reported additives.
+> The surrounding panels show characteristic additive families, representative molecules and functional
+> bias profiles acros sseven electrolyte -regulation mechanisms .d,Comparison of representation
+> methods in terms of clustering quality (K-Mean sand hierarchical clusterin g)and computational cost.
+> Silhouette scores quantify the separability of molecular cluster s.Methods labeled with “+” indicate
+> augmentation -enhanced representations .e,Relative composition of representative boron -related
+> motifs across the seven learned prototypes. The motif -level distribution shows that different prototypes
+> are associated with distinct substructural preferences, suggesting that the learned representation space
+> captures chemically meaningful organization .See the s hared -motif summary table in Supplementary
+> Table S4 .
+
+Prototype -guided adaptation transfers additive knowledge to unlabeled chemical space 
+
+Although the prototype library extracted from reported additives captures transferable 
+
+chemical organization, it does not by itself determine how limited experimental 
+
+resources should be allocated within the much larger unlabeled candidate space. To 
+
+addres s this challenge, we developed a prototype -guided semi -supervised contrastive 
+
+learning  (PCL)  model, as the adaptation stage of ProtoMI ( Fig. 4a  and  Methods M4 ). 
+
+The PCL module combines exponential moving average (EMA) 55  updating of 
+
+prototype centroids, top -k prototype -relevant sample assignment and prototype 
+
+decorrelation regularization. Together, these components are designed to transfer 
+
+prototype -level knowledge from the positive additive domain to the unlabeled 
+
+candid ate domain while maintaining both recommendation quality and prototype 
+
+diversity. 
+
+During training, the prototype centroids exhibited a characteristic three -stage 
+
+trajectory, consisting of initial exploration, progressive refinement and eventual 
+
+stabilization ( Fig. 4b ). The gradual reduction in prototype drift indicates that the model 
+
+converges toward a stable prototype organization in the adapted molecular 
+
+representation space. This behavior supports the use of adapted prototypes as 
+
+anchors for candidate prioritizatio n. 
+
+We next examined how prototype knowledge was transferred from the reported 
+
+additive space to the unlabeled candidate space. The correspondence between 
+
+original prototypes P1 -P7 and adapted , new  prototypes NP1 -NP7 shows that 
+
+adaptation is not a simple one -to -one copying process ( Fig. 4c ). Instead, each adapted 
+
+prototype integrates contributions from multiple original prototype regions, indicating 
+
+that the PCL model reorganizes literature -derived knowledge according to the 
+
+structure of the target candidate space while preserving prototype -level continuity. 
+
+Consistently, the cosine -similarity map between initial and adapted prototypes shows 12 
+
+strong diagonal correspondence together with structured off -diagonal relationships 
+
+(Supplementary Fig. S5 ). Motif analysis further shows that characteristic boron -
+
+containing fragments are retained and redistributed across adapted prototypes, 
+
+supporting chemically meaningful transfer rather than arbitrary re -clustering 
+
+(Supplementary Fig. S6 ). 
+
+We then benchmarked the complete ProtoMI framework against multiple 
+
+recommendation strategies ( Table 1  and  Fig. 4d ). ProtoMI achieved high prototype 
+
+similarity, assignment entropy and cluster separability, with values of 0.7 89  ± 0.03 0,
+
+0.723 and 0.976, respectively.  This  indicat es  that recommended molecules remain 
+
+both structurally coherent  (Supplementary  Fig . S7) and broadly distributed across 
+
+multiple prototype regions  (Supplementary  Fig . S8). The corresponding entropy -
+
+weighted prototype similarity  (Method s M5) reached 0.57  (or 57% ), exceeding the 
+
+competing recommendation pipelines. These results indicate that ProtoMI  selects 
+
+molecules that remain close to learned prototype regions while preserving coverage 
+
+across multiple chemically distinct directions, thereby avoiding collapse into a few 
+
+dominant structural families. 
+
+Ablation analysis further clarifies the contribution of each PCL component ( Fig. 
+
+4e ). Removing top -k assignment reduces the model’s ability to select high -confidence 
+
+molecules most compatible with each prototype. Removing prototype decorrelation 
+
+decreases inter -prototype separation and promotes redundancy among adapted 
+
+prototype directio ns. Removing EMA updating destabilizes cross -domain adaptation 
+
+by allowing abrupt prototype shifts during training. The performance degradation 
+
+observed after removing these components indicates that effective prototype 
+
+adaptation requires coordinated cont rol of sample confidence, prototype diversity and 
+
+transfer stability  (Supplementary  Fig . S9). The  conclusion is  further  supported by 
+
+additional statistics in  Supplementary Table S6 .
+
+Finally, we evaluated whether prototype adaptation improves discovery efficiency 
+
+using retrospective temporal validation. Across four temporal splits using 2017, 2019, 
+
+2021 and 2023 as cutoff years, ProtoMI recovered future -reported additives with recall 
+
+rates of 8.8 -20.0% while screening only 0.19 -1.27% of the candidate space, 
+
+corresponding to enrichment factors of 9.2 -45.6 relative to random screening ( Fig. 4f 
+
+and  Supplementary Table S7 ). Pareto -front analysis further shows that ProtoMI 
+
+concentrates discovery efforts into a small fraction of the search space while 
+
+preserving substantial recall, corresponding to effective search -space reductions of 13 
+
+79 -517  fold s (Fig. 4g ). These results demonstrate that sparse literature -derived 
+
+prototype knowledge can be transferred into unlabeled chemical space to improve 
+
+candidate prioritization under limited experimental budgets. 
+
+Fig.  4 | Prototype adaptation transfers additive knowledge to unlabeled boron -containing 
+
+chemical space . a,  Workflow of the PCL  module  within  ProtoMI . Molecular prototypes extracted from 
+
+reported boron -containing electrolyte additives are used to guide representation learning and candidate 
+
+recommendation in the unlabeled molecular space . b,  Mean evolution of prototype drift during training a bd f
+
+# c
+
+1.5 1.4 1.3 1.2 
+
+1.1 
+
+50 100 150 200 250 300      
+
+> Prototype drift
+> Stage ⅠStage ⅡStage Ⅲ
+
+Training epoch 
+
+× 10 -3 
+
+NP1 NP2 NP3 
+
+NP4 NP5 NP6 NP7 
+
+> 0
+
+60 45 30 15 0
+
+> Entropy-weighted
+> prototype similarity (%)
+> Assignment fraction (%)
+
+100 75 50 25 0     
+
+> 57 42 29 28 24
+> 9
+> 3200
+
+USL Encoder 
+
+Positive molecules 
+
+Unlabeled molecules 
+
+> {Mol_ID: Prototype_ID}
+
+PCL Encoder 
+
+Projection       
+
+> {Prototype_ID: Embeddings}
+> P1 P2 P3 P4 P5 P6 P7
+> Cosine Similarity
+> Top-25 samples for each batch
+
+Decor Loss Proto Loss ＋ Back propagation 
+
+Loss Function 
+
+> EMA Update
+> Graphs
+> P1 P2 P3 P4 P5 P6 P7 NP1 NP2 NP3 NP4 NP5 NP6
+> Old prototypes New prototypes
+
+# e
+
+w/o EMA w/o decor. w/o top-k 
+
+> Degradation score
+
+0.540 0.048 0.095 0.602 
+
+0.443 0.602 0.046 1.000 
+
+0.590 0.571 0.099 1.000 
+
+> 1.0 0.5 0
+
+# g
+
+20 15 10 50
+
+> Recall (%)
+
+25 2017 2019 2023 
+
+0.1 
+
+Experimental budget (%) 
+
+0.2 0.5 1 2 
+
+> 3/34 4/20 5/47 5/43
+
+2021 
+
+> 517 ×
+> reduced
+> 218 × reduced
+> 99 ×
+> reduced
+> 79 ×
+> reduced
+> Recall (%)
+
+Cutoff year 
+
+20 15 10 5025 40 30 20 10 0
+
+> Enrichment factor
+
+50     
+
+> 10.6 11.6 8.8 20.0 0.026 0.019 0.011 0.024
+> 10.5 ×9.2 ×
+> 45.6 ×
+> 43.6 ×
+
+Recall: gray, random; color, ProtoMI  
+
+> 348 825 2279 Recommended molecule No.
+
+14 
+
+across 10 trials. Prototype centroids undergo an initial exploration stage (Stage I), followed by 
+
+progressive refinement (Stage II) and eventual stabilization (Stage III), revealing the emergence of a 
+
+converged prototype organization in the learned molecula r representation space.  c,  Knowledge 
+
+retention between original prototypes and adapted prototypes. The Sankey diagram shows the 
+
+redistribution of structural motifs from reported -additive prototypes to newly formed prototypes in 
+
+unlabeled molecular space . d,  Entropy -weighted prototype similarity and prototype distribution of 
+
+molecules  selected  by different  recommendation pipelines . ProtoMI maintains high prototype 
+
+consistency while preserving coverage across multiple prototypes.  e, Ablation analysis of key 
+
+components in  the PCL module . Removing EMA updating, prototype decorrelation or top -k prototype 
+
+selection degrades recommendation quality, highlighting their roles in stable prototype formation and 
+
+effective knowledge transfer.  f, Temporal validation using historical splits. Recall rates are compared 
+
+with random screening, and the red line indicates the enrichment factor achieved under limited 
+
+experimental budgets . g,  Pareto front of discovery efficiency. Bubble size represents the number of 
+
+recommended molecules, illustrating the trade -off between recall ability and experimental budget 
+
+across different historical splits.  “x/y” in the figure indicates  the correct prediction of  x molecules among 
+
+the literature reported  y molecules. 
+
+Table 1 |  Recommendation performance of ProtoMI and baseline strategies 
+
+Category  Method  Similarity  Entropy  Silhouette 
+
+Random  Random selection  0.521 ± 0.147  0.529  0.596 
+
+Fingerprint  Morgan fingerprints  0.497 ± 0.177  0.836  0.408 
+
+Encoder  UCL encoder only  0.085 ± 0.010  0.349  -0.185 
+
+PCL encoder only  0.728 ± 0.045  0.404  0.968 
+
+Clustering  UCL encoder clustering  0.079 ± 0.021  0.260  0.786 
+
+PCL encoder clustering  0.571 ± 0.110  0.426  0.916 
+
+Prototype -
+
+guided  ProtoMI  0.789±0.030  0.723  0.976 
+
+Ablation 
+
+w/o EMA  0.141 ± 0.036  0.669  0.253 
+
+w/o decorrelation  0.080 ± 0.014  0.037  -0.224 
+
+w/o top -k 0.257 ± 0.000  0.000  N/A 
+
+Bold and gray -shaded values indicate the best and second -best performance, respectively .
+
+Knowledge -guided translation converts recommendations into testable candidates 
+
+Prototype adaptation reduced the original search space from 179,977 boron -
+
+containing candidates to 30, 800  ProtoMI -recommended molecules. However, many 
+
+recommended molecules remained chemically impractical or experimentally 
+
+inaccessible. To bridge the gap between computational prioritization and laboratory 
+
+validation, we developed a knowledge -guided translation strate gy that incorporates 
+
+empirical additive -design constraints and practical accessibility requirements ( Fig. 5a 
+
+and  Method s M6 ). 
+
+The translation workflow sequentially applied filters based on PubChem CID 
+
+validity, molecular -weight range, synthetic accessibility, active -hydrogen exclusion, 
+
+Chemical Abstracts Service (CAS) availability and practical cost. This process reduced 15 
+
+the recommendation pool from 30,799 molecules to 68 supplier -accessible candidates, 
+
+which were further prioritized according to purchasability, cost and prototype 
+
+traceability  (Supplementary Fig . S10  and  Supplementary  Table S8 ). Four low -cost 
+
+commercially available molecules were selected for experimental consideration 
+
+(Supplementary Table S9 ). This workflow separates the model -driven 
+
+recommendation stage from the practical translation stage, ensuring that 
+
+experimentally selected molecules are both chemically relevant and accessible under 
+
+realistic resource constraints. 
+
+To assess whether prototype -level organization was preserved during translation, 
+
+we projected the retained molecules onto the adapted representation landscape ( Fig. 
+
+5b ). Post -screened molecules remained distributed across multiple prototype regions, 
+
+indicating that practical filtering did not collapse the recommendations into a single 
+
+structural family. No commercially accessible molecules were retained from NP4 and 
+
+NP7  after final filtering, although candidate molecules from these regions existed 
+
+before post -screening. This suggests that their absence among final candidates 
+
+reflects practical accessibility constraints rather than a lack of prototype coverage. 
+
+Representa tive unselected molecules, UM #1-UM #3, are shown to illustrate 
+
+structurally plausible molecules that were present in the unlabeled pool but not 
+
+retained as final experimental candidates. 
+
+Together, these results show that knowledge -guided translation serves as a 
+
+practical bridge between prototype -guided molecular exploration and experimental 
+
+implementation. By incorporating feasibility and accessibility constraints after model 
+
+recommendatio n, ProtoMI  converts a large prioritized molecular pool into a small set 
+
+of experimentally actionable candidates. 16 
+
+Fig.  5 | Knowledge -guided translation converts ProtoMI recommendations into experimentally 
+
+actionable candidates . a,  Post -screening workflow applied to molecules recommended by ProtoMI .
+
+Sequential filtering based on PubChem CID validity, molecular -weight range, synthetic accessibility, 
+
+active hydrogen exclusion, CAS availability and practical cost considerations progressively reduced 
+
+30,800 recommended molecules to four experimentally s elected candidates. Numbers below each step 
+
+indicate the remaining candidate pool after filtering . b,  Distribution of recommended molecules in the 
+
+transferred molecular representation space. Colored regions denote  7 new prototype domains (NP1 -
+
+NP7) formed after transferring prototype knowledge to the unlabeled boron -containing molecular space. 
+
+Representative molecules associated with each new prototype are shown to illustrate the chemical 
+
+motifs captured by the transferred prototype regions. Rep resentative unlabeled molecules (UM#1 -
+
+UM#3) are additionally shown from the broader molecular space to indicate structurally plausible 
+
+molecules that were present in the unlabeled pool but not retained as final experimental candidates. 17 
+
+> Experimental validation in high -temperature LiFePO 4||graphite cells
+
+To validate whether a ProtoMI -recommended molecule could translate into 
+
+measurable battery performance improvement, we selected one representative 
+
+candidate, 4,4,5,5 -tetramethyl -2-[10 -(1 -naphthyl)anthracen -9-yl] -1,3,2 -dioxaborolane 
+
+(TNDB; NP3#6), for elect rochemical testing ( Fig. 6a ). LiFePO 4||graphite cells were 
+
+chosen because this chemistry is widely used in electric vehicles and stationary 
+
+energy storage, while its cycling stability at elevated temperature remains limited by 
+
+parasitic interfacial reactions and transition -metal  crossover 32,33 . The additive -
+
+containing electrolyte was prepared by introducing 1 wt% TNDB into the baseline 
+
+electrolyte  (1M LiPF 6 in  ethylene carbonate ( EC ):dimethyl carbonate ( DMC ) = 3:7 v/v )
+
+and  tested at 55 °C. Compared with the baseline electrolyte, the TNDB -containing cell 
+
+showed improved capacity retention, with a  34.93%  improvement at the 100 th  cycle 
+
+(Fig. 6b ). Because high -temperature degradation in  LiFePO 4||graphite cells is 
+
+associated with electrolyte decomposition, SEI instability and Fe 
+
+dissolution/deposition 32,33 , we next investigated how TNDB alters  the  interphase 
+
+chemistry. 
+
+The chemical contribution of TNDB to SEI formation was first examined using X -
+
+ray photoelectron spectroscopy (XPS). High -resolution B 1s spectra collected from 
+
+graphite electrodes recovered from TNDB -containing cells showed B –F and B –O
+
+coordination environ ments after both formation and 100 cycles ( Fig. 6c ), indicating that 
+
+TNDB -derived boron species are incorporated into the graphite interphase. XPS after 
+
+formation further showed a small but detectable B signal only in the TNDB -containing 
+
+cell, together with a higher F atomic fraction and a lower O atomic  fraction relative to 
+
+the baseline cell ( Fig. 6d ). These surface -composition changes suggest that TNDB 
+
+contributes to a B/F -containing interphase and suppresses the accumulation of 
+
+oxygen -rich decomposition products during early SEI formation. 
+
+F 1s XPS was then used to analyze fluorinated interphase species after formation 
+
+(Fig. 6e ). In both electrolytes, LiF remained the dominant fluorinated component, while 
+
+the TNDB -containing electrolyte showed a modified distribution of LiF, Li xPF y and 
+
+LiₓPOF y species. Specifically, the LiF contribution remained high in the TNDB -
+
+containing cell, whereas the  LiₓPOF y contribution increased relative to the baseline 
+
+electrolyte. This indicates that TNDB does not simply increase the total LiF  fraction at 
+
+the outermost surface, but instead modifies the formation of F - and P/O -containing 
+
+inorganic interphase species. Together with the B 1s results, these XPS signatures 18 
+
+support the formation of a TNDB -modified inorganic interphase on graphite. 
+
+The organic and inorganic carbonate components of the graphite SEI were further 
+
+analyzed by C 1s XPS peak deconvolution ( Fig. 6f  and  Supplementary Fig. S11 ). 
+
+Following common assignments for graphite SEI analysis, the C 1s spectra were fitted 
+
+into  C-C, C -O, C=O, ROCO 2Li and  Li 2CO 3 components 56,57 . In the baseline electrolyte, 
+
+oxygenated organic SEI species, including C -O, C=O and  ROCO 2Li , accounted for 38% 
+
+of the fitted C 1s area after formation and remained at 32% after 100 cycles. In contrast, 
+
+the TNDB -containing electrolyte showed lower oxygenated organic contributions, 
+
+decreasing from 28% after formation to 26% after 100 cycles. The  Li 2CO 3 contribution 
+
+after 100 cycles was also reduced from 4% in the baseline cell to 1% in the TNDB -
+
+containing cell. These results indicate that TNDB suppresses the accumulation of 
+
+carbonate -derived organic species and inorganic carbonate residues during high -
+
+te mperature cycling. 
+
+Time -of -flight secondary ion mass spectrometry (ToF -SIMS) provided depth -
+
+resolved evidence for TNDB -mediated SEI reconstruction ( Fig. 6 g and  Supplementary 
+
+Fig. S12 ). Representative negative secondary -ion fragments, including  CH 3CO ⁻, PO 2⁻,
+
+CO 3⁻ and  LiF 2⁻, were used to visualize solvent -derived organic fragments, LiPF 6-
+
+derived P -O species, carbonate -containing residues and LiF -related inorganic species, 
+
+respectively 58,59 . In the baseline electrolyte,  CH3CO- and  CO3- fragments extended 
+
+broadly through the analyzed interphase volume, consistent with heterogeneous 
+
+accumulation of carbonate -derived decomposition products. In contrast, graphite 
+
+electrodes cycled with TNDB showed attenuated oxygenated organic fragments and 
+
+a reorganized distribution of  LiF 2⁻ and  PO 2⁻ species. These depth -resolved signatures 
+
+are consistent with a graphite interphase that is less dominated by organic carbonate 
+
+decomposition and contains redistributed salt -derived inorganic components 60,61 .
+
+Additive -derived boron incorporation was further visualized using x -z cross -
+
+sectional ToF -SIMS maps of the B ⁻ fragment in graphite electrodes cycled with TNDB 
+
+(Supplementary Fig. S13 ). A sparse and discontinuous B ⁻ signal was observed after 
+
+formation, whereas a more extensive B ⁻ distribution appeared after 100 cycles, 
+
+indicating progressive incorporation and retention of boron -containing species within 
+
+the SEI. Sputter -depth profiles of representative SEI fragments further showed that 
+
+CH 3CO ⁻ signals were attenuated in the TNDB -containing electrolyte, supporting 
+
+suppressed accumulation of solvent -derived organic decomposition products 19 
+
+(Supplementary Fig. S14 ). The FeO ⁻ depth profile was also strongly suppressed after 
+
+formation and remained lower after extended cycling in the TNDB -containing cell 
+
+(Supplementary Fig. S15 ). Because transition -metal deposits on graphite can catalyze 
+
+electrolyte reduction and destabilize the anode interphase 62 , the reduced FeO ⁻ signal 
+
+suggests that TNDB -derived interphase chemistry mitigates Fe contamination of the 
+
+graphite surface. 
+
+SEM and EDS analyses provided complementary information on surface 
+
+morphology and Fe deposition. SEM images show the morphology of graphite 
+
+electrodes recovered after formation and after 100 cycles with and without TNDB 
+
+(Supplementary Fig. S16 ). EDS mapping further revealed pronounced Fe 
+
+accumulation on graphite electrodes cycled in the baseline electrolyte, with the Fe 
+
+fraction in selected mapping regions increasing from 2.06 wt% after formation to 3.61 
+
+wt% after 100 cycles ( Fig. 6h ). In contrast, graphite electrodes cycled with TNDB 
+
+showed substantially lower Fe accumulation, with corresponding values of 0.23 wt% 
+
+after formation and 1.04 wt % after 100 cycles. These values correspond to 89% and 
+
+71% lower Fe contents, respectively, relative to the baseline electrolyte. The reduced 
+
+Fe deposition may help suppress Fe -catalyzed electrolyte decomposition and 
+
+interphase deterioration during high -te mperature cycling. 20 
+
+Fig. 6 | Interphase regulation by the TNDB under 55 °C cycling. a , Molecular structure of TNDB 
+
+shown as a  ball -and -stick model; grey, C; red, O; pink, B; and white, H.  b, Capacity retention of 
+
+LiFePO 4||graphite  coin  cells containing the baseline or TNDB -containing electrolyte during cycling at 
+
+55 °C.  The shadings indicate the deviation of two reproducible cells.  c, High -resolution B 1s XPS spectra 
+
+of graphite electrodes recovered from TNDB -containing cells after formation and 100 cycles, with the 
+
+fitted components assigned to B -F and B -O.  d, XPS -derived relative atomic concentrations of C, O, F, 
+
+P and B on graphite electrodes recovered from baseline and TNDB -containing cells after formation . e,
+
+F 1s XPS spectra of graphite electrodes recovered from cells  with and without TNDB after the formation ,
+
+with the fitted components assigned to  LiF, Li xPF y, Li xPOF y. f, Relative C 1s peak  area fractions of C -C, 
+
+C-O, C -O, ROC O2Li and L i2CO3 for graphite electrodes recovered from baseline and TNDB -containing 
+
+cells after formation and 100 cycles.  g, Merged three -dimensional ToF -SIMS compositional renderings 
+
+of C H3CO ⁻ (red), P O2⁻ (blue), C O3⁻ (yellow) and Li F2⁻ (green) fragments in the corresponding graphite 21    
+
+> interphases. h, Representative Fe EDS maps (inset) and corresponding semi -quantitative Fe contents
+> of the graphite electrodes.
+
+Operando Fourier transform infrared spectroscopy (FTIR) was collected during 
+
+the formation step at 55 °C to monitor electrolyte and interphase evolution under 
+
+operating conditions ( Fig. 7a,b ). The upper panels show time -resolved absorbance 
+
+spectra, while the lower panels show difference spectra,  ΔA(t) =  A(t) – A( t0), where  t is 
+
+the time and  t0 corresponds to the beginning of charge . In the baseline electrolyte, the 
+
+difference spectra show a gradual increase in the organic semi -carbonate region. 
+
+Bands around 1640 -1670 cm ⁻¹ can be assigned to lithium semi -carbonate and lithium 
+
+alkyl carbonate species, such as lithium methyl carbonate and lithium ethylene 
+
+dicarbonate, according to previous operando infrared studies 63,64 . Quantitative 
+
+integration of this region shows a faster growth of organic semi -carbonate species in 
+
+the baseline cell than in the TNDB -containing cell ( Fig. 7c ). At the end of charge, the 
+
+integrated response was 0.25 a.u. cm ⁻¹ for the baseline electrolyte and 0.17 a.u. cm ⁻¹
+
+for the TNDB -containing electrolyte, consistent with suppressed formation of 
+
+carbonate -derived organic SEI species. 
+
+The  PF 6⁻-related P-F stretching region also evolved differently in the two 
+
+electrolytes.  We use the integrated  PF 6⁻ response  between  820 -880  cm -1 to track 
+
+PF 6⁻-related interfacial evolution. The baseline electrolyte developed a positive end -
+
+point response in this region, whereas the TNDB -containing electrolyte showed a 
+
+negative end -point response ( Fig. 7d ). This contrast indicates that TNDB changes the 
+
+direction and magnitude of  PF 6⁻-related  spectral evolution during formation. When 
+
+considered together with the XPS and ToF -SIMS results, the operando FTIR data 
+
+suggests  that TNDB suppresses carbonate -solvent decomposition while modifying 
+
+salt -derived interfacial chemistry. 
+
+Overall, the post -mortem and operando evidence supports a coherent interphase -
+
+regulation mechanism for  improved  high -temperature cycling performance. TNDB 
+
+participates in graphite interphase construction by introducing B -containing species, 
+
+modifying F -, P-, and  O-containing inorganic components, suppressing carbonate -
+
+derived organic SEI accumulation and reducing Fe deposition on graphite. These 
+
+coupled effects provide a plausible explanation for the improved capacity retention of 
+
+LiFePO 4||graphite cells cycled at 55 °C with the ProtoMI -recommended TNDB additive. 22 
+
+Fig. 7 | Operando FTIR analysis of electrolyte and interphase evolution during 55 °C formation. 
+
+a,b,  Time -resolved absorbance spectra (top) and corresponding difference spectra , A(t)-A(t0) (bottom), 
+
+collected during the formation -charge step at 55  °C for LiFeP O4||graphite cells containing the baseline 
+
+electrolyte ( a) and the TNDB -containing electrolyte ( b). The dashed lines delimit the 1640 -1670 c m-1
+
+region associated with  organic  semi -carbonate  species . The P -F stretching region of P F6- is indicated 
+
+at approximately 8 20-880 c m-1. Identical color scales are used for direct comparison.  c,  Time evolution 
+
+of the integrated absolute difference absorbance  within the  organic  semi -carbonate  region  with and 
+
+without  TNDB . d,  Integrated spectral changes for  organic  semi -carbonate  and  the PF 6⁻ P-F stretching 
+
+region  at the end of  the  1st  charge .
+
+## Discussion  and conclusion 
+
+In this work, we develop ProtoMI as a molecular discovery framework for data -scarce 
+
+settings in which experimentally validated molecules are sparse and most candidate 
+
+molecules remain unlabeled. Rather than treating additive discovery as a conventional 
+
+sup ervised property -prediction problem, ProtoMI re -formulates it as an efficient 
+
+exploration problem. Sparse literature -derived successes are converted into 
+
+transferable prototype representations, adapted to a broader unlabeled candidate 
+
+space and translated into experimentally actionable molecules through  practical 0.25 0.75 0.17  
+
+> −1.43
+> 0123
+> Time (h)
+> w/o TNDB Organic semi-carbonate vC=O vO-C-O vC-C ring
+> 0123
+> Time (h)
+> −0.1
+> 0.1 0.3 0.5 0.7
+> Absorbance (a.u.)
+> w/ TNDB vC-C ring vO-C-O vC=O Organic semi-carbonate
+
+# a b      
+
+> 2000 1800 1600 1400 1200 1000 800 0123
+
+Wavenumber (cm -1 )Time (h)        
+
+> PF 6-PF 6-
+> 2000 1800 1600 1400 1200 1000 800 0123
+
+Wavenumber (cm -1 )Time (h)        
+
+> −0.04 −0.02
+> 0.00 0.02 0.04
+> A(t)-A(t0) (a.u.)
+> 0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5 0.0 0.1 0.2 0.3
+> A(t)-A(t0) area (a.u. ∙cm -1 )
+
+Time (h) 
+
+> w/o TNDB w/ TNDB
+
+Organic semi-carbonate 
+
+# c
+
+Organic carbonate PF 6-
+
+> −2.0 −1.5 −1.0 −0.5
+> 0.0 0.5 1.0 1.5 2.0
+> A(t)-A(t0) area (a.u. ∙cm -1 )
+> w/o TNDB w/ TNDB
+
+# d At the end of charge 23 
+
+chemical constraints. This workflow allows limited experimental resources to be 
+
+concentrated on chemically promising regions rather than distributed across the full 
+
+candidate space. 
+
+A central feature of ProtoMI  is that knowledge transfer occurs at the prototype 
+
+level rather than at the level of individual molecules. Conventional similarity -based 
+
+recommendation strategies tend to remain close to previously reported compounds 
+
+and may therefore restrict exploration  to local molecular neighborhoods. In contrast, 
+
+ProtoMI learns higher -order organization from groups of reported additives and 
+
+transfers this organization across source -target distribution mismatch. The 
+
+preservation and redistribution of prototype identities after adaptation suggest that the 
+
+framework captures transferable chemical relationships instead of simply memorizing 
+
+known molecular structures. This prototype -centr ic strategy provides a practical route 
+
+to extending sparse literature knowledge into structurally broader regions of chemical 
+
+space. 
+
+The experimental validation demonstrates how ProtoMI  recommendations can be 
+
+connected to battery performance. As a representative candidate, TNDB improved the 
+
+high -temperature cycling stability of LiFePO 4||graphite cells relative to the baseline 
+
+electrolyte.  XPS, ToF -SIMS, EDS mapping and operando FTIR analyses indicate that 
+
+TNDB incorporates B -containing species into the graphite interphase, modifies F/P/O -
+
+containing inorganic SEI components, suppresses carbonate -solvent decomposition, 
+
+alters PF 6⁻-related spectral evolution and reduces Fe deposition on graphite . These 
+
+coupled interfacial effects provide a plausible explanation for the improved capacity 
+
+retention observed at 55 °C. At the same time, the present experimental validation 
+
+should be interpreted as a proof of concept for one representative ProtoMI -
+
+reco mmended candidate rather than exhaustive validation of all recommended 
+
+molecules. 
+
+More broadly, this study highlights the importance of discovery efficiency in 
+
+scientific problems where labels are scarce, and candidate spaces are large. Under 
+
+such conditions, maximizing predictive accuracy for individual molecules may be less 
+
+practical  than improving the allocation of limited experimental resources. 
+
+Retrospective temporal validation shows that literature -derived prototype knowledge 
+
+can enrich future -reported additives while screening only a small fraction of the 
+
+candidate space. This sug gests that prototype -guided exploration can complement 
+
+supervised prediction, physics -informed modeling and active -learning workflows by 24 
+
+serving as an upstream candidate -prioritization strategy. 
+
+Several limitations remain. The current implementation focuses on boron -
+
+containing electrolyte additives and relies primarily on structural molecular 
+
+representations. It does not yet explicitly incorporate electrochemical stability, reaction 
+
+pathways, solv ation structures, synthesis routes or cell -level performance labels. In 
+
+addition, the translation stage depends on empirical filters and commercial availability 
+
+constraints, which may bias the final experimentally selected candidates. Future 
+
+studies could  integrate physics -informed descriptors, quantum -chemical calculations, 
+
+synthesis -planning tools, multimodal molecular representations and active 
+
+experimental feedback to further improve recommendation quality and practical 
+
+accessibility. With these extensi ons, prototype -guided knowledge transfer may provide 
+
+a general route for molecular discovery under severe label scarcity. 
+
+## Methods 
+
+M1.  Data collection . For  the searching  space  molecules dataset, we use d keywords 
+
+(Borane, Borate, Boric, Boron, Boronic, Boronate , Additive, Electrolyte ) to inquire the 
+
+boron -related molecules  and  their  molecular information , including  formula,  SMILES, 
+
+fingerprint,  topological,  weight,  and  heavy  atom . For the positive  samples dataset, we 
+
+used the heuristic extraction process to  obtain  the literature information of each 
+
+reported boron -containing electrolyte additive molecul e.  The  details  of  the  LLM -
+
+assist ed  data -mining  pipeline  is  provided  in  Supplementary  Fig . S17. Finally , we  get 
+
+179,977  boron -containing molecules as the  searching  space  molecules dataset and 
+
+126  reported boron electrolyte additive molecules as the  positive samples dataset. 
+
+M2. Graph -level descriptors.  To characterize the global topological properties of        
+
+> molecules, several graph -level descriptors were calculated, including atom number ( 𝑁 ), bond
+> number ( 𝐸 ), average degree ( 𝑘 ̅), graph density ( 𝐷 ), and degree entropy ( 𝐻 ). The average
+> degree was defined as
+> 𝑘 ̅=1
+> 𝑁 ∑𝑘 =2𝐸
+> 𝑁
+> 𝑁
+> =1
+> (1)
+
+where  𝑘  denotes the degree of node  𝑖 . Graph density, which measures the fraction of 
+
+existing bonds relative to the maximum possible number of bonds, was calculated as 
+
+𝐷  = 2𝐸 
+
+𝑁 (𝑁  − 1) (2)
+
+To quantify the heterogeneity of node connectivity, the degree entropy was 25 
+
+computed using the Shannon entropy of the degree distribution, 
+
+𝐻  = − ∑ 𝑝 (𝑘 ) log  𝑝 (𝑘 )
+
+> 𝑘
+
+(3)
+
+where  𝑝 (𝑘 ) denotes the probability that a node has degree  𝑘  . These descriptors 
+
+collectively characterize molecular size, connectivity and topological complexity. 
+
+M3. Unsupervised graph contrastive learning (U CL)  model . To extract prototype 
+
+knowledge from experimentally reported  boron electrolyte  additive  molecules , an 
+
+unsupervised graph contrastive learning strategy was first applied to all  reported boron 
+
+electrolyte additive molecules . Each molecule was represented as a graph  𝑅𝐺  =
+
+(𝑅𝑉  , 𝑅𝐸  ), where node features describe atomic attributes and edge features describe 
+
+bond -level information. During training, two views of each molecular graph were 
+
+constructed for contrastive learning.  The first view preserves the original structure, 
+
+while the second view is generated via stochastic edge perturbation :
+
+𝑅𝐺  (1) = 𝑅𝐺  , (4)
+
+𝑅𝐺  (2) = (𝑅𝑉  , (𝑅𝐸  \ 𝑅𝐸  𝑑𝑒𝑙  ) ∪ 𝑅𝐸  𝑎𝑑𝑑  ), (5)
+
+|𝑅𝐸  𝑑𝑒𝑙  | = |𝑅𝐸  𝑎𝑑𝑑  | = ⌊𝜌 |𝑅𝐸  |
+
+2 ⌋ (6)
+
+where  𝑅 𝐸  𝑑𝑒𝑙  and  𝑅𝐸  𝑎𝑑𝑑  denote the sets of removed and newly added edges, 
+
+respectively , and  𝜌  = 0.1 controls the perturbation ratio . The two graph views were 
+
+then encoded by  a three -layer  gra ph neural  network (GNN).  The layer -wise 
+
+propagation can be formulated as :
+
+𝐻 (𝑙 ) = 𝐷𝑟𝑜𝑝𝑜𝑢𝑡  (𝑅𝑒𝐿𝑈  (𝐺𝑟𝑎𝑝 ℎ𝑁𝑜𝑟𝑚  (𝐺𝐼𝑁𝐸 (𝑙 )(𝐻 (𝑙 −1), 𝑅𝐸  )))) , 𝑙  = 1,2,3 (7)
+
+where  𝐻 (0) = 𝑅𝑋  denotes the initial node feature matrix  and  𝑙  represents the layer 
+
+number of this GNN encoder.  The graph -level representation was obtained via global 
+
+mean pooling: 
+
+ℎ𝑅𝐺 𝑖  = 𝑓 𝜃  
+
+> 𝑈𝑆𝐿
+
+(𝑅 𝐺  ) = 𝑀𝑒𝑎𝑛𝑃𝑜𝑜𝑙 (𝐻 (3)) = 1
+
+𝑅𝑉  ∑ ℎ𝑣 
+
+> (3)
+> 𝑣 ∈𝑅 𝑉 𝑖
+
+(8)
+
+where  ℎ𝑣  
+
+> (3)
+
+represents the embedding of node after the third layer GNN, and  𝑓 𝜃  
+
+> 𝑈𝑆𝐿
+
+is 
+
+the three -layer encoder for this unsupervised learning stage.  To optimize the 
+
+representation space, the graph embeddings were further mapped by projection heads 
+
+𝑔 1(⋅)and  𝑔 2(⋅):
+
+𝑧  (1) = 𝑔 1(ℎ𝑅 𝐺 𝑖  
+
+> (1)
+
+), 𝑧  (2) = 𝑔 2(ℎ𝑅𝐺 𝑖  
+
+> (2)
+
+) (9)26 
+
+The use of separate projection heads follows standard contrastive learning 
+
+practice to improve representation quality.  The model was trained using an  InfoNCE 
+
+contrastive loss  (Method M 10 ), which  encourages embeddings from two augmented 
+
+views of the same molecule to be close, while separating them from other molecules 
+
+in the batch . After each training epoch, molecular embeddings were L2 -normalized 
+
+and clustered using  hierarchical clustering with  outlier filtering , average linkage and 
+
+cosine distance  (Method M 9). The optimal number of clusters was determined by 
+
+maximizing the average silhouette score  (Meth od M 5) over a predefined range. The 
+
+model achieving the highest silhouette score was selected as the final representation 
+
+model and used to define molecular prototypes for subsequent prototype -guided 
+
+learning. 
+
+M4. Prototype semi -supervised contrastive learning  model . To transfer prototype 
+
+knowledge from experimentally reported  boron electrolyte  additive  molecules  to the 
+
+unlabeled molecular space, we developed a prototype semi -supervised contrastive 
+
+learning  model . First,  we use the pre -trained molecular representation model  (Method 
+
+M3) to  generate  prototype -level embeddings  for  all experimentally reported  additive 
+
+molecules  ℎ𝑅𝐺 𝑖  , and  followed by  a randomly initialized  projection head  which  is 
+
+motivated by the need to improve robustness and avoid representation bias induced 
+
+by the contrastive pretraining objective :
+
+= 𝑁𝑜𝑟𝑚  (𝑔 ′ (𝑓 𝜃  
+
+> 𝑈𝑆𝐿
+
+(𝑅 𝐺  ))) (10 )
+
+where  𝑔 ′(⋅) denotes the projection head.  Hierarchical clustering with average linkage 
+
+and cosine distance was then applied to the normalized positive -sample embeddings. 
+
+The optimal number of clusters was determined by comparing clustering quality across 
+
+candidate cluster numbers. Each cluster was  regarded as a molecular prototype group, 
+
+and the corresponding prototype label  table  𝑅𝐿  was assigned to each positive additive :
+
+𝑅𝐿  = HierarchicalCluster ( ) (11 )
+
+Next , positive additives and unlabeled candidate molecules were jointly used  to 
+
+train the prototype semi -supervised contrastive learning model.  At each epoch, 
+
+prototype centroids were first recalculated from the positive additives according to their 
+
+prototype labels. For prototype  𝑛  , the centroid was computed as the mean 
+
+representation of positive samples assigned to this prototype: 27 
+
+𝑝  , 𝑒𝑤  
+
+> (𝑡 )
+
+= 𝑁𝑜𝑟𝑚  ( 1
+
+∣ 𝒫  ∣ ∑ (𝑡 )
+
+> ∈𝒫 𝑛
+
+) (12 )
+
+where  𝒫  denotes the set of positive additives assigned to prototype  𝑛 , and  (𝑡 ) is the 
+
+normalized embedding produced by the current model at epoch  𝑡 . To avoid unstable 
+
+prototype shifts during semi -supervised adaptation, the prototype centroids were 
+
+updated using an exponential moving average 55 :
+
+𝑝  (𝑡 ) = 𝑚 𝑝 (𝑡 −1) + (1 − 𝑚 )𝑝  , 𝑒𝑤  
+
+> (𝑡 )
+
+, 𝑚  = 0.999  (13 )
+
+where  𝑚  is the momentum coefficient. This update allows the prototypes to gradually 
+
+adapt from the positive -only representation space toward the broader unlabeled 
+
+molecular space while preserving the original prototype knowledge extracted from 
+
+experimentally repor ted additives. 
+
+At the beginning of the model training, a  new  GNN  encoder and projection head 
+
+were initialized and trained using both positive and unlabeled molecular graphs . For 
+
+each  mini -batch, the similarity between molecular embeddings and prototype 
+
+centroids was calculated by cosine similarity . F or each prototype, the top -k molecules 
+
+with the highest similarity to that prototype were selected as prototype -relevant core 
+
+samples.  The embeddings of the selected molecules can be expressed in: 
+
+= 𝑔 ′′  (𝑓 𝜃  
+
+> 𝑃𝐶𝐿
+
+(𝐺  ))
+
+‖𝑔 ′′  (𝑓 𝜃 
+
+> 𝑃𝐶𝐿
+
+(𝐺  ))‖2
+
+, (14 )
+
+𝑠  = 𝑠𝑖𝑚 ( , 𝑝  ), (15 )
+
+ℐ(𝐾 ) = TopK ({𝑠 1 , 𝑠 2 , … , 𝑠 𝑁  }) , (16 )
+
+= {𝐳  ∣ 𝑖  ∈ ℐ(𝐾 )} . (17 )
+
+where  𝐺  ∈ {𝑅 𝐺  , 𝑈 𝐺  } denotes either a reported positive molecular graph or an 
+
+unlabeled molecular graph;  𝑓 𝜃  
+
+> 𝑃𝐶𝐿
+
+is the newly initialized GNN encoder;  𝑔 ′′ (⋅) is the 
+
+newly initialized projection head;  𝐳  is the normalized embedding of molecule  𝑖  ; 𝑝 
+
+denotes the centroid of the  𝑛  -th prototype;  𝑠  is the cosine similarity between 
+
+molecule  𝑖  and prototype  𝑛  ; 𝑁  is the number of molecules in the mini -batch;  ℐ (𝐾 )
+
+represents the index set of the top -k molecules most similar to prototype  𝑛 ; and 
+
+denotes the corresponding set of selected prototype -relevant embeddings. In this work, 
+
+𝐾  = 25 .
+
+This strategy restricts contrastive optimization to molecules that are most relevant 28 
+
+to each prototype, thereby reducing the influence of low -confidence unlabeled 
+
+samples and preventing noisy candidates from dominating the representation learning 
+
+process.  For prototype  𝑛 , the selected molecules were optimized using a prototype 
+
+contrastive loss  (Method M 10 ). To encourage different prototypes to encode distinct 
+
+molecular patterns, a prototype decorrelation regularization term was introduced 
+
+(Method M 10 ). The model was optimized using Adam with weight decay. After each 
+
+epoch, the learned embeddings were evaluated on the held -out positive and unlabeled 
+
+test samples. The silhouette score  (Method M 5) based on cosine distance was used 
+
+to quantify the separation quality of the learned prototype -aware representation space. 
+
+The model checkpoint with the highest silhouette score was selected as the best 
+
+prototype semi -supervised contrastive learning model. 
+
+M5. Evaluating  metrics . The silhouette score was used to assess the quality of the 
+
+learned embedding space and the separation of prototype clusters. For each sample, 
+
+the silhouette coefficient compares its average intra -cluster distance  𝑎 (𝑖 ) with the 
+
+minimum average distance to the nearest neighboring cluster  𝑏 (𝑖 ), defined as:         
+
+> 𝑆𝑖𝑙 ℎ𝑜𝑢𝑡𝑡𝑒 𝑆𝑐𝑜𝑟𝑒 =1
+> 𝑁 ∑𝑏 (𝑖 )−𝑎 (𝑖 )
+> max (𝑎 (𝑖 ),𝑏 (𝑖 ))
+> 𝑁
+> =1
+> (18 )
+
+The score ranges from −1 to 1, where higher values indicate more compact 
+
+clusters and better inter -cluster separation. In this study, the silhouette score was 
+
+computed using cosine distance for consistency with the clustering metric. The optimal 
+
+number of  clusters was selected by maximizing the average silhouette score. 
+
+Furthermore, it was used as an indicator of representation quality, where higher scores 
+
+reflect more discriminative and well -structured molecular embeddings. 
+
+To evaluate both prototype similarity and prototype coverage, an entropy -
+
+weighted prototype similarity  (EWPS)  metric was defined. Each recommended 
+
+molecule was assigned to the prototype centroid with the highest cosine similarity, and 
+
+the average maximum similarity was calculated as :
+
+𝑠 ̅ = 1
+
+𝑁  ∑ 𝑆 
+
+> 𝑁
+> =1
+
+(19 )
+
+where  𝑠  denotes the maximum cosine similarity between molecule  𝑖  and all prototype 
+
+centroids. Prototype coverage was quantified using the normalized assignment 
+
+entropy :29 
+
+𝐻  𝑜𝑟𝑚  = − ∑ 𝑝 𝑘  𝑙𝑛 𝑝 𝑘 
+
+> 𝐾
+> 𝑘 =1
+
+𝑙𝑛  𝐾  (20 )
+
+where  𝑝 𝑘  is the fraction of molecules assigned to prototype  𝑘 . The final EWPS metric 
+
+was defined as :
+
+𝐸𝑊𝑃𝑆  = 𝑠 ̅ ∗ 𝐻  𝑜𝑟𝑚  (21 )
+
+Higher EWPS values indicate that the recommended molecules are both highly 
+
+representative of the learned prototypes and broadly distributed across prototype 
+
+categories. 
+
+To evaluate the ability of ProtoMI to recover future -reported additives, a temporal 
+
+validation strategy was adopted. Recall was defined as :
+
+𝑅𝑒𝑐𝑎𝑙𝑙  = 𝑁 ℎ 𝑡 
+
+𝑁 ℎ 𝑑𝑑𝑒 
+
+(22 )
+
+where  𝑁 hit  is the number of hidden positive molecules recovered by the 
+
+recommendation list and  𝑁 hidden  is the total number of hidden positives. Higher recall 
+
+values indicate  a stronger capability for identifying future experimentally reported 
+
+additives. 
+
+To quantify the efficiency improvement over random screening, the enrichment 
+
+factor (EF) was calculated as :
+
+𝐸𝐹  = 𝑁 ℎ 𝑡  𝑁 𝑟𝑒𝑐 ⁄
+
+𝑁 ℎ 𝑑𝑑𝑒  𝑁 𝑐𝑎 𝑑 𝑑𝑎𝑡𝑒 ⁄ (23 )
+
+where  𝑁 rec  is the number of recommended molecules and  𝑁 candidate  is the size of 
+
+the candidate pool. EF measures how many times the recommendation strategy 
+
+outperforms random selection, with larger values indicating more efficient prioritization 
+
+of experimentally promising molecules. 
+
+M6. Translation strategy.  To further improve experimental feasibility, we designed a 
+
+knowledge -guided post -screening pipeline based on empirical chemical constraints, 
+
+as illustrated in  Fig. 5a . Specifically, six sequential filtering criteria were applied. First, 
+
+CID filtration was performed by retaining only molecules with PubChem compound IDs 
+
+(CID) smaller than 100,000,000, as larger IDs typically correspond to composite 
+
+entries rather than sing le molecular entities. Second, molecular weight filtering was 
+
+conducted by constraining candidates within the empirical range observed in reported 
+
+boron -containing additives (26.811 –1455.489). Third, synthesizability was evaluated 
+
+using the SA score, and only molecules within the dataset -derived range (2.012 –6.319) 
+
+were preserved. Fourth, active hydrogen exclusion was implemented via  SMiles 30 
+
+ARbitrary Target Specification  (SMARTS )-based functional group matching 65  to 
+
+remove molecules containing labile protic hydrogens, which are known to negatively 
+
+affect electrolyte stability and battery performance. Fifth, CAS availability was required 
+
+to ensure that selected molecules are commercially accessible. Finally, consid ering 
+
+practical cost constraints, we manually selected  four  molecules from  68  commercially 
+
+available candidates for experimental validation. 
+
+M7. Molecular representation.  In this  paper, we used  fingerprints , SMILES, and 
+
+graphs  to represent molecules  and  use d the  augmented  molecular graph 
+
+representation  (Method  M8) as the  best performance molecular representation 
+
+method for  the  model training  stage.  For fingerprints, we used  the 
+
+rdFingerprintGenerator.GetMorganGenerator ()  function in  the  RDKit Python package 
+
+to  generate  fingerprints for all molecules with  radius=2  and  fpSize=1024 . For SMILES, 
+
+most SMILES  can be  obtained from PubChem , OPSIN,  and  the  literature , while some 
+
+molecules  are lacking,  and  we used ChemDraw software to  generate them manually. 
+
+For graphs, we converted the SMILES into the molecular graph  by  encoding  atom 
+
+elements,  the number  of heavy neighbors , formal charge, hybridization types,  whether 
+
+it  is in a ring, whether  it  is aromatic,  scaled  van der  Waals radius , and scaled  covalent 
+
+radius  information  as  the node features, and  bond types, bond is conjugated, bond is 
+
+in  ring, bond direction, and bond is aromatic information as the edge features.  All 
+
+numeric features  have been normalized to the float data type , and  all string features 
+
+are one -hot  encoded . See the  Supplementary  Table s S2  and  S10  for details .
+
+M8. Graph data augmentation.  To enhance the robustness of representation learning 
+
+under limited labeled data, we employ a multi -scale graph augmentation strategy that 
+
+perturbs molecular graphs at the feature, structure, and topology levels.  At the feature 
+
+level, node attributes are augmented through random feature shuffling 42  and 
+
+stochastic noise masking 39 . Feature shuffling randomly permutes a subset of node 
+
+feature dimensions across nodes, while noise masking injects Gaussian perturbations 
+
+into randomly selected feature entries. These operations simulate uncertainty and 
+
+variability in molecular descriptor s.  At the structural level, graph topology is modified 
+
+through node dropping 43  and edge perturbation 40 . Node dropping randomly removes 
+
+a subset of nodes and their associated edges, generating subgraph -level variations. 
+
+Edge perturbation is performed using a weighted sampling strategy, where edges are 
+
+probabilistically removed or added based on node degree  and shortest -path distance, 
+
+encouraging the model to learn robust local structural patterns.  At the global topology 31 
+
+level, we further introduce a Personalized PageRank (PPR) -based augmentation 41 . A 
+
+PPR diffusion matrix is computed to capture higher -order connectivity, and edges are 
+
+selectively removed or added according to their PPR scores.  In particular, the  diffusion 
+
+matrix  is  computed to capture higher -order connectivity,  defined as: 
+
+𝑃  = 𝛼  ∑(1 − 𝛼 )𝑘 𝐴 ̂𝑘 
+
+> 𝐾
+> 𝑘 =0
+
+(24 )
+
+where  𝐴 ̂ = 𝐷 −1
+
+> 2
+
+𝐴 𝐷 −1 
+
+> 2
+
+is the normalized adjacency matrix , 𝐷  is the degree  matrix 
+
+with  𝐷  = ∑ 𝐴  𝑗 𝑗  , 𝐴  is the adjacency matrix encoding the bonding topology of the 
+
+molecular graph , 𝛼  is the teleport probability , and  𝐾  is the truncation depth.  The 
+
+diffusion score  𝑃  𝑗  quantifies higher -order topological relationships between node  𝑖 
+
+and node  𝑗  . Based on this score, edges with lower  𝑃  𝑗  values  are preferentially 
+
+removed, while non -edge pairs with higher  𝑃  𝑗  values are more likely to be added. 
+
+M9. Hierarchical  clustering algorithm  with  outlier filtering . To identify 
+
+representative prototype groups from experimentally reported positive additives, 
+
+hierarchical clustering was performed on the learned molecular graph embeddings 
+
+using average linkage with cosine distance. Different clustering solutions were 
+
+gen erated by varying the number of clusters from 3 to a predefined maximum value ,
+
+max_cluster=10 , and the optimal cluster number  (7)  was selected according to the 
+
+silhouette score  (Method  M5) calculated with cosine distance.  To improve the 
+
+robustness of prototype discovery, a cluster -wise outlier filtering strategy was applied 
+
+for each candidate clustering solution. For each cluster, the centroid was calculated 
+
+as the mean embedding of all samples assigned to that cluster. The  cosine similarity 
+
+between each sample embedding and its corresponding cluster centroid was then 
+
+computed and converted into cosine distance as  1 − cos (𝑥  , 𝑐 𝑘 ), 𝑥  represents the  𝑖 th 
+
+sample, and  𝑐 𝑘 represents the  𝑘 th  prototype centroid . Samples with distances larger 
+
+than the cluster -specific threshold, defined as the mean distance plus 1.5 times the 
+
+standard deviation, were regarded as outliers and removed. Clusters containing fewer 
+
+than two samples were excluded from this filtering pro cedure.  After outlier removal, 
+
+hierarchical clustering was recomputed on the filtered embeddings using average 
+
+linkage and cosine distance. The silhouette score was then evaluated for each 
+
+candidate cluster number, and the clustering configuration with the highest  score was 
+
+selected. The corresponding filtered embeddings, cluster labels, additive names, and 
+
+linkage matrix were retained for subsequent prototype construction and prototype -32 
+
+guided representation learning. 
+
+M10 . Loss function s. In this section, we introduce  two loss functions used in the pre -
+
+trained molecular representation model and prototype semi -supervised  contrastive 
+
+learning model, respectively. 
+
+For the pre -trained molecular representation model,  an InfoNCE -based 
+
+contrastive loss was adopted  to learn discriminative molecular representations. Given 
+
+two augmented views of each molecular graph, their embeddings were first L2 -
+
+normalized, and cosine similarity was used to measure pairwise similarity. For each 
+
+sample, the corresponding positive pair  was encouraged to have higher similarity than 
+
+all other samples in the batch, which  served  as negatives. The loss is defined as: 
+
+ℒ𝐼 𝑓𝑜𝑁𝐶𝐸  = − 1
+
+𝑁  ∑ 𝑙𝑜𝑔  exp  (𝑠𝑖𝑚 (𝑧  (1), 𝑧  (2)) 𝜏 ⁄ )
+
+∑ exp  (𝑠𝑖𝑚  (𝑧  (1), 𝑧 𝑗 
+
+> (2)
+
+) 𝜏 ⁄ )𝑁 
+
+> 𝑗 =1
+> 𝑁
+> =1
+
+(25 )
+
+where  𝜏  is a temperature parameter controlling the concentration level of the 
+
+distribution , and  𝑧  represents the embedding of each  sample . All other samples in the 
+
+batch are treated as negatives . The similarity function  sim (⋅,⋅) is defined as the cosine 
+
+similarity between two embedding vectors :
+
+𝑠𝑖𝑚 (𝑧  (1), 𝑧  (2)) = 𝑧  (1)⊤
+
+𝑧  (2)
+
+‖𝑧  (1)‖‖𝑧  (2)‖ = 𝑧  (1)⊤
+
+𝑧  (2) (26 )
+
+For the prototype semi -supervised contrastive learning model , the similarity 
+
+between a selected molecule and its corresponding prototype was treated as the 
+
+positive logit, while similarities to all other prototypes were treated as competing logits: 
+
+ℒ𝑝𝑟𝑜𝑡𝑜  = − 1
+
+𝑀  ∑ 1
+
+| 𝑚 | ∑ 𝑙𝑜𝑔  
+
+> 𝜖 𝑚
+
+exp (𝑠𝑖𝑚 ( , 𝑝 𝑚 ) 𝜏 ⁄ )
+
+∑ exp (𝑠𝑖𝑚 ( , 𝑝 𝑟 ) 𝜏 ⁄ )𝑀 
+
+> 𝑟 =1
+> 𝑀
+> 𝑚 =1
+
+(27 )
+
+where  𝑀  is the number of prototypes , and  𝜏  = 0.1 is the temperature parameter , and , 
+
+> 𝑚
+
+was constructed by top -k assignment within each batch, such that molecules with 
+
+the highest similarity to  𝑝 𝑚  were treated as positive samples for that prototype .
+
+ℒ𝑑𝑒𝑐𝑜𝑟  = 1
+
+𝑀 2 ∑ ∑(𝑠𝑖𝑚 (𝑝  , 𝑝 𝑗  ) − 𝛿  𝑗  )2
+
+> 𝑀
+> 𝑗 =1
+
+, 𝛿  𝑗  = 1 𝑖𝑓  𝑖  = 𝑗 , 𝑒𝑙𝑠𝑒  0
+
+> 𝑀
+> =1
+
+(28 )
+
+where  𝑝  ∈ ℝ𝑑  represents the embedding vector of the  𝑖 -th prototype centroid in the 
+
+latent space;  𝑝  ⊤𝑝 𝑗  denotes the inner product (cosine similarity after normalization) 
+
+between prototype  𝑖  and prototype  𝑗 ; and  𝛿  𝑗  is the Kronecker delta, which equals 1 
+
+when  𝑖  = 𝑗  and 0 otherwise.  This encourages prototypes to capture diverse and non -
+
+overlapping molecular patterns.  The total loss was defined as the sum of the prototype 33 
+
+contrastive loss and the prototype decorrelation loss :
+
+ℒ𝑡𝑜𝑡𝑎𝑙  = ℒ𝑝𝑟𝑜𝑡𝑜  + ℒ𝑑𝑒𝑐𝑜𝑟  (29 )
+
+During evaluation, prototype -relevant core samples were selected from the held -
+
+out positive and unlabeled test molecules using the same top -k criterion, and the 
+
+silhouette score with cosine distance was calculated on these selected embeddings. 
+
+M11.  Electrochemical measurements . Electrochemical measurements were carried 
+
+out using CR2025 -type LiFePO 4||graphite coin cells. The baseline electrolyte 
+
+consisted of 1 M LiPF 6 in EC :DMC ( 3:7 by volume), with a solvent water content below 
+
+50 ppm, and the additive -containing electrolyte was prepared by adding 1 wt% additive 
+
+to the baseline electrolyte. The cells were assembled in an Ar -filled glovebox using 
+
+LiFePO 4 cathodes, graphite anodes, Celgard 2025 separators and 60  μL electrolyte ,
+
+followed by resting for 12 h before testing. The cells were cycled between 2.5 and 3.65 
+
+V at 55  °C. Formation was conducted for three cycles at 0.33C charge and 0.33C 
+
+discharge, followed by long -term cycling at 0.33C charge and 1C discharge. Capacity 
+
+retention was calculated by normalizing the discharge capacity of each cycle to the 
+
+second discharge c apacity .
+
+M12. Post -mortem sample preparation.  The coin cells were disassembled in an Ar -
+
+filled glovebox to avoid exposure to air and moisture. The graphite electrodes were 
+
+carefully collected and rinsed with anhydrous DMC three times to remove residual 
+
+electrolyte and loosely attached salts. After the residual DMC evaporated inside the 
+
+glove box, the electrodes were mounted on the corresponding sample holders and 
+
+transferred to the characterization chambers using an air -free vacuum transfer stage. 
+
+M13. X-ray photoelectron spectroscopy.  XPS was performed using a PHI 
+
+VersaProbe  4 system (ULVAC -PHI). Survey spectra and high -resolution spectra were 
+
+collected to analyze the surface chemical composition and bonding environments of 
+
+the SEI. The C 1s, O 1s, F 1s, P 2p, B 1s, and Fe 2p regions were analyzed when 
+
+applicable. The binding  energies were calibrated using the C -C component in the C 
+
+1s spectrum at 284.8 eV. Peak deconvolution was performed after background 
+
+subtraction to determine the relative contents of different SEI components. 
+
+M14. Time -of -flight secondary ion mass spectrometry.  ToF -SIMS measurements 
+
+were carried out using an IONTOF M6 instrument. Negative -ion mode was mainly 
+
+used to analyze SEI -related fragments, including PO 2⁻, CH 3CO ⁻, LiF 2⁻, CO 3⁻,
+
+CH 3COO ⁻, and FeO ⁻. Three -dimensi onal chemical renderings and sputter -depth 34 
+
+profiles were obtained by sequential ion analysis and sputtering. The depth profiles 
+
+were used to compare the relative distribution of solvent -derived organic fragments, 
+
+carbonate -containing residues, LiF -related species, phosphate/fluorophosphate -
+
+related fragments, and Fe -containing deposits within the SEI. 
+
+M15. Scanning electron microscopy.  SEM was conducted using an SU3900 
+
+microscope. SEM images were collected to examine the morphology of the cycled 
+
+graphite electrodes and the surface evolution after high -temperature cycling. 
+
+M16. Energy -dispersive X-ray spectroscopy mapping.  EDS mapping was 
+
+performed on the cycled graphite electrodes to analyze the spatial distribution of Fe. 
+
+Elemental mapping was conducted on representative regions of the graphite electrode 
+
+surface to evaluate transition -metal deposition after formation and l ong -term cycling. 
+
+The Fe mapping results were used to compare the extent of Fe accumulation on 
+
+graphite electrodes cycled in the baseline and additive -containing electrolytes. 
+
+M17. Operando IR spectroscopy collection. 
+
+Operando infrared measurements were conducted using a Bruker Invenio R
+
+spectrometer equipped with a customized electrochemical cell containing an 
+
+embedded IR fiber. The manually polished fiber was inserted through symmetric 
+
+through -holes and sealed with ep oxy resin for 12 h. The cell was assembled by 
+
+sequentially stacking a graphite electrode, the IR fiber, a Whatman GF/D separator 
+
+wetted with 120  μL electrolyte, and an LFP electrode with a diameter of 12 mm within 
+
+a PTFE stabilizing ring. After a 1  h rest,  transmitted IR signals were collected by a 
+
+liquid -nitrogen -cooled MCT detector over 5000 -600 cm -1. Spectra were acquired every 
+
+1 min during cycling at a resolution of 4  cm -1 with 32 scans, while maintaining the signal 
+
+intensity at approximately 10,000 to  ensure a high signal -to -noise ratio. 35 
+
+## Acknowledgments 
+
+The authors  are grateful for  the National Natural Science Foundation of China (No. 
+
+92372109 ), the National Key R&D Program of China (No. 2023YFB2503600), and 
+
+Guangdong S&T Program (No. 2025A0505000017). The authors thank the Materials, 
+
+Design and Manufacturing Facility (MDMF), Materials Characterization and 
+
+Preparation Facility (MCPF), and Wilso n Tang Brilliant Energy Science and 
+
+Technology Lab (BEST Lab) of The Hong Kong University of Science and Technology 
+
+(Guangzhou) for providing experimental support. This work is partially supported by 
+
+GDIC. 
+
+## Author contributions 
+
+W.H. conceived the project, designed the methodology, collected the data, developed 
+
+the model, performed the data analysis, prepared the figures, and wrote the  paper ,
+
+with participation in electrochemical testing and materials characterization.  H.D. 
+
+performed all electrochemical measurements , materials characterization experiments ,
+
+and  wrote the experimental part of the paper . J.T. contributed to the conceptualization 
+
+of the project.  R.T. provided guidance on model development and algorithm design. 
+
+J.L. supervised the computational work and contributed to  paper  revision.  Y.Q. 
+
+supervised the  paper  preparation and provided theoretical guidance on boron 
+
+chemistry.  J.H. conceived and supervised the overall project and contributed to 
+
+refinement of the  paper  and figure s. All authors discussed the results and contributed 
+
+to the final  paper .
+
+## Competing interests 
+
+A Chinese patent application related to this work has been filed and is currently 
+
+pending .
+
+## Data and code availability 
+
+The source code used in this study is publicly available at 
+
+https://github.com/HongWxd/ProtoMI. The datasets generated and analyzed during 
+
+the current study are available from the corresponding author upon reasonable 
+
+request .36 
+
+## References 
+
+1 Armand, M. & Tarascon, J. -M. Building better batteries.  Nature  451 , 652 -657 (2008). 
+
+2 Yang, X., Zhang, H., Liu, Q. & Jiang, G. The Li -ion battery industry and its challenges.  Nature 
+
+Reviews Chemistry  9, 497 -498 (2025). 
+
+3 Fan, X. & Wang, C. High -voltage liquid electrolytes for Li batteries: progress and perspectives. 
+
+Chemical Society Reviews  50 , 10486 -10566 (2021). 
+
+4 Wan, H., Xu, J. & Wang, C. Designing electrolytes  and interphases for high -energy lithium 
+
+batteries.  Nature Reviews Chemistry  8, 30 -44 (2024). 
+
+5 Palací n, M. R. & de Guibert, A. Why do batteries fail?  Science  351 , 1253292 (2016). 
+
+6 Zhang, S. S. A review on electrolyte additives for lithium -ion batteries.  Journal of Power 
+
+Sources  162 , 1379 -1394 (2006). 
+
+7 Pandey, M.  et al.  The transformational role of GPU computing and deep learning in drug 
+
+discovery.  Nature Machine Intelligence  4, 211 -221 (2022). 
+
+8 Jumper, J.  et al.  Highly accurate protein structure prediction with AlphaFold.  Nature  596 , 583 -
+
+589 (2021). 
+
+9 Gao, Y. -C.  et al.  Accelerating battery innovation: AI -powered molecular discovery.  Chemical 
+
+Society Reviews  54 , 9630 -9684 (2025). 
+
+10  Gao, Y. -C.  et al.  Data -Driven Insight into the Reductive Stability of Ion –Solvent Complexes in 
+
+Lithium Battery Electrolytes.  Journal of the American Chemical Society  145 , 23764 -23770 
+
+(2023). 
+
+11  Gao, X.  et al.  Generative Artificial Intelligence Navigated Development of Solvents for Next 
+
+Generation High -Performance Magnesium Batteries.  Advanced Materials  38 , e10083 (2026). 
+
+12  Li, H., Hao, J. & Qiao, S. -Z. AI -Driven Electrolyte Additive Selection to Boost Aqueous Zn -Ion 
+
+Batteries Stability.  Advanced Materials  36 , 2411991 (2024). 
+
+13  Lao, Z.  et al.  Data -driven exploration of weak coordination microenvironment in solid -state 
+
+electrolyte for safe and energy -dense batteries.  Nature Communications  16 , 1075 (2025). 
+
+14  Xie, T.  et al.  Accelerating amorphous polymer electrolyte screening by learning to reduce errors 
+
+in molecular dynamics simulated properties.  Nature Communications  13  (2022). 
+
+15  Li, K., Wang, J., Song, Y. & Wang, Y. Machine learning -guided discovery of ionic polymer 
+
+electrolytes for lithium metal batteries.  Nature Communications  14  (2023). 
+
+16  Wang, F., Tang, Y. -H., Ma, Z. -B., Jin, Y. -C. & Cheng, J. Domain oriented universal machine 
+
+learning potential enables fast exploration of chemical space of battery electrolytes.  Nature 
+
+Communications  17  (2025). 
+
+17  Gao, Y. C.  et al.  A Knowledge –Data Dual ‐Driven Framework for Predicting the Molecular 
+
+Properties of Rechargeable Battery Electrolytes.  Angewandte Chemie International Edition  64 
+
+(2024). 
+
+18  Zou, B. -B.  et al.  Decoding Lithium Metal Battery Degradation with Symmetric -Cell Artificial 
+
+Intelligence Diagnostics (SAID).  Advanced Materials  38 , e12041 (2026). 
+
+19  Ma, P., Kumar, R., Wang, K. -H. & Amanchukwu, C. V. Active learning accelerates electrolyte 
+
+solvent screening for anode -free lithium metal batteries.  Nature Communications  16  (2025). 
+
+20  Hong, X.  et al.  Deep active learning and knowledge transfer for rapid discovery of lithium metal 
+
+battery electrolytes.  Nature Communications  17 , 5146 (2026). 
+
+21  Zhu, S.  et al.  Differentiable modeling and optimization of non -aqueous Li -based battery 
+
+electrolyte solutions using geometric deep learning.  Nature Communications  15  (2024). 
+
+22  Li, R.  et al.  Data -driven design of advanced magnesium -battery electrolyte via dynamic 
+
+solvation models.  Energy & Environmental Science  18 , 6790 -6798 (2025). 
+
+23  Ma, L.  et al.  Designing Bilayer Heterostructure Functional Polymer Electrolytes with Interfacial 
+
+Engineering Strategy for High ‐Performance Lithium Metal Batteries.  Advanced Functional 
+
+Materials  35 , 2414816 (2025). 
+
+24  Park, N. R.  et al.  Understanding Boron Chemistry as the Surface Modification and Electrolyte 
+
+Additive for Co -Free Lithium -Rich Layered Oxide.  Advanced Energy Materials  14 , 2401968 
+
+(2024). 
+
+25  Yu, Y.  et al.  Enable reversible conversion reaction of copper fluoride batteries by hydroxyl 
+
+solution and anion acceptor.  Energy Storage Materials  64 , 103073 (2024). 37 
+
+26  Deng, T.  et al.  Designing In -Situ -Formed Interphases Enables Highly Reversible Cobalt -Free 
+
+LiNiO2 Cathode for Li -ion and Li -metal Batteries.  Joule  3, 2550 -2564 (2019). 
+
+27  Cherti, M.  et al.  in  2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition 
+
+(CVPR)  2818 -2829 (2023). 
+
+28  Jin, J., Wang, S., Dong, Z., Liu, X. & Zhu, E. in  2023 IEEE/CVF Conference on Computer Vision 
+
+and Pattern Recognition (CVPR)  11600 -11609 (2023). 
+
+29  Rao, H. & Miao, C. in  2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition 
+
+(CVPR)  22118 -22128 (2023). 
+
+30  Yang, X., Song, Z., King, I. & Xu, Z. A Survey on Deep Semi -Supervised Learning.  IEEE 
+
+Transactions on Knowledge and Data Engineering  35 , 8934 -8954 (2023). 
+
+31  Kim, S.  et al.  PubChem 2025 update.  Nucleic acids research  53 , D1516 -D1525 (2025). 
+
+32  Azam, S.  et al.  Improving and Understanding Lifetime of LFP/Graphite Pouch Cells with Higher 
+
+Concentrations of Vinylene Carbonate in the Electrolyte.  Journal of The Electrochemical 
+
+Society  172 , 070523 (2025). 
+
+33  Black, W., Azam, S., MacLennan, H., Metzger, M. & Dahn, J. R. Understanding Capacity Loss 
+
+in LFP/Graphite Pouch Cells at High Temperatures through Modelling.  Journal of the 
+
+Electrochemical Society  172 , 090503 (2025). 
+
+34  McInnes, L., Healy, J. & Melville, J. Umap: Uniform manifold approximation and projection for 
+
+dimension reduction.  arXiv preprint arXiv:1802.03426  (2018). 
+
+35  Rogers, D. & Hahn, M. Extended -connectivity fingerprints.  Journal of Chemical Information and 
+
+Modeling  50 , 742 -754 (2010). 
+
+36  Murtagh, F. & Contreras, P. Algorithms for hierarchical clustering: an overview.  WIREs Data 
+
+Mining and Knowledge Discovery  2, 86 -97 (2011). 
+
+37  Ertl, P. & Schuffenhauer, A. Estimation of synthetic accessibility score of drug -like molecules 
+
+based on molecular complexity and fragment contributions.  Journal of Cheminformatics  1
+
+(2009). 
+
+38  Hu, H., Wang, X., Zhang, Y., Chen, Q. & Guan, Q. A comprehensive survey on contrastive 
+
+learning.  Neurocomputing  610  (2024). 
+
+39  Pinheiro, G. A., Da Silva, J. L. F. & Quiles, M. G. SMICLR: Contrastive Learning on Multiple 
+
+Molecular Representations for Semisupervised and Unsupervised Representation Learning. 
+
+Journal of Chemical Information and Modeling  62 , 3948 -3960 (2022). 
+
+40  Wang, Y.  et al.  in  Proceedings of the 26th ACM SIGKDD International Conference on 
+
+Knowledge Discovery & Data Mining  207 -217 (2020). 
+
+41  Page, L., Brin, S., Motwani, R. & Winograd, T. in  The Web Conference. 
+
+42  Zhu, Y.  et al.  in  Proceedings of the Web Conference 2021  2069 -2080 (2021). 
+
+43  You, Y.  et al.  Graph contrastive learning with augmentations.  Advances in neural information 
+
+processing systems  33 , 5812 -5823 (2020). 
+
+44  Cereto -Massagué , A.  et al.  Molecular fingerprint similarity search in virtual screening.  Methods 
+
+71 , 58 -63 (2015). 
+
+45  Weininger, D. SMILES, a chemical language and information system. 1. Introduction to 
+
+methodology and encoding rules.  Journal of chemical information and computer sciences  28 ,
+
+31 -36 (1988). 
+
+46  Rousseeuw, P. Silhouettes: a graphical aid to the interpretation and validation of cluster 
+
+analysis.  J. Comput. Appl. Math.  20 , 53 –65 (1987). 
+
+47  Zhang, H., Lu, G., Zhan, M. & Zhang, B. Semi -Supervised Classification of Graph Convolutional 
+
+Networks with Laplacian Rank Constraints.  Neural Process. Lett.  54 , 2645 –2656 (2022). 
+
+48  Lin, L. & Wang, H. in  Proceedings of the 26th ACM SIGKDD International Conference on 
+
+Knowledge Discovery & Data Mining  1819 –1827 (Association for Computing Machinery, 
+
+Virtual Event, CA, USA, 2020). 
+
+49  You, Y.  et al.  in  Proceedings of the 34th International Conference on Neural Information 
+
+Processing Systems  Article 488 (Curran Associates Inc., Vancouver, BC, Canada, 2020). 
+
+50  Likas, A., Vlassis, N. & Verbeek, J. J. The global k -means clustering algorithm.  Pattern 
+
+recognition  36 , 451 -461 (2003). 38 
+
+51  Xue, Z. -M., Zhao, J. -F., Ding, J. & Chen, C. -H. LBDOB, a new lithium salt with benzenediolato 
+
+and oxalato complexes of boron for lithium battery electrolytes.  Journal of Power Sources  195 ,
+
+853 -856 (2010). 
+
+52  Nie, M., Xia, J. & Dahn, J. Development of pyridine -boron trifluoride electrolyte additives for 
+
+lithium -ion batteries.  Journal of The Electrochemical Society  162 , A1186 -A1195 (2015). 
+
+53  Ma, Y.  et al.  A new anion receptor for improving the interface between lithium -and manganese -
+
+rich layered oxide cathode and the electrolyte.  Chemistry of Materials  29 , 2141 -2149 (2017). 
+
+54  Xi, K.  et al.  A novel strategy to improve the electrochemical properties of in -situ polymerized 1, 
+
+3-dioxolane electrolyte in lithium metal batteries.  Journal of Colloid and Interface Science  679 ,
+
+1277 -1287 (2025). 
+
+55  Morales -Brotons, D., Vogels, T. & Hendrikx, H. Exponential Moving Average of Weights in Deep 
+
+Learning: Dynamics and Benefits.  Trans. Mach. Learn. Res.  2024  (2024). 
+
+56  Zhang, J.  et al.  Worse Interference of Fe3+ than Fe2+ on Degrading the Interphase and 
+
+Performance of LiFePO4||Graphite Battery.  Advanced Materials  37 , e13736 (2025). 
+
+57  Dedryvè re, R.  et al.  Characterization of lithium alkyl carbonates by X -ray photoelectron 
+
+spectroscopy: experimental and theoretical study.  The Journal of Physical Chemistry B  109 ,
+
+15868 -15875 (2005). 
+
+58  Sim, R., Su, L., Dolocan, A. & Manthiram, A. Delineating the Impact of Transition ‐Metal 
+
+Crossover on Solid ‐Electrolyte Interphase Formation with Ion Mass Spectrometry.  Advanced 
+
+Materials  36 , 2311573 (2024). 
+
+59  Ota, H., Akai, T., Namita, H., Yamaguchi, S. & Nomura, M. XAFS and TOF –SIMS analysis of 
+
+SEI layers on electrodes.  Journal of Power Sources  119 -121 , 567 -571 (2003). 
+
+60  Wang, A., Kadam, S., Li, H., Shi, S. & Qi, Y. Review on modeling of the anode solid electrolyte 
+
+interphase (SEI) for lithium -ion batteries.  npj Computational Materials  4, 15 (2018). 
+
+61  Xu, H.  et al.  Impacts of dissolved Ni2+ on the solid electrolyte interphase on a graphite anode. 
+
+Angewandte Chemie  134 , e202202894 (2022). 
+
+62  Guo, Z., Cui, Z. & Manthiram, A. Crossover Effects of Transition ‐Metal Ions on Lithium ‐Metal 
+
+Anode in Localized High Concentration Electrolytes.  Advanced Functional Materials  35 ,
+
+2501743 (2025). 
+
+63  Wang, D.  et al.  Revealing the lithium solid electrolyte interphase in liquid electrolytes via in situ 
+
+Fourier transform infrared spectroscopy.  Cell Press Blue  (2026). 
+
+64  Wang, Y.  et al.  Formation dynamics of an ethylene carbonate -derived solid –electrolyte -
+
+interphase in commercial Li -ion batteries.  Energy & Environmental Science  (2026). 
+
+65  Zhang, C.  et al.  Small Molecule Accurate Recognition Technology (SMART) to Enhance 
+
+Natural Products Research.  Scientific Reports  7 (2017). 1
+
+# Supplementary information 
+
+# Prototype -guided transfer of sparse literature 
+
+# knowledge for electrolyte additive discovery 
+
+Weixiang HONG 1, 5, Hongting DU 1, 5, Jiayue TANG 1, Ruifeng TAN 1, Yangjian 
+
+QUAN 2, Jia LI 3,* , Jiaqiang HUANG 1, 4,*  
+
+> 1
+
+Sustainable Energy and Environment Thrust  and  Guangzhou Municipal Key Laboratory of 
+
+Materials Informatics, The Hong Kong University of  Science and Technology (Guangzhou), 
+
+Nansha, Guangzhou, 511400,  Guangdong, P.R. China  
+
+> 2
+
+Department of Chemistry, The Hong Kong University of Science and Technology, Clear 
+
+Water Bay, Kowloon, Hong Kong SAR, P.R. China  
+
+> 3
+
+Data Science and Analytics Thrust  and  Guangzhou Municipal Key Laboratory of Materials 
+
+Informatics, The Hong Kong University of Science and Technology (Guangzhou), Nansha, 
+
+Guangzhou, 511400, Guangdong, P.R. China  
+
+> 4
+
+Academy of Interdisciplinary Studies, The Hong Kong University of Science and 
+
+Technology, Clear Water Bay, Kowloon,  Hong Kong SAR, P.R. China  
+
+> 5
+
+These authors contributed equally: Weixiang HONG, Hongting DU 
+
+* Corresponding authors: 
+
+J. Huang:  seejhuang@ hkust -gz.edu.cn 
+
+J. Li:  jialee@ hkust -gz.edu.cn 2
+
+Fig ure  S1 | Hierarchical clustering 1 dendrogram  of reported boron -containing electrolyte additives .
+
+Hierarchical clustering dendrogram of 126 reported boron -containing electrolyte additives constructed using Morgan 
+
+fingerprints and pairwise Tanimoto distances 2. Each terminal leaf represents one reported additive, and the branch 
+
+height reflects molecular dissimilarity. Even with this simple fingerprint -based representation, additives with highly 
+
+similar names and closely related chemical structures are grouped i nto the same local branches, such as families 
+
+of lithium borates, fluorinated borates and aryl borate derivatives. This branch -level organization suggests that 
+
+reported boron -containing additives are not randomly scattered as isolated successful examples,  but are enriched 
+
+in recurrent structural families. These repeated local branches therefore support the presence of recurring molecular 
+
+patterns or scaffold -level motifs in the reported additive chemical space. Branch colors are used to visually 
+
+distinguish  major dendrogram regions generated by hierarchical clustering. 
+
+Table S 1 | Dataset statistics 
+
+Category  Value 
+
+Atoms  41.191±47.281 
+
+Bonds  87.259±102.386 
+
+Average degree  4.130±0.432 
+
+Graph density  0.189±0.117 
+
+Degree entropy  3.265±0.802 
+
+These  statistics  were  calculated from both reported molecules and the searching space molecules. 3 
+
+> Table S 2| Node features and corresponding physical meanings
+
+Feature No.  Physical Meaning  Feature type  Encoding type  Data type 
+
+N0  C Node feature  One hot encoding  String 
+
+N1  N Node feature  One hot encoding  String 
+
+N2  O Node feature  One hot encoding  String 
+
+N3  S Node feature  One hot encoding  String 
+
+N4  F Node feature  One hot encoding  String 
+
+N5  Si  Node feature  One hot encoding  String 
+
+N6  P Node feature  One hot encoding  String 
+
+N7  Cl  Node feature  One hot encoding  String 
+
+N8  Br  Node feature  One hot encoding  String 
+
+N9  Mg  Node feature  One hot encoding  String 
+
+N10  Na  Node feature  One hot encoding  String 
+
+N11  Ca  Node feature  One hot encoding  String 
+
+N12  Fe  Node feature  One hot encoding  String 
+
+N13  As  Node feature  One hot encoding  String 
+
+N14  Al  Node feature  One hot encoding  String 
+
+N15  I Node feature  One hot encoding  String 
+
+N16  B Node feature  One hot encoding  String 
+
+N17  V Node feature  One hot encoding  String 
+
+N18  K Node feature  One hot encoding  String 
+
+N19  TI  Node feature  One hot encoding  String 
+
+N20  Yb  Node feature  One hot encoding  String 
+
+N21  Sb  Node feature  One hot encoding  String 
+
+N22  Sn  Node feature  One hot encoding  String 
+
+N23  Ag  Node feature  One hot encoding  String 
+
+N24  Pd  Node feature  One hot encoding  String 
+
+N25  Co  Node feature  One hot encoding  String 
+
+N26  Se  Node feature  One hot encoding  String 
+
+N27  Ti  Node feature  One hot encoding  String 
+
+N28  Zn  Node feature  One hot encoding  String 
+
+N29  Li  Node feature  One hot encoding  String 
+
+N30  Ge  Node feature  One hot encoding  String 
+
+N31  Cu  Node feature  One hot encoding  String 
+
+N32  Au  Node feature  One hot encoding  String 
+
+N33  Ni  Node feature  One hot encoding  String 
+
+N34  Cd  Node feature  One hot encoding  String 
+
+N35  In  Node feature  One hot encoding  String 
+
+N36  Mn  Node feature  One hot encoding  String 
+
+N37  Zr  Node feature  One hot encoding  String 4
+
+N38  Cr  Node feature  One hot encoding  String 
+
+N39  Pt  Node feature  One hot encoding  String 
+
+N40  Hg  Node feature  One hot encoding  String 
+
+N4  Pb  Node feature  One hot encoding  String 
+
+N42  Unknown element  Node feature  One hot encoding  String 
+
+N43  n_heavy_neighbors_0  Node feature  One hot encoding  String 
+
+N44  n_heavy_neighbors_1  Node feature  One hot encoding  String 
+
+N45  n_heavy_neighbors_2  Node feature  One hot encoding  String 
+
+N46  n_heavy_neighbors_3  Node feature  One hot encoding  String 
+
+N47  n_heavy_neighbors_4  Node feature  One hot encoding  String 
+
+N48  n_heavy_neighbors_More 
+
+ThanFour 
+
+Node feature  One hot encoding  String 
+
+N49  formal_charge_ -3 Node feature  One hot encoding  String 
+
+N50  formal_charge_ -2 Node feature  One hot encoding  String 
+
+N51  formal_charge_ -1 Node feature  One hot encoding  String 
+
+N52  formal_charge_0  Node feature  One hot encoding  String 
+
+N53  formal_charge_1  Node feature  One hot encoding  String 
+
+N54  formal_charge_2  Node feature  One hot encoding  String 
+
+N55  formal_charge_3  Node feature  One hot encoding  String 
+
+N56  formal_charge_Extreme  Node feature  One hot encoding  String 
+
+N57  S Node feature  One hot encoding  String 
+
+N58  SP  Node feature  One hot encoding  String 
+
+N59  SP2  Node feature  One hot encoding  String 
+
+N60  SP3  Node feature  One hot encoding  String 
+
+N61  SP3D  Node feature  One hot encoding  String 
+
+N62  SP3D2  Node feature  One hot encoding  String 
+
+N63  Other hybridization  Node feature  One hot encoding  String 
+
+N64  is_in_a_ring  Node feature  Numerical  Int 
+
+N65  is_aromatic  Node feature  Numerical  Int 
+
+N66  atomic_mass_scaled  Node feature  Numerical  Float 
+
+N67  vdw_radius_scaled  Node feature  Numerical  Float 
+
+N68  covalent_radius_scaled  Node feature  Numerical  Float 
+
+N69  CHI_UNSPECIFIED  Node feature  One hot encoding  String 
+
+N70  CHI_TETRAHEDRAL_CW  Node feature  One hot encoding  String 
+
+N71  CHI_TETRAHEDRAL_CC 
+
+W
+
+Node feature  One hot encoding  String 
+
+N72  CHI_OTHER  Node feature  One hot encoding  String 
+
+N73  n_hydrogens_0  Node feature  One hot encoding  String 
+
+N74  n_hydrogens_1  Node feature  One hot encoding  String 
+
+N75  n_hydrogens_2  Node feature  One hot encoding  String 
+
+N76  n_hydrogens_3  Node feature  One hot encoding  String 5
+
+N77  n_hydrogens_4  Node feature  One hot encoding  String 
+
+N78  n_hydrogens_MoreThanF 
+
+our 
+
+Node feature  One hot encoding  String 
+
+Fig ure  S2 | Selection of the optimal number of molecular prototype . Average silhouette scores of hierarchical 
+
+clustering and K -means 3 clustering evaluated for cluster numbers ranging from 3 to 15. The optimal number of 
+
+molecular prototypes was determined using the silhouette score, which measures the compactness and 
+
+separation of molecular clusters. Hierarchical clustering achieved the  highest silhouette score at k = 7, while K -
+
+means clustering showed a consistent optimum in the same region. Therefore, seven molecular prototypes were 
+
+selected in a data -driven manner and used throughout this study for unsupervised prototype discovery and 
+
+subsequent prototype -guided learning. 
+
+Figure S3 | UMAP 4 visual ization of  the reported boron electrolyte additive molecules  learned  by the UCL 
+
+model.  UMAP projection of the learned graph -level embeddings of reported boron -containing electrolyte additives. 
+
+Each point represents one reported additive molecule, and colors denote the prototype assignments obtained by 6
+
+hierarchical clustering in the learned representation space. The seven well -separated groups indicate that the UCL 
+
+model organizes reported additives into distinct molecular prototype regions, consistent with the optimal cluster 
+
+number determined by silhou ette -score analysis in Supplementary Fig ure  S2. The spatial separation of the clusters 
+
+supports the presence of structurally and functionally distinguishable additive prototypes encoded in the learned 
+
+embedding space. 
+
+Table  S3 | Reported additive molecules  in each prototypes .
+
+Molecular 
+
+ID  Molecular name  Molecules  Molecular 
+
+weight 
+
+Synthetic 
+
+accessibility 
+
+Score 5
+
+Prototype 
+
+label  References 
+
+6 TBDB  225.890  4.273  1 6
+
+10  ITD  186.060  3.616  1 7
+
+12  SOFPB  352.331  2.987  1 8
+
+14  DPD -CN -OCH3  245.087  3.159  1 9
+
+19  C-LiMCFB  317.089  4.211  1 10 
+
+24  NHCABT  167.971  3.293  1 11 
+
+32  DPD  190.051  2.893  1 9
+
+43  BF3 -THF  139.913  5.532  1 12 7
+
+59  DiOB -Py  205.066  2.853  1 13 
+
+66  BEG -1 412.185  4.069  1 14 
+
+83  DPD -CN  215.061  3.159  1 9
+
+92  DPD -F 208.041  2.98  1 9
+
+95  BDB  253.944  3.428  1 15 
+
+98  DPD -CHO  218.061  3.128  1 9
+
+104  DPD -COOCH2CH3  262.114  2.852  1 9
+
+116  DiOB -An  275.201  2.699  1 13 
+
+3 PFPBO  265.886  3.559  2 16 
+
+34  DCLBSB  427.745  4.164  2 17 
+
+45  TFPBO  559.977  2.965  2 18 8
+
+51  LiBBrSB  462.792  4.368  2 19 
+
+54  PFPTFBB  357.924  3.393  2 20 
+
+56  TPFPB  511.980  2.800  2 21 
+
+75  TPF  511.980  2.800  2 22 
+
+77  TFPB  511.980  2.800  2 18 
+
+94  TCLBSB  496.635  4.388  2 17 
+
+109  4FLBDOB  285.827  4.647  2 23 
+
+115  LiBClSB  373.89  4.260  2 19 
+
+122  LiBCl2SB  442.78  4.355  2 19 
+
+4 LiPVAOB  221.931  5.608  3 24 
+
+30  ADM  170.961  3.811  3 25 9
+
+36  LiODFB  143.767  4.662  3 26 
+
+37  LiPAAOB  278.959  4.432  3 27 
+
+52  LBDCB  265.899  5.246  3 28 
+
+61  LDFOB  143.767  4.662  3 29 
+
+67  LBCB  297.853  5. 653  3 28 
+
+69  NaDFOB  159.816  4.729  3 30 
+
+73  LiBOB  193.789  4.913  3 19 
+
+101  LiMOB  221.843  4.983  3 31 
+
+102  LiBMAB  301.973  4.961  3 32 
+
+105  LOCB  245.821  5.846  3 28 10 
+
+110  LiBF4  193.789  4.913  3 29 
+
+112  LiDFOB  143.767  4.662  3 33 
+
+5 (C6H3F)O2B(C8H3 
+
+F6)  349.998  3.089  4 34 
+
+8 LBBPB  386.141  3.111  4 35 
+
+9 TPhBX  311.751  2.739  4 36 
+
+15  (C6H3F)O2B(C6H3 
+
+F2)  249.984  2.911  4 34 
+
+18  LBSB  289.965  3.837  4 17 
+
+28  LBNB  334.065  3.487  4 35 
+
+50  (C6H3F)O2B(C7H4 
+
+F3)  282.001  2.880  4 34 
+
+55  (C6F4)O2B(C6F5)  234.010  2.888  4 34 
+
+60  (C6F4)O2B(C8H3F 
+
+6)  351.006  3.059  4 34 11 
+
+70  LBDOB  233.945  3.733  4 37 
+
+76  LBBB  233.945  3.733  4 35 
+
+82  (C6F4)O2B(C7H3F 
+
+6)  283.009  2.906  4 34 
+
+84  LiBPh4  326.177  2.093  4 38 
+
+85  3-MLBSB  318.019  4.029  4 17 
+
+88  (C6F4)O2B(C6H4F)  233.002  2.742  4 34 
+
+89  Li[BScB]  289.965  3.837  4 39 
+
+97  B(OPh)3  290.127  2.012  4 40 
+
+107  LiBSB  289.965  3.837  4 19 
+
+113  (C6F4)O2B(C6H3F 
+
+2)  250.992  2.873  4 34 
+
+7 TRIFM  214.905  2.601  5 41 12 
+
+11  LBO  49.751  5.870  5 42 
+
+21  Li2TB  169.123  6.757  5 43 
+
+33  PRZ  215.702  4.900  5 44 
+
+35  H3BO3  61.833  3.432  5 45 
+
+38  FBA  189.929  2.415  5 46 
+
+41  Li3BO3  65.750  6.320  5 47 
+
+44  B2O3  263811  5.773  5 48 
+
+57  LiBO2  65.750  6.320  5 49 
+
+58  TEB  65.750  6.320  5 50 
+
+65  TMSPB  194.115  2.914  5 51 
+
+71  MDMB  192.067  2.911  5 52 13 
+
+74  3F -PBF  164.898  3.899  5 41 
+
+78  LUTID  174.962  3.700  5 41 
+
+86  PBF  146.908  2.415  5 41 
+
+91  TRIZIN  284.496  5.317  5 53 
+
+96  K2B4O5(OH)4  704.412  6.036  5 54 
+
+103  VPBF  172.946  2.874  5 41 
+
+106  DEBA  99.926  4.079  5 55 
+
+111  PCN  171.918  2.711  5 41 
+
+121  LiB5AB  385.906  3.065  5 56 
+
+124  2F -PBF  164.898  2.703  5 41 
+
+13  (C3HF6O)2B(C6H5 
+
+) 421.974  3.417  6 34 14 
+
+17  THFBuBO  607.947  3.432  6 57 
+
+25  (C3HF6O)2B(C6F5)  440.972  3.547  6 34 
+
+31  (C3HF6O)2B(C6H3 
+
+F2)  457.954  3.594  6 34 
+
+46  TFEB  307.905  3.422  6 43 
+
+63  B(HFIP)3  511.896  3.443  6 58 
+
+68  Na[B(hfip)4]  701.914  3.743  6 59 
+
+90  THFB  511.896  3.687  6 57 
+
+93  TTFEB  307.905  3.422  6 60 
+
+99  TMF  613.863  3.644  6 22 
+
+108  TTFB  307.905  3.422  6 61 
+
+119  ABA#1  511.896  3.443  6 62 15 
+
+123  THFPB  511.896  3.443  6 63 
+
+125  THB  511.896  3.443  6 64 
+
+0 TMSB  278.382  3.985  7 65 
+
+1 TCEB  221.025  3.847  7 66 
+
+2 TMBx  173.535  5.202  7 67 
+
+16  TiPBx  257.697  4.618  7 67 
+
+20  L-LiMCFB  326.046  3.152  7 10 
+
+22  TME  188.076  3.621  7 22 
+
+26  HBC  1455.489  4.462  7 68 
+
+27  TnPBx  257.697  4.219  7 67 
+
+29  LBC  1059.012  3.722  7 68 16 
+
+40  LiT4PAB  414.189  3.856  7 69 
+
+47  BF3·DE  141.929  2.963  7 70 
+
+48  BPC  1060.984  3.801  7 71 
+
+64  TPB  188.076  3.388  7 72 
+
+72  TAB  342.197  3.497  7 73 
+
+79  TMB  125.538  5.382  7 74 
+
+80  B-HEMA  398.217  3.249  7 68 
+
+100  PBA  137.931  2.255  7 75 
+
+114  TBB  230.157  2.858  7 76 
+
+117  TEBx  215.616  4.804  7 67 
+
+The missing compound ID was filtered out as an outlier during the clustering process. 
+
+Table S 4 | Shared motif summary table 17 
+
+Legend  in Fig . 3e Motif name  Motif structure  Appears in the 
+
+prototype 
+
+P1 -SM  C-B(OR )2 motif  P1, P2, P3, P4, P5, P6 
+
+P2 -SM  Pentafluorophenyl  group  P2 
+
+P3 -SM  Boron  oxalate  P2, P3 
+
+P4 -SM  Catechol  boronate  P2, P3, P4 
+
+P5 -SM  BF3 -like  motif  P1, P5, P7 
+
+P6 -SM  Fluorinated  alkoxy  P6 
+
+P7 -SM  Tri -alkoxy  borate  P1, P2, P3, P4, P5, P6, 
+
+P7 
+
+8-SM  Tetra -alkoxy  borate  P2, P3, P4, P6, P7  
+
+> The shared molecular framework was identified using the SMART 77 method. 18
+
+Fig ure  S4 | Mechanism annotation statistics of the seven learned molecular prototypes.  Quantitative 
+
+mechanism annotation supporting the functional profiles in Fig. 3c. Heatmap showing the normalized frequency of 
+
+seven electrolyte -regulation mechanisms across the seven learned molecular prototypes. Frequencies were 
+
+calculated by dividing the  number of mechanism -related records by the total number of annotated records in each 
+
+prototype. 
+
+Table S 5 | Prototype s summary  table 
+
+Prototype  Number of 
+
+molecules  Representative molecule  Dominant motifs 
+
+P1  89  DiOB -Py  C-B(OR)2 motif 
+
+P2  64  TPFPB  pentafluorophenyl 
+
+group 
+
+P3  78  LiDFOB  tetra -alkoxy borate 
+
+P4  117  LBBB  catechol boronate 
+
+P5  131  PCN  BF3 -like motif 
+
+P6  92  TTFEB  fluorinated alkoxy 
+
+P7  109  TBB  tri -alkoxy borate 
+
+The population is calculated  after the graph augmentation. 19 
+
+Figure S 5 | Prototype correspondence between initial and transferred prototype centroids . Heatmap showing 
+
+the mean cosine similarity between the initial prototype centroids at epoch 1 and the transferred prototype centroids 
+
+after PCL training at epoch 300. Rows denote transferred prototypes, and columns denote initial prototypes. The 
+
+strong dia gonal similarity indicates that most transferred prototypes preserve clear correspondence with their initial 
+
+prototype identities, whereas structured off -diagonal similarities reflect partial reorganization and information sharing 
+
+among related prototype r egions during adaptation. These results support that PCL maintains prototype -level 
+
+continuity while allowing the prototype organization to adjust to the unlabeled candidate chemical space. 20 
+
+Figure S 6 | Structural motif distribution across transferred prototypes . Stacked bar plot showing the 
+
+distribution of representative boron -containing structural motifs across transferred prototypes after PCL adaptation. 
+
+Motif proportions were calculated from molecules assigned to each new prototype using predefined  SMiles ARbitrary 
+
+Target Specification  (SMARTS ) patterns, including tetra -alkoxy borate, tri -alkoxy borate, boron oxalate, BF 3-like 
+
+motifs, fluorinated alkoxy groups, C -B(OR) 2 motifs, pentafluorophenyl groups and catechol boronate. The 
+
+enrichment of different motifs in distinct transferred prototypes indicates that PCL preserves chemically meaningful 
+
+structural information during prototype adaptation rather than forming arbitra ry clusters in the candidate space. 
+
+Because a molecule may contain more than one motif, stacked heights represent cumulative motif occurrence rather 
+
+than mutually exclusive molecular classes. 
+
+Fig ure  S7 | Distribution of prototype similarity across recommendation strategies . Violin plots showing the 
+
+distribution of molecule -level prototype similarity for molecules recommended by different strategies after  translation 
+
+strategy . Each point represents one recommended molecule, and box plots indicate the median and interquartile 
+
+range. ProtoMI shows the highest overall prototype similarity among the compared strategies, indicating that 
+
+prototype -guided adaptation enriches molecule s that remain close to the learned additive prototype regions. The 
+
+red star highlights ProtoMI  achieves the highest prototype similarity among all recommendation methods .21 
+
+Fig ure  S8 | Prototype occupancy of molecules recommended by different strategies . Heatmap showing the 
+
+occupancy of recommended molecules across the seven learned molecular prototypes after  translation strategy .
+
+Rows correspond to different recommendation strategies, and columns correspond to assigned prototypes P1 –P7. 
+
+Values indicate the percentage of molecules assigned to each prototype within a given strategy, with each row 
+
+normalized to 100%. ProtoMI distrib utes recommended molecules across multiple prototype regions while retaining 
+
+high prototype similarity, suggesting that the model avoids collapse into a single prototype and preserves chemically 
+
+diverse recommendation coverage. 
+
+Fig ure  S9 | Similarity of recommended molecules to reported additives . Distribution of the maximum structural 
+
+similarity between recommended molecules and reported boron -containing electrolyte additives across different 
+
+recommendation strategies. Each violin plot shows the molecule -level known -additive similarity after post -screening, 
+
+with box plots indicating the median and interquartile range. ProtoMI exhibits a broad similarity distribution, including 
+
+both candidates close to reported additives and candidates with lower similarity, suggesting that the model transfers 
+
+protot ype -level chemical knowledge without simply reproducing close analogues of known molecules. P1 P2 P3 P4 P5 P6 P7 
+
+Assigned prototype 
+
+ProtoMI PCL encoder 
+
+PCL clustering 
+
+USL encoder USL clustering Morgan Random Recommendation strategy 
+
+21.1 5.6 8.5 0.0 23.9 40.8 0.0 
+
+3.0 38.9 0.0 0.0 0.0 58.2 0.0 6.5 1.2 2.9 0.0 5.3 78.9 5.3 0.0 26.4 0.0 0.0 0.1 71.3 2.2 
+
+0.0 0.6 83.2 0.6 0.0 0.0 15.5 5.8 18.3 4.4 6.8 3.2 32.6 29.0 
+
+4.8 11.6 3.7 0.5 4.6 71.7 3.1 
+
+010 20 
+
+30 
+
+40 50 60 70 
+
+80 Occupancy (  )22   
+
+> Table S 6| Extra recommendation statistics
+
+Method 
+
+Entropy -
+
+weighted 
+
+prototype 
+
+similarity 
+
+Novelty 
+
+score 
+
+High 
+
+similarity 
+
+ratio >0.75 
+
+Moderate 
+
+similarity 
+
+ratio 0.40 -
+
+0.75 
+
+Low 
+
+similarity 
+
+ratio <0.40 
+
+Post -
+
+screening 
+
+survival 
+
+Random 
+
+selection  27.637  0.6435 ± 
+
+0.0910  0.62%  24.42%  74.96%  2.10% 
+
+Morgan 
+
+fingerprints  41.600  0.6304 ± 
+
+0.0875  0.75%  29.10%  70.15%  5.18% 
+
+UCL encoder 
+
+only  2.985  0.6323 ± 
+
+0.0889  0.43%  30.70%  68.87%  5.26% 
+
+PCL encoder 
+
+only  29.466  0.6206 ± 
+
+0.1127  1.73%  29.21%  69.06%  1.31% 
+
+UCL encoder 
+
+clustering  2.079  0.6762 ± 
+
+0.0607  0.00%  10.32%  89.68%  0.50% 
+
+PCL encoder 
+
+clustering  24.364  0.6551 ± 
+
+0.0744  0.00%  22.29%  77.71%  1.10% 
+
+ProtoMI  57.121  0.5975 ± 
+
+0.2446  12.68%  25.35%  61.97%  0.23% 
+
+w/o EMA  9.456  0.6722 ± 
+
+0.1029  1.22%  12.91%  85.86%  1.86% 
+
+w/o 
+
+decorrelation  0.299  0.6270 ± 
+
+0.0817  0.75%  30.21%  69.04%  5.65% 
+
+w/o top -k 0.000  0.6558 ± 
+
+0.2060  7.07%  23.91%  69.02%  0.96%  
+
+> Table S 7| Full temporal validation
+
+Cutoff year  Recall  Precision  F1 score  Enrichment 
+
+factor 
+
+Reduction 
+
+factor  Hit number 
+
+2017  0.10638  0.00274  0.00535  10.52583  98.94282  5/47 
+
+2019  0.11627  0.00219  0.00430  9.18278  78.97191  5/43 
+
+2021  0.08823  0.00862  0.01570  45.63311  517.17528  3/34 
+
+2023  0.20000  0.00484  0.00946  43.63078  218.15393  4/20 23 
+
+Fig ure  S10 | Prototype survival during translation from model recommendations to experimentally 
+
+actionable candidates . Sankey diagram showing the retention and redistribution of new prototype assignments 
+
+during the translation strategy from PCL -recommended molecules to experimentally actionable candidates. The 
+
+initial PCL recommendation pool contained 30,800 molecules dist ributed across seven new prototypes. Sequential 
+
+filtering based on molecular validity, molecular weight, synthetic accessibility, active hydrogen exclusion, CAS 
+
+availability and practical cost considerations reduced the pool to 68 translation candidates. F urther prioritization 
+
+according to commercial availability and experimental feasibility yielded four candidates for electrochemical 
+
+validation, all assigned to NP3. Flow widths are proportional to the number of molecules retained from each 
+
+prototype at eac h filtering stage. 
+
+Table S 8 | 68  Candidates after  trans lation strategy 
+
+Index  Compound 
+
+ID  Formula  Molecular 
+
+weight 
+
+SA 
+
+Score 
+
+Prototype 
+
+label  CAS number  Reported 
+
+or not 
+
+1 11090867  409.053  3.177  1 119618 -67 -6 No 
+
+2 15877487  180.095  2.739  1 253280 -01 -2 No 
+
+3 57041839  292.148  3.585  1 62043 -02 -1 No 
+
+4 71390453  292.148  3.624  1 62043 -03 -2 No 
+
+5 78020  278.136  3.984  1 4325 -85 -3 Yes 24 
+
+6 425307  188.049  3.456  1 4887 -24 -5 No 
+
+7 12418354  266.132  3.356  1 7560 -51 -2 No 
+
+8 22338812  266.092  3.121  1 55923 -08 -5 No 
+
+9 56973279  344.957  3.429  1 1356165 -73 -
+
+5 No 
+
+10  517955  69.940  3.831  1 1113 -22 -0 No 
+
+11  138247  71.920  3.989  1 4443 -43 -0 No 
+
+12  13301362  222.050  3.060  1 94839 -08 -4 No 
+
+13  13789232  239.500  3.942  1 107134 -81 -6 No 
+
+14  68979  55.920  3.834  1 593 -90 -8 No 
+
+15  25068199  405.100  3.195  1 951163 -66 -9 No 
+
+16  66709077  182.122  3.664  2 1392108 -88 -
+
+1 No 
+
+17  15158954  148.020  3.571  2 139298 -13 -8 No 
+
+18  11522786  331.000  2.822  2 872044 -92 -3 No 
+
+19  22663171  193.120  3.577  2 141938 -41 -2 No 25 
+
+20  25112575  556.257  2.677  3 624744 -67 -8 No 
+
+21  58050304  430.210  2.540  3 1149804 -35 -
+
+2 No 
+
+22  58489416  430.210  2.524  3 1115639 -92 -
+
+3 No 
+
+23  23115783  502.500  2.529  3 281668 -51 -7 No 
+
+24  58769449  354.300  2.472  3 890042 -13 -4 No 
+
+25  21425  818.862  2.456  5 5337 -41 -7 No 
+
+26  125587  224.200  3.947  5 32327 -52 -9 No 
+
+27  13680338  238.300  3.883  5 16413 -17 -5 No 
+
+28  71384846  350.500  3.582  5 62594 -01 -8 No 
+
+29  71384845  350.500  3.983  5 62594 -02 -9 No 
+
+30  71334465  560.900  2.331  5 106787 -52 -4 No 
+
+31  71386315  460.700  2.844  5 62444 -57 -9 No 
+
+32  71352225  476.700  2.070  5 1188 -97 -2 No 
+
+33  352104  518.799  2.065  5 14245 -38 -6 No 26 
+
+34  71346374  211.180  3.403  5 151293 -65 -1 No 
+
+35  17177  398.500  3.931  5 2467 -13 -2 No 
+
+36  21424  314.300  3.996  5 5337 -37 -1 No 
+
+37  17178  566.800  2.247  5 2467 -15 -4 No 
+
+38  219443  440.600  3.010  5 3088 -77 -5 No 
+
+39  108841  608.900  2.480  5 59802 -06 -1 No 
+
+40  15605783  296.100  3.454  6 267006 -38 -2 No 
+
+41  18373965  240.038  3.337  6 848609 -02 -9 No 
+
+42  582056  511.985  2.800  6 1109 -15 -5 Yes 
+
+43  11727684  344.993  2.819  6 165612 -94 -2 No 
+
+44  75360847  458.017  3.449  6 2003 -04 -5 Yes 
+
+45  10959856  380.380  3.032  6 2720 -03 -8 No 
+
+46  11115716  359.960  2.958  6 170151 -48 -1 No 
+
+47  12626668  248.770  3.405  6 830 -48 -8 No 27 
+
+48  11050988  770.100  3.300  6 190282 -03 -2 Yes 
+
+49  15520532  207.940  3.206  6 363596 -54 -7 No 
+
+50  10876447  770.100  3.354  6 204930 -04 -1 Yes 
+
+51  71428744  494.000  3.182  6 916442 -23 -4 Yes 
+
+52  71420187  598.200  3.056  6 820972 -26 -7 No 
+
+53  71447200  367.850  3.257  6 329009 -01 -0 No 
+
+54  71350376  448.100  3.152  6 165612 -90 -8 No 
+
+55  71428745  854.100  3.459  6 916336 -48 -6 Yes 
+
+56  4121732  221.150  3.178  6 4426 -24 -8 No 
+
+57  11327649  422.000  2.897  6 148892 -98 -2 No 
+
+58  4072412  302.100  3.264  6 158752 -98 -8 No 
+
+59  144241  262.990  3.962  6 67395 -53 -3 No 
+
+60  22722373  332.100  2.614  6 154735 -10 -1 No 
+
+61  12159360  837.900  3.357  6 223769 -13 -9 No 28 
+
+62  3599767  307.910  3.422  6 659 -18 -7 Yes 
+
+63  18329245  1100.100  3.875  6 213974 -85 -7 No 
+
+64  2736203  511.900  3.443  6 6919 -80 -8 Yes 
+
+65  54472851  607.950  3.432  6 755 -53 -3 Yes 
+
+66  15887311  560.000  2.965  6 146355 -12 -6 Yes 
+
+67  52915087  403.960  3.776  6 2317 -76 -2 Yes 
+
+68  4438527  679.000  2.839  6 47855 -94 -7 Yes  
+
+> Table S 9| 4 final molecules
+
+Compound 
+
+ID  Molecular name  CAS  Formula  Price  Action 
+
+25112575 
+
+2-[9,10 -Di(naphthalen -2-
+
+yl)anthracen -2-yl] -4,4,5,5 -
+
+tetramethyl -1,3,2 -
+
+dioxaborolane 
+
+624744 -67 -8 240.9 ￥/g Under 
+
+preparation 
+
+58050304 
+
+4,4,5,5 -Tetramethyl -2-[10 -(1 -
+
+naphthyl)anthracen -9-yl] -1,3,2 -
+
+dioxaborolane 
+
+1149804 -35 -2 557.9 ￥/g
+
+Select to do 
+
+the validation 
+
+experiment 
+
+58489416 
+
+4,4,5,5 -Tetramethyl -2-[3 -
+
+(triphenylen -2-yl)phenyl] -1,3,2 -
+
+dioxaborolane 
+
+1115639 -92 -3 122.9 ￥/g Under 
+
+preparation 
+
+58769449 
+
+4,4,5,5 -Tetramethyl -2-
+
+(triphenylen -2-yl) -1,3,2 -
+
+dioxaborolane 
+
+890042 -13 -4 68 .9 ￥/g Under 
+
+preparation 29 
+
+Fig ure  S1 1 | C 1s XPS analysis of graphite electrodes cycled with and without TNDB.  High -resolution C 1s 
+
+spectra and peak deconvolution of graphite electrodes recovered from the baseline electrolyte after (a) formation 
+
+and (b) 100 cycles, and from the TNDB -containing electrolyte after (c) formation and (d) 100 cycles at 55  ° C. The 
+
+fitted components are assigned to C –C, C –O, C=O, lithium alkyl carbonates (ROCO 2Li) and Li 2CO 3. Open squares 
+
+represent the experimental data, red curves the overall fits and colored curves the individual fitted components. 
+
+Binding energies were calibrated to the C –C peak at 284.8  eV. 280 285 290 295 Intensity (a.u.) Binding energy (eV)  
+
+> w/o TNDB Formation C-C C-O C=O ROCO 2Li Li 2CO 3
+
+# b
+
+## 280 285 290 295 Intensity (a.u.) Binding energy (eV) 
+
+> 100 cycle w/o TNDB
+
+## 280 285 290 295 Intensity (a.u.) Binding energy (eV) 
+
+> with TNDB Formation
+
+# ac
+
+## 280 285 290 295 Intensity (a.u.) Binding energy (eV) 
+
+> with TNDB 100 cycle
+
+# d30 
+
+Fig ure  S12 | Three -dimensional ToF -SIMS compositional renderings of representative SEI fragments on 
+
+graphite electrodes cycled at 55 ° C with and without TNDB.  From left to right, the mapped negative secondary -
+
+ion fragments are PO 2⁻, LiF 2⁻, CO 3⁻ and CH 3CO ⁻. The rows correspond, from top to bottom, to graphite electrodes 
+
+recovered from the baseline electrolyte after formation and after 100 cycles, and from the TNDB -containing 
+
+electrolyte after formation and after 100 cycles at 55  ° C. The renderings visualize the spatial and depth -dependent 
+
+distributions of the selected fragments within the sputtered interphase volume. 31 
+
+Fig ure  S13 | Depth -resolved distribution of additive -derived boron in the graphite SEI.  X–Z cross -sectional 
+
+ToF -SIMS maps of the B ⁻ secondary -ion fragment obtained from graphite electrodes cycled in the TNDB -containing 
+
+electrolyte after formation and after 100 cycles at 55  ° C. Color scales are independently adjusted for visualization. 
+
+Fig ure  S14 | ToF -SIMS sputter -depth profiles of the graphite SEI formed with and without TNDB.  (a) CH 3CO ⁻,
+
+representing oxygenated organic fragments derived from electrolyte decomposition; (b) LiF 2⁻, representing LiF -
+
+related inorganic species; and (c) PO 2⁻, associated with LiPF 6-derived P -O species. (d) CO 3⁻, representing 
+
+carbonate -containing residues.  The profiles are interpreted as relative depth -distribution trends. 0 200 400 600 800 1000 
+
+> Intensity (a.u.)
+
+Sputtering Time (s)      
+
+> w/o TNDB Formation w/o TNDB 100 Cycle with TNDB Formation with TNDB 100 cycle CH 3CO-0200 400 600 800 1000
+> Intensity (a.u.)
+
+Sputtering Time (s) 
+
+> w/o TNDB Formation w/o TNDB 100 Cycle with TNDB Formation with TNDB 100 cycle LiF 2-
+
+a bc d     
+
+> 0200 400 600 800 1000
+> Intensity (a.u.)
+
+Sputtering Time (s)      
+
+> w/o TNDB Formation w/o TNDB 100 Cycle with TNDB Formation with TNDB 100 cycle PO 2-0200 400 600 800 1000 w/o TNDB Formation w/o TNDB 100 Cycle with TNDB Formation with TNDB 100 cycle
+> Intensity (a.u.)
+
+Sputtering Time (s) 
+
+> CO 3-
+
+32 
+
+Fig ure  S15  | ToF -SIMS sputtering -time profiles of the FeO ⁻ secondary -ion fragment for graphite electrodes 
+
+recovered after formation and 100 cycles. 
+
+Fig ure  S16 | Surface morphology of graphite electrodes after cycling.  Representative SEM images of graphite 
+
+electrodes recovered from LiFePO 4||graphite cells using the (a,b) baseline electrolyte and (c,d) TNDB -containing 
+
+electrolyte after (a,c) formation and (b,d) 100 cycles at 55  ° C. TOF-SIMS, FeO -     
+
+> 0200 400 600 800 1000
+> Intensity (a.u.)
+
+Sputtering time (s)   
+
+> w/o TNDB, formation w/o TNDB, 100 th cycle w/ TNDB, formation w/ TNDB, 100 th cycle
+
+33 
+
+Fig ure  S17  | Details of the  large -language -model -assisted  data -mining pipeline . Content identification: identify 
+
+the electrolyte and interphase -related information. Auto -extraction: using the large language model to extract specific 
+
+content guided by the user prompts. Auto -correction: read the corresponding literature for each electro lyte and 
+
+additive entity again to check the correction of the extracted information.  The deadline for collecting the dataset is 
+
+before  July 2025.  And the prompts used in  the extraction stage are shown in the Supplementary Figure S18 and 
+
+Figure S19. LLMs Electrolyte Info 
+
+> {"electrolyte_type ": "Liquid",
+> "battery_system ": "Li-ion battery",
+> "format ": "Not found", "cathode_material ": "Not found", "anode_material ": "Graphite", "electrolyte ": "Methyl acetate (MA) with 0.1 M TPFPB + 0.3 M LiF, 10% FEC, and 0.05 M LiDFOB additive",
+> "additive ": "Lithium
+> Difluoro(oxalato)borate (LiDFOB) and Fluoroethylene carbonate (FEC)", "year ": "2025“
+> },
+
+Content 
+
+Identification Auto-Extraction Auto-Correction 
+
+Interphase Info {
+
+> 'CEI ': 'Form a stable and dense
+> CEI membrane.’,
+> 'SEI ': 'Suppressing side reactions
+> and reducing interface impedance.’
+> }
+
+Electrolyte 
+
+Additive 
+
+> Cell type Additives Molecule SMILES
+> Electrolytes
+
+Heuristic extraction of literature knowledge 
+
+Info accuracy 
+
+> 70.7% 82.6% 94.4%
+
+Extracted data  
+
+> …… …% 34
+
+Figure S 18 | Prompt for content identification  and auto -extraction .35 
+
+Figure S 19 | Prompt for auto -correction. 36    
+
+> Table S 10 |Edge features and corresponding physical meanings
+
+Feature  index  Physical Meaning  Feature type  Encoding type  Data type 
+
+1 bond_type_single  Edge  feature  One hot encoding  String 
+
+2 bond_type_double  Edge feature  One hot encoding  String 
+
+3 bond_type_triple  Edge feature  One hot encoding  String 
+
+4 bond_type_aromatic  Edge feature  One hot encoding  String 
+
+5 bond_is_conjugated  Edge feature  Numerical  Int 
+
+6 bond_is_in_ring  Edge feature  Numerical  Int 
+
+7 bond_dir_none  Edge feature  One hot encoding  String 
+
+8 bond_dir_beginwedge  Edge feature  One hot encoding  String 
+
+9 bond_dir_begindash  Edge feature  One hot encoding  String 
+
+10  bond_dir_enddownright  Edge feature  One hot encoding  String 
+
+11  bond_dir_endupright  Edge feature  One hot encoding  String 
+
+12  bond_is_aromatic  Edge feature  Numerical  Int 
+
+13  stereo_type_stereoz  Edge feature  One hot encoding  String 
+
+14  stereo_type_stereoe  Edge feature  One hot encoding  String 
+
+15  stereo_type_stereoany  Edge feature  One hot encoding  String 
+
+16  stereo_type_stereonone  Edge feature  One hot encoding  String 37 
+
+Reference s
+
+1 Murtagh, F. & Contreras, P. Algorithms for hierarchical clustering: an overview.  Wiley 
+
+interdisciplinary reviews: data mining and knowledge discovery  2, 86 -97 (2012). 
+
+2 Bajusz, D., Rácz, A. & Héberger, K. Why is Tanimoto index an appropriate choice for 
+
+fingerprint -based similarity calculations?  Journal of Cheminformatics  7, 20 (2015). 
+
+3 Likas, A., Vlassis, N. & Verbeek, J. J. The global k -means clustering algorithm.  Pattern 
+
+recognition  36 , 451 -461 (2003). 
+
+4 McInnes, L., Healy, J. & Melville, J. Umap: Uniform manifold approximation and 
+
+projection for dimension reduction.  arXiv preprint arXiv:1802.03426  (2018). 
+
+5 Ertl, P. & Schuffenhauer, A. Estimation of synthetic accessibility score of drug -like 
+
+molecules based on molecular complexity and fragment contributions.  Journal of 
+
+Cheminformatics  1 (2009). 
+
+6 Zou, Y.  et al.  Enhanced interfacial stability of a LiNi0. 9Co0. 05Mn0. 05O2 cathode by 
+
+a diboron additive.  ACS Applied Energy Materials  4, 11051 -11061 (2021). 
+
+7 Zhang, W.  et al.  Dynamically constructing robust cathode -electrolyte -interphase on 
+
+nickel -rich cathode by organic boron additive for high -performance lithium -ion batteries. 
+
+Chemical Engineering Journal  491 , 151946 (2024). 
+
+8 Chen, Y.  et al.  Molecular -level designed single electrolyte additive with multifunctional 
+
+groups enabling high mechanical properties/fast Li+ kinetics interphase for wide -
+
+temperature nickel -rich/graphite batteries.  Chemical Engineering Journal  500 , 157218 
+
+(2024). 
+
+9 Sun, Z.  et al.  High -voltage and high -temperature LiCoO2 operation via the electrolyte 
+
+additive of electron -defect boron compounds.  ACS Energy Letters  8, 2478 -2487 (2023). 
+
+10  Zhou, H.  et al.  Controlled Anodic Decomposition Pathway of Supramolecular Lithium 
+
+Borate for Rationally Tuned Interphase Chemistry.  Angewandte Chemie  137 ,
+
+e202500425 (2025). 
+
+11  Wang, Y.  et al.  N-heterocyclic carbene as a potent LiNO3 -solubilizer, Li+ -solvation 
+
+regulator and solid -electrolyte interphase enhancer for highly durable Lithium metal 
+
+batteries.  Chemical Engineering Journal , 166397 (2025). 
+
+12  Peng, S. -H., Kuan, W. -F. & Lue, S. J. Electro -boost in -situ formation of poly 
+
+(tetrahydrofuran) to enhance interfacial compatibility and charge transfer for solid 
+
+polymer electrolyte.  European Polymer Journal  234 , 114016 (2025). 
+
+13  Kucuk, A. C. & Abe, T. Borolan -2-yl involving anion acceptors for organic liquid 
+
+electrolyte -based fluoride shuttle batteries.  Journal of Fluorine Chemistry  240 , 109672 
+
+(2020). 
+
+14  Zhang, S. & Angell, C. A Novel Electrolyte Solvent for Rechargeable Lithium and 
+
+Lithium ‐Ion Batteries.  Journal of The Electrochemical Society  143 , 4047 -4053 (1996). 
+
+15  Lv, J., Wang, Z., Zhou, Y., Yu, W. & Jia, Q. Application of a cost -effective boron -based 
+
+electrolyte additive in high -voltage lithium metal battery.  Journal of Energy Storage  112 ,
+
+115596 (2025). 
+
+16  Li, L., Lee, H., Li, H., Yang, X. & Huang, X. A pentafluorophenylboron oxalate additive 
+
+in non -aqueous electrolytes for lithium batteries.  Electrochemistry communications  11 ,
+
+2296 -2299 (2009). 
+
+17  Sasaki, Y., Handa, M., Kurashima, K., Tonuma, T. & Usami, K. Application of lithium 38 
+
+organoborate with salicylic ligand to lithium battery electrolyte.  Journal of The 
+
+Electrochemical Society  148 , A999 -A1003 (2001). 
+
+18  Sun, X., Lee, H., Yang, X. & McBreen, J. Comparative studies of the electrochemical 
+
+and thermal stability of two types of composite lithium battery electrolytes using boron ‐
+
+based anion receptors.  Journal of The Electrochemical Society  146 , 3655 -3659 (1999). 
+
+19  Kaymaksiz, S.  et al.  Electrochemical stability of lithium salicylato -borates as electrolyte 
+
+additives in Li -ion batteries.  Journal of Power Sources  239 , 659 -669 (2013). 
+
+20  Chen, Z. & Amine, K. Bifunctional electrolyte additive for lithium -ion batteries. 
+
+Electrochemistry communications  9, 703 -707 (2007). 
+
+21  McBreen, J., Lee, H., Yang, X. & Sun, X. New approaches to the design of polymer and 
+
+liquid electrolytes for lithium batteries.  Journal of Power Sources  89 , 163 -167 (2000). 
+
+22  Parida, R. & Lee, J. Y. Boron based podand molecule as an anion receptor additive in 
+
+Li -ion battery electrolytes: A combined density functional theory and molecular 
+
+dynamics study.  Journal of Molecular Liquids  384 , 122236 (2023). 
+
+23  Li, X. -Y., Xue, Z. -M., Zhao, J. -F. & Chen, C. -H. A new lithium salt with tetrafluoro -1, 2 -
+
+benzenediolato and oxalato complexes of boron for lithium battery electrolytes.  Journal 
+
+of Power Sources  235 , 274 -279 (2013). 
+
+24  Zhu, Y.  et al.  A composite gel polymer electrolyte with high performance based on poly 
+
+(vinylidene fluoride) and polyborate for lithium ion batteries.  Advanced Energy 
+
+Materials  4, 1300647 (2014). 
+
+25  Chen, Y. -Q.  et al.  An electrolyte additive with boron -nitrogen -oxygen alkyl group 
+
+enabled stable cycling for high voltage LiNi0. 5Mn1. 5O4 cathode in lithium -ion battery. 
+
+Journal of Power Sources  477 , 228473 (2020). 
+
+26  Aravindan, V., Gnanaraj, J., Madhavi, S. & Liu, H. K. Lithium ‐ion conducting electrolyte 
+
+salts for lithium batteries.  Chemistry –A European Journal  17 , 14326 -14346 (2011). 
+
+27  Zhu, Y., Xiao, S., Shi, Y., Yang, Y. & Wu, Y. A trilayer poly (vinylidene 
+
+fluoride)/polyborate/poly (vinylidene fluoride) gel polymer electrolyte with good 
+
+performance for lithium ion batteries.  Journal of Materials Chemistry A  1, 7790 -7797 
+
+(2013). 
+
+28  Tang, Y. -N., Xue, Z. -M., Ding, J. & Chen, C. -H. Two unsymmetrical lithium 
+
+organoborates with mixed -ligand of croconato and oxalicdiolato or benzenediolato for 
+
+lithium battery electrolytes.  Journal of Power Sources  218 , 134 -139 (2012). 
+
+29  Liu, Y.  et al.  Impacts of lithium tetrafluoroborate and lithium difluoro (oxalate) borate as 
+
+additives on the storage life of Li -ion battery at elevated temperature.  Ionics  24 , 1617 -
+
+1628 (2018). 
+
+30  Feng, Y. H.  et al.  Dual ‐Anionic Coordination Manipulation Induces Phosphorus and 
+
+Boron ‐Rich Gradient Interphase Towards Stable and Safe Sodium Metal Batteries. 
+
+Angewandte Chemie  137 , e202415644 (2025). 
+
+31  Xu, W., Shusterman, A. J., Marzke, R. & Angell, C. A. LiMOB, an unsymmetrical 
+
+nonaromatic orthoborate salt for nonaqueous solution electrochemical applications. 
+
+Journal of The Electrochemical Society  151 , A632 -A638 (2004). 
+
+32  Liu, P.  et al.  Interphase building of organic –inorganic hybrid polymer solid electrolyte 
+
+with uniform intermolecular Li+ path for stable lithium metal batteries.  Small  17 ,
+
+2102454 (2021). 39 
+
+33  Chen, Z., Liu, J. & Amine, K. Lithium difluoro (oxalato) borate as salt for lithium -ion 
+
+batteries.  Electrochemical and solid -state letters  10 , A45 -A47 (2007). 
+
+34  Lee, H., Ma, Z., Yang, X., Sun, X. & McBreen, J. Synthesis of a series of fluorinated 
+
+boronate compounds and their use as additives in lithium battery electrolytes.  Journal 
+
+of The Electrochemical Society  151 , A1429 -A1435 (2004). 
+
+35  Sasaki, Y., Sekiya, S., Handa, M. & Usami, K. Chelate complexes with boron as lithium 
+
+salts for lithium battery electrolytes.  Journal of Power Sources  79 , 91 -96 (1999). 
+
+36  Kucuk, A. C., Yamanaka, T. & Abe, T. Fluoride shuttle batteries: on the performance of 
+
+the BiF3 electrode in organic liquid electrolytes containing a mixture of lithium bis 
+
+(oxalato) borate and triphenylboroxin.  Solid State Ionics  357 , 115499 (2020). 
+
+37  Xue, Z. -M., Zhao, J. -F., Ding, J. & Chen, C. -H. LBDOB, a new lithium salt with 
+
+benzenediolato and oxalato complexes of boron for lithium battery electrolytes.  Journal 
+
+of Power Sources  195 , 853 -856 (2010). 
+
+38  Kwon, H.  et al.  Covariance of interphasic properties and fast chargeability of energy -
+
+dense lithium metal batteries.  Nature Energy  10 , 1132 -1145 (2025). 
+
+39  Shah, F. U., Gnezdilov, O. I. & Filippov, A. Ion dynamics in halogen -free phosphonium 
+
+bis (salicylato) borate ionic liquid electrolytes for lithium -ion batteries.  Physical 
+
+Chemistry Chemical Physics  19 , 16721 -16730 (2017). 
+
+40  Long, J.  et al.  Efficient boron -based electrolytes constructed by anionic and interfacial 
+
+co -regulation for rechargeable magnesium batteries.  Chemical Engineering Journal 
+
+461 , 141901 (2023). 
+
+41  Nie, M., Xia, J. & Dahn, J. Development of pyridine -boron trifluoride electrolyte 
+
+additives for lithium -ion batteries.  Journal of The Electrochemical Society  162 , A1186 -
+
+A1195 (2015). 
+
+42  Park, N. R.  et al.  Understanding the role of lithium borate as the surface coating on 
+
+high voltage single crystal LiNi0. 5Mn1. 5O4.  Advanced Functional Materials  34 ,
+
+2312091 (2024). 
+
+43  Xie, Z.  et al.  Designing High -Temperature Stable Electrolytes: Insights from the 
+
+Degradation Mechanisms of Boron -Containing Additives.  Journal of the American 
+
+Chemical Society  147 , 23931 -23945 (2025). 
+
+44  Ma, L.  et al.  A systematic study of some promising electrolyte additives in Li 
+
+[Ni1/3Mn1/3Co1/3] O2/graphite, Li [Ni0. 5Mn0. 3Co0. 2]/graphite and Li [Ni0. 6Mn0. 
+
+2Co0. 2]/graphite pouch cells.  Journal of Power Sources  299 , 130 -138 (2015). 
+
+45  Öksüzoğlu, F.  et al.  The Impact of boron compounds on the structure and ionic 
+
+conductivity of LATP solid electrolytes.  Materials  17 , 3846 (2024). 
+
+46  Liu, S.  et al.  Dendrite -free lithium deposition enabled by interfacial regulation via dipole -
+
+dipole interaction in anode -free lithium metal batteries.  Energy Storage Materials  62 ,
+
+102959 (2023). 
+
+47  Wang, D.  et al.  Enhanced ionic conductivity of Li3. 5Si0. 5P0. 5O4 with addition of 
+
+lithium borate.  Solid State Ionics  283 , 109 -114 (2015). 
+
+48  Pershina, S., Vovkotrub, E. & Antonov, B. Effects of B2O3 on crystallization kinetics, 
+
+microstructure and properties of Li1. 5Al0. 5Ge1. 5 (PO4) 3 -based glass -ceramics. 
+
+Solid State Ionics  383 , 115990 (2022). 
+
+49  Aslam, M. & Kong, X. Y. A lithium ion conductor in Li4SiO4 -Li3PO4 -LiBO2 ternary 40 
+
+system.  Solid State Ionics  293 , 72 -76 (2016). 
+
+50  Li, J.  et al.  Understanding interfacial properties between Li -rich layered oxide and 
+
+electrolyte containing triethyl borate.  The Journal of Physical Chemistry C  120 , 26899 -
+
+26907 (2016). 
+
+51  Cai, Q.  et al.  Synergistic effects of film -forming and film -modifying additives for 
+
+enhanced all -climate performance of graphite/NMC622 pouch cells.  Chemical 
+
+Engineering Journal  505 , 159156 (2025). 
+
+52  Liu, Z., Patra, A. & Matsumi, N. Boron -Containing Ternary Electrolyte for Excellent Li -
+
+Ion Transference and Stabilization of LiNMC -Based Cells.  ACS Applied Energy 
+
+Materials  8, 3360 -3368 (2025). 
+
+53  Zhang, Y.  et al.  BF3 -based electrolyte additives promote electrochemical reactions to 
+
+boost the energy density of Li/CFx primary batteries.  Electrochimica Acta  470 , 143311 
+
+(2023). 
+
+54  Yan, J.  et al.  Sustainable release of borate -and nitrate -electrolyte additives via metal -
+
+organic frameworks nanocapsules for stable lithium metal batteries.  Chemical 
+
+Engineering Journal  494 , 153104 (2024). 
+
+55  Cai, K.  et al.  Tow -way regulation strategy for in -situ electropolymerization additives 
+
+coordinated by double bonds and boric acid groups in lithium secondary batteries. 
+
+Chemical Engineering Journal  500 , 156790 (2024). 
+
+56  Duan, P. H.  et al.  Dynamic anion enables self ‐healing single ‐ion conductor polymer 
+
+electrolyte for lithium ‐metal batteries.  Advanced Functional Materials  34 , 2402065 
+
+(2024). 
+
+57  Kumagae, K.  et al.  Improvement of cycling performance of FeF3 -based lithium -ion 
+
+battery by boron -based additives.  Journal of The Electrochemical Society  163 , A1633 -
+
+A1636 (2016). 
+
+58  Song, X.  et al.  Iodine Boosted Fluoro ‐Organic Borate Electrolytes Enabling Fluent Ion ‐
+
+Conductive Solid Electrolyte Interphase for High ‐Performance Magnesium Metal 
+
+Batteries.  Angewandte Chemie  137 , e202417450 (2025). 
+
+59  Lohani, H.  et al.  Fluorine Rich Borate Salt Anion Based Electrolyte for High Voltage 
+
+Sodium Metal Battery Development.  Small  20 , 2311157 (2024). 
+
+60  Ma, Y.  et al.  A new anion receptor for improving the interface between lithium -and 
+
+manganese -rich layered oxide cathode and the electrolyte.  Chemistry of Materials  29 ,
+
+2141 -2149 (2017). 
+
+61  Hou, Z., Zhou, R., Liu, K., Zhu, J. & Zhang, B. A CaI2 ‐Based Electrolyte Enabled by 
+
+Borate Ester Anion Receptors for Reversible Ca− Organic and Ca− Se Batteries. 
+
+Angewandte Chemie International Edition  64 , e202413416 (2025). 
+
+62  Nagasubramanian, G. & Sanchez, B. A new chemical approach to improving discharge 
+
+capacity of Li/(CFx) n cells.  Journal of Power Sources  165 , 630 -634 (2007). 
+
+63  Li, L.  et al.  New electrolytes for lithium ion batteries using LiF salt and boron based 
+
+anion receptors.  Journal of Power Sources  184 , 517 -521 (2008). 
+
+64  Li, T.  et al.  In situ polymerization of 1, 3 -dioxolane and formation of fluorine/boron -rich 
+
+interfaces enabled by film -forming additives for long -life lithium metal batteries. 
+
+Chemical Science  15 , 12108 -12117 (2024). 
+
+65  Meng, Y., Chen, G., Shi, L., Liu, H. & Zhang, D. Operando fourier transform infrared 41 
+
+investigation of cathode electrolyte interphase dynamic reversible evolution on Li1. 
+
+2Ni0. 2Mn0. 6O2.  ACS Applied Materials & Interfaces  11 , 45108 -45117 (2019). 
+
+66  Zhang, Z.  et al.  Enhancing the electrochemical performance of a high -voltage LiCoO2 
+
+cathode with a bifunctional electrolyte additive.  ACS Applied Energy Materials  4,
+
+12954 -12964 (2021). 
+
+67  Horino, T.  et al.  High voltage stability of interfacial reaction at the LiMn2O4 thin -film 
+
+electrodes/liquid electrolytes with boroxine compounds.  Journal of The Electrochemical 
+
+Society  157 , A677 -A681 (2010). 
+
+68  Shim, J., Lee, J. S., Lee, J. H., Kim, H. J. & Lee, J. -C. Gel polymer electrolytes 
+
+containing anion -trapping boron moieties for lithium -ion battery applications.  ACS 
+
+Applied Materials & Interfaces  8, 27740 -27752 (2016). 
+
+69  Yang, Z., Ye, Y., Meng, N. & Lian, F. Adaptive 3D Cross ‐Linked Single ‐Ion Conducting 
+
+Polymer Electrolytes Enable Powerful Interface for Solid State Batteries.  Angewandte 
+
+Chemie  137 , e202505232 (2025). 
+
+70  Forero -Saboya, J., Bodin, C. & Ponrouch, A. A boron -based electrolyte additive for 
+
+calcium electrodeposition.  Electrochemistry communications  124 , 106936 (2021). 
+
+71  Hong, D. G., Baik, J. -H., Kim, S. & Lee, J. -C. Solid polymer electrolytes based on 
+
+polysiloxane with anion -trapping boron moieties for all -solid -state lithium metal 
+
+batteries.  Polymer  240 , 124517 (2022). 
+
+72  Yang, X.  et al.  Stabilizing lithium manganese oxide/organic carbonate electrolyte 
+
+interface with a simple boron -containing additive.  Electrochimica Acta  227 , 24 -32 
+
+(2017). 
+
+73  Shin, H.  et al.  Synthesis and characteristics of acrylol borate as new acrylic gelator for 
+
+lithium secondary battery.  Macromolecular Research  16 , 134 -138 (2008). 
+
+74  Freiberg, A.  et al.  Anodic decomposition of trimethylboroxine as additive for high 
+
+voltage Li -ion batteries.  Journal of The Electrochemical Society  161 , A2255 -A2261 
+
+(2014). 
+
+75  Luo, S.  et al.  Construction of stable two -sided interface via the addition of phenylboric 
+
+acid in Lithium -ion batteries.  Electrochimica Acta  498 , 144684 (2024). 
+
+76  Xi, K.  et al.  A novel strategy to improve the electrochemical properties of in -situ 
+
+polymerized 1, 3 -dioxolane electrolyte in lithium metal batteries.  Journal of Colloid and 
+
+Interface Science  679 , 1277 -1287 (2025). 
+
+77  Zhang, C.  et al.  Small Molecule Accurate Recognition Technology (SMART) to 
+
+Enhance Natural Products Research.  Scientific Reports  7 (2017).
