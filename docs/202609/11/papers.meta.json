@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-11",
+  "date": "2026-09-11",
+  "generated_at": "2026-09-11T22:13:48",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/11/2609.11347v1-reification-as-a-transferable-vocabulary-zero-shot-link-prediction-with-vanilla-gnns",
+      "section": "quick",
+      "title_en": "Reification as a Transferable Vocabulary: Zero-Shot Link Prediction with Vanilla GNNs",
+      "authors": "Camille Pradel",
+      "date": "2026-09-10",
+      "pdf": "https://arxiv.org/pdf/2609.11347v1",
+      "score": "6.0",
+      "evidence": "零样本迁移到未见图的归纳链接预测",
+      "tldr": "知识图谱基础模型依赖专用架构实现零样本链接预测。本文通过具体化把事实变为节点，用固定六种元关系连接主语、宾语与关系类型，使关系类型成为匿名共享节点而非模型参数。五种教科书GNN仅用单图4245三元组训练30分钟，即可零样本迁移至40个归纳链接预测基准，最佳GAT媲美ULTRA。这证明迁移机制可外置于表示，并开源代码、检查点与评测流程。",
+      "tags": "query:drug-ood-gen",
+      "abstract_en": "Knowledge graph foundation models such as ULTRA achieve zero-shot link prediction on unseen graphs through dedicated architectures that hard-code a transfer mechanism. In this work we move that mechanism out of the architecture and into the representation, by \\emph{reifying} the input graph: every fact becomes a node, connected to its subject, object, and relation type through a fixed vocabulary of six meta-relations, with relation types as anonymous shared nodes rather than model parameters. On this representation, five textbook GNNs (GAT, GINE with sum and with mean+max aggregation, GraphSAGE, R-GCN), each trained on a single knowledge graph of 4,245 triples for 30 minutes on one NVIDIA A100, transfer zero-shot to 40 inductive link-prediction benchmarks. The best of them, an off-the-shelf GAT, matches ULTRA, a dedicated foundation model pretrained on three graphs, across ULTRA's own evaluation suite. The same fixed vocabulary extends to relational databases, a row becoming an entity and a foreign-key column a relation type; a preliminary probe on two unseen databases, with no cell values, schema text or in-context labels, shows a model of this family pretrained on three knowledge graphs ranking foreign-key targets far above random-initialization and degree controls. We release the code, the checkpoints, and the evaluation pipeline for all 40 benchmarks.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

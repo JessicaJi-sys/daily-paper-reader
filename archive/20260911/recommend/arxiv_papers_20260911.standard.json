@@ -1,0 +1,61 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-11T22:12:39.811417+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 5,
+    "deep_divecandidates": 0,
+    "deep_cap": 10,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 15,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.11347v1",
+      "source": "arxiv",
+      "title": "Reification as a Transferable Vocabulary: Zero-Shot Link Prediction with Vanilla GNNs",
+      "abstract": "Knowledge graph foundation models such as ULTRA achieve zero-shot link prediction on unseen graphs through dedicated architectures that hard-code a transfer mechanism. In this work we move that mechanism out of the architecture and into the representation, by \\emph{reifying} the input graph: every fact becomes a node, connected to its subject, object, and relation type through a fixed vocabulary of six meta-relations, with relation types as anonymous shared nodes rather than model parameters. On this representation, five textbook GNNs (GAT, GINE with sum and with mean+max aggregation, GraphSAGE, R-GCN), each trained on a single knowledge graph of 4,245 triples for 30 minutes on one NVIDIA A100, transfer zero-shot to 40 inductive link-prediction benchmarks. The best of them, an off-the-shelf GAT, matches ULTRA, a dedicated foundation model pretrained on three graphs, across ULTRA's own evaluation suite. The same fixed vocabulary extends to relational databases, a row becoming an entity and a foreign-key column a relation type; a preliminary probe on two unseen databases, with no cell values, schema text or in-context labels, shows a model of this family pretrained on three knowledge graphs ranking foreign-key targets far above random-initialization and degree controls. We release the code, the checkpoints, and the evaluation pipeline for all 40 benchmarks.",
+      "authors": [
+        "Camille Pradel"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-10T10:26:09+00:00",
+      "link": "https://arxiv.org/pdf/2609.11347v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "zero-shot transfer to unseen graphs for inductive link prediction",
+      "llm_evidence_cn": "零样本迁移到未见图的归纳链接预测",
+      "llm_evidence": "零样本迁移到未见图的归纳链接预测",
+      "canonical_evidence": "零样本迁移到未见图的归纳链接预测",
+      "llm_tldr_en": "By reifying knowledge graphs into a fixed six-meta-relation vocabulary, textbook GNNs trained on a single small graph transfer zero-shot to 40 inductive link-prediction datasets without specialized architectures.",
+      "llm_tldr_cn": "知识图谱基础模型依赖专门架构硬编码迁移机制，才能在未见图上实现零样本链接预测。本文把迁移机制从架构移入表示，通过具体化将每条事实变为节点，以六种元关系与匿名关系类型节点构成固定词汇表，再训练经典GNN。实验表明五种教科书GNN在单个小规模知识图谱上训练后，可零样本迁移到40个归纳链接预测数据集，对未见药物节点预测有借鉴意义。",
+      "llm_tldr": "知识图谱基础模型依赖专门架构硬编码迁移机制，才能在未见图上实现零样本链接预测。本文把迁移机制从架构移入表示，通过具体化将每条事实变为节点，以六种元关系与匿名关系类型节点构成固定词汇表，再训练经典GNN。实验表明五种教科书GNN在单个小规模知识图谱上训练后，可零样本迁移到40个归纳链接预测数据集，对未见药物节点预测有借鉴意义。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "inductive graph generalization on unseen nodes and edges with distribution shift",
+      "matched_requirement_id": "req-40",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

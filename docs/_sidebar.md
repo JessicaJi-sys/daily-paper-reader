@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-09-11 <!--dpr-date:20260911-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/11/2609.11347v1-reification-as-a-transferable-vocabulary-zero-shot-link-prediction-with-vanilla-gnns" data-sidebar-item="{&quot;title&quot;: &quot;Reification as a Transferable Vocabulary: Zero-Shot Link Prediction with Vanilla GNNs&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.11347v1-reification-as-a-transferable-vocabulary-zero-shot-link-prediction-with-vanilla-gnns&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;drug-ood-gen&quot;}], &quot;evidence&quot;: &quot;零样本迁移到未见图的归纳链接预测&quot;}">Reification as a Transferable Vocabulary: Zero-Shot Link Prediction with Vanilla GNNs</a>
   * 2026-09-09 <!--dpr-date:20260909-->
     * 精读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/09/2609.04261v1-self-supervised-pretraining-of-molecular-graph-encoders-with-lejepa" data-sidebar-item="{&quot;title&quot;: &quot;Self-Supervised Pretraining of Molecular Graph Encoders with LeJEPA&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.04261v1-self-supervised-pretraining-of-molecular-graph-encoders-with-lejepa&quot;, &quot;score&quot;: &quot;9.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;mgp&quot;}], &quot;evidence&quot;: &quot;研究无标签分子图的自监督预训练表示学习，并在分子性质预测任务上评估效果&quot;}">Self-Supervised Pretraining of Molecular Graph Encoders with LeJEPA</a>
