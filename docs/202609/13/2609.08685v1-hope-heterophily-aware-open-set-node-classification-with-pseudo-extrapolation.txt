@@ -1,0 +1,469 @@
+Title: HOPE: Heterophily-Aware Open-Set Node Classification with Pseudo-Extrapolation
+
+URL Source: https://arxiv.org/pdf/2609.08685v1
+
+Published Time: Wed, 09 Sep 2026 03:40:38 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# HOPE: Heterophily-Aware Open-Set Node Classification with Pseudo-Extrapolation 
+
+Yumeng Dai 1, Yue Tan 2, Yixin Liu 2, Chenxu Wang 1,* , Pinghui Wang 1, Tao Qin 1
+
+> 1
+
+Xi’an Jiaotong University, Xi’an, China 
+
+> 2
+
+Griffith University, Brisbane, Australia ymdai@stu.xjtu.edu.cn, yue.tan@griffith.edu.au, yixin.liu@griffith.edu.au, cxwang@mail.xjtu.edu.cn, phwang@mail.xjtu.edu.cn, qin.tao@mail.xjtu.edu.cn 
+
+> *
+
+Corresponding author: Chenxu Wang 
+
+Abstract —Standard open-set node classification methods heav-ily rely on the homophily assumption, where connected nodes share identical labels. However, real-world graphs are often heterophilic, revealing the sub-optimal performance of current methods and posing new challenges to open-set node classifi-cation. On the one hand, the cross-class connectivity nature of heterophilic graphs causes node representations from different known or unknown classes to be intertwined after aggregation, undermining the discriminative capacity of learned represen-tations. On the other hand, the structural mixture invalidates traditional threshold-based open-set classification methods and breaks conventional cross-class feature interpolation paradigms, leading to unreliable unknown-class rejection. To address these critical challenges, we propose a novel framework named HOPE Heterophily-aware Open-set node classification method with Pseudo-Extrapolation, abbreviated as HOPE. To adapt open-set graph neural networks (GNNs) to heterophilic scenarios, HOPE utilizes a structure-augmented feature initialization layer to capture multi-hop structural patterns for feature augmentation. Meanwhile, we design a trustworthy neighborhood aggregation mechanism adaptable to standard GNNs to dynamically filter out noisy cross-class neighbors. To enhance the unknown-class rejection capability of HOPE, we introduce a heterophily-guided pseudo-extrapolation strategy. It dynamically maintains the rep-resentations of known-class centers and extrapolates from these centers along cross-class neighborhood displacement directions, thereby synthesizing pseudo-unknown proxies near structurally ambiguous regions. Finally, we optimize the network via a joint classification framework with logit margin regularization, routing synthetic proxies into a dedicated rejection slot without imposing geometric margin constraints in the representation space. Exten-sive experiments on multiple datasets demonstrate that HOPE consistently outperforms state-of-the-art models, validating its effectiveness, robustness, and efficiency. 
+
+Index Terms —Graph Neural Networks, Open-Set Node Clas-sification, Graph Heterophily, Pseudo-Unknown Proxies. 
+
+I. I NTRODUCTION 
+
+Graph Neural Networks (GNNs) have achieved remarkable success in various graph-structured tasks, particularly in semi-supervised node classification [1]. Standard node classification methods operate under a closed-set assumption, where the training and testing environments share an identical label space. However, real-world graph database applications often encounter open-set scenarios [2]–[4], where test graphs contain nodes from previously unseen or unknown categories. When conventional closed-set methods face these unknown nodes, 
+
+(a) Unknown classes in ho-mophilic graphs Known class 
+
+> Unknown class
+
+(b) Unknown categories in het-erophilic graphs 
+
+Fig. 1: The distinct topological behaviors of unknown class nodes in homophilic versus heterophilic graphs. they often mistakenly force them into one of the known classes with high confidence, neglecting the presence of novel categories beyond the predefined label space. To address this limitation, open-set node classification has emerged as a crucial research problem, aiming to classify nodes from known categories while identifying nodes from previously unseen categories [2], [5]. By jointly modeling known-class discrimination and unknown-class rejection, open-set node classification methods can support both accurate known-class identification and robust unknown-class detection. Despite the progress of open-set node classification in recent years, existing methods often assume that graphs are ho-mophilic, meaning that connected nodes tend to share the same class label [6]. This assumption may not always hold in practi-cal scenarios, since heterophilic graphs, which break the above homophily assumption, are ubiquitous in practical domains, such as e-commerce networks, social networks, and molecular structures [6]–[11]. Due to their distinct neighborhood-label correlations, the structural distribution of unknown classes exhibits fundamental differences between homophilic and het-erophilic settings. As shown in Fig. 1a, unseen categories in homophilic graphs are characterized by dense localized clustering with limited cross-boundary expansion. Conversely, as depicted in Fig. 1b, unknown nodes in heterophilic graphs manifest as highly intertwined topological neighbors, gener-arXiv:2609.08685v1 [cs.LG] 8 Sep 2026 ating extensive and complex mixtures that deeply blur the classification boundaries of adjacent known class manifolds. As a result, existing open-set node classification methods often struggle on heterophilic graphs, as their homophily-oriented mechanisms, such as label propagation [12], [13] and consistency regularization [14], [15], may over-smooth naturally dissimilar neighbors and misinterpret normal inter-class edges as label noise. Moreover, the boundary-based proxy generation strategies (e.g., Mixup) used in some open-set classification approaches [16], [17] may scatter pseudo-unknown nodes across the feature space in heterophilic graphs, thereby blurring the distinction between known and unknown classes. These limitations motivate a fundamental question: 
+
+Can we develop an open-set graph learning approach that can identify unknown nodes in heterophilic graphs? 
+
+Answering the above question is non-trivial, as the structural discrepancies between homophilic and heterophilic graphs introduce two key challenges for open-set node classification. 
+
+Challenge 1 : Representation boundary confusion under het-erophilic aggregation. In a heterophilic graph, a known-class node is surrounded by neighbors from different known classes and potential unknown classes [18], [19]. In this case, standard neighborhood aggregation, which acts as a low-pass filter, may smooth out essential high-frequency distinctive features. When open-set nodes are mixed into these neighborhoods, uniform aggregation can cause catastrophic representation overlap, making known-class discrimination and unknown-class rejec-tion mutually entangled. As a result, the model struggles to separate different known classes in the representation space, since the neighbor label distributions are highly noisy and complex, leading to ambiguous decision boundaries among the known classes. While the above challenge focuses on maintaining separable known-class representations, open-set learning further requires reliable rejection of nodes beyond the known label space, leading to Challenge 2 : Unreliable unknown-class rejection under structural entanglement. In heterophilic graphs, un-known nodes are structurally intertwined with the clusters from known classes through cross-class connections, rendering existing rejection criteria for open-set node classification in-effective. Specifically, threshold-based rejection methods [2], [20], [21] may misinterpret heterophilic connections as un-known evidence, leading to both false positives and false negatives. Meanwhile, interpolation-based proxy generation methods [16], [17] may also become unreliable, as simple feature interpolation between known classes cannot faithfully capture the complex cross-class distributions and topological boundaries induced by heterophily. Consequently, the gen-erated proxies may be scattered across the feature space, further misleading the model in separating unknown nodes from known ones. In this case, a dedicated open-set node classification framework is needed to detect unknown nodes under such structurally entangled heterophilic settings. To address these challenges, we propose a novel 
+
+Heterophily-aware Open-set node classification method with 
+
+Pseudo-Extrapolation (HOPE for short). HOPE consists of four components designed to support known-class node clas-sification and unknown-class node rejection simultaneously. Specifically, to address Challenge 1 , we develop a structure-augmented feature initialization layer that computes multi-hop geometric descriptors to enrich raw node attributes, ensuring the model recognizes latent open-set boundaries before mes-sage passing. Meanwhile, we implement a trustworthy neigh-borhood aggregation scheme that uses an edge discriminator to evaluate homophily compatibility scores and dynamically prunes untrustworthy cross-class neighbors. Instead of rely-ing on a specific GNN backbone, the proposed aggregation scheme can be applied to various standard GNN models in a plug-and-play manner, enhancing their ability to preserve discriminative known-class representations under heterophily. To handle Challenge 2, we introduce a pseudo-unknown proxy generation strategy based on structural extrapolation. This strategy extrapolates from known-class anchors along het-erophilic neighborhood directions to synthesize representative pseudo-unknown boundary instances, providing informative supervision for learning reliable known-unknown rejection boundaries. Moreover, we optimize the network via a uni-fied classification framework integrated with a logit margin regularization loss. By routing the synthetic proxies to adedicated (K + 1) -th classification slot, HOPE establishes a robust classification-driven shield around known categories without relying on explicit geometric margin constraints in the representation space. The primary contributions of this paper are summarized as follows:  
+
+> •
+
+Problem: We formalize the problem of open-set node classification under heterophily and investigate the topo-logical distribution differences of unknown classes be-tween homophilic and heterophilic graphs.  
+
+> •
+
+Methodology: We propose HOPE, which incorporates a structure-augmented initialization layer, a trustwor-thy neighbor filtering mechanism adaptable to standard GNNs, a heterophily-guided pseudo-extrapolation strat-egy, and a unified (K + 1) -way classification framework with logit regularization.  
+
+> •
+
+Experiments: Extensive evaluations on multiple het-erophilic graph benchmarks demonstrate that HOPE significantly outperforms state-of-the-art closed-set and open-set models, showcasing superior generalizability and robustness. II. R ELATED WORK 
+
+A. Graph Neural Networks under Heterophily 
+
+Most foundational Graph Neural Networks (GNNs), such as GCN [1] and GAT [22], assume graph homophily, where connected nodes share similar labels or features [6]. However, these models fail on heterophilic graphs where links connect nodes from different classes, a pattern common in e-commerce and social networks [6]–[9], [23], [24]. To capture heterophilic graph structures, various message-passing and spectral mechanisms have been designed. For instance, H2GCN [9] separates ego-embeddings from neigh-borhood representations, Geom-GCN [25] maps topologies into geometric spaces, and JK-Net [26] aggregates layers dynamically. Additionally, GPR-GNN [27] utilizes generalized PageRank for adaptive filtering, GCNII [28] incorporates ini-tial residuals, EG-GCN [18] employs edge discriminators, and DiRW [29] uses path-aware random walks. Yet, these methods assume a fixed and fully known label space during training, causing them to fail when encountering unknown classes at test time. 
+
+B. Open-Set Node Classification on Graphs 
+
+Open-set node classification addresses this by identifying unknown semantic classes during inference [2], [30], [31], primarily through threshold-based calibration or generative proxy modeling. Threshold-based frameworks like OpenWGL [2] utilize rejection metrics on softmax confidence or un-certainty scores [20], [21], but deep networks often output overconfident scores for unknown samples [32]. Generative proxy modeling methods, such as G2Pxy [16] and EGonc [17], instead introduce virtual open-set nodes via hidden-layer manifold mixup or energy-based density optimization to simulate external distributions. Nevertheless, existing open-set methods strongly depend on structural homophily, assuming unknown categories always appear as localized, tight groups. Under severe heterophily, known and unknown nodes connect tightly, causing standard propagation to blur semantic spaces and create severe overlap at classification boundaries. To address this, HOPE introduces a classification-driven structural extrapolation mechanism op-timized within local batches. By mapping synthetic boundary proxies to a dedicated (K + 1) -th classification slot, this framework maintains high closed-set accuracy while ensuring adaptive open-set node rejection on heterophilic graphs. III. P RELIMINARIES 
+
+In this section, we present the formal definitions of graph concepts, heterophily, and the formulation of the open-set node classification task on heterophilic graphs. 
+
+A. Graph Definitions and Heterophily 
+
+Let G = (V, E, X) denote an attributed graph, where 
+
+V = {v1, v 2, . . . , v N } represents the set of N nodes, and 
+
+E ⊆ V × V represents the set of edges. The topological structure of G can be uniquely represented by an adjacency matrix A ∈ { 0, 1}N ×N , where Aij = 1 if there exists an edge (vi, v j ) ∈ E , and Aij = 0 otherwise. Each node vi ∈ V 
+
+is associated with a D-dimensional feature vector xi ∈ RD ,and the collective features of all nodes form the node attribute matrix X = [ x1, x2, . . . , xN ]⊤ ∈ RN ×D . The neighborhood of a node vi is defined as N (vi) = {vj ∈ V | (vi, v j ) ∈ E} .The connection patterns between nodes in a graph can be quantified by homophily and heterophily. Formally, given a fully labeled graph where each node vi has a class label yi,the edge homophily ratio h is defined as the proportion of edges that connect nodes sharing the same label: 
+
+h =
+
+P  
+
+> (vi,v j)∈E
+
+I(yi = yj )
+
+|E| , (1) where I(·) is the indicator function. A graph is conventionally categorized as a homophilic graph when h is close to 1, implying that “like attracts like”. Conversely, a graph is designated as a heterophilic graph when h is close to 0, which signifies that edges predominantly link nodes belonging to distinct categories (i.e., N (vi) contains substantial semantic diversity). 
+
+B. Open-Set Node Detection Formulation 
+
+Unlike classical closed-set semi-supervised node classifica-tion, where the training and testing phases share an identi-cal label space, Open-Set Recognition (OSR) accommodates the presence of unknown semantic classes during inference. Formally, let YL = {c1, c 2, . . . , c K } be the set of K known classes available during the training stage. In the open-set deployment phase, the test nodes may originate from an expanded label space Y = YL ∪ Y U , where YU =
+
+{cK+1 , c K+2 , . . . } denotes the set of unseen or unknown classes that never appear in the training dataset, satisfying 
+
+YL ∩ Y U = ∅.During training, we are given the graph G along with a set of labeled training nodes Vtrain ⊂ V , where each node 
+
+vi ∈ V train is assigned a known label yi ∈ Y L. The remaining nodes are partitioned into a validation set Vval and a test set Vtest . Critically, Vtest comprises both known-class nodes (whose labels belong to YL) and unknown-class nodes (whose true labels belong to YU ). The objective of open-set node detection is to learn a mapping function F : V → Y L ∪{ cunk },capable of precisely classifying nodes from known classes into their respective categories while simultaneously rejecting nodes from any unseen classes by categorizing them into a single unified unknown slot cunk (typically mapped as the 
+
+(K + 1) -th class). 
+
+C. Open-Set GNNs under Heterophily 
+
+An Open-Set Graph Neural Network (GNN) model typi-cally consists of a structural encoder followed by an open-set classifier. Existing traditional open-set learning paradigms frequently assume that data samples are independent and identically distributed (i.i.d.). Open-set GNNs break this as-sumption by leveraging spatial dependencies, propagating ego-features across the topological structure via message-passing mechanisms to generate robust node representations Z =
+
+Encoder (X, A).However, in heterophilic environments, standard open-set GNNs that rely on uniform low-pass aggregation (such as GCN) inherently aggregate conflicting representations from dissimilar neighbors. This drawback distorts the open-set decision boundaries by mixing known and unknown semantic spaces in the neighborhood. To resolve this challenge, HOPE addresses the coupled heterophily and open-set configura-tion by learning heterophily-aware structural mappings that separate multi-hop structural patterns. Instead of relying on representation-space distance margins as the primary open-set objective, HOPE introduces a dedicated (K + 1) -way classification mechanism. This framework ensures that for any node vi ∈ V test , the prediction is derived via: 
+
+ˆyi = arg max  
+
+> c∈{ 1,...,K,K +1 }
+
+P(yi = c | xi, A), (2) where c = K + 1 represents the dynamic rejection slot for pseudo-unknown node variations synthetically extrapolated along heterophilic structural directions. IV. M ETHODOLOGY 
+
+In this section, we elaborate on the architectural design of HOPE, a novel framework tailored for semi-supervised open-set node classification on heterophilic graphs. As shown in Fig. 2, HOPE consists of four components: a structure-augmented feature initialization layer, a trustworthy neighbor-hood aggregation mechanism, a classification loss guided by a structural pseudo-extrapolation strategy, and a joint classi-fication optimization framework integrated with logit margin regularization. By dynamically generating out-of-distribution (OOD) node boundaries without relying on brittle margin-based constraints, HOPE effectively prevents the overlapping of known and unseen class distributions under severe structural heterophily. 
+
+A. Structure-Augmented Feature Initialization 
+
+In heterophilic open-set graphs, known and unknown nodes are often structurally mixed, making it difficult to distinguish unknown classes after neighborhood aggregation. Therefore, the model should establish discriminative node representa-tions before the message passing stage. An appropriate initial representation should capture both semantic attributes and topological structures, because in heterophilic graphs, topo-logical connections carry important boundary patterns that can indicate whether a node lies in a mixed neighborhood containing open-set nodes. To construct a complete initial node representation and avoid structural confusion at the beginning of the network, we enrich the raw feature space by explicitly adding structural encodings. This design ensures that the model recognizes structural identities at open-set boundaries before feature propagation. For each node vi, we pre-compute a 16-dimensional topology-only structural encoding to capture its multi-hop structural characteristics before message passing. Specifically, let P = AD −1 denote the degree-normalized propagation matrix, where D is the degree matrix. We define the structural encoding as 
+
+si = (P)ii , (P2)ii , . . . , (P16 )ii 
+
+ ∈ R16 .
+
+The k-th component (Pk)ii characterizes the structural return pattern of node vi after k propagation steps, allowing si to summarize local topology over multiple neighborhood ranges. This encoding depends only on graph structure, requires no node labels, and is shared across different backbone choices. We then combine the structural encoding with the original node attributes to obtain the initial representation: 
+
+h(0)  
+
+> i
+
+= MLP init ([ xi∥si]) , (3) where ∥ denotes feature concatenation. This structure-augmented representation provides topology-aware initializa-tion for the subsequent heterophily-aware message passing. 
+
+B. Trustworthy Neighborhood Aggregation 
+
+In heterophilic open-set graphs, not all neighbors provide useful information, as cross-class and open-set connections may introduce misleading messages during feature propaga-tion. However, standard low-pass aggregation unconditionally averages all adjacent representations, which allows open-set node variants to indiscriminately poison the surrounding known-class representations across heterophilic links. To alleviate this problem, we design a trustworthy neigh-borhood aggregation module to selectively aggregate messages from reliable, contextually consistent neighbors, which shields the ego-node from noisy or conflicting semantic categories. By implementing a trustworthy neighborhood filtering mech-anism, edge compatibility is evaluated to ensure that only highly reliable homophilic neighbors participate in the final neighborhood aggregation. Concretely, we utilize an edge discriminator to estimate the structural relationship between connected nodes. For each incoming edge (vj , v i), the dis-criminator computes a homophily probability pij . Meanwhile, we compute the cosine similarity between the intermediate hidden states of node vi and node vj . Let h(t−1)  
+
+> i
+
+denote the hidden embedding of node vi at the (t − 1) -th iteration step. The model evaluates a homophily selection score sij for each connection: 
+
+sij = pij · ReLU (Sim (h(t−1)  
+
+> j
+
+, h(t−1)  
+
+> i
+
+)) 
+
+τ , (4) where Sim (·) is the cosine similarity function, and τ rep-resents the aggregation temperature. Rather than keeping all neighbors, a strict masking threshold is applied based on sij .An edge is preserved only if its homophily selection score is sufficiently high. This step filters out untrustworthy cross-class neighbors and extracts a clean, homophilic neighbor subset 
+
+Ntrust (vi).Finally, the model performs normalized aggregation exclu-sively over this trustworthy homophilic subset Ntrust (vi). The layer-wise representation update for node vi at the t-th step is formulated as follows: 
+
+h(t) 
+
+> i
+
+= LayerNorm 
+
+
+
+MLP f use 
+
+ h(t−1)  
+
+> i
+
+∥
+
+X 
+
+> vj∈N trust (vi)
+
+αij · h(t−1) 
+
+> j
+
+
+
++ Wself · h(0) 
+
+> i
+
+
+
+,
+
+(5) where ∥ denotes the concatenation operation, αij represents the normalized edge weight computed via Softmax over the encoder 
+
+> initial
+> embeddings
+
+𝒉 𝟎 
+
+> …
+> feature structure
+> embeddings
+
+combine   
+
+> …
+> …
+> …
+> …
+> ①
+> 𝒉 𝑖1,𝑘
+> 𝒉 𝑖4,𝑘
+> 𝒉 𝑖3,𝑘
+> 𝒉 𝑖5,𝑘
+> 𝑠𝑖𝑚 𝑖1,𝑖4,𝑘
+> ②known -class
+> cross -entropy loss
+> ③
+> K+1 classifier
+> ⑤unknown -class cross -entropy loss ④𝒉 𝑖2,𝑘
+> 𝒉 𝑖6,𝑘
+> class boundary
+> regularization
+> …
+
+structure 
+
+encoder 
+
+training graph  
+
+> 𝑲 𝑲 + 𝟏
+
+…𝟎 
+
+> penalty
+> margin
+> …
+
+MLP Fig. 2: The overall architecture of HOPE. Raw node features are enriched with structural encodings into initial representations 
+
+h0. The structure encoder then extracts multi-hop structural patterns through selective neighborhood pathways to output enhanced intermediate embeddings. Finally, a unified (K +1) -way classifier categorizes nodes, jointly optimized via a multi-task learning paradigm comprising known-class loss Lreal , pseudo-extrapolated unknown-class loss Lsyn , and classification-driven regularization penalty Lreg without geometric margin contractions. trusted subset, and Wself · h(0)  
+
+> i
+
+provides a self-loop residual connection from the initialization layer. After T iterations, the final output representation is denoted as zi = h(T ) 
+
+> i
+
+for all vi ∈ V . For different backbones, the backbone-specific propagation first produces a graph-aware representation, which is combined with h(0) through a residual connection and subsequently refined by the same trustworthy aggregation module. Thus, HOPE does not alter the internal propagation rule of the underlying backbone. Overall, this module enables HOPE to perform more robust and discriminative message passing by preserving beneficial homophilic signals while suppressing misleading heterophilic noise, thereby improving open-set recognition in complex graph structures. 
+
+C. Pseudo-Unknown Proxy Generation and Classification Loss 
+
+In open-set recognition, the absence of labeled unknown samples makes it difficult for the model to explicitly learn where known-class decision boundaries should stop. To bridge this gap, we synthesize representative out-of-distribution (OOD) boundary instances to explicitly populate the (K + 1) -th classification slot, forcing the open-set model to learn a compact and closed decision boundary for known classes within a standard classification framework. Under heterophilic environments, graph nodes generally exhibit a low edge ho-mophily ratio h, meaning that their neighborhoods N (vi) con-tain substantial semantic diversity across multiple categories. Crucially, this structural characteristic applies to all entities in the graph, including both known and unknown classes. During message-passing propagation, when a Graph Neural Network (GNN) aggregates multi-hop structural patterns, the features of an open-set node are simultaneously subjected to multi-directional traction exerted by its semantically diverse neighbors from distinct known categories. This omnidirec-tional structural pulling prevents unknown nodes from forming isolated, well-segregated clusters in the latent space. Instead, their latent representations are inherently driven into the inter-secting zones, peripheral margins, and ambiguous boundaries of the established known manifolds. Consequently, the latent representations of nodes near these frontiers, regardless of whether they belong to known or unseen categories, would suffer from severe territorial overlap, which blurs the closed-set rejection boundaries. To decouple this overlap without modifying or distorting the internal repre-sentation spaces of known classes, HOPE leverages a structural extrapolation paradigm optimized within mini-batches. Instead of forcing the learned clusters of seen categories to become overly compact, our method places synthetic boundary prox-ies in the ambiguous regions between different classes. By assigning these boundary proxies to the unique classification slot cunk = K + 1 , the standard cross-entropy loss forces the (K + 1) -th logit to become dominant exactly within these overlapping regions. As a result, the linear decision boundaries of the classifier are driven to adaptively wrap around and seal the known manifolds, effectively delegating the contaminated intersection zones to the unknown slot while leaving the internal latent structures of known classes uncompromised and largely preserved. Specifically, during each training epoch, we optimize HOPE on the subgraph induced by labeled training nodes. To provide stable class anchors, we maintain an EMA center μc ∈ Rd for each known class c ∈ Y L:
+
+μc ← ρμc + (1 − ρ) 1
+
+|V c
+
+> train
+
+|
+
+X
+
+> vi∈V c
+> train
+
+zi, (6) where Vc 
+
+> train
+
+denotes the labeled training nodes belonging to class c, and ρ is the EMA smoothing factor. To synthesize pseudo-unknown proxies, we sample struc-turally ambiguous known-class nodes as anchors according to a softened structural score that combines neighborhood en-tropy and local cross-class connectivity. All statistics involved in anchor selection are computed exclusively on the labeled training-induced subgraph. For an anchor node vi with label yi, we define its known heterophilic neighborhood as Nhet (vi) = {vj ∈ N (vi) ∩Vtrain | yj̸ = yi, y j ∈ Y L}. We then construct an outward ex-trapolation direction from the center of the anchor class toward its heterophilic neighbors: di = 1
+
+> |N het (vi)|
+
+P 
+
+> vj∈N het (vi)
+
+(zj −
+
+μyi ). Accordingly, the pseudo-unknown representation is gen-erated as 
+
+˜z = μyi + βdi + ϵ, (7) where β ∼ U (1 , β max ) and βmax = max(1 , β base (1 + η)) .Here, η denotes the heterophily ratio of known-class edges in the current training-induced subgraph, which adaptively con-trols the extrapolation range, while ϵ ∼ N (0, σ 2I) introduces mild perturbations to improve boundary coverage. To jointly preserve known-class discrimination and learn the additional rejection slot, we optimize real known nodes and synthesized pseudo-unknown proxies in a unified (K +1) -way classification space. For a labeled training node vi ∈ V train 
+
+with yi ∈ Y L, we apply the supervised cross-entropy loss only over the first K known-class logits: 
+
+Lreal = − 1
+
+|V train |
+
+X
+
+> vi∈V train
+
+log exp( oi,y i )
+
+PKc=1 exp( oi,c ) , (8) where oi = Linear( zi) ∈ RK+1 is the output logit vector and 
+
+oi,c denotes its c-th component. Concurrently, we optimize the generated proxies toward the 
+
+(K + 1) -th unknown slot using a weighted cross-entropy loss: 
+
+Lsyn = − 1
+
+P|V syn | 
+
+> q=1
+
+wq
+
+> |V syn |
+
+X
+
+> q=1
+
+wq log exp(˜ oq,K +1 )
+
+PK+1  
+
+> c=1
+
+exp(˜ oq,c ) , (9) where ˜oq = Linear(˜ zq ), and wq denotes the structural sam-pling weight inherited from the corresponding anchor. 
+
+D. Logit Margin Regularization 
+
+To prevent the unknown slot from dominating the logit space of known-class nodes during training, we introduce a classification-driven margin penalty Lreg . This regularization term explicitly encourages that for any known-class training node vi (with yi ∈ YL), the logit corresponding to the unknown rejection slot cunk = K + 1 remains strictly lower than the maximum logit among the known classes. Without such a constraint, the model might push the unknown logit excessively high in order to fit synthetic pseudo-unknown TABLE I: Detailed statistics of the evaluated heterophilous graph datasets.                                      
+
+> Dataset Graph Properties Name Nodes Edges Features Classes
+> Chameleon 2,277 31,421 2,325 5Squirrel 5,201 198,493 2,089 5Wisconsin 251 466 1,703 5Amazon-Ratings 24,492 93,050 300 5Roman-Empire 22,662 32,927 300 18 Actor 7,600 26,752 932 5Arxiv-Year 169,343 1,166,243 128 5
+> aThe class space indicates Kobserved known classes and 1unobserved unknown class.
+
+proxies, thereby eroding the discriminative power of known classes. Formally, the logit margin regularization loss Lreg 
+
+enforces a margin between the strongest known-class logit and the unknown-class logit for each known training node: 
+
+Lreg = 1
+
+|V train |
+
+X
+
+> vi∈V train
+
+h
+
+max  0, oi,K +1 −
+
+max  
+
+> c=1 ,...,K
+
+oi,c + mi
+
+,
+
+(10) where Vknown train is the set of training nodes whose labels belong to the known classes YL, m > 0 is a fixed margin hyperparameter, and max(0 , ·) denotes the ReLU function. This loss penalizes a known-class node whenever its maximum known-class logit fails to exceed the unknown-slot logit by at least the margin m, thereby encouraging a clear separation between known-class predictions and the rejection option. Without this regularization, the joint optimization of Lreal 
+
+and Lsyn may inadvertently drive the unknown logit to become active even for known nodes, especially in heterophilic graphs where known and unknown neighborhoods are heavily inter-twined. By imposing a soft margin constraint directly on the logits, rather than on geometric distances in the representation space. HOPE avoids brittle boundary tuning while preserving the full expressiveness of the (K + 1) -way classifier. Finally, the total objective function of HOPE is formulated as a multi-task learning paradigm: 
+
+Ltotal = Lreal + γ1Lsyn + γ2Lreg , (11) where γ1 and γ2 are non-negative hyperparameters that scale the contributions of the pseudo-unknown classification risk and the known-class logit regularization penalty, respectively. Overall, this unified objective allows HOPE to jointly op-timize known-class discrimination, unknown-boundary mod-eling, and known-class rejection regularization, leading to more reliable open-set recognition under heterophilic graph structures. V. E XPERIMENTS 
+
+A. Experimental Setup 
+
+To comprehensively evaluate the performance of our pro-posed framework, we conduct benchmark evaluations across TABLE II: Experimental results (Acc and F1) across multi-datasets                                                                                                                                                                                                                                                                                                                                                            
+
+> Accuracy (%) F1-Score (%) Model Method Roman Empire Amazon Ratings Wis-consin Actor Chame-leon Squirrel Arxiv-Year Roman Empire Amazon Ratings Wis-consin Actor Chame-leon Squirrel Arxiv-Year GCN
+> GCN 20.58 31.63 47.76 12.48 43.24 14.68 44.91 16.13 11.20 29.57 12.35 36.57 22.35 32.23 ROG PL 35.15 31.68 52.94 25.48 33.04 21.64 41.52 29.48 19.68 19.66 19.90 15.18 15.83 28.21 G2Pxy 31.60 30.85 41.88 20.43 31.92 18.55 42.62 37.01 21.98 33.72 13.23 18.26 20.01 30.22 EGonc 34.24 37.54 49.14 17.43 46.27 15.98 40.98 29.57 22.67 19.23 18.70 31.44 16.77 30.60 CONC 28.72 31.38 42.64 11.76 15.53 17.02 38.60 15.32 11.47 13.16 7.48 18.38 19.10 29.66 HOPE 53.95 39.92 59.32 43.85 55.16 39.00 45.41 54.78 55.28 43.09 28.87 38.76 21.29 35.85 GPR-GNN
+> GPR-GNN 40.05 30.43 49.52 11.97 43.08 16.44 42.39 33.81 12.52 32.08 12.21 36.49 23.87 28.33 ROG PL 47.14 32.28 47.05 28.13 24.50 26.82 34.79 41.07 17.26 20.60 21.19 21.34 17.27 20.26 G2Pxy 42.53 30.74 40.68 22.09 27.44 19.72 32.17 27.34 21.76 34.29 16.33 18.26 20.23 19.77 EGonc 34.21 37.62 45.33 21.34 36.58 16.33 37.52 34.56 28.51 23.12 17.71 20.57 17.45 24.85 CONC 36.66 31.38 36.64 12.22 21.27 19.20 40.60 32.78 19.62 33.28 11.44 18.38 20.18 29.33 HOPE 50.04 38.81 59.32 42.22 56.99 46.21 44.58 51.04 33.80 41.44 27.69 39.93 29.53 32.01 GCNII
+> GCNII 44.48 21.47 47.76 34.18 29.87 31.85 42.13 33.87 12.00 28.85 19.08 28.71 22.38 26.59 ROG PL 46.22 31.66 46.80 27.05 34.46 41.39 38.55 34.55 14.14 15.67 17.58 11.33 23.54 23.52 G2Pxy 45.54 29.19 47.06 28.64 42.56 40.76 35.23 36.27 25.22 24.20 11.21 22.60 23.62 22.17 EGonc 44.91 30.61 42.64 28.40 46.20 34.03 30.76 26.28 20.53 21.05 17.76 23.74 21.77 22.01 CONC 33.65 32.05 42.21 25.64 33.54 34.13 36.61 24.61 22.34 26.87 12.09 28.18 22.14 25.40 HOPE 51.51 38.67 55.93 30.95 48.16 42.84 43.99 52.06 32.69 38.73 29.15 38.04 27.60 29.96 EG-GCN
+> EG-GCN 52.66 21.89 62.50 40.76 52.77 41.03 45.52 48.64 22.01 50.24 21.87 38.79 21.63 33.63 ROG PL 49.62 31.38 49.15 18.02 44.07 38.89 37.90 33.55 17.14 22.83 9.97 14.34 22.33 29.33 G2Pxy 47.43 28.71 37.50 22.09 41.22 39.48 40.28 27.74 23.12 12.00 16.36 28.61 22.76 30.24 EGonc 34.43 28.17 42.76 21.34 38.36 34.13 34.55 24.84 20.42 25.32 17.73 29.65 21.77 26.86 CONC 31.98 27.92 40.67 12.22 50.54 26.82 41.36 33.44 16.33 11.56 17.62 26.27 24.75 30.86 HOPE 53.13 29.33 53.70 43.94 53.07 43.22 47.62 51.78 25.71 40.13 26.73 46.23 25.02 33.97
+
+seven widely-used heterophilic graph datasets, namely Roman-Empire [33], Amazon-Ratings [33], Wisconsin [25], Actor [34], Chameleon [25], [35], Squirrel [25], [35], and Arxiv-Year [36]. These benchmarks span diverse topological scales, attribute dimensionalities, and feature densities, providing a robust and challenging testbed for open-set node classification under heterophilic environments. Following standard semi-supervised open-set evaluation protocols established in graph domains, we designate the specific category with the fewest instances as the unobserved unknown novel class, ensuring it remains completely inaccessible during the optimization phase, while the remaining classes constitute the observed known label space. The source code and experimental config-urations are available at: https://github.com/Solkattkgo/HOPE. As a plug-and-play framework adaptable to standard back-bones, we evaluate HOPE by comparing it against two repre-sentative groups of state-of-the-art graph baselines. The first group consists of graph neural network architectures including GCN [1], GPR-GNN [27], GCNII [28], and EG-GCN [18], which serve as foundational structural encoders covering both homophilous assumptions and heterophilic designs. The sec-ond group comprises open-set detection frameworks including ROG PL [20], G2Pxy [16], EGonc [17] and CONC [21], which represent advanced open-set node classification and boundary modeling methods. Crucially, for the specific eval-uations conducted in the open-set and closed-set performance analysis, robustness evaluation, and computational efficiency analysis, GCNII, GPR-GNN, and EG-GCN utilize their own specialized architectures as structural encoders, whereas all other compared open-set detection methods consistently adopt GCN as their default underlying backbone network. To evaluate open-set node classification, we use Overall Accuracy and Macro-F1-Score. Overall Accuracy measures global prediction performance, while Macro-F1 provides a bal-anced evaluation across imbalanced classes. Unless otherwise specified, we set γ1 = 0 .5, γ2 = 0 .1, and m = 0 .3. The random seed is fixed to 42 for all randomized operations and dataset splits. 
+
+B. Performance Comparison 
+
+The comparison results of HOPE are illustrated in Table II. From the table, we make the following key observations: Our proposed HOPE consistently secures the optimal or competitive second-best performance across almost all eval-uation slots under both metrics. When paired with standard backbones, HOPE yields substantial performance gains com-pared to the vanilla versions. For instance, on the Roman-Empire dataset under the GPR-GNN framework, our method elevates the accuracy from 40.05% to the best 50.04% and the macro-F1 score from 33.81% to the best 51.04%. This performance stability highlights that our approach generalizes well to various heterophilic structural patterns. The strong performance of HOPE is rooted in its dedicated design for open-set node recognition under severe struc-tural heterophily. Specifically, it enriches raw features with multi-hop structural patterns via structure-augmented feature initialization, selectively propagates semantically consistent messages using a trustworthy neighborhood aggregation mod-TABLE III: Ablation study of the proposed model on Roman-Empire, Wisconsin, and Squirrel datasets. 
+
+Roman-Empire Wisconsin Squirrel acc f1 acc f1 acc f1 w/o reg 18.63 17.68 16.95 5.80 55.50 14.28 w/o init 48.39 40.41 59.32 45.12 37.87 20.28 w/o trust 47.16 48.17 57.63 40.52 38.51 20.64 Full Model 53.95 54.78 59.32 55.28 39.00 21.29 
+
+ule, and synthesizes realistic pseudo-unknown boundaries via heterophily-guided structural extrapolation. Together with a joint classification framework with logit margin regularization, HOPE successfully circumvents severe statistical trade-offs, yielding balanced and stable leads. In contrast, alternative baselines encounter clear algorithmic bottlenecks. Traditional closed-set encoders including GCN, GCNII, GPR-GNN, and EG-GCN lack native open-set aware-ness, and their confidence calibration breaks down under heterophilic linking patterns when evaluating under post-hoc threshold deployment protocols. This explains why, within the GCNII-backbone group, the vanilla GCNII achieves the highest Overall Accuracy on the Actor dataset but exhibits a depressed Macro-F1 score. On the other hand, established open-set baselines like ROG PL, G2Pxy, EGonc, and CONC assume structural homophily. When applied to heterophilic graphs, their rigid boundaries aggressively classify valid nor-mal nodes into the open-set rejection slot due to severe false-positive errors. This over-rejection behavior accounts for the severe statistical trade-offs observed in the results, such as when ROG PL is paired with GPR-GNN on the Amazon-Ratings dataset, or combined with GCNII on the Squirrel dataset, where it achieves a relatively high Overall Accuracy while its Macro-F1 score lags far behind due to the catas-trophic collapse of known-class precision. 
+
+C. Ablation Study 
+
+To examine the contribution of key designs in HOPE, we conduct ablation studies on 3 datasets with a GCN backbone. We compare the full model against three variants: w/o init, which removes the structure-augmented feature initialization layer; w/o trust, which disables the trustworthy neighborhood aggregation mechanism; and w/o reg, which omits the logit margin regularization loss. We have the following observations from Table III: ❶ The full model achieves the best overall performance, demonstrating that all designed modules are essential and mutually reinforcing. ❷ Removing the structural initialization layer triggers a significant performance degra-dation. This decline occurs because raw node attributes lack geometric awareness, making the model blind to local topo-logical positions. These findings confirm that relying solely on semantic features is insufficient in heterophilic environments. 
+
+❸ Disabling the edge-filtering mechanism leads to noticeable performance drops across all datasets. The root cause is that standard low-pass aggregation unconditionally averages all adjacent representations, allowing open-set node variants and GCN ROG_PL G2Pxy EGonc CONC GPR-GNN GCNII EG-GCN HOPE 
+
+> Methods on Chameleon
+> 020 40 60 80 100
+> Accuracy (%)
+> 31.16% 91.16%
+
+(a) Chameleon GCN ROG_PL G2Pxy EGonc CONC GPR-GNN GCNII EG-GCN HOPE  
+
+> Methods on Roman-Empire
+> 020 40 60 80 100
+> Accuracy (%)
+> 49.50% 99.26%
+
+(b) Roman-Empire 
+
+Fig. 3: ACC of known/unknown classes comparison. 1 2 3 4 5 6 7 8# of unseen classes 020 40 60 80 Accuracy (%) 
+
+> GCN ROG_PL G2Pxy EGonc CONC GPR-GNN GCNII EG-GCN HOPE
+
+(a) Accuracy comparison 1 2 3 4 5 6 7 8# of unseen classes 020 40 60 80 F1-Score (%)  
+
+> GCN ROG_PL G2Pxy EGonc CONC GPR-GNN GCNII EG-GCN HOPE
+
+(b) F1-score comparison 
+
+Fig. 4: ACC/F1 with the increasing #open-set classes. heterophilic cross-class neighbors to indiscriminately poison the ego-node features. ❹ Omitting the logit margin regulariza-tion loss causes a catastrophic failure mode where the model collapses to classifying almost all nodes as the open-set class. This dramatic collapse verifies that our classification-driven margin penalty is indispensable for anchoring known-class logits to sustain a stable open-set decision space. 
+
+D. Open-set and Closed-set Performance 
+
+To evaluate the fine-grained discriminative capability of HOPE in open-set scenarios, we analyze the classification performance on both known and unknown classes across the Chameleon and Roman-Empire datasets, as illustrated in Fig. 3. From the results, we observe that HOPE exhibits an outstanding capability to simultaneously maintain high classi-fication precision on observed known classes and achieve supe-rior detection rates on unobserved unknown nodes. Although G2Pxy secures a higher individual accuracy for identifying unknown class nodes on the Roman-Empire dataset, it severely sacrifices the prediction accuracy of the normal known classes, leading to massive false-positive classification errors. In con-trast, by utilizing structure-augmented initialization and trust-worthy aggregation alongside balanced margin regularization, HOPE successfully manages the decision spaces and prevents the unknown slot from aggressively absorbing normal nodes, thereby establishing stable and comprehensive leads under severe structural heterophily. 
+
+E. Robustness Analysis 
+
+To evaluate the operational stability and robustness of our proposed framework under volatile open-set environments, we show the performance variations on the Roman-Empire dataset by incrementally increasing the number of unseen classes Known class 3 Known class 1 Known class 0 Known class 2 Real unknown (test) Pseudo-unknown proxies Fig. 5: The t-SNE visualization of node representations on the Chameleon dataset. The synthesized proxies tend to occupy ambiguous regions near known-class boundaries and show substantial overlap with regions containing real unknown nodes. from one to eight. As observed from the results in Fig. 4, HOPE consistently maintains the optimal performance across all evaluation phases, exhibiting strong resistance against en-vironmental volatility compared to alternative baselines. Even when the open-set class space expands during deployment, our framework establishes a steady performance superiority. This robust behavior is mainly attributed to our specialized pseudo-unknown proxy generation strategy, which models the invari-ant topological mixture mechanism within local mini-batches by adaptively shifting proxies outwards along heterophilic neighborhood displacement vectors. Consequently, our syn-thetic proxies continue to tend to populate representation regions associated with known-class boundaries to maintain stable decision hyperplanes under structural heterophily. 
+
+F. Latent Space Topology Visualization 
+
+To intuitively demonstrate the geometric soundness of our proposed structural pseudo-extrapolation strategy, we conduct a latent space topology visualization experiment using the t-SNE algorithm on the Chameleon dataset. The resulting visual distribution mapping is illustrated in Fig. 5. As shown in the t-SNE visualization, the real unknown test nodes are distributed across specific regions adjacent to the known class boundaries. Importantly, rather than scattering randomly or encroaching upon the dense cores of known clusters, the synthetic boundary proxies tend to locate near the spatial positions occupied by the real unknown test nodes. This observation provides qualitative evidence that our proxies tend to appear near regions where real unknown nodes reside, offering visual support for the strategic rationality of our structural extrapolation paradigm under heterophily. 
+
+G. Efficiency Analysis 
+
+Complexity Analysis. Let N , M , and d denote the numbers of nodes, edges, and hidden dimensions, respectively. Exclud-ing the structural encoding preprocessing, trustworthy edge scoring and aggregation require O(M d ) operations, while the edge MLP costs O(M d 2) when its hidden width scales with d. Node transformations require O(N d 2), and proxy 10 1
+
+> Time (ms) 30 35 40 45 50 55 Accuracy (%)
+> GCN ROG_PL G2Pxy EGonc CONC GPR-GNN GCNII EG-GCN HOPE
+
+(a) Accuracy vs. time usage 50 75 100 125 150 175 200 Memory (mb) 30 35 40 45 50 55 Accuracy (%)  
+
+> GCN ROG_PL G2Pxy EGonc CONC GPR-GNN GCNII EG-GCN HOPE
+
+(b) Accuracy vs. memory usage 
+
+Fig. 6: Computational costs comparison. 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 Weight 010 20 30 40 Accuracy (%) 
+
+> 1
+> 2
+> m
+
+(a) Sensitivity of Accuracy 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 Weight 010 20 30 40 F1-Score (%)  
+
+> 1
+> 2
+> m
+
+(b) Sensitivity of F1 score 
+
+Fig. 7: Parameter sensitivity analysis of HOPE with respect to γ1, γ 2, and m . The model shows consistent performance across a broad range of parameter settings. construction requires O(M d + Sd ) for S synthesized proxies. Therefore, for fixed d and S, the per-epoch complexity scales linearly with N + M , with memory complexity O(N d + M d ).Empirical Evaluation. We illustrate the execution trade-offs on the Chameleon dataset in Fig. 6, where Fig. 6a and Fig. 6b showcase accuracy versus time and memory usage, respec-tively. The plots indicate that alternative closed-set, open-set, and heterophilic baselines either suffer from poor performance or incur heavy computational overhead. In contrast, HOPE secures a substantial performance margin over these competi-tors while maintaining a small computational/memory foot-print, achieving high accuracy with lower time and memory expenditures than heavy paradigms like EGonc. 
+
+H. Parameter Sensitivity Analysis 
+
+To investigate the operational stability of HOPE under var-ied optimization balances, we perform a parameter sensitivity analysis on the Squirrel dataset. We evaluate the performance fluctuations in terms of Accuracy and Macro-F1 Score by varying the critical loss scaling factors γ1, γ2, and the soft margin m independently within the range from 0.1 to 1.0. As illustrated in Fig. 7, different hyperparameter configura-tions present smooth and predictable performance variations. Specifically, γ1 and γ2 exhibit complementary tendencies due to the balance between synthetic open-set optimization and topological soft margin anchoring, while both metrics remain relatively stable and flat across the entire variation spectrum of the soft margin parameter m. Overall, HOPE remains stable across hyperparameter settings, demonstrating low sensitivity under heterophilic distributions. VI. C ONCLUSION 
+
+In this paper, we propose HOPE, a novel framework de-signed for open-set node classification on heterophilic graphs. To handle severe structural heterophily, our approach enriches raw features with multi-hop structural patterns and filters out noisy cross-class connections via a trustworthy aggregation mechanism. Furthermore, we introduce a heterophily-guided pseudo-extrapolation strategy to synthesize realistic pseudo-unknown boundaries at the intersections of known classes. This process is jointly optimized with a known-class logit reg-ularization loss to maintain a balanced decision space. Exten-sive experiments across multiple benchmarks demonstrate that HOPE achieves the best or competitive performance across the evaluated settings against state-of-the-art baselines, verifying its effectiveness, efficiency, and robustness in entangled label environments. REFERENCES [1] T. N. Kipf and M. Welling, “Semi-supervised classification with graph convolutional networks,” arXiv preprint arXiv:1609.02907 , 2016. [2] M. Wu, S. Pan, and X. Zhu, “Openwgl: Open-world graph learning,” in 2020 IEEE international conference on data mining (icdm) . IEEE, 2020, pp. 681–690. [3] X. Gao, T. Chen, W. Zhang, Y. Li, X. Sun, and H. Yin, “Graph condensation for open-world graph learning,” in Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining ,2024, pp. 851–862. [4] Y. Liu, S. Li, Y. Zheng, Q. Chen, C. Zhang, P. S. Yu, and S. Pan, “From few-shot to zero-shot: Towards generalist graph anomaly detection,” 
+
+IEEE Transactions on Knowledge and Data Engineering , 2026. [5] T. Huang, D. Wang, Y. Fang, and C. Zhengyu, “End-to-end open-set semi-supervised node classification with out-of-distribution detection,” in IJCAI , 2022. [6] X. Zheng, Y. Wang, Y. Liu, M. Li, M. Zhang, D. Jin, P. S. Yu, and S. Pan, “Graph neural networks for graphs with heterophily: A survey,” 
+
+IEEE Transactions on Knowledge and Data Engineering , 2026. [7] J. Lin, X. Guo, S. Zhang, Y. Zhu, and J. Shun, “When heterophily meets heterogeneity: Challenges and a new large-scale graph benchmark,” in Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining V. 2 , 2025, pp. 5607–5618. [8] T. Wang, D. Jin, R. Wang, D. He, and Y. Huang, “Powerful graph convo-lutional networks with adaptive propagation mechanism for homophily and heterophily,” in Proceedings of the AAAI conference on artificial intelligence , vol. 36, no. 4, 2022, pp. 4210–4218. [9] J. Zhu, Y. Yan, L. Zhao, M. Heimann, L. Akoglu, and D. Koutra, “Beyond homophily in graph neural networks: Current limitations and effective designs,” Advances in neural information processing systems ,vol. 33, pp. 7793–7804, 2020. [10] Y. Tan, G. Long, J. Jiang, and C. Zhang, “Influence-oriented personalized federated learning,” in IEEE International Conference on Data Mining ,2026. [11] B. Chen, W. Wongso, X. Hu, Y. Tan, and F. D. Salim, “Multi-stage verification-centric framework for mitigating hallucination in multi-modal rag,” in 2025 KDD Cup Workshop for Multimodal Retrieval Augmented Generation .[12] A. Iscen, G. Tolias, Y. Avrithis, and O. Chum, “Label propagation for deep semi-supervised learning,” in Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , 2019, pp. 5070– 5079. [13] H. Wang and J. Leskovec, “Unifying graph convolutional neural net-works and label propagation,” arXiv preprint arXiv:2002.06755 , 2020. [14] D. Bo, B. Hu, X. Wang, Z. Zhang, C. Shi, and J. Zhou, “Regularizing graph neural networks via consistency-diversity graph augmentations,” in Proceedings of the AAAI conference on artificial intelligence , vol. 36, no. 4, 2022, pp. 3913–3921. [15] J. Li, C. Xiong, and S. C. Hoi, “Comatch: Semi-supervised learning with contrastive graph regularization,” in Proceedings of the IEEE/CVF international conference on computer vision , 2021, pp. 9475–9484. [16] Q. Zhang, Z. Shi, X. Zhang, X. Chen, P. Fournier-Viger, and S. Pan, “G2pxy: generative open-set node classification on graphs with proxy unknowns,” in International Joint Conference on Artificial Intelligence ,2023, pp. 4576–4583. [17] Q. Zhang, Z. Shi, S. Pan, J. Chen, H. Wu, and X. Chen, “Egonc: Energy-based open-set node classification with substitute unknowns,” Advances in Neural Information Processing Systems , vol. 37, pp. 66 147–66 177, 2024. [18] S. Liu, D. He, Z. Yu, D. Jin, Z. Feng, and W. Zhang, “Integrating co-training with edge discrimination to enhance graph neural networks under heterophily,” in Proceedings of the AAAI Conference on Artificial Intelligence , vol. 39, no. 18, 2025, pp. 18 960–18 968. [19] X. Shen, Y. Liu, Y. Wang, R. Miao, Y. Dai, S. Pan, Y. Chang, and X. Wang, “Raising the bar in graph ood generalization: Invariant learning beyond explicit environment modeling,” IEEE Transactions on Pattern Analysis and Machine Intelligence , 2026. [20] Q. Zhang, X. Li, J. Lu, L. Qiu, S. Pan, X. Chen, and J. Chen, “Rog pl: Robust open-set graph learning via region-based prototype learning,” in 
+
+Proceedings of the AAAI Conference on Artificial Intelligence , vol. 38, no. 8, 2024, pp. 9350–9358. [21] Q. Zhang, J. Lu, X. Li, H. Wu, S. Pan, and J. Chen, “Conc: complex-noise-resistant open-set node classification with adaptive noise de-tection,” in Thirty-Third International Joint Conference on Artificial Intelligence (IJCAI-24) . IJCAI, 2024. [22] P. Veliˇ ckovi´ c, G. Cucurull, A. Casanova, A. Romero, P. Lio, and Y. Ben-gio, “Graph attention networks,” arXiv preprint arXiv:1710.10903 , 2017. [23] Y. Zhao, Y. Liu, Q. Chen, S. Li, Y. Tan, and S. Pan, “Fedcigar: A personalized reconstruction approach for federated graph-level anomaly detection,” in International Joint Conference on Artificial Intelligence ,2026. [24] S. Li, Y. Zhao, Y. Tan, Q. Chen, Y. Liu, and S. Pan, “Towards anomaly detection on relational data,” arXiv preprint arXiv:2606.18621 , 2026. [25] H. Pei, B. Wei, K. C.-C. Chang, Y. Lei, and B. Yang, “Geom-gcn: Geo-metric graph convolutional networks,” arXiv preprint arXiv:2002.05287 ,2020. [26] K. Xu, C. Li, Y. Tian, T. Sonobe, K.-i. Kawarabayashi, and S. Jegelka, “Representation learning on graphs with jumping knowledge networks,” in International conference on machine learning . pmlr, 2018, pp. 5453– 5462. [27] E. Chien, J. Peng, P. Li, and O. Milenkovic, “Adaptive universal general-ized pagerank graph neural network,” arXiv preprint arXiv:2006.07988 ,2020. [28] M. Chen, Z. Wei, Z. Huang, B. Ding, and Y. Li, “Simple and deep graph convolutional networks,” in International conference on machine learning . PMLR, 2020, pp. 1725–1735. [29] D. Su, X. Li, Z. Li, Y. Liao, R.-H. Li, and G. Wang, “Dirw: Path-aware digraph learning for heterophily,” in Proceedings of the 34th ACM International Conference on Information and Knowledge Management ,2025, pp. 2771–2780. [30] H. Xu, K. Liu, Z. Yao, P. S. Yu, M. Li, K. Ding, and Y. Zhao, “Lego-learn: Label-efficient graph open-set learning,” arXiv preprint arXiv:2410.16386 , 2024. [31] Y. Tan, C. Chen, W. Zhuang, X. Dong, L. Lyu, and G. Long, “Taming heterogeneity to deal with test-time shift in federated learning,” in 
+
+International Workshop on Federated Learning for Distributed Data Mining , 2023. [32] J. Gawlikowski, C. R. N. Tassi, M. Ali, J. Lee, M. Humt, J. Feng, A. Kruspe, R. Triebel, P. Jung, R. Roscher et al. , “A survey of uncertainty in deep neural networks,” Artificial intelligence review , vol. 56, no. Suppl 1, pp. 1513–1589, 2023. [33] O. Platonov, D. Kuznedelev, M. Diskin, A. Babenko, and L. Prokhorenkova, “A critical look at the evaluation of gnns under heterophily: Are we really making progress?” arXiv preprint arXiv:2302.11640 , 2023. [34] J. Tang, J. Sun, C. Wang, and Z. Yang, “Social influence analysis in large-scale networks,” in Proceedings of the 15th ACM SIGKDD international conference on Knowledge discovery and data mining ,2009, pp. 807–816. [35] B. Rozemberczki, C. Allen, and R. Sarkar, “Multi-scale attributed node embedding,” Journal of Complex Networks , vol. 9, no. 2, p. cnab014, 2021. [36] D. Lim, X. Li, F. Hohne, and S.-N. Lim, “New benchmarks for learning on non-homophilous graphs,” arXiv preprint arXiv:2104.01404 , 2021.

@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-13",
+  "date": "2026-09-13",
+  "generated_at": "2026-09-13T22:14:11",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/13/2609.08685v1-hope-heterophily-aware-open-set-node-classification-with-pseudo-extrapolation",
+      "section": "quick",
+      "title_en": "HOPE: Heterophily-Aware Open-Set Node Classification with Pseudo-Extrapolation",
+      "authors": "Yumeng Dai, Yue Tan, Yixin Liu, Chenxu Wang, Pinghui Wang, Tao Qin",
+      "date": "2026-09-08",
+      "pdf": "https://arxiv.org/pdf/2609.08685v1",
+      "score": "6.0",
+      "evidence": "分布偏移与未知类下的开放集节点分类",
+      "tldr": "传统开集节点分类依赖同配假设，在异配图上跨类连接使已知与未知类表示纠缠，阈值方法失效。HOPE 用结构增强特征初始化与可信邻域聚合过滤噪声邻居，并引入异配引导伪外推，沿跨类位移合成伪未知代理。联合分类与 logit 间隔正则将代理路由到拒绝槽，无需表示空间几何间隔约束。多个数据集上持续超越 SOTA，验证其有效性、鲁棒性与效率。",
+      "tags": "query:drug-ood-gen",
+      "abstract_en": "Standard open-set node classification methods rely on the homophily assumption, where connected nodes share labels. However, real-world graphs are often heterophilic, exposing the limitations of current methods and posing new challenges to open-set node classification. On the one hand, cross-class connectivity causes representations from different known or unknown classes to become intertwined after aggregation, undermining their discriminative capacity. On the other hand, structural mixture invalidates threshold-based open-set methods and cross-class feature interpolation, leading to unreliable unknown-class rejection. To address these challenges, we propose HOPE, a Heterophily-aware Open-set node classification method with Pseudo-Extrapolation. To adapt open-set graph neural networks (GNNs) to heterophilic scenarios, HOPE uses a structure-augmented feature initialization layer to capture multi-hop structural patterns. Meanwhile, we design a trustworthy neighborhood aggregation mechanism for standard GNNs to dynamically filter noisy cross-class neighbors. To enhance unknown-class rejection, we introduce a heterophily-guided pseudo-extrapolation strategy. It dynamically maintains known-class centers and extrapolates along cross-class neighborhood displacement directions, synthesizing pseudo-unknown proxies near structurally ambiguous regions. Finally, we optimize the network with joint classification and logit margin regularization, routing synthetic proxies into a dedicated rejection slot without imposing geometric margin constraints in the representation space. Extensive experiments on multiple datasets show that HOPE consistently outperforms state-of-the-art models, validating its effectiveness, robustness, and efficiency.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
