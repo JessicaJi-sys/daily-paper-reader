@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-09-14 <!--dpr-date:20260914-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/14/2609.09891v1-prometa-few-shot-protac-targeted-degradation-prediction-across-e3-ligases" data-sidebar-item="{&quot;title&quot;: &quot;ProMeta: Few-shot PROTAC-targeted degradation prediction across E3 ligases&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.09891v1-prometa-few-shot-protac-targeted-degradation-prediction-across-e3-ligases&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;cold-ddi&quot;}], &quot;evidence&quot;: &quot;数据稀缺下向未见E3连接酶的少样本泛化&quot;}">ProMeta: Few-shot PROTAC-targeted degradation prediction across E3 ligases</a>
   * 2026-09-13 <!--dpr-date:20260913-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/13/2609.08685v1-hope-heterophily-aware-open-set-node-classification-with-pseudo-extrapolation" data-sidebar-item="{&quot;title&quot;: &quot;HOPE: Heterophily-Aware Open-Set Node Classification with Pseudo-Extrapolation&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.08685v1-hope-heterophily-aware-open-set-node-classification-with-pseudo-extrapolation&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;drug-ood-gen&quot;}], &quot;evidence&quot;: &quot;分布偏移与未知类下的开放集节点分类&quot;}">HOPE: Heterophily-Aware Open-Set Node Classification with Pseudo-Extrapolation</a>

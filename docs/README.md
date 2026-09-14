@@ -48,7 +48,7 @@
 <section class="dpr-home-dashboard-card dpr-home-report-card">
   <div class="dpr-home-dashboard-header">
     <div>
-      <span class="dpr-home-dashboard-kicker">2026-09-13</span>
+      <span class="dpr-home-dashboard-kicker">2026-09-14</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
     <strong class="dpr-home-dashboard-count">共 1 篇</strong>
@@ -58,7 +58,7 @@
     <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>0</dd></div>
     <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>1</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-09-13 22:14:10 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-09-14 22:45:16 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,7 +69,9 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>今日速读1篇异质图开放集节点分类论文，聚焦HOPE模型的伪外推方法。该工作尝试在异质图中处理开放集识别，值得关注其如何用伪外推应对未知类别节点。普通读者可先了解开放集与异质图的基本概念，再判断是否深入阅读。</p>
+<p>今日仅速读 1 篇论文，精读挂零，主题聚焦 PROTAC 靶向降解预测。</p>
+<p>唯一可看的是《ProMeta: Few-shot PROTAC-targeted degradation prediction across E3 ligases》（6.0/10），亮点在于用少样本学习跨多种 E3 连接酶做降解预测，试图缓解特定 E3 数据稀缺的问题。</p>
+<p>普通读者可先关注“少样本+跨 E3 泛化”这一思路能否落地，后续若有实验验证或多靶点对比再决定是否深读。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -94,9 +96,9 @@
     <strong class="dpr-home-dashboard-count">1 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="HOPE: Heterophily-Aware Open-Set Node Classification with Pseudo-Extrapolation">HOPE: Heterophily-Aware Open-Set Node Classification with Pseudo-Extrapolation</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="ProMeta: Few-shot PROTAC-targeted degradation prediction across E3 ligases">ProMeta: Few-shot PROTAC-targeted degradation prediction across E3 ligases</span></li></ul>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">drug-ood-gen <strong>1</strong></span></div>
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">cold-ddi <strong>1</strong></span></div>
 </section>
 </div>
 

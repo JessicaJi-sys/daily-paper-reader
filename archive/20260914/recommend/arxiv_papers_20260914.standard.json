@@ -1,0 +1,66 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-14T22:44:34.474386+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 5,
+    "deep_divecandidates": 0,
+    "deep_cap": 10,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 15,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.09891v1",
+      "source": "arxiv",
+      "title": "ProMeta: Few-shot PROTAC-targeted degradation prediction across E3 ligases",
+      "abstract": "Proteolysis-targeting chimeras (PROTACs) have emerged as a transformative therapeutic strategy that selectively degrades historically ''undruggable'' targets via the ubiquitin-proteasome system. Despite growing efforts to develop computational predictors of PROTAC degradation activity, existing supervised approaches remain severely challenged by data scarcity and imbalance across E3 ligases, limiting their ability to generalize beyond well-studied ligase contexts. In practice, labeled data are heavily concentrated on a few ligases (e.g., CRBN and VHL), while the majority of E3 ligases remain underexplored yet are critical for expanding the design space of targeted degraders. Developing methods that enable robust cross-ligase generalization with minimal labeled data is therefore essential for improving the practical utility of computational PROTAC discovery. We reformulate PROTAC degradation activity prediction across E3 ligases as a few-shot meta-learning problem and present ProMeta, a prototype-based graph neural network trained through episodic meta-learning on source-E3 tasks and evaluated on held-out target-E3 tasks through support-conditioned inference. ProMeta performs inference without updating the encoder by dynamically estimating class prototypes from minimal target-ligase support samples. On the CRBN-to-VHL benchmark, ProMeta achieves AUROC values of 0.796 under K=2, Q=3 and 0.883 under K=2, Q=5, improving by 19.9% and 6.8%, respectively, over the corresponding supervised GNN baseline. Reverse VHL-to-CRBN transfer under the same protocol yielded AUROC values of 0.702 (K=2, Q=3) and 0.821 (K=2, Q=5), confirming bidirectional applicability while revealing direction and data-regime dependence. Together, these results support ProMeta as a practical framework for cross-ligase few-shot prediction under the evaluated support/query protocols.",
+      "authors": [
+        "Yuansheng Liu",
+        "Yufei Ye",
+        "Tao Tang",
+        "Jiawei Luo",
+        "Wen Tao",
+        "Xiao Luo"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-bio.QM"
+      ],
+      "published": "2026-09-09T08:47:01+00:00",
+      "link": "https://arxiv.org/pdf/2609.09891v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "few-shot generalization to unseen E3 ligases under data scarcity",
+      "llm_evidence_cn": "数据稀缺下向未见E3连接酶的少样本泛化",
+      "llm_evidence": "数据稀缺下向未见E3连接酶的少样本泛化",
+      "canonical_evidence": "数据稀缺下向未见E3连接酶的少样本泛化",
+      "llm_tldr_en": "Existing PROTAC degradation predictors suffer from scarce and imbalanced labels across E3 ligases, limiting generalization to underexplored ligases. ProMeta is a few-shot framework enabling robust cross-ligase prediction, offering transferable inductive ideas for cold-start drug activity modeling.",
+      "llm_tldr_cn": "现有PROTAC降解活性预测方法受限于E3连接酶间数据稀缺与类别不平衡，标注严重集中于CRBN、VHL等少数连接酶，难以泛化到大量研究不足的连接酶场景。本文提出ProMeta少样本预测框架，针对跨连接酶标注稀缺问题，实现稳健的跨连接酶泛化预测。摘要未披露具体实验数值，但方法面向标注有限的新连接酶场景进行预测。该工作为冷启动式、跨实体的药物活性预测提供了可迁移的归纳学习范式。",
+      "llm_tldr": "现有PROTAC降解活性预测方法受限于E3连接酶间数据稀缺与类别不平衡，标注严重集中于CRBN、VHL等少数连接酶，难以泛化到大量研究不足的连接酶场景。本文提出ProMeta少样本预测框架，针对跨连接酶标注稀缺问题，实现稳健的跨连接酶泛化预测。摘要未披露具体实验数值，但方法面向标注有限的新连接酶场景进行预测。该工作为冷启动式、跨实体的药物活性预测提供了可迁移的归纳学习范式。",
+      "llm_tags": [
+        "query:cold-ddi"
+      ],
+      "matched_query_tag": "query:cold-ddi",
+      "matched_query_text": "inductive knowledge transfer for new drugs",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

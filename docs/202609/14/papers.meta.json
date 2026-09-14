@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-14",
+  "date": "2026-09-14",
+  "generated_at": "2026-09-14T22:45:17",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/14/2609.09891v1-prometa-few-shot-protac-targeted-degradation-prediction-across-e3-ligases",
+      "section": "quick",
+      "title_en": "ProMeta: Few-shot PROTAC-targeted degradation prediction across E3 ligases",
+      "authors": "Yuansheng Liu, Yufei Ye, Tao Tang, Jiawei Luo, Wen Tao, Xiao Luo",
+      "date": "2026-09-09",
+      "pdf": "https://arxiv.org/pdf/2609.09891v1",
+      "score": "6.0",
+      "evidence": "数据稀缺下向未见E3连接酶的少样本泛化",
+      "tldr": "PROTAC通过泛素-蛋白酶体降解难成药靶点，但现有计算预测受E3连接酶数据稀缺与不平衡制约，难以跨连接酶泛化。ProMeta将跨E3降解活性预测重构为小样本元学习问题，用原型图神经网络在源E3任务上 episodic 训练，并在目标E3任务上以支持样本动态估计类原型进行推理。在CRBN到VHL基准上，K=2,Q=3取得AUROC 0.796，K=2,Q=5取得0.883，分别较监督GNN基线提升19.9%和6.8%；反向VHL到CRBN也验证双向适用性。该工作为少标注跨连接酶PROTAC降解预测提供了实用框架。",
+      "tags": "query:cold-ddi",
+      "abstract_en": "Proteolysis-targeting chimeras (PROTACs) have emerged as a transformative therapeutic strategy that selectively degrades historically ''undruggable'' targets via the ubiquitin-proteasome system. Despite growing efforts to develop computational predictors of PROTAC degradation activity, existing supervised approaches remain severely challenged by data scarcity and imbalance across E3 ligases, limiting their ability to generalize beyond well-studied ligase contexts. In practice, labeled data are heavily concentrated on a few ligases (e.g., CRBN and VHL), while the majority of E3 ligases remain underexplored yet are critical for expanding the design space of targeted degraders. Developing methods that enable robust cross-ligase generalization with minimal labeled data is therefore essential for improving the practical utility of computational PROTAC discovery. We reformulate PROTAC degradation activity prediction across E3 ligases as a few-shot meta-learning problem and present ProMeta, a prototype-based graph neural network trained through episodic meta-learning on source-E3 tasks and evaluated on held-out target-E3 tasks through support-conditioned inference. ProMeta performs inference without updating the encoder by dynamically estimating class prototypes from minimal target-ligase support samples. On the CRBN-to-VHL benchmark, ProMeta achieves AUROC values of 0.796 under K=2, Q=3 and 0.883 under K=2, Q=5, improving by 19.9% and 6.8%, respectively, over the corresponding supervised GNN baseline. Reverse VHL-to-CRBN transfer under the same protocol yielded AUROC values of 0.702 (K=2, Q=3) and 0.821 (K=2, Q=5), confirming bidirectional applicability while revealing direction and data-regime dependence. Together, these results support ProMeta as a practical framework for cross-ligase few-shot prediction under the evaluated support/query protocols.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
