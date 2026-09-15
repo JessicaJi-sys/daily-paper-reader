@@ -1,0 +1,581 @@
+Title: Multi-View Molecular Representation Learning with Hierarchical Graphs and Contextualized Fingerprints
+
+URL Source: https://arxiv.org/pdf/2609.15611v1
+
+Published Time: Tue, 15 Sep 2026 02:59:12 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# Multi-View Molecular Representation Learning with Hierarchical Graphs and Contextualized Fingerprints 
+
+# Gwang-Hyeon Yun ∗
+
+Yonsei University Wonju-si, Republic of Korea ghyun0130@yonsei.ac.kr 
+
+# Jong-Hoon Park ∗
+
+Yonsei University Wonju-si, Republic of Korea jonghoon_park@yonsei.ac.kr 
+
+# Bing Hu 
+
+University of Waterloo Waterloo, Canada b25hu@uwaterloo.ca 
+
+# Helen Chen 
+
+University of Waterloo Waterloo, Canada helen.chen@uwaterloo.ca 
+
+# Anita Layton 
+
+University of Waterloo Waterloo, Canada anita.layton@uwaterloo.ca 
+
+# Young-Rae Cho †
+
+Yonsei University - Mirae Campus Wonju-si, Republic of Korea youngcho@yonsei.ac.kr 
+
+## Abstract 
+
+Molecular property prediction requires representations that gen-eralize from limited labeled data to structurally novel compounds. Existing molecular pretraining methods often rely on a single view: graph-based approaches model atom-bond topology but provide limited fragment-level supervision, whereas fingerprint descriptors encode chemical patterns but are typically used as fixed auxiliary features. We propose HiFi-Mol , a multi-view framework that sepa-rately pretrains a hi erarchical graph encoder and a contextualized 
+
+fi ngerprint encoder before downstream integration. The graph branch uses fragment-aware masking with multi-resolution super-vision to capture substructure-aware representations, while the fingerprint branch tokenizes active entries from seven fingerprint families and applies masked language modeling to learn contextual-ized embeddings. During fine-tuning, HiFi-Mol combines projected multi-resolution graph features with fingerprint embeddings for downstream prediction. Evaluated on MoleculeNet benchmarks under the scaffold split, HiFi-Mol achieves a 2.77% improvement in average ROC-AUC over the best baseline across eight classification tasks while maintaining competitive performance on three regres-sion tasks. Further analyses reveal that fragment-aware masking improves graph representation quality, and classification results demonstrate dataset-dependent strengths of the individual graph and fingerprint variants, confirming that the two views provide complementary predictive signals. 
+
+## CCS Concepts 
+
+• Applied computing → Bioinformatics ; • Computing method-ologies → Learning latent representations .
+
+> ∗These authors are contributed equally to this work.
+> †Corresponding author.
+> This work is licensed under a Creative Commons Attribution 4.0 International License.
+> CIKM ’26, Rome, Italy.
+> © 2026 Copyright held by the owner/author(s). ACM ISBN 979-8-4007-2539-5/2026/11 https://doi.org/10.1145/3799682.3840948
+
+## Keywords 
+
+Multi-View Learning, Molecular Representation Learning, Molecu-lar Property Prediction, Hierarchical Graph, Contextualized Finger-print 
+
+ACM Reference Format: 
+
+Gwang-Hyeon Yun, Jong-Hoon Park, Bing Hu, Helen Chen, Anita Layton, and Young-Rae Cho. 2026. Multi-View Molecular Representation Learning with Hierarchical Graphs and Contextualized Fingerprints. In Proceedings of the 35th ACM International Conference on Information and Knowledge Management (CIKM ’26), November 7–11, 2026, Rome, Italy. ACM, New York, NY, USA, 9 pages. https://doi.org/10.1145/3799682.3840948 
+
+## 1 Introduction 
+
+Molecular property prediction [6, 32] is a central problem in early-stage drug discovery, where computational models are used to pri-oritize promising compounds and filter toxic or inactive candidates before costly experimental validation [25, 28, 33]. Despite signifi-cant progress, two key challenges remain. First, labeled molecular data are often scarce, forcing models to learn from limited super-vision [21]. Second, such models must generalize to structurally novel molecules beyond the training distribution, since newly eval-uated compounds are often absent from the training data [1, 22]. These challenges place strong demands on molecular representation learning: useful representations should encode not only atom-level topology but also higher-order chemical structures and functional patterns that govern molecular activity. Graph neural networks (GNNs) have become a dominant ap-proach for molecular representation learning because molecules naturally form atom-bond graphs [14, 16, 30]. However, atom-level graph representations mainly capture local relational topology through message passing over atoms and bonds, making it difficult to explicitly model chemically meaningful substructures such as functional groups, ring systems, and pharmacophoric scaffolds [19]. While recent methods such as MGSSL [44] and HiMol [43] incorpo-rate fragment-level nodes, they either decouple fragment identities from their constituent atom-bond patterns or lack multi-resolution supervision spanning atom, fragment, global, and geometric signals. Molecular fingerprints provide another chemically informed view of molecular structure [2, 7, 40]. They encode predefined de-scriptors such as circular substructures, pharmacophoric patterns, and topological relations. Although many fingerprint descriptors are derived from molecular topology, their discrete and predefined arXiv:2609.15611v1 [cs.LG] 14 Sep 2026 CIKM ’26, November 7–11, 2026, Rome, Italy. Gwang-Hyeon Yun et al. 
+
+encoding scheme can capture structural patterns that are comple-mentary to learned graph representations [9]. However, existing molecular pretraining methods rarely treat these two views as learnable, multi-view components within a unified framework: fin-gerprints are typically incorporated as static auxiliary vectors and shallowly concatenated with graph embeddings, limiting their abil-ity to model contextual descriptor relationships. Motivated by these observations, we propose HiFi-Mol, a multi-view molecular pretraining framework composed of a Hi erarchical graph encoder and a contextualized Fi ngerprint encoder. Rather than enforcing a shared pretraining space, HiFi-Mol learns graph and fingerprint views with view-specific objectives and integrates them during downstream adaptation. On the graph side, fragment-aware masking corrupts chemically coherent fragments together with their constituent atoms and bonds, while multi-resolution su-pervision over atom, bond, fragment, global, and geometric signals guides the learning of hierarchical representations with fragment-level chemical semantics. In parallel, the fingerprint encoder repre-sents active entries from multiple fingerprint families as descriptor tokens, which are processed together with accompanying SMILES tokens for joint masked language modeling [10]. This objective cap-tures contextual dependencies among fingerprint descriptors while leveraging SMILES-derived molecular context, yielding fingerprint representations beyond static descriptor vectors. Finally, projected graph and fingerprint representations are concatenated and passed to a task-specific predictor for downstream property prediction. Experiments on MoleculeNet [37] benchmarks show strong clas-sification performance and competitive regression results. Single-view comparisons reveal dataset-dependent strengths of graph and fingerprint representations, suggesting that the two views provide complementary predictive signals. The main contributions are summarized as follows: 
+
+• HiFi-Mol formulates graph topology and fingerprint descrip-tors as complementary molecular views with distinct induc-tive biases, and pretrains each encoder with view-specific objectives before downstream integration. 
+
+• Fragment-aware masking and multi-resolution supervision jointly improve hierarchical graph representations by en-couraging coherent substructure recovery across molecular resolutions. 
+
+• Masked language modeling over joint SMILES–fingerprint token sequences learns contextualized descriptor represen-tations that capture co-occurrence patterns beyond static fingerprint vectors. 
+
+## 2 Related Work 
+
+Molecular Graph Pretraining. Self-supervised molecular pre-training has been widely studied to alleviate label scarcity in molec-ular property prediction. Existing graph-based methods can be broadly categorized into generative objectives, such as AttrMask and ContextPred [16], which reconstruct masked node, edge, or con-textual attributes, and contrastive objectives, such as GraphCL [42], JOAOv2 [41], and MolCLR [35], which maximize agreement be-tween augmented molecular views. Hybrid methods combine gener-ative and contrastive pretraining signals to capture richer molecular 
+
+Figure 1: Illustration of the hierarchical molecular graph and fragment-aware masking (FAM). (a) A molecule is de-composed into fragment-level units using BRICS and SSSR, forming a hierarchical graph with atom, fragment, and global nodes. (b) FAM samples fragment nodes and propagates the mask to their constituent atoms and incident bonds, encour-aging reconstruction of coherent substructures. 
+
+semantics. GraphMVP [24] and MoleculeSDE [23] incorporate geo-metric information by aligning 2D graph representations with 3D molecular signals, whereas Mole-BERT [38] combines masked atom prediction with contrastive learning over multiple molecular views. While effective, these approaches typically rely on atom-level or graph-level objectives, leaving explicit supervision of chemically meaningful substructures such as functional groups, ring systems, and pharmacophores relatively underexplored. 
+
+Fragment-level Graph Pretraining. Recent studies have in-corporated fragment- or motif-level information into molecular graph learning. MGSSL [44] performs motif-based generative pre-training by predicting motif labels and topological structure, while HiMol [43] constructs hierarchical molecular graphs with virtual motif and graph-level nodes. GraphFP [26] further aligns molecular and fragment representations through fragment-based contrastive learning. These methods demonstrate the value of modeling higher-order substructures, yet existing objectives often decouple fragment identities from the atom-bond patterns that define them. 
+
+Fingerprint Representation Learning and Multi-View Learn-ing. Molecular fingerprints represent molecules as binary or count vectors encoding predefined substructural patterns, providing a complementary view of chemical structure [11, 29]. Prior meth-ods such as FP-GNN [4] and DGCL [18] suggest that combining fingerprint features with graph representations can improve down-stream molecular property prediction, but fingerprints are typically used as static auxiliary descriptors and fused shallowly with graph embeddings. Recent fingerprint language modeling approaches such as DELBERT [31] show that sparse fingerprint vectors can be tokenized into discrete sequences and pretrained with masked language modeling, producing contextualized descriptor represen-tations beyond fixed fingerprint vectors. 
+
+## 3 Preliminaries 
+
+We formally introduce the two molecular views underlying HiFi-Mol and formulate the multi-view property prediction problem. Multi-View Molecular Representation Learning with Hierarchical Graphs and Contextualized Fingerprints CIKM ’26, November 7–11, 2026, Rome, Italy. 
+
+Definition 1 (Hierarchical Molecular Graph). Given a mole-cule 𝑀 , its hierarchical molecular graph is defined as G = (V , E) ,where 
+
+V = Vatom ∪ V frag ∪ { 𝑣 global }, (1) 
+
+E = Ebond ∪ E hier . (2) 
+
+Vatom consists of atom nodes, Vfrag consists of fragment nodes corresponding to chemically coherent substructures, and 𝑣 global is a virtual global node representing the entire molecule. Ebond contains chemical bonds, and Ehier contains directed edges connecting atom, fragment, and global levels. 
+
+Definition 2 (Joint SMILES–Fingerprint Token Sequence). 
+
+Let RFP = {𝑅 1, . . . , 𝑅 𝐾 } denote a set of fingerprint families. For each active entry in family 𝑅 𝑘 , we construct a discrete token 𝑡 𝑝 =
+
+<fp_name_index_value> encoding its fingerprint type, bit index, and count value. The sparse fingerprint token sequence is denoted by: 
+
+𝑋 FP = (𝑡 𝑝 | 𝑡 𝑝 ∈ Active (𝑅 𝑘 ), ∀𝑅 𝑘 ∈ R FP ). (3) Given the SMILES token sequence 𝑋 SMI , the joint token sequence is defined as: 
+
+𝑋 SF = [𝑋 SMI ∥ 𝑋 FP ], (4) which serves as the input to the fingerprint encoder. 
+
+Problem 1 (Multi-View Molecular Property Prediction). 
+
+Given a molecular dataset D = {( 𝑀 𝑛 , 𝑦 𝑛 )} 𝑁 𝑛 =1, where 𝑦 𝑛 denotes the ground-truth property label, each molecule 𝑀 𝑛 is represented by a hierarchical graph G𝑛 and a joint token sequence 𝑋 SF ,𝑛 . The goal is to learn a prediction function 𝑓 pred :ˆ𝑦 𝑛 = 𝑓 pred 
+
+ ΦGNN (G 𝑛 ) ∥ ΦFP (𝑋 SF ,𝑛 ), (5) where ΦGNN and ΦFP denote the graph and fingerprint encoders, re-spectively, ∥ denotes feature concatenation, and ˆ 𝑦 𝑛 is the predicted molecular property. 
+
+## 4 Proposed Method 
+
+Figure 2 illustrates HiFi-Mol, a multi-view pretraining framework for molecular property prediction, consisting of three stages: hier-archical graph pretraining, contextualized fingerprint pretraining, and multi-view downstream integration. 
+
+## 4.1 Hierarchical Graph Pretraining 
+
+Hierarchical Graph Construction. As shown in Figure 1(a), frag-ment nodes Vfrag are constructed via a two-stage decomposition. The BRICS algorithm [8] first cleaves retrosynthetically meaningful bonds to isolate initial fragments. SSSR-based ring refinement then further partitions coarse ring-containing fragments into the small-est chemically coherent cyclic substructures. Each resulting frag-ment is canonicalized into a SMILES string and mapped to a unique ID through a dictionary function 𝜙 : Sfrag → { 0, . . . , |D frag | − 1},where fragments occurring fewer than 𝜏 min = 10 times are assigned to an ⟨UNK ⟩ token. 
+
+Fragment-aware Masking. As illustrated in Figure 1(b), fragment-aware masking (FAM) is applied to the hierarchical graph G as a corruption procedure. Unlike atom-level masking, which can often be inferred from local neighborhoods, FAM selects fragment nodes as masking units, requiring the encoder to recover coherent sub-structures rather than isolated graph elements. Formally, a subset of fragment nodes Mfrag ⊂ V frag is sampled at ratio 𝑟 𝑓 = 0.15 and designated as masked fragments. The corresponding atom mask is defined as 
+
+Matom = 𝑣 𝑢 ∈ V atom | ∃ 𝑣 𝑠 ∈ M frag s.t. 𝑣 𝑢 ∈ A ( 𝑠 ) , (6) where 𝑣 𝑢 and 𝑣 𝑠 denote the atom and fragment nodes indexed by 
+
+𝑢 and 𝑠 , respectively, and A ( 𝑠 ) is the set of atom nodes belonging to fragment 𝑠 . If the induced atom masking ratio falls below 𝑟 𝑎 =
+
+0.25, additional atoms are uniformly sampled to ensure sufficient corruption. The set of masked bonds is defined as 
+
+Mbond = {( 𝑣 𝑢 , 𝑣 𝑣 ) ∈ E bond | 𝑣 𝑢 ∈ M atom or 𝑣 𝑣 ∈ M atom }, (7) where (𝑣 𝑢 , 𝑣 𝑣 ) denotes a chemical bond incident to at least one masked atom. This produces a masked graph ˜G, in which masked nodes Matom ∪M frag and masked bonds Mbond serve as reconstruc-tion targets for the encoder. 
+
+Hierarchical Graph Encoding. Given the masked hierarchical graph ˜G, node and edge features are represented as ℎ(0) 
+
+> 𝑖
+
+∈ R𝑑 and 
+
+𝑒 𝑖 𝑗 ∈ R𝑑 , respectively. Node features are derived from atom at-tributes, fragment dictionary identities, or global molecular context depending on the node type, with masked atom and fragment nodes replaced by a learnable mask embedding. Edge features incorporate bond attributes and hierarchical relation types, enabling informa-tion propagation over both chemical bonds and cross-resolution connections. Detailed feature initialization procedures are provided in Appendix A. A shared GINE backbone [16] encodes ˜G by performing message passing over both chemical and hierarchical edges. At each layer 𝑙 ,the representation of node 𝑣 𝑖 is updated as: 
+
+ℎ(𝑙 ) 
+
+> 𝑖
+
+= MLP (𝑙 ) ©«
+
+1 + 𝜖 (𝑙 ) 
+
+ℎ(𝑙 −1) 
+
+> 𝑖
+
++∑︁   
+
+> 𝑗 ∈ N ( 𝑖 )
+
+ReLU 
+
+
+
+ℎ(𝑙 −1) 
+
+> 𝑗
+
++ 𝑒 𝑖 𝑗 
+
+ª®¬
+
+, (8) where N ( 𝑖 ) denotes the neighbors of 𝑣 𝑖 in ˜G, and 𝜖 (𝑙 ) is a learnable scalar that controls the contribution of the previous-layer repre-sentation of 𝑣 𝑖 . After 𝐿 layers, the encoder produces final-layer node representations ˜ℎ(𝐿 ) 
+
+> 𝑖
+
+∈ R𝑑 , which capture multi-resolution chemical context across atom, fragment, and global levels. 
+
+Multi-resolution Pretraining Objectives. The final-layer rep-resentations { ˜ℎ(𝐿 ) 
+
+> 𝑖
+
+} are optimized with five objectives that supervise molecule-level consistency, masked substructure recovery, local atom-bond reconstruction, and geometric regularization. For molecule-level supervision, we generate two independently masked views, ˜G (1) and ˜G (2) , for each molecule using FAM. Their global node embeddings are projected and ℓ2-normalized to obtain 
+
+𝑧 (1) and 𝑧 (2) , which are then optimized with an InfoNCE loss [5]: 
+
+LCL = −E
+
+"
+
+log 𝑒 ⟨𝑧 (1) ,𝑧 (2) ⟩/ 𝜏 
+
+𝑒 ⟨𝑧 (1) ,𝑧 (2) ⟩/ 𝜏 + Í𝑧 − ∈ Z − 𝑒 ⟨𝑧 (1) ,𝑧 − ⟩/ 𝜏 
+
+#
+
+, (9) where 𝜏 = 0.1 is the temperature parameter that scales the simi-larity logits, and Z− consists of in-batch negatives from different molecules. For substructure-level supervision, masked fragment identities and atom types are recovered via linear classification heads over their respective masked node representations: 
+
+Lfrag = −∑︁  
+
+> 𝑣 𝑠 ∈ M frag
+
+log 𝑃 
+
+
+
+𝜙 (𝑠 ) | ˜ℎ(𝐿 )
+
+> 𝑠
+
+
+
+, (10) CIKM ’26, November 7–11, 2026, Rome, Italy. Gwang-Hyeon Yun et al. 
+
+Figure 2: Overview of the HiFi-Mol framework. (a) Given a hierarchical molecular graph, fragment-aware masking produces two masked views that are passed through a shared 5-layer GINE encoder and optimized with global, fragment, atom, bond, and distance prediction objectives. (b) SMILES and multi-type fingerprint tokens are concatenated and processed by ChemFLM via masked language modeling. (c) For downstream prediction, the pretrained encoders provide multi-resolution graph features and contextualized fingerprint embeddings, which are projected, concatenated, and passed to a task-specific prediction head. 
+
+Latom = −∑︁  
+
+> 𝑣 𝑢 ∈ M atom
+
+log 𝑃 
+
+
+
+𝑎 𝑢 | ˜ℎ(𝐿 )
+
+> 𝑢
+
+
+
+, (11) while bond types are predicted by a two-layer MLP over concate-nated endpoint representations: 
+
+Lbond = −∑︁   
+
+> (𝑣 𝑢 ,𝑣 𝑣 ) ∈ M bond
+
+log 𝑃 
+
+
+
+𝑐 𝑢𝑣 | ˜ℎ(𝐿 ) 
+
+> 𝑢
+
+, ˜ℎ(𝐿 )
+
+> 𝑣
+
+
+
+. (12) In these losses, 𝜙 (𝑠 ), 𝑎 𝑢 , and 𝑐 𝑢𝑣 denote the ground-truth fragment dictionary ID, atom type of atom node 𝑣 𝑢 , and bond type between atom nodes 𝑣 𝑢 and 𝑣 𝑣 , respectively. For geometry-level supervision, a distance decoder 𝑓 dist predicts the Euclidean distance between sampled atom pairs from their final representations: 
+
+Ldist =∑︁   
+
+> (𝑣 𝑢 ,𝑣 𝑣 ) ∈ P
+
+
+
+𝑓 dist ( ˜ℎ(𝐿 ) 
+
+> 𝑢
+
+, ˜ℎ(𝐿 ) 
+
+> 𝑣
+
+) − ∥ 𝑝 𝑢 − 𝑝 𝑣 ∥2
+
+2
+
+, (13) where P denotes sampled atom pairs including bonded and ran-domly sampled non-bonded pairs, and 𝑝 𝑢 , 𝑝 𝑣 ∈ R3 are the 3D coor-dinates available only during pretraining. 
+
+Uncertainty-based Loss Weighting. To balance the five pre-training objectives without manual tuning, we adopt uncertainty-based loss weighting [20]. Let 𝜎 2 
+
+> 𝑡
+
+denote a learnable variance pa-rameter for objective 𝑡 . The total graph pretraining loss is: 
+
+LG =∑︁  
+
+> 𝑡 ∈ T
+
+ 12𝜎 2
+
+> 𝑡
+
+L𝑡 + log 𝜎 𝑡 
+
+
+
+, (14) where T denotes the set of pretraining objectives. The first term adaptively down-weights objectives with higher uncertainty, while the log-variance term prevents trivial growth of 𝜎 𝑡 .
+
+## 4.2 Contextualized Fingerprint Pretraining 
+
+To complement the graph-based structural view, we independently pretrain a fingerprint encoder ΦFP by reframing molecular finger-prints as discrete token sequences. The fingerprint view is con-structed from seven complementary fingerprint families captur-ing chemical patterns across multiple structural scales, including local circular environments (ECFP4, ECFP6), pharmacophoric fea-tures (FCFP4, FCFP6), long-range topological relations (ATOM-PAIR), torsional fragments (TOPTOR), and interpretable structural Multi-View Molecular Representation Learning with Hierarchical Graphs and Contextualized Fingerprints CIKM ’26, November 7–11, 2026, Rome, Italy. 
+
+keys (MACCS). ΦFP is initialized from ChemFLM, a ModernBERT-based fingerprint language model [31, 36], enabling contextualized descriptor modeling beyond fixed fingerprint vectors. Given the joint token sequence 𝑋 SF defined in Section 3, token and segment embeddings are summed to form the input represen-tations: 
+
+𝐻 (0) 
+
+> SF
+
+= 𝐸 tok (𝑋 SF ) + 𝐸 seg (𝑋 SF ), (15) where 𝐸 tok maps discrete tokens to embeddings and 𝐸 seg distin-guishes whether each token belongs to the SMILES segment or one of the fingerprint descriptor families. The initialized sequence is processed by stacked self-attention layers: 
+
+𝐻 (𝑙 ) 
+
+> SF
+
+= Φ(𝑙 )
+
+> FP
+
+
+
+𝐻 (𝑙 −1)
+
+> SF
+
+
+
+, 𝑙 = 1, . . . , 𝐿 FP , (16) yielding final hidden states 𝐻 SF = 𝐻 (𝐿 FP ) 
+
+> SF
+
+∈ R|𝑋 SF | × 𝑑 FP .During pretraining, a masked sequence ˜ 𝑋 SF is constructed by randomly replacing 15% of joint tokens with a mask token. Let ˜𝐻 SF = ΦFP ( ˜𝑋 SF ) denote the final hidden states obtained from the masked input. For each masked position 𝑝 ∈ M SF , an MLM head predicts the original token 𝑥 𝑝 from the corresponding contextual-ized representation ˜ 𝐻 SF ,𝑝 . The encoder is trained to reconstruct the original tokens at masked positions: 
+
+LFP = −∑︁  
+
+> 𝑝 ∈ M SF
+
+log 𝑃 
+
+
+
+𝑥 𝑝 | ˜𝑋 SF 
+
+
+
+, (17) where 𝑥 𝑝 denotes the original token at masked position 𝑝 . By maintaining ΦFP as a standalone module separate from ΦGNN , HiFi-Mol preserves descriptor-level chemical semantics distinct from topology-driven graph representations. 
+
+## 4.3 Multi-View Downstream Integration 
+
+Since the graph and fingerprint encoders capture distinct chem-ical views, HiFi-Mol combines their representations only during downstream adaptation after view-specific pretraining. This design preserves the hierarchical structural information encoded across atom, fragment, and global levels, as well as the descriptor-level chemical knowledge captured by the fingerprint encoder. Molecule-level representations are derived independently from each view. Given the hierarchical graph G, the graph encoder ΦGNN 
+
+yields final-layer representations at three levels: atom-level 𝐻 atom ,fragment-level 𝐻 frag , and global-level ℎglobal . A molecule-level atom summary ℎatom is obtained by mean pooling over 𝐻 atom , a fragment summary ℎfrag by max pooling over 𝐻 frag , and ℎglobal is retained di-rectly. For the fingerprint view, ΦFP processes 𝑋 SF without masking to produce final hidden states 𝐻 SF . The molecule-level representa-tion ℎFP is obtained by mean pooling over 𝐻 SF .These view-specific summaries are then projected into compati-ble embedding spaces, concatenated, and passed to a task-specific prediction head: 
+
+𝑧 𝑔 = 𝑓 GNN 
+
+   ℎatom ∥ ℎfrag ∥ ℎglobal 
+
+  , (18) 
+
+𝑧 fp = 𝑓 FP (ℎFP ) , (19) ˆ𝑦 = 𝑓 pred 
+
+   𝑧 𝑔 ∥ 𝑧 fp 
+
+  . (20) In this implementation, 𝑓 GNN and 𝑓 FP are two-layer MLP projec-tion heads with batch normalization, SiLU activation, and dropout, 
+
+Table 1: Dataset statistics and downstream hyperparameter settings for MoleculeNet benchmarks. All datasets use batch size 32, weight decay 0, and dropout 0.1. Dataset Avg. # Atoms Avg. # Frags LR Epochs 
+
+Classification benchmarks 
+
+BBBP 24.1 6.5 10 −4 20 Tox21 18.6 4.9 10 −5 100 ToxCast 18.8 5.1 10 −4 100 HIV 25.5 6.7 10 −5 20 MUV 24.2 7.1 10 −4 10 ClinTox 26.2 7.0 10 −5 100 BACE 34.1 9.4 10 −5 20 SIDER 33.6 9.0 10 −4 20 
+
+Regression benchmarks 
+
+ESOL 13.3 3.4 10 −4 150 FreeSolv 8.7 2.2 10 −4 150 Lipophilicity 27.0 7.8 10 −4 100 producing 128-dimensional graph and fingerprint embeddings. Sim-ilarly, 𝑓 pred uses the same MLP block to map the concatenated rep-resentation to the task output. 
+
+## 5 Experiments 5.1 Experimental Settings 
+
+Datasets and Metrics. The graph encoder is pretrained on PCQM4M-v2 [15], containing 3.3 million molecules with 3D coordinates used only for distance prediction. The fingerprint encoder is initial-ized from ChemFLM, pretrained on 4.4 million molecules from AIRCHECK [12], ChEMBL [13], and MOSES [27]. We evaluate on 11 MoleculeNet benchmarks under the scaffold split [37]: eight clas-sification datasets and three regression datasets, whose statistics are summarized in Table 1. Performance is measured by ROC-AUC for classification and RMSE for regression. 
+
+Baselines. We compare against representative molecular pretrain-ing methods from four categories: generative SSL methods (Attr-Mask [16], ContextPred [16], GPT-GNN [17]), contrastive SSL meth-ods (InfoGraph [34], GraphCL [42], JOAOv2 [41], MolCLR [35]), hybrid SSL methods (GraphMVP [24], MoleculeSDE [23], Mole-BERT [38]), and fragment-based SSL methods (MGSSL [44], Hi-Mol [43]). Baseline results are reproduced using officially released implementations under the same scaffold split protocol and metric settings. 
+
+Implementation Details. The graph encoder uses 5 GINE layers with hidden dimension 300, pretrained for 100 epochs with batch size 1,024, learning rate 10 −4, AdamW optimizer, and a OneCycle scheduler with 10% warmup followed by cosine annealing. Frag-ment masking ratio is set to 𝑟 𝑓 = 0.15, with additional random atom masking to maintain a minimum atom masking ratio of 𝑟 𝑎 = 0.25. The fingerprint encoder uses a ModernBERT large encoder with 12 layers and hidden size 1024, pretrained with learning rate 10 −4,AdamW optimizer, batch size 64, and a cosine annealing schedule with 10% warmup. Downstream hyperparameters are summarized CIKM ’26, November 7–11, 2026, Rome, Italy. Gwang-Hyeon Yun et al. 
+
+Table 2: ROC-AUC ( ↑) on MoleculeNet classification benchmarks under the scaffold split (mean ± std over 3 seeds). Best in bold, second-best underlined. HiFi-Mol Graph and HiFi-Mol FP denote graph-only and fingerprint-only variants, respectively. 
+
+Dataset BBBP Tox21 ToxCast HIV MUV ClinTox BACE SIDER Avg. AUC # Molecules 2,039 7,831 8,577 41,127 93,087 1,477 1,513 1,427 -# Tasks 1 12 617 1 17 2 1 27 -AttrMask [16] 69.25 ±1.85 74.46 ±0.20 62.90 ±0.47 75.49 ±0.86 73.03 ±0.76 71.28 ±8.24 78.36 ±0.87 58.09 ±0.53 70.36 ContextPred [16] 67.25 ±1.86 73.73 ±0.44 61.61 ±0.75 74.26 ±1.56 73.53 ±2.42 76.03 ±3.67 75.94 ±0.96 59.20 ±0.44 70.19 GPT-GNN [17] 61.33 ±1.59 74.36 ±0.88 62.93 ±0.61 76.87 ±0.81 75.53 ±0.72 54.47 ±1.51 74.51 ±1.17 57.13 ±1.74 67.14 InfoGraph [34] 68.54 ±1.39 73.60 ±0.79 60.98 ±0.95 75.61 ±0.59 74.47 ±2.94 69.02 ±4.65 61.30 ±3.41 58.20 ±1.10 67.72 GraphCL [42] 69.65 ±1.06 75.17 ±0.23 62.83 ±0.87 75.72 ±1.26 74.30 ±1.66 71.56 ±8.08 73.00 ±0.79 61.14 ±0.70 70.42 JOAOv2 [41] 69.83 ±0.79 74.76 ±0.67 63.30 ±0.90 74.27 ±2.31 74.94 ±1.15 66.44 ±1.25 75.77 ±0.35 60.64 ±1.01 69.99 MolCLR [35] 72.16 ±0.34 73.63 ±0.28 62.18 ±0.56 77.64 ±0.95 76.55 ±1.06 90.64 ±1.61 82.13 ±1.06 57.83 ±0.71 74.10 GraphMVP [24] 68.44 ±0.57 74.26 ±1.00 64.25 ±0.46 75.74 ±1.91 75.61 ±1.67 72.84 ±1.89 80.84 ±2.71 61.38 ±1.09 71.67 MoleculeSDE [23] 70.68 ±0.97 75.04 ±0.24 62.62 ±0.22 76.89 ±0.50 76.22 ±1.36 72.45 ±3.07 80.74 ±0.59 59.82 ±0.35 71.81 Mole-BERT [38] 67.57 ±1.08 75.45 ±0.51 62.93 ±0.83 77.56 ±0.63 76.69 ±0.88 70.87 ±5.91 78.57 ±0.53 58.21 ±0.38 70.98 MGSSL [44] 68.06 ±1.53 75.65 ±0.26 62.76 ±0.26 73.78 ±1.34 74.45 ±1.42 66.96 ±4.80 82.13 ±1.64 58.04 ±1.26 70.23 HiMol [43] 70.62 ±0.61 76.82 ±0.83 65.37 ±0.35 73.04 ±1.82 76.80 ±0.97 60.79 ±1.30 80.31 ±0.68 58.66 ±3.29 70.30 HiFi-Mol Graph 70.68 ±1.53 74.76 ±0.23 66.05 ±0.27 75.49 ±0.81 74.82 ±0.61 88.84 ±1.91 82.16 ±0.61 61.03 ±0.40 74.23 HiFi-Mol FP 70.09 ±0.93 74.03 ±0.39 64.86 ±0.82 78.20 ±0.60 75.62 ±1.40 91.68 ±6.38 80.49 ±0.90 64.23 ±1.39 74.90 HiFi-Mol 73.68 ±0.55 74.56 ±1.07 65.27 ±0.29 77.10 ±0.45 77.29 ±2.36 96.83 ±0.95 81.84 ±1.36 62.64 ±0.70 76.15 Table 3: RMSE (↓) on MoleculeNet regression bench-marks under the scaffold split. Best in bold, second-best underlined. HiFi-Mol Graph and HiFi-Mol FP denote graph-only and fingerprint-only variants, respectively. 
+
+Dataset ESOL FreeSolv Lipophilicity # Molecules 1,128 642 4,200 # Tasks 1 1 1MolCLR [35] 1.368 ±0.012 2.940 ±0.099 0.732 ±0.014 
+
+GraphMVP [24] 1.294 ±0.097 2.741 ±0.266 0.727 ±0.003 
+
+Mole-BERT [38] 1.349 ±0.018 2.696 ±0.063 0.766 ±0.007 
+
+MGSSL [44] 1.374 ±0.020 3.076 ±0.214 0.779 ±0.005 
+
+HiMol [43] 0.884 ±0.018 2.042 ±0.060 0.743 ±0.009 
+
+HiFi-Mol Graph 0.861 ±0.051 2.644 ±0.196 0.718 ±0.006 
+
+HiFi-Mol FP 0.968 ±0.019 2.454 ±0.049 0.830 ±0.022 
+
+HiFi-Mol 0.869 ±0.018 2.358 ±0.080 0.743 ±0.001 
+
+in Table 1. All results are reported as mean and standard deviation over three random seeds. Graph pretraining is conducted on a sin-gle NVIDIA RTX A6000 GPU ( ∼50 hours), and fingerprint encoder pretraining on a single NVIDIA RTX 4090 GPU ( ∼500 hours). 
+
+## 5.2 Downstream Performance in MoleculeNet 
+
+Classification. Table 2 reports ROC-AUC results on eight Molecu-leNet classification benchmarks. HiFi-Mol achieves the highest average ROC-AUC of 76.15, corresponding to a 2.77% relative im-provement over MolCLR, the strongest baseline. MolCLR remains competitive by learning globally consistent molecular represen-tations, while GraphMVP and MoleculeSDE benefit from 2D-3D geometric alignment. Fragment-level methods such as MGSSL and HiMol show the value of higher-order substructure modeling, but their performance varies substantially across benchmarks. To analyze the contribution of each molecular view, we com-pare HiFi-Mol with its graph-only and fingerprint-only variants. Across the three HiFi-Mol variants, at least one achieves state-of-the-art performance on seven of the eight classification benchmarks. Within the HiFi-Mol family, the graph-only variant performs better on BBBP, Tox21, ToxCast, and BACE, while the fingerprint-only variant performs better on HIV, MUV, ClinTox, and SIDER. This dataset-dependent behavior suggests that graph and fingerprint rep-resentations provide complementary predictive signals, and their integration yields the best average performance. 
+
+Regression. Table 3 reports RMSE results on three MoleculeNet regression benchmarks. HiFi-Mol remains competitive, achieving the second-best result on ESOL and FreeSolv, while HiFi-Mol Graph 
+
+performs best on ESOL and Lipophilicity. Notably, graph-based hierarchical models, including HiMol and HiFi-Mol Graph , achieve strong performance on ESOL and FreeSolv, suggesting that hier-archical structural representations can be beneficial for certain physicochemical regression tasks. The comparatively weaker gains from multi-view integration further suggest that some regression targets may already be sufficiently modeled by hierarchical graph representations. 
+
+## 5.3 Ablation Study 
+
+Graph Pretraining Components. We analyze the contribution of each graph pretraining component through ablation on eight MoleculeNet classification benchmarks. As shown in Table 4, re-placing fragment-aware masking with random masking reduces the average ROC-AUC by 0.91, and removing any individual ob-jective consistently degrades performance, indicating that global Multi-View Molecular Representation Learning with Hierarchical Graphs and Contextualized Fingerprints CIKM ’26, November 7–11, 2026, Rome, Italy. 
+
+Table 4: Ablation of graph pretraining components on MoleculeNet classification benchmarks under scaffold split (best in bold). The w/o FAM variant replaces the masking strategy with random masking; each other variant removes one pretraining objective. ΔAvg. reports the change in average ROC-AUC relative to the full model. 
+
+Method BBBP Tox21 ToxCast HIV MUV ClinTox BACE SIDER Avg. ΔAvg. 
+
+Full Model 73.68 ±0.55 74.56 ±1.07 65.27 ±0.29 77.10 ±0.45 77.29 ±2.36 96.83 ±0.95 81.84 ±1.36 62.64 ±0.70 76.15 -w/o FAM 71.19 ±1.88 75.05 ±0.55 66.16 ±0.11 75.18 ±1.99 74.06 ±2.24 94.45 ±1.60 82.45 ±0.37 63.37 ±1.70 75.24 -0.91 w/o Fragment ID 71.73 ±0.78 74.67 ±0.69 65.61 ±0.37 74.63 ±0.80 74.32 ±1.47 97.46 ±0.94 80.55 ±1.85 63.76 ±0.82 75.34 -0.81 w/o Distance 71.63 ±0.67 75.27 ±0.81 66.37 ±0.26 74.65 ±0.45 74.25 ±1.01 97.62 ±0.11 80.46 ±0.94 63.37 ±0.66 75.45 -0.70 w/o Global Contrastive 71.60 ±0.42 74.87 ±0.81 65.76 ±0.33 76.30 ±1.31 73.81 ±1.54 94.18 ±2.65 79.31 ±0.30 63.53 ±1.62 74.92 -1.23 w/o Atom & Bond 71.01 ±1.99 75.00 ±0.53 66.00 ±0.29 77.24 ±1.79 75.56 ±1.67 96.64 ±1.76 82.94 ±1.07 62.48 ±1.10 75.86 -0.29 
+
+Table 5: Effect of GNN backbone architectures within HiFi-Mol. Results report ROC-AUC under scaffold split. 
+
+Backbone BBBP BACE HIV MUV GIN 73.68 ±0.55 81.84 ±1.36 77.10 ±0.45 77.29 ±2.36 
+
+GCN 73.45 ±0.91 80.82 ±0.22 76.36 ±1.28 75.68 ±0.92 
+
+GAT 72.81 ±0.84 78.42 ±2.19 75.47 ±0.73 75.49 ±0.79 
+
+GraphSAGE 72.03 ±0.92 82.73 ±0.29 75.24 ±0.43 74.93 ±0.73 
+
+contrastive consistency, fragment-level semantics, geometric regu-larization, and local atom-bond recovery provide complementary supervision signals. The largest degradation occurs upon remov-ing the global contrastive objective ( ΔAvg. = −1.23), followed by fragment identity prediction ( −0.81), distance prediction ( −0.70), and atom-bond recovery ( −0.29), whose modest impact suggests that local bonding patterns are partially recoverable via indirect supervision from the remaining objectives. 
+
+Backbone Sensitivity. To evaluate the generality of HiFi-Mol across different GNN architectures, we experiment with four back-bone variants on a representative subset of benchmarks spanning small datasets (BBBP, BACE) and large datasets (HIV, MUV). As shown in Table 5, GIN achieves the strongest performance, which we attribute to its expressive power under the Weisfeiler-Leman graph isomorphism test [39], a property particularly beneficial for distinguishing chemically distinct substructures during hierarchical pretraining. Importantly, all backbone variants remain competi-tive across both dataset scales, demonstrating that the hierarchical graph pretraining and fingerprint integration strategies are robust across GNN architectures with different aggregation characteristics. These results indicate that the proposed pretraining and integration strategies remain effective across multiple GNN backbones. 
+
+## 5.4 Retrieval Analysis of Pretrained Graph Representations 
+
+The effect of fragment-aware masking is assessed through a molec-ular retrieval task on the pretrained graph encoder, prior to finger-print integration. For each query molecule, we extract its embedding from the pretrained graph encoder and retrieve the top-5 nearest neighbors by cosine similarity. As shown in Figure 3, the FAM-pretrained encoder retrieves molecules with structurally similar scaffolds to the query, with the 1st, 2nd, and 4th nearest neighbors 
+
+Figure 3: Top-5 retrieval results for a query molecule from the Tox21 dataset, retrieved by cosine similarity in the em-bedding space. Scores denote ECFP4 Tanimoto similarity to the query. 
+
+Figure 4: Quantitative comparison on Tox21 and ToxCast using Mean Tanimoto@5 and Scaffold Match@5. 
+
+sharing the ortho-disubstituted benzene core and maintaining con-siderably higher ECFP4 Tanimoto similarity. In contrast, the model trained without FAM retrieves chemically less coherent neighbors, including sugar derivatives and terpenoids, with substantially lower ECFP4 similarity despite high cosine similarity in the embedding space. Retrieval quality is further quantified using Mean Tanimoto@5 and Scaffold Match@5, which measure the average ECFP4 sim-ilarity and the fraction of retrieved molecules sharing the same Bemis-Murcko scaffold [3] as the query, respectively. As illustrated in Figure 4, pretraining with FAM consistently improves both met-rics across Tox21 and ToxCast, with Mean Tanimoto@5 increasing by +0.023 on both datasets and Scaffold Match@5 improving by 
+
++0.034 and +0.030, respectively. Across both qualitative and quanti-tative evaluations, these results suggest that pretraining with FAM CIKM ’26, November 7–11, 2026, Rome, Italy. Gwang-Hyeon Yun et al. 
+
+encourages the graph encoder to organize the embedding space along chemically meaningful structural axes, capturing scaffold-level relationships beyond local atom-level patterns. 
+
+## 6 Conclusions and Future Work 
+
+This paper presents HiFi-Mol, a multi-view molecular pretrain-ing framework for molecular property prediction. HiFi-Mol sepa-rately pretrains hierarchical graph and contextualized fingerprint encoders before integrating them during downstream adaptation. Fragment-aware masking with multi-resolution supervision en-ables the graph encoder to learn substructure-aware representa-tions, while masked language modeling over joint SMILES–fingerprint token sequences allows the fingerprint encoder to capture contex-tual descriptor relationships. Experiments on MoleculeNet bench-marks demonstrate the effectiveness of each design choice, with the dual-view integration achieving the best average performance across classification tasks. Nevertheless, 3D geometry is used only as pretraining supervision rather than downstream input, and the dual-view integration does not always yield gains over single-view variants on regression tasks. Future work will investigate scalable cross-view interaction mechanisms between hierarchical topology and descriptor semantics, as well as extensions to equivariant 3D molecular modeling. 
+
+## Acknowledgments 
+
+This research was supported by National Research Foundation of Korea (NRF) grant funded by the Ministry of Science and ICT (RS-2025-16067916), Basic Science Research Program through the NRF funded by the Ministry of Education (RS-2025-25432868), IITP grant funded by the Ministry of Science and ICT through the Digital Columbus Project (RS-2025-02304331), and the ANCHOR program through the Gangwon ANCHOR Center funded by the Ministry of Education and the Gangwon State, Republic of Korea (2026-ANCHOR-10-006). 
+
+## Appendix A Graph Initialization Details 
+
+Given the masked hierarchical graph ˜G, each node 𝑣 𝑖 ∈ V is initialized into a representation ℎ(0) 
+
+> 𝑖
+
+∈ R𝑑 according to its node type. A learnable type embedding 𝐸 type ∈ R3×𝑑 distinguishes atom, fragment, and global nodes. Masked atom and fragment nodes, 
+
+𝑣 𝑖 ∈ M atom ∪ M frag , are assigned a learnable mask embedding 
+
+ℎmask ∈ R𝑑 in place of their original features. For atom nodes 𝑣 𝑢 ∈ V atom , the initial representation is obtained by summing embedding lookups over ten chemical atom features 
+
+{𝑥 (𝑘 ) 
+
+> 𝑢
+
+}10  
+
+> 𝑘 =1
+
+(Table 6): 
+
+ℎ(0) 
+
+> 𝑢
+
+=
+
+> 10
+
+∑︁ 
+
+> 𝑘 =1
+
+𝐸 (𝑘 )
+
+> node
+
+h
+
+𝑥 (𝑘 )
+
+> 𝑢
+
+i
+
++ 𝐸 type (0). (21) The ten atom attributes are atomic number, chirality, formal charge, hybridization, number of hydrogens, implicit valence, degree, aro-maticity, ring membership, and number of radical electrons. 
+
+Table 6: Atom features used for node initialization. Atomic number 119 is reserved as a mask token. Feature Size 
+
+Atomic number 119 Chirality 4Formal charge 11 Hybridization 7Number of hydrogens 9Implicit valence 7Degree 11 Aromaticity 2Ring membership 2Radical electrons 5For fragment nodes 𝑣 𝑠 ∈ V frag , the initial representation is de-termined by the fragment dictionary identity 𝜙 (𝑠 ):
+
+ℎ(0) 
+
+> 𝑠
+
+= 𝐸 frag [𝜙 (𝑠 )] + 𝐸 type (1). (22) The global node 𝑣 global is initialized by averaging the initial atom feature embeddings: 
+
+ℎ(0) 
+
+> global
+
+= 1
+
+|V atom |∑︁ 𝑣 𝑢 ∈ V atom 
+
+> 10
+
+∑︁ 
+
+> 𝑘 =1
+
+𝐸 (𝑘 ) 
+
+> node
+
+[𝑥 (𝑘 ) 
+
+> 𝑢
+
+] + 𝐸 type (2). (23) Each edge (𝑣 𝑖 , 𝑣 𝑗 ) is initialized as the sum of four edge feature embeddings: 
+
+𝑒 𝑖 𝑗 =
+
+> 4
+
+∑︁  
+
+> 𝑟 =1
+
+𝐸 (𝑟 ) 
+
+> edge
+
+[𝑏 (𝑟 ) 
+
+> 𝑖 𝑗
+
+], (24) where {𝑏 (𝑟 ) 
+
+> 𝑖 𝑗
+
+}4  
+
+> 𝑟 =1
+
+denotes edge attributes for bond type, bond direc-tion, stereo configuration, and conjugation. The bond type attribute is extended beyond physical bond types to include self-loops, mask tokens, and directed hierarchical relation types, including atom-to-fragment, fragment-to-atom, fragment-to-fragment, fragment-to-global, and global-to-fragment edges. 
+
+## GenAI Usage Disclosure 
+
+LLM was used solely for grammar checking and language polish-ing of the manuscript. All scientific content, experimental design, analysis, and conclusions are entirely the work of the authors. 
+
+## References         
+
+> [1] Evan Antoniuk, Shehtab Zaman, Tal Ben-Nun, Peggy Li, James Diffenderfer, Busra Sahin, Obadiah Smolenski, Everett Grethel, Tim Hsu, Anna Hiszpanski, et al. 2026. Boom: benchmarking out-of-distribution molecular property predictions of machine learning models. Advances in Neural Information Processing Systems
+> 38 (2026). [2] Kenneth Atz, Francesca Grisoni, and Gisbert Schneider. 2021. Geometric deep learning on molecular representations. Nature Machine Intelligence 3, 12 (2021), 1023–1032. [3] Guy W Bemis and Mark A Murcko. 1996. The properties of known drugs. 1. Molecular frameworks. Journal of medicinal chemistry 39, 15 (1996), 2887–2893. [4] Hanxuan Cai, Huimin Zhang, Duancheng Zhao, Jingxing Wu, and Ling Wang. 2022. FP-GNN: a versatile deep learning architecture for enhanced molecular property prediction. Briefings in bioinformatics 23, 6 (2022), bbac408. [5] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geoffrey Hinton. 2020. A simple framework for contrastive learning of visual representations. In Interna-tional conference on machine learning . PMLR, 1597–1607.
+
+Multi-View Molecular Representation Learning with Hierarchical Graphs and Contextualized Fingerprints CIKM ’26, November 7–11, 2026, Rome, Italy. 
+
+[6] Jae-Woo Chu, Jong-Hoon Park, and Young-Rae Cho. 2026. MEMOL: Mixture of experts for multimodal learning through multi-head attention to predict drug toxicity. Computer Methods and Programs in Biomedicine 273 (2026), 109088. [7] Laurianne David, Amol Thakkar, Rocío Mercado, and Ola Engkvist. 2020. Molec-ular representations in AI-driven drug discovery: a review and practical guide. 
+
+Journal of cheminformatics 12, 1 (2020), 56. [8] Jorg Degen, Christof Wegscheid-Gerlach, Andrea Zaliani, and Matthias Rarey. 2008. On the art of compiling and using’drug-like’chemical fragment spaces. 
+
+ChemMedChem 3, 10 (2008), 1503. [9] Jianyuan Deng, Zhibo Yang, Hehe Wang, Iwao Ojima, Dimitris Samaras, and Fusheng Wang. 2023. A systematic study of key elements underlying molecular property prediction. Nature Communications 14, 1 (2023), 6395. [10] Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019. Bert: Pre-training of deep bidirectional transformers for language understanding. In 
+
+Proceedings of the 2019 conference of the North American chapter of the association for computational linguistics: human language technologies, volume 1 (long and short papers) . 4171–4186. [11] David K Duvenaud, Dougal Maclaurin, Jorge Iparraguirre, Rafael Bombarell, Timothy Hirzel, Alán Aspuru-Guzik, and Ryan P Adams. 2015. Convolutional networks on graphs for learning molecular fingerprints. Advances in neural information processing systems 28 (2015). [12] Aled M Edwards and Dafydd R Owen. 2025. Protein–ligand data at scale to support machine learning. Nature Reviews Chemistry 9, 9 (2025), 634–645. [13] Anna Gaulton, Louisa J Bellis, A Patricia Bento, Jon Chambers, Mark Davies, Anne Hersey, Yvonne Light, Shaun McGlinchey, David Michalovich, Bissan Al-Lazikani, et al. 2012. ChEMBL: a large-scale bioactivity database for drug discovery. Nucleic acids research 40, D1 (2012), D1100–D1107. [14] Justin Gilmer, Samuel S Schoenholz, Patrick F Riley, Oriol Vinyals, and George E Dahl. 2017. Neural message passing for quantum chemistry. In International conference on machine learning . PMLR, 1263–1272. [15] Weihua Hu, Matthias Fey, Hongyu Ren, Maho Nakata, Yuxiao Dong, and Jure Leskovec. 2021. Ogb-lsc: A large-scale challenge for machine learning on graphs. 
+
+arXiv preprint arXiv:2103.09430 (2021). [16] Weihua Hu, Bowen Liu, Joseph Gomes, Marinka Zitnik, Percy Liang, Vijay Pande, and Jure Leskovec. 2019. Strategies for pre-training graph neural networks. arXiv preprint arXiv:1905.12265 (2019). [17] Ziniu Hu, Yuxiao Dong, Kuansan Wang, Kai-Wei Chang, and Yizhou Sun. 2020. Gpt-gnn: Generative pre-training of graph neural networks. In Proceedings of the 26th ACM SIGKDD international conference on knowledge discovery & data mining . 1857–1867. [18] Xiuyu Jiang, Liqin Tan, and Qingsong Zou. 2024. DGCL: dual-graph neural networks contrastive learning for molecular property prediction. Briefings in Bioinformatics 25, 6 (2024), bbae474. [19] Yinghui Jiang, Shuting Jin, Xurui Jin, Xianglu Xiao, Wenfan Wu, Xiangrong Liu, Qiang Zhang, Xiangxiang Zeng, Guang Yang, and Zhangming Niu. 2023. Pharmacophoric-constrained heterogeneous graph transformer model for molec-ular property prediction. Communications Chemistry 6, 1 (2023), 60. [20] Alex Kendall, Yarin Gal, and Roberto Cipolla. 2018. Multi-task learning using uncertainty to weigh losses for scene geometry and semantics. In Proceedings of the IEEE conference on computer vision and pattern recognition . 7482–7491. [21] Ruifeng Li, Wei Liu, Xiangxin Zhou, Mingqian Li, Qiang Zhang, Hongyang Chen, and Xuemin Lin. 2025. Contextual Representation Anchor Network for Mitigating Selection Bias in Few-Shot Drug Discovery. In Proceedings of the 34th ACM International Conference on Information and Knowledge Management .1634–1642. [22] Bowen Liu, Haoyang Li, Shuning Wang, Shuo Nie, and Shanghang Zhang. 2025. Subgraph aggregation for out-of-distribution generalization on graphs. In Pro-ceedings of the AAAI Conference on Artificial Intelligence , Vol. 39. 18763–18771. [23] Shengchao Liu, Weitao Du, Zhi-Ming Ma, Hongyu Guo, and Jian Tang. 2023. A group symmetric stochastic differential equation model for molecule multi-modal pretraining. In International Conference on Machine Learning . PMLR, 21497– 21526. [24] Shengchao Liu, Hanchen Wang, Weiyang Liu, Joan Lasenby, Hongyu Guo, and Jian Tang. 2021. Pre-training molecular graph representation with 3d geometry. 
+
+arXiv preprint arXiv:2110.07728 (2021). [25] Ziyang Liu, Chaokun Wang, Shuwen Zheng, Cheng Wu, Hao Feng, Li Xu, Yue Zheng, Liang Rong, and Peng Li. 2025. Molecular Motif Learning as a pretraining objective for molecular property prediction. Nature Communications (2025). [26] Kha-Dinh Luong and Ambuj K Singh. 2023. Fragment-based pretraining and finetuning on molecular graphs. Advances in Neural Information Processing Systems 36 (2023), 17584–17601. [27] Daniil Polykovskiy, Alexander Zhebrak, Benjamin Sanchez-Lengeling, Sergey Golovanov, Oktai Tatanov, Stanislav Belyaev, Rauf Kurbanov, Aleksey Artamonov, Vladimir Aladinskiy, Mark Veselov, et al. 2020. Molecular sets (MOSES): a bench-marking platform for molecular generation models. Frontiers in pharmacology 11 (2020), 565644. [28] Jianbo Qiao, Junru Jin, Ding Wang, Saisai Teng, Junyu Zhang, Xuetong Yang, Yuhang Liu, Yu Wang, Lizhen Cui, Quan Zou, et al. 2025. A self-conformation-aware pre-training framework for molecular property prediction with substruc-ture interpretability. Nature Communications 16, 1 (2025), 4382. [29] David Rogers and Mathew Hahn. 2010. Extended-connectivity fingerprints. 
+
+Journal of chemical information and modeling 50, 5 (2010), 742–754. [30] Yu Rong, Yatao Bian, Tingyang Xu, Weiyang Xie, Ying Wei, Wenbing Huang, and Junzhou Huang. 2020. Self-supervised graph transformer on large-scale molecular data. Advances in neural information processing systems 33 (2020), 12559–12571. [31] Arman Seyed-Ahmadi, Bing Xu Hu, Armin Geraili, Anita Layton, Helen Hong Chen, Shana O Kelley, and Bo Wang. 2026. DELBERT: Fingerprint Language Modeling For Generalizable Hit Discovery in DNA-Encoded Libraries. In ICLR 2026 Workshop on Machine Learning for Genomics Explorations .[32] Hannes Stärk, Dominique Beaini, Gabriele Corso, Prudencio Tossou, Christian Dallago, Stephan Günnemann, and Pietro Liò. 2022. 3d infomax improves gnns for molecular property prediction. In International conference on machine learning .PMLR, 20479–20502. [33] Jonathan M Stokes, Kevin Yang, Kyle Swanson, Wengong Jin, Andres Cubillos-Ruiz, Nina M Donghia, Craig R MacNair, Shawn French, Lindsey A Carfrae, Zohar Bloom-Ackermann, et al. 2020. A deep learning approach to antibiotic discovery. 
+
+Cell 180, 4 (2020), 688–702. [34] Fan-Yun Sun, Jordan Hoffmann, Vikas Verma, and Jian Tang. 2019. Infograph: Un-supervised and semi-supervised graph-level representation learning via mutual information maximization. arXiv preprint arXiv:1908.01000 (2019). [35] Yuyang Wang, Jianren Wang, Zhonglin Cao, and Amir Barati Farimani. 2022. Molecular contrastive learning of representations via graph neural networks. 
+
+Nature Machine Intelligence 4, 3 (2022), 279–287. [36] Benjamin Warner, Antoine Chaffin, Benjamin Clavié, Orion Weller, Oskar Hall-ström, Said Taghadouini, Alexis Gallagher, Raja Biswas, Faisal Ladhak, Tom Aarsen, et al. 2025. Smarter, better, faster, longer: A modern bidirectional encoder for fast, memory efficient, and long context finetuning and inference. In Proceed-ings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) . 2526–2547. [37] Zhenqin Wu, Bharath Ramsundar, Evan N Feinberg, Joseph Gomes, Caleb Ge-niesse, Aneesh S Pappu, Karl Leswing, and Vijay Pande. 2018. MoleculeNet: a benchmark for molecular machine learning. Chemical science 9, 2 (2018), 513–530. [38] Jun Xia, Chengshuai Zhao, Bozhen Hu, Zhangyang Gao, Cheng Tan, Yue Liu, Siyuan Li, and Stan Z Li. 2023. Mole-bert: Rethinking pre-training graph neural networks for molecules. In The Eleventh International Conference on Learning Representations .[39] Keyulu Xu, Weihua Hu, Jure Leskovec, and Stefanie Jegelka. 2018. How powerful are graph neural networks? arXiv preprint arXiv:1810.00826 (2018). [40] Kevin Yang, Kyle Swanson, Wengong Jin, Connor Coley, Philipp Eiden, Hua Gao, Angel Guzman-Perez, Timothy Hopper, Brian Kelley, Miriam Mathea, et al. 2019. Analyzing learned molecular representations for property prediction. Journal of chemical information and modeling 59, 8 (2019), 3370–3388. [41] Yuning You, Tianlong Chen, Yang Shen, and Zhangyang Wang. 2021. Graph contrastive learning automated. In International conference on machine learning .PMLR, 12121–12132. [42] Yuning You, Tianlong Chen, Yongduo Sui, Ting Chen, Zhangyang Wang, and Yang Shen. 2020. Graph contrastive learning with augmentations. Advances in neural information processing systems 33 (2020), 5812–5823. [43] Xuan Zang, Xianbing Zhao, and Buzhou Tang. 2023. Hierarchical molecular graph self-supervised learning for property prediction. Communications Chemistry 6, 1 (2023), 34. [44] Zaixi Zhang, Qi Liu, Hao Wang, Chengqiang Lu, and Chee-Kong Lee. 2021. Motif-based graph self-supervised learning for molecular property prediction. Advances in Neural Information Processing Systems 34 (2021), 15870–15882.

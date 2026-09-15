@@ -48,17 +48,17 @@
 <section class="dpr-home-dashboard-card dpr-home-report-card">
   <div class="dpr-home-dashboard-header">
     <div>
-      <span class="dpr-home-dashboard-kicker">2026-09-14</span>
+      <span class="dpr-home-dashboard-kicker">2026-09-15</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">共 1 篇</strong>
+    <strong class="dpr-home-dashboard-count">共 5 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
     <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>0</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>1</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>2</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>3</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-09-14 22:45:16 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-09-15 22:43:43 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,9 +69,7 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>今日仅速读 1 篇论文，精读挂零，主题聚焦 PROTAC 靶向降解预测。</p>
-<p>唯一可看的是《ProMeta: Few-shot PROTAC-targeted degradation prediction across E3 ligases》（6.0/10），亮点在于用少样本学习跨多种 E3 连接酶做降解预测，试图缓解特定 E3 数据稀缺的问题。</p>
-<p>普通读者可先关注“少样本+跨 E3 泛化”这一思路能否落地，后续若有实验验证或多靶点对比再决定是否深读。</p>
+<p>2026-09-15 日报：精选 5 篇图学习论文，精读两篇 8 分之作。最值得看的是归纳图上的在线贝叶斯节点分类（应对分布偏移）与层次图+上下文化指纹的多视图分子表示学习。普通读者可先读这两篇精读，再按兴趣扫速读中的图域自适应与图 Transformer 预训练。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -80,12 +78,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">精读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">0 篇</strong>
+    <strong class="dpr-home-dashboard-count">2 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p class="dpr-home-dashboard-empty">今日暂无推荐。</p>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Online Bayesian Node Classification on Inductive Graphs under Distribution Shift">Online Bayesian Node Classification on Inductive Graphs under Distribution Shift</span></li><li><span class="dpr-home-dashboard-paper-title" title="Multi-View Molecular Representation Learning with Hierarchical Graphs and Contextualized Fingerprints">Multi-View Molecular Representation Learning with Hierarchical Graphs and Contextualized Fingerprints</span></li></ul>
   </div>
-
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">drug-ood-gen <strong>1</strong></span><span class="dpr-home-dashboard-tag">mgp <strong>1</strong></span></div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-skim-card">
   <div class="dpr-home-dashboard-header">
@@ -93,12 +91,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">速读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">1 篇</strong>
+    <strong class="dpr-home-dashboard-count">3 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="ProMeta: Few-shot PROTAC-targeted degradation prediction across E3 ligases">ProMeta: Few-shot PROTAC-targeted degradation prediction across E3 ligases</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Data-Efficient Agentic Graph Domain Adaptation via Reliability-Aware Prototype Learning">Data-Efficient Agentic Graph Domain Adaptation via Reliability-Aware Prototype Learning</span></li><li><span class="dpr-home-dashboard-paper-title" title="Pre-training with Graph Transformers">Pre-training with Graph Transformers</span></li><li><span class="dpr-home-dashboard-paper-title" title="MIRAGE: Measuring Interpolation and Redundancy in Affinity GEneralization">MIRAGE: Measuring Interpolation and Redundancy in Affinity GEneralization</span></li></ul>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">cold-ddi <strong>1</strong></span></div>
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">drug-ood-gen <strong>2</strong></span><span class="dpr-home-dashboard-tag">mgp <strong>1</strong></span></div>
 </section>
 </div>
 

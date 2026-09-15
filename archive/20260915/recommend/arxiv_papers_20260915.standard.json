@@ -1,0 +1,247 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-15T22:40:01.062865+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 5,
+    "deep_divecandidates": 2,
+    "deep_cap": 10,
+    "deep_selected": 2,
+    "quick_candidates": 3,
+    "quick_skim_target": 15,
+    "quick_selected": 3
+  },
+  "deep_dive": [
+    {
+      "id": "2609.13655v1",
+      "source": "arxiv",
+      "title": "Online Bayesian Node Classification on Inductive Graphs under Distribution Shift",
+      "abstract": "On evolving graphs, node classifiers must satisfy two key requirements: inductive generalization to newly arriving nodes under distribution shift and calibrated uncertainty for safety-sensitive applications. Standard graph neural networks (GNNs) are typically trained once and address neither requirement. We adapt the Bayesian last-layer (BLL) model by placing random last-layer parameters on top of a deterministic GNN encoder for uncertainty quantification. The categorical softmax likelihood required for classification breaks Gaussian conjugacy, so neither the training posterior nor the test-time streaming update has a closed-form solution. To address both challenges, we introduce a variational Bayesian last-layer (VBLL) objective that jointly trains the encoder and an approximate last-layer posterior by maximizing an evidence lower bound with a Monte Carlo expected log-likelihood. At test time, we freeze the encoder and apply an online Laplace update to the last-layer posterior. This update corresponds to a power-prior Bayesian model with exponential forgetting and a Kullback-Leibler anchor to the training posterior. Across five node-classification benchmarks under distribution shift, online GVBLL is the only method to achieve the best accuracy and negative log-likelihood on every dataset. It improves accuracy by up to 17 percentage points on Cora and 14 percentage points on ogbn-arxiv over the strongest non-GVBLL baseline, while remaining competitive in calibration with MC Dropout, Deep Ensembles, Temperature Scaling, and Gaussian-process classifiers.",
+      "authors": [
+        "Jinwen Xu",
+        "Gonzalo Mateos Buckstein",
+        "Qin Lu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ME",
+        "stat.ML"
+      ],
+      "published": "2026-09-12T02:23:30+00:00",
+      "link": "https://arxiv.org/pdf/2609.13655v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "inductive generalization to newly arriving nodes under distribution shift with calibrated uncertainty",
+      "llm_evidence_cn": "面向分布偏移下新到节点的归纳泛化与不确定性校准",
+      "llm_evidence": "面向分布偏移下新到节点的归纳泛化与不确定性校准",
+      "canonical_evidence": "面向分布偏移下新到节点的归纳泛化与不确定性校准",
+      "llm_tldr_en": "Adapts a variational Bayesian last layer on top of a deterministic GNN encoder so that node classifiers can inductively generalize to newly arriving nodes under distribution shift while providing calibrated uncertainty.",
+      "llm_tldr_cn": "演化图上的节点分类需同时满足两个要求：在分布偏移下对新到节点归纳泛化，并为安全敏感场景提供校准的不确定性；标准图神经网络只训练一次且二者皆不满足。本文在确定性GNN编码器之上引入变分贝叶斯末层，联合处理分类所需的类别softmax似然破坏高斯共轭的难题。该方法面向归纳图节点分类与不确定性量化，可迁移到冷启动节点预测等场景。",
+      "llm_tldr": "演化图上的节点分类需同时满足两个要求：在分布偏移下对新到节点归纳泛化，并为安全敏感场景提供校准的不确定性；标准图神经网络只训练一次且二者皆不满足。本文在确定性GNN编码器之上引入变分贝叶斯末层，联合处理分类所需的类别softmax似然破坏高斯共轭的难题。该方法面向归纳图节点分类与不确定性量化，可迁移到冷启动节点预测等场景。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "inductive graph generalization on unseen nodes and edges with distribution shift",
+      "matched_requirement_id": "req-40",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2609.15611v1",
+      "source": "arxiv",
+      "title": "Multi-View Molecular Representation Learning with Hierarchical Graphs and Contextualized Fingerprints",
+      "abstract": "Molecular property prediction requires representations that generalize from limited labeled data to structurally novel compounds. Existing molecular pretraining methods often rely on a single view: graph-based approaches model atom-bond topology but provide limited fragment-level supervision, whereas fingerprint descriptors encode chemical patterns but are typically used as fixed auxiliary features. We propose HiFi-Mol, a multi-view framework that separately pretrains a hierarchical graph encoder and a contextualized fingerprint encoder before downstream integration. The graph branch uses fragment-aware masking with multi-resolution supervision to capture substructure-aware representations, while the fingerprint branch tokenizes active entries from seven fingerprint families and applies masked language modeling to learn contextualized embeddings. During fine-tuning, HiFi-Mol combines projected multi-resolution graph features with fingerprint embeddings for downstream prediction. Evaluated on MoleculeNet benchmarks under the scaffold split, HiFi-Mol achieves a 2.77% improvement in average ROC-AUC over the best baseline across eight classification tasks while maintaining competitive performance on three regression tasks. Further analyses reveal that fragment-aware masking improves graph representation quality, and classification results demonstrate dataset-dependent strengths of the individual graph and fingerprint variants, confirming that the two views provide complementary predictive signals.",
+      "authors": [
+        "Gwang-Hyeon Yun",
+        "Jong-Hoon Park",
+        "Bing Hu",
+        "Helen Chen",
+        "Anita Layton",
+        "Young-Rae Cho"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-14T14:07:19+00:00",
+      "link": "https://arxiv.org/pdf/2609.15611v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "molecular pretraining with fragment-aware masking to generalize to structurally novel compounds",
+      "llm_evidence_cn": "分子预训练，片段感知掩码，泛化到结构新颖化合物",
+      "llm_evidence": "分子预训练，片段感知掩码，泛化到结构新颖化合物",
+      "canonical_evidence": "分子预训练，片段感知掩码，泛化到结构新颖化合物",
+      "llm_tldr_en": "Molecular property prediction struggles to generalize from limited labels to novel compounds; HiFi-Mol separately pretrains a hierarchical graph encoder with fragment-aware masking and a contextualized fingerprint encoder, then integrates them. It captures substructure-aware multi-view representations, improving generalization to structurally novel molecules relevant to cold-start drug settings.",
+      "llm_tldr_cn": "分子性质预测常因标注数据有限而难以泛化到结构新颖的化合物，现有预训练方法多依赖单一视图。本文提出HiFi-Mol，分别预训练层次化图编码器（片段感知掩码与多分辨率监督）和上下文化指纹编码器，再在下游整合。多视图表示强化了子结构感知能力，在结构新颖分子上取得更好泛化，为冷启动药物的表示学习提供了可迁移思路。",
+      "llm_tldr": "分子性质预测常因标注数据有限而难以泛化到结构新颖的化合物，现有预训练方法多依赖单一视图。本文提出HiFi-Mol，分别预训练层次化图编码器（片段感知掩码与多分辨率监督）和上下文化指纹编码器，再在下游整合。多视图表示强化了子结构感知能力，在结构新颖分子上取得更好泛化，为冷启动药物的表示学习提供了可迁移思路。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "self supervised learning on large unlabeled molecular data to improve unseen drug property prediction",
+      "matched_requirement_id": "req-27",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.14045v1",
+      "source": "arxiv",
+      "title": "Data-Efficient Agentic Graph Domain Adaptation via Reliability-Aware Prototype Learning",
+      "abstract": "Agentic learning systems are often required to adapt after deployment by observing new data and reusing prior knowledge under limited supervision or feedback. For graph-structured prediction, Graph Domain Adaptation (GDA) naturally instantiates this setting by transferring knowledge from labeled source graphs to unlabeled target graphs under distribution shifts. However, most GDA methods assume sufficient labeled source graphs, which becomes restrictive in data-efficient agentic settings where only limited source evidence can be retained. Under such constraints, source semantics become unreliable, leading to unstable source anchoring, uncertain target association, and fragile targetmarginal calibration. To address these challenges, we propose DEAG, a reliability-aware prototype learning framework for data-efficient agentic GDA. DEAG estimates class reliability from retained source support and embedding compactness, and constructs stable reusable source anchors by blending empirical prototypes with classifier directions. Guided by these anchors, DEAG performs prototype-aware soft target association and aligns confidence-weighted target centers with source semantics. A source-prior regularizer further sharpens target predictions while keeping the target marginal consistent with retained source evidence. Experiments on graph benchmarks with diverse domain shifts show that DEAG improves average adaptation performance over competitive GDA baselines under the same source-data budget.",
+      "authors": [
+        "Yingxu Wang",
+        "Kunyu Zhang",
+        "Siyang Gao"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-12T16:54:53+00:00",
+      "link": "https://arxiv.org/pdf/2609.14045v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "graph domain adaptation transferring knowledge under distribution shift via prototype learning",
+      "llm_evidence_cn": "图域自适应在分布偏移下通过原型学习迁移知识",
+      "llm_evidence": "图域自适应在分布偏移下通过原型学习迁移知识",
+      "canonical_evidence": "图域自适应在分布偏移下通过原型学习迁移知识",
+      "llm_tldr_en": "This paper addresses graph domain adaptation when labeled source graphs are scarce, proposing a reliability-aware prototype learning method to transfer knowledge to unlabeled target graphs under distribution shift.",
+      "llm_tldr_cn": "针对数据高效场景下标注源图稀缺、源语义不可靠导致图域自适应不稳定的问题，本文提出可靠性感知的原型学习方法。该方法在分布偏移下从有限源证据中学习可靠原型，用于目标图的关联与校准，缓解源锚定不稳、目标关联不确定和边际校准脆弱等困难。实验表明该框架能在少量监督下实现有效的跨图知识迁移，对归纳式图泛化与冷启动节点预测具有参考价值。",
+      "llm_tldr": "针对数据高效场景下标注源图稀缺、源语义不可靠导致图域自适应不稳定的问题，本文提出可靠性感知的原型学习方法。该方法在分布偏移下从有限源证据中学习可靠原型，用于目标图的关联与校准，缓解源锚定不稳、目标关联不确定和边际校准脆弱等困难。实验表明该框架能在少量监督下实现有效的跨图知识迁移，对归纳式图泛化与冷启动节点预测具有参考价值。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "inductive graph generalization on unseen nodes and edges with distribution shift",
+      "matched_requirement_id": "req-40",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.13844v1",
+      "source": "arxiv",
+      "title": "Pre-training with Graph Transformers",
+      "abstract": "This article investigates pre-training strategies for graph transformers in the biochemistry domain. By conducting comprehensive experiments, the study reveals that supervised pre-training using computed properties as labels provides the highest performance gain on downstream tasks. The results also highlight the importance of constraining model capacity to mitigate overfitting in graph transformers.",
+      "authors": [
+        "Jiaming Wang",
+        "Thomas Laurent",
+        "Xavier Bresson"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-12T10:01:03+00:00",
+      "link": "https://arxiv.org/pdf/2609.13844v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "pre-training strategies for graph transformers in biochemistry domain",
+      "llm_evidence_cn": "生化领域的图Transformer预训练策略",
+      "llm_evidence": "生化领域的图Transformer预训练策略",
+      "canonical_evidence": "生化领域的图Transformer预训练策略",
+      "llm_tldr_en": "This work studies pre-training strategies for graph transformers in biochemistry, showing supervised pre-training with computed property labels gives the largest downstream gains and that constraining model capacity reduces overfitting.",
+      "llm_tldr_cn": "针对生化领域图Transformer预训练策略缺乏系统比较的问题，本文在多个生化数据集上系统评估了不同预训练方式。研究发现以计算性质为标签的监督预训练在下游任务上带来最大性能提升，并指出限制模型容量有助于缓解过拟合。该结果为分子图预训练的策略选择与容量控制提供了实证依据，可迁移到药物相关图表示学习任务。",
+      "llm_tldr": "针对生化领域图Transformer预训练策略缺乏系统比较的问题，本文在多个生化数据集上系统评估了不同预训练方式。研究发现以计算性质为标签的监督预训练在下游任务上带来最大性能提升，并指出限制模型容量有助于缓解过拟合。该结果为分子图预训练的策略选择与容量控制提供了实证依据，可迁移到药物相关图表示学习任务。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "molecular graph pretraining on unlabeled data",
+      "matched_requirement_id": "req-20",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.14491v1",
+      "source": "arxiv",
+      "title": "MIRAGE: Measuring Interpolation and Redundancy in Affinity GEneralization",
+      "abstract": "Deep learning now underpins structure-based drug design, from complex and affinity prediction to ligand ranking and pose generation. Recent co-folding models reportedly approach free-energy-perturbation accuracy at far lower cost. Yet standard evaluation, a single held-out correlation or pooled pose-success rate, cannot separate transferable binding principles from repeated exposure to related protein families in public databases, and practical success depends on genuinely novel targets. We introduce MIRAGE (Measuring Interpolation and Redundancy in Affinity GEneralization), a plug-in benchmark treating historical public family support (through 2019) as an explicit variable, applying a family-support axis to affinity and pose prediction via matched strata, family-disjoint controls, ligand-only baselines, and temporal evaluation. Co-folder affinity accuracy rises sharply with family support, while shallow controls that cannot exploit the test family stay flat, large for co-folders and near zero for every family-disjoint or trivial control. For Nesso-1 it survives covariate, conditioning, balancing, and clustering checks; Boltz-2's endpoint is limited by coverage. It localizes to family support rather than ligand chemistry, approaching a level from family identity alone. Rankings reverse on novel families, where a family-disjoint random forest leads both co-folders, significantly vs Nesso-1. On one external low-support target, neither co-folder beats molecular weight, corroborative rather than population-level evidence. gnina shows significant support dependence in rescoring whereas smina does not; MSA-free pose engines show larger gaps than smina redocking. This redundancy-driven inflation differs from conventional leakage. We propose reporting performance across family support plus excess over a support-insensitive baseline, and release MIRAGE as an installable benchmark and dataset.",
+      "authors": [
+        "Mehdi Yazdani-Jahromi",
+        "Sanjay Padhi",
+        "Ivan Garibay"
+      ],
+      "primary_category": "q-bio.QM",
+      "categories": [
+        "q-bio.QM"
+      ],
+      "published": "2026-09-13T12:56:32+00:00",
+      "link": "https://arxiv.org/pdf/2609.14491v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "OOD generalization to novel targets, family support variable",
+      "llm_evidence_cn": "面向新颖靶点的分布外泛化评测",
+      "llm_evidence": "面向新颖靶点的分布外泛化评测",
+      "canonical_evidence": "面向新颖靶点的分布外泛化评测",
+      "llm_tldr_en": "MIRAGE is a plug-in benchmark that treats historical public family support as an explicit variable, separating transferable binding principles from redundancy to evaluate affinity and pose generalization to genuinely novel targets.",
+      "llm_tldr_cn": "结构导向药物设计中的亲和力与构象预测评估通常只报告单一留出相关性，无法区分真正可迁移的结合规律与对公共数据库中相近蛋白家族的重复暴露，而实用成功依赖真正新颖的靶点。本文提出 MIRAGE 基准，把历史公共家族支持度作为显式变量，通过匹配的家族支持轴评估亲和力与构象预测。实验揭示模型在真正新颖靶点上的泛化差异。该工作为分子分布外泛化评估提供了可插拔的评测工具。",
+      "llm_tldr": "结构导向药物设计中的亲和力与构象预测评估通常只报告单一留出相关性，无法区分真正可迁移的结合规律与对公共数据库中相近蛋白家族的重复暴露，而实用成功依赖真正新颖的靶点。本文提出 MIRAGE 基准，把历史公共家族支持度作为显式变量，通过匹配的家族支持轴评估亲和力与构象预测。实验揭示模型在真正新颖靶点上的泛化差异。该工作为分子分布外泛化评估提供了可插拔的评测工具。",
+      "llm_tags": [
+        "query:drug-ood-gen:composite"
+      ],
+      "matched_query_tag": "query:drug-ood-gen:composite",
+      "matched_query_text": "Papers central to 分子分布外泛化和生物医学图分布外泛化相关研究，重点关注分子骨架新颖性、指纹距离、分子表示空间距离、化学空间外推、scaffold split，以及图层面的节点分布偏移、局部邻域变化、关系类型变化、子图结构差异、Graph OOD检测和归纳式图泛化。同时涵盖不确定性估计、置信度校准以及LLM与Graph结合进行药物语义增强、知识补充或分布差异判断的方法。, especially work that connects or combines: methods to evaluate molecular scaffold novelty for out-of-distribution generalization; graph out-of-distribution detection methods for identifying novel subgraph structures; inductive graph generalization on unseen nodes and edges with distribution shift; large language model combined with graph neural networks for drug semantic enhancement and knowledge transfer; knowledge transfer across molecular distributions for out-of-distribution generalization; How to determine sufficient structural or semantic similarity between novel and training drugs for molecular out of distribution generalization?; Graph out of distribution detection for biomedical graphs considering node distribution shift, local neighborhood changes, and subgraph structure differences.; Combining large language models with graph neural networks for drug semantic enhancement, knowledge supplementation, and distribution discrepancy assessment..",
+      "matched_requirement_id": "req-composite-drug-ood-gen",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
