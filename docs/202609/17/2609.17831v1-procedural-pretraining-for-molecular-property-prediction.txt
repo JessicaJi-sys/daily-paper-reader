@@ -1,0 +1,320 @@
+Title: Procedural Pretraining for Molecular Property Prediction
+
+URL Source: https://arxiv.org/pdf/2609.17831v1
+
+Published Time: Thu, 17 Sep 2026 00:15:55 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+# Procedural Pretraining for Molecular Property Prediction 
+
+Moritz Friedemann 1 Zachary Shinnick 1,2 Philip Torr 1,3 Bruno Andreis 1,31University of Oxford 2Adelaide University 3Slater Labs 
+
+## Abstract 
+
+Molecular property prediction is often limited by the small size of labeled down-stream datasets, motivating pretraining on large corpora of unlabeled molecules. In this work, we ask whether useful inductive biases can instead be learned from abstract, procedurally generated data before a model sees any molecular data. We introduce a three-stage training pipeline consisting of procedural pretraining, molecular pretraining on SMILES, and downstream fine-tuning, and evaluate sev-eral procedural tasks spanning sequence structure, cellular automata, and graph reasoning. We find that procedural pretraining can improve molecular property prediction even after subsequent molecular pretraining: on Lipophilicity, R EVERSE 
+
+reduces test error by 4.8%. For context, the magnitude of this improvement is roughly 90% of the performance difference between our 250K-molecule baseline and the publicly released MoLFormer checkpoint pretrained on approximately 100M molecules. Our analysis shows that the benefit is strongest under down-stream data scarcity, depends on the structure of the procedural data rather than only surface-level statistics, and does not increase monotonically with additional procedural training. Instead, transfer typically peaks at an intermediate procedural budget and deteriorates as the model approaches convergence on the procedural task. We further find that, for several tasks, much of the transferable information is localized in the attention layers, while feed-forward layers can contribute to over-specialization. These results show that procedural data can provide transferable structure for molecular learning and offer a complementary route to improving performance when labeled molecular data are limited. 
+
+## 1 Introduction procedural pretraining molecular pretraining fine-tuning   
+
+> 123456.65?3?1 ({[?]}[])?} O
+> C?(=O)C1C?CCC1 training step error with proc. pt. without proc. pt.
+
+Figure 1: Overview of the proposed three-stage train-ing pipeline. A transformer is first pretrained on procedurally generated masked-token tasks, then pretrained on molecular SMILES, and finally fine-tuned for molecular property prediction. Procedural pretraining can reduce downstream error relative to molecular pretraining and fine-tuning alone. Modern molecular machine learning mod-els are often trained in a regime where un-labeled molecules are abundant [Irwin and Shoichet, 2004, Kim et al., 2019] but la-beled downstream data are scarce. Molecular property prediction datasets frequently con-tain only hundreds or thousands of labeled examples [Wu et al., 2018], making it diffi-cult for high-capacity models to learn use-ful representations from downstream super-vision alone. A common response has been to adopt the pretraining paradigm developed for language models: models are first trained on large collections of unlabeled molecular representations, such as SMILES strings, and subsequently fine-tuned for a target property 
+
+> Preprint. arXiv:2609.17831v1 [cs.LG] 15 Sep 2026
+
+[Chithrananda et al., 2020, Ross et al., 2022]. While such molecular pretraining can substantially im-prove performance, acquiring and processing increasingly large molecular corpora can be expensive, and it remains unclear whether useful inductive biases must themselves be learned from molecular data. Recent work suggests an alternative source of pretraining signal: procedurally generated data. Simple algorithmic processes, such as logical operations [Wu et al., 2022, Shinnick et al., 2025], formal languages [Papadimitriou and Jurafsky, 2023, Hu et al., 2025], and cellular automata [Zhang et al., 2025, Lee et al., 2026], can generate effectively unlimited data with controlled structural properties. Procedural pretraining on such data has been shown to induce representations that transfer to natural language and vision tasks [Jiang et al., 2026, Shinnick et al., 2026]. This raises a surprising possibility for molecular learning: can a model learn useful computational structure before seeing a single molecule, and can that structure subsequently improve molecular property prediction? 
+
+We investigate this question by introducing a procedural pretraining stage before conventional molecular pretraining and downstream fine-tuning. Using MoLFormer [Ross et al., 2022] as our base architecture, we pretrain on several procedural tasks spanning sequence manipulation [Jiang et al., 2026], hierarchical structure [Hu et al., 2025], dynamical systems [Lee et al., 2026], and graph reasoning, then transfer the learned transformer weights to molecular prediction. Our experiments consider both a realistic three-stage pipeline, procedural pretraining, molecular pretraining, and downstream fine-tuning, and a simplified setting that removes molecular pretraining to isolate the mechanisms responsible for transfer. We find that procedural pretraining can improve molecular property prediction even after subsequent pretraining on real molecular data. On Lipophilicity [Wu et al., 2018], pretraining on a simple sequence-reversal task reduces test error by 4.8% relative to a molecular-pretraining-only baseline, recovering roughly 90% of the performance difference between our 250K-molecule baseline and the publicly released MoLFormer checkpoint pretrained on approximately 100M molecules. We then use controlled experiments to characterize when this transfer is beneficial, what properties of the procedural data drive it, and where the transferable information is represented in the model. Our main contributions are: • We show that procedural pretraining can improve molecular property prediction even after subsequent molecular pretraining , demonstrating that useful non-molecular structure can survive a realistic domain-specific pretraining stage. • We find that structural alignment between procedural and molecular data provides an initial head start during molecular pretraining but does not reliably predict downstream benefit .• We show that the benefit is largest under downstream data scarcity , suggesting that procedural pretraining acts as an inductive bias that is most valuable when labeled molecular data are limited. • We find that more procedural pretraining is not always better . Across four of five tasks, downstream performance peaks at an intermediate procedural budget and deteriorates as the model approaches the optimum of the procedural task. • We demonstrate that transfer depends on the structure of the procedural data rather than surface-level statistics : shuffling token order while preserving vocabulary, sequence length, and token frequencies removes the benefit. • We localize much of the transferable information to the attention layers for several pro-cedural tasks, while finding that feed-forward layers can contribute to the over-specialization observed at larger procedural budgets. 
+
+## 2 Related Work 
+
+Pretraining on procedural data. Recent work has shown that useful representations can be learned from procedurally generated data rather than natural corpora. In language, pretraining on artificial languages, formal languages, neural cellular automata, and simple algorithmic tasks can improve downstream performance on natural language tasks [Papadimitriou and Jurafsky, 2020, Hu et al., 2025, Lee et al., 2026, Jiang et al., 2026]. Similar results have been observed in vision using 2synthetic images such as fractals or structured noise [Kataoka et al., 2021, Baradad Jurjo et al., 2021]. While many of these procedures reproduce structural properties of the target domain, recent work demonstrates transfer even across domains: sequence-based formal languages can improve vision transformers [Shinnick et al., 2026], and music pretraining can benefit language models [Nomura, 2026]. This suggests that procedural pretraining can provide useful inductive biases without closely resembling downstream data. Prior work has also investigated which properties make procedural pretraining transferable. Structural properties such as diversity, long-range dependencies, and hierarchical organization can improve transfer [Baradad Jurjo et al., 2021, Chiang and Lee, 2021, Hu et al., 2025]. However, strong domain alignment is not always necessary: even simple sequence operations retain part of the benefit of natural-language pretraining [Wu et al., 2022], and transferable information may reside in different transformer components depending on the downstream task [Jiang et al., 2026]. Together, these findings point to two possible sources of transfer: alignment between the procedural and target distributions, and more general changes to the model’s inductive bias. We extend this line of work to molecular modeling, where labeled data are comparatively scarce and procedural pretraining has received little attention. We study whether abstract procedural tasks can complement molecular pretraining, how alignment with SMILES structure affects transfer, and which model components and properties of procedural-task learning account for downstream gains. 
+
+## 3 Methodology 
+
+Training pipeline. We study a three-stage training pipeline consisting of (a) procedural pretraining, (b) molecular pretraining, and (c) downstream fine-tuning. The procedural stage exposes the model only to algorithmically generated data, before it encounters any molecular examples. We then optionally continue pretraining on unlabeled SMILES strings before fine-tuning on a molecular property prediction task. In Section 4.2, we omit the molecular pretraining stage for some experiments and fine-tune directly after procedural pretraining in order to isolate the effect of the procedural data. 
+
+Procedural pretraining tasks. We consider five procedural tasks designed to expose the model to different forms of structure. Three operate directly on synthetic sequences: R EVERSE , in which the model must recover the reversed form of a token sequence; D YCK , which consists of properly nested bracket sequences; and D YCK -S HUFFLE , which permits crossing bracket dependencies. DYCK mirrors the structure of branching parentheses in SMILES, while D YCK -S HUFFLE mirrors ring-closure digits. We additionally consider neural cellular automaton (NCA) trajectories, which introduce spatiotemporal structure, and a shortest-path (SSP) task in which the model predicts node distances from the SMILES representation of a random graph. All tasks are formulated as masked-token prediction problems so that the same model architecture and training objective can be used throughout procedural and molecular pretraining. Examples of the procedural inputs are shown in Figure 2. 
+
+Model. We use MoLFormer [Ross et al., 2022], an encoder-only transformer with approximately 
+
+44 M parameters designed for learning from SMILES representations. MoLFormer uses rotary positional embeddings (RoPE), linear attention based on generalized random features, and a regular-expression-based SMILES tokenizer with a vocabulary of 2,362 tokens. We use the same transformer architecture across all training stages. 
+
+Molecular pretraining. MoLFormer is conventionally pretrained using masked token modeling (MTM) on large collections of unlabeled SMILES strings drawn from PubChem [Kim et al., 2019] and ZINC [Irwin and Shoichet, 2004]. The publicly released MoLFormer checkpoint was trained on approximately 100 M molecules, which is beyond our available compute budget. To evaluate procedural pretraining within a realistic molecular pretraining pipeline, we therefore construct a smaller-scale approximation of the setup in Ross et al. [2022]. We pretrain for 12 epochs on a 250k-molecule subset of PubChem using the same MTM objective and a masking probability of 
+
+0.15 . When comparing procedural and non-procedural initializations, all models receive the same molecular pretraining data and compute budget. 3Task Generated After masking Reverse BCAFED.DEFACB BCAFED.?EF??B                      
+
+> Dyck ()()[]{[()]} ()(?[?{[(?]}
+> Dyck-Shuffle ([)]{}(){[}] ([?]{?(){[}?
+> 0
+> 1234234
+> source
+> (a) graph and source node
+> *CCCCCCC1()101234234
+> concatenate
+> *C1CC(C)C1CC.01234234
+> mask distances
+> *C1CC(C)C1CC.?12??2?4
+> (b) input sequence
+
+Figure 2: Procedural pretraining tasks. Top: example sequences of the sequence-level tasks before and after masking. Bottom: how an input sequence for the SSP task is created. a) A molecule-like random graph is generated and a source node chosen at random. b) The SMILES representation of the graph (using * for the source and C for all other nodes) is concatenated with shortest-path distances from the source to all other nodes. 
+
+Downstream evaluation. We evaluate on three molecular property prediction benchmarks with continuous regression targets: Lipophilicity from MoleculeNet [Wu et al., 2018], containing ap-proximately 4k molecules; FreeSolv, containing 642 molecules; and QM9, for which we predict the HOMO–LUMO gap and use either the full dataset or controlled subsets of the training set. Models are fine-tuned for 500 epochs. We report test mean absolute error (MAE) on standardized targets from the checkpoint achieving the best validation performance, following Ross et al. [2022]. Unless stated otherwise, comparisons use identical downstream splits and optimization settings. 
+
+Weight transfer. We partition the model parameters into token embeddings, attention projections, feed-forward layers, LayerNorm parameters, and the output head. The procedural and molecular domains use different token semantics, so we do not transfer learned procedural token embeddings. Instead, the embedding matrix is held fixed at its random initialization during procedural pretraining, ensuring that any transferable information must be encoded in the transformer backbone rather than in task-specific token representations. We also discard the procedural output head, whose dimensionality and semantics need not match those of subsequent stages. Our default transfer setting therefore retains the learned transformer backbone while reinitializing the input and output interfaces as required. To localize where transferable information is stored, we additionally consider selective transfer. We transfer either only the attention-layer weights or only the feed-forward-layer weights, while reinitializing all remaining parameters, including LayerNorms. This allows us to measure how much of the downstream benefit can be attributed to each component of the transformer. 
+
+## 4 Experiments 
+
+4.1 Procedural Pretraining Improves Molecular Property Prediction 
+
+We first evaluate procedural pretraining in the full three-stage pipeline: procedural pretraining, molecular pretraining, and downstream fine-tuning. We compare models initialized from each procedural task against a baseline trained only on molecular data, while keeping the molecular pretraining and downstream fine-tuning stages fixed. We evaluate on Lipophilicity, FreeSolv, and a 1k-molecule subset of QM9 for HOMO–LUMO gap prediction. 4Table 1: Molecular property prediction after procedural and molecular pretraining: All models are pretrained on our 250k molecule PubChem subset before downstream fine-tuning. Standardized test MAE is reported (lower is better), with ∆ relative to the molecular-pretraining-only baseline. Results average n=3 seeds ( n=6 for FreeSolv); best procedural results are bold.                                                                     
+
+> LIPOPHILICITY QM9 GAP (1k) FREE SOLV
+> MAE ∆%MAE ∆%MAE ∆%Random init. →PUB CHEM 250 K(baseline) 0.4083 ±0.0125 —0.2662 ±0.0015 —0.1676 ±0.0145 —
+> Procedural pretraining →PUB CHEM 250 K
+> DYCK 0.4028 ±0.0020 −1.29 0.2641 ±0.0020 −0.80 0.1764 ±0.0163 +5 .69
+> DYCK -S HUFFLE 0.3937 ±0.0029 −3.53 0.2680 ±0.0026 +0 .65 0.1867 ±0.0129 +12 .36
+> REVERSE 0.3885 ±0.0111 −4.80 0.2611 ±0.0004 −1.91 0.1621 ±0.0031 −2.59
+> NCA 0.4069 ±0.0027 −0.28 0.2703 ±0.0054 +1 .51 0.1849 ±0.0110 +11 .16
+> SMILES S HORTEST -P ATHS 0.4011 ±0.0016 −1.70 0.2671 ±0.0001 +0 .32 0.1713 ±0.0074 +3 .13
+
+Table 1 reports standardized test MAE and the relative change with respect to the molecular-pretraining-only baseline. On Lipophilicity, two procedural tasks yield clear improvements: R EVERSE 
+
+reduces MAE by 4.80% and D YCK -S HUFFLE by 3.53% , with both improvements separated from the baseline across seeds. The remaining three tasks also improve the mean performance, although their gains lie within seed variation. R EVERSE additionally improves performance on the 1k-molecule QM9 subset by 1.91% .The magnitude of the Lipophilicity improvement is notable relative to scaling molecular pretraining itself. Fine-tuning the publicly released MoLFormer checkpoint, pretrained on approximately 
+
+100 M molecules, improves over our 250k-molecule molecular-pretraining baseline by 5.35% . By comparison, only 1.25k procedural pretraining steps on R EVERSE recover a 4.80% improvement without using any additional molecular data. We do not observe a clear benefit on FreeSolv. Four procedural tasks perform worse than the molecular-pretraining-only baseline, although the released MoLFormer checkpoint, trained on ap-proximately 400 × more molecular data, is also worse by 12 .01% . Given that FreeSolv contains only 642 molecules, the dataset appears too small to reliably resolve differences of this magnitude. Overall, these results show that information learned from procedural data can survive subsequent molecular pretraining and improve downstream molecular property prediction. 
+
+4.2 When and Why Does Procedural Pretraining Help? 
+
+Having established that procedural pretraining can improve the full three-stage molecular learning pipeline, we next investigate when and why this transfer occurs. Unless otherwise noted, experiments in this section use a two-stage diagnostic setting: procedural pretraining followed directly by down-stream fine-tuning, with no intervening molecular pretraining. In this setting, procedurally pretrained models are compared against an identically fine-tuned, randomly initialized baseline. Removing the molecular stage isolates the effects of procedural pretraining from representations subsequently learned from SMILES data. Two subsections also examine the full pipeline: Section 4.2.1 retains molecular pretraining throughout, while Section 4.2.4 reports shuffled-token controls in both settings. 
+
+4.2.1 Does Structural Alignment With Molecules Matter? 
+
+REVERSE provides the strongest downstream improvement in Section 4.1, despite having no obvious structural correspondence with SMILES. By contrast, D YCK , D YCK -S HUFFLE , and SSP were chosen to reflect structural properties that are more closely aligned with molecular representations. We therefore ask whether such alignment provides an advantage during molecular pretraining. We compare held-out masked-token modeling loss throughout 12 epochs of molecular pretraining on PubChem250k. As shown in Figure 3a, the SMILES-aligned tasks, D YCK , D YCK -S HUFFLE ,and SSP, provide the largest advantage at the beginning of molecular pretraining. However, this advantage decays rapidly, and after several epochs their performance becomes similar to that of REVERSE . SSP eventually becomes detrimental despite operating on real SMILES strings. 52 4 6 8 10 12 
+
+> molecular pretraining epoch
+> 10 0-10 -20 -30
+> Δ MTM loss vs baseline (%) ↑ more benefit
+> Dyck Dyck-Shuffle SSP Reverse NCA shuffled control
+
+(a) Held-out PubChem250k loss. 1k 16k 64k 108k  
+
+> QM9 training-set size
+> -8 -6 -4 -2 024
+> Δ MAE vs baseline (%) ↑ more benefit
+> -5.6 -4.4 -3.0 +2.1
+
+(b) QM9 gap MAE across training-set sizes. 
+
+Figure 3: Molecular pretraining dynamics and data-scarcity evaluation: a) Held-out molecular pretraining loss for each procedural task at its best configuration; also includes a token-shuffled control model discussed in Section 4.2.4. b) QM9 gap MAE across training-set sizes after D YCK 
+
+(k = 64 ) pretraining. Values are relative to the randomly initialized baseline; error bars are ±1
+
+standard deviation over n=3 seeds. The full-dataset point in b) is a single seed. Panel (a) also includes the token-shuffled D YCK -S HUFFLE control discussed in Section 4.2.4 These results suggest that structural alignment provides an initial head start during molecular pre-training, but that much of this advantage can be recovered from SMILES data alone. More broadly, structural alignment is not a reliable predictor of which tasks will transfer best: R EVERSE provides the strongest downstream improvement after the full pipeline despite having little obvious alignment with SMILES. Thus, within our task suite, procedural tasks do not need to be structurally aligned with the molecular target domain to transfer effectively. 
+
+4.2.2 The Benefit Is Largest Under Data Scarcity 
+
+If procedural pretraining supplies useful structure that would otherwise have to be inferred from downstream molecular data, its value should increase as the amount of labeled data decreases. To test this hypothesis, we subsample the QM9 training set to 1k, 16k, 64k, and the full 108,446 molecules. At each size, we compare a model pretrained on D YCK against a randomly initialized baseline and evaluate both models on the same held-out test set of 13,389 molecules. Figure 3b shows a clear relationship between downstream dataset size and transfer benefit: the advantage of procedural pretraining grows monotonically as the amount of training data decreases. Procedural pretraining therefore acts most strongly as an inductive bias in low-data regimes, where the downstream dataset provides less opportunity for the model to learn the relevant structure directly. 
+
+4.2.3 More Procedural Pretraining Is Not Always Better 
+
+A practical appeal of procedural data is that it can be generated in effectively unlimited quantities. We therefore ask whether increasing the procedural pretraining budget continually improves downstream transfer. We vary both task complexity and procedural training duration. For D YCK and D YCK -S HUFFLE ,complexity is controlled by the number of distinct bracket types; for R EVERSE , by sequence length; and for NCA, by the gzip complexity of the generated trajectories. For each combination of task complexity and training budget, we procedurally pretrain a model and compare its downstream Lipophilicity performance against the randomly initialized baseline. As shown in Figure 4, four of the five procedural tasks exhibit the same qualitative pattern: down-stream benefit initially increases with additional procedural training, reaches a maximum at an intermediate budget, and then deteriorates. At the largest budgets, performance is often worse than the randomly initialized baseline. NCA is the only exception and is also the only task that the model does not learn to solve during procedural pretraining. 63M 30M 300M 20 10 0-10         
+
+> Δ MAE vs baseline (%) ↑ more benefit
+> (a) Dyck
+> k=32
+> k=64
+> k=128
+> 3M 30M 300M
+> (b) Dyck-Shuffle
+> k=64
+> k=128
+> 3M 30M 300M
+> (c) Reverse
+> L=8
+> L=16
+> L=32
+> L=64
+> 3M 30M 300M
+> (d) NCA
+> L-band M-band H-band
+> 3M 30M 300M
+> (e) SSP
+> number of procedural tokens
+
+Figure 4: Downstream transfer across procedural pretraining budgets: Lipophilicity performance relative to random initialization across procedural budgets and task-complexity settings. Error bars show ±1 standard deviation over n=3 seeds; Across four of five tasks, downstream benefit vanishes at higher budgets. In particular, a few seeds at the highest budget collapsed to the loss of a constant predictor, these seeds are excluded from the mean calculation. This behavior suggests that transfer degrades as the model becomes increasingly specialized to the procedural objective. To examine this more directly, we compare downstream benefit with the procedural loss reached at each training budget. For deterministic tasks such as D YCK , R EVERSE ,and SSP, the Bayes-optimal loss is zero, and the models approach this value at large training budgets. DYCK -S HUFFLE is not perfectly predictable because closing-bracket identity contains aleatoric uncertainty: at a masked position, multiple currently open bracket types can yield a valid sequence. Its Bayes-optimal loss is therefore non-zero and can be computed from the generating process. For 
+
+k = 128 , this value is approximately 1.267 , which the model approaches at the largest budgets. Procedural losses and Bayes-optima can be found in Appendix C. The relevant factor is therefore not low procedural loss in absolute terms, but proximity to the best achievable solution for the procedural task. Across tasks, downstream transfer is strongest before the model approaches procedural convergence, suggesting that useful general structure is acquired earlier than task-specific specialization. 
+
+4.2.4 Transfer Requires Procedural Structure 
+
+One alternative explanation for the observed gains is that procedural pretraining need not teach meaningful structure at all. Any additional pretraining could move the model away from its ran-dom initialization, calibrate parameter scales, or expose it to relevant sequence lengths and token-frequency statistics. To distinguish these effects from learning structured dependencies, we construct shuffled-token controls. We randomly permute token order within each procedural sequence, thereby destroying order-dependent structure while preserving the vocabulary, sequence lengths, and token frequencies of the original corpus. We evaluate these controls in two complementary settings. First, in the two-stage diagnostic setting used throughout most of Section 4.2, we construct a separate shuffled-token corpus for each of the five procedural tasks. Each model is pretrained on the shuffled corpus and then fine-tuned directly on Lipophilicity, without molecular pretraining. As shown in Appendix D, every shuffled-token model loses the downstream benefit of its structured counterpart and performs no better than the randomly initialized fine-tuning baseline. Second, we test whether this conclusion survives the full three-stage pipeline using D YCK -S HUFFLE 
+
+as a representative control. The token-shuffled model undergoes the same molecular pretraining and downstream fine-tuning as the structured model. In Figure 3a, its held-out MTM loss remains worse than that of molecular pretraining from random initialization throughout all 12 epochs. After Lipophilicity fine-tuning, it obtains an MAE of 0.4181 ± 0.0062 , a roughly 2.46% degradation relative to the molecular-pretraining-only baseline, whereas structured D YCK -S HUFFLE improves performance by 3.53% .These results rule out generic exposure to synthetic sequences or their token-level statistics as a sufficient explanation for transfer. The downstream benefit depends on the structured relationships present in the procedural data. 74.3 Where Does the Transfer Reside? 
+
+The preceding experiments show that procedural structure can transfer to molecular prediction, but they do not identify where that information is represented within the transformer. We therefore ask which model components carry the transferable information learned during procedural pretraining. We compare three transfer settings on Lipophilicity: transferring the full transformer backbone, transferring only the attention-layer weights, and transferring only the feed-forward-layer weights. All other parameters are reinitialized as described in Section 3. Dyck (k=64) Dyck-Shuffle (k=128) Reverse NCA SSP -10 -5 0510 
+
+> Δ MAE vs baseline (%) ↑ more benefit
+> full transfer attention-only FFN-only
+
+Figure 5: Lipophilicity benefit for full-backbone, attention-only, and feed-forward-only transfer. Attention-only transfer retains most of the benefit, while feed-forward-only transfer generally does not. Figure 5 shows that attention-only transfer matches or exceeds full-backbone transfer for DYCK , D YCK -S HUFFLE , and R EVERSE . In contrast, transferring only the feed-forward layers removes most of the downstream ben-efit and can even hurt performance. SSP be-haves differently: neither component alone recovers the full-transfer benefit, suggesting that useful information is distributed across both attention and feed-forward layers. NCA provides no significant benefit under any trans-fer configuration. The deterioration observed at large procedural budgets in Section 4.2.3 raises a related ques-tion: does this over-specialization also reside in particular model components? To test this, we repeat the procedural-budget sweep while transferring only the attention-layer weights to the downstream task. Figure 6 shows that attention-only transfer is generally more robust to increasing procedural budgets than full-backbone transfer. For D YCK and D YCK -S HUFFLE , the downstream benefit no longer decays at the largest tested budgets when only attention weights are transferred. R EVERSE and SSP also decay more slowly under attention-only transfer, although both eventually converge back towards the baseline. Together, these results indicate that much of the useful transferable structure learned from D YCK ,DYCK -S HUFFLE , and R EVERSE is carried by the attention layers. They also suggest that part of the degradation caused by excessive procedural pretraining is associated with the feed-forward layers: discarding these weights preserves useful transfer over a wider range of procedural budgets. The separation is not complete, however, since R EVERSE and SSP still lose their advantage at sufficiently large budgets even under attention-only transfer. 3M 30M 300M -10 -5 0510       
+
+> Δ MAE vs baseline (%) ↑ more benefit
+> (a) Dyck ( k=64)
+> full transfer attention-only
+> 3M 30M 300M
+> (b) Dyck-Shuffle ( k=128)
+> 3M 30M 300M
+> (c) Reverse
+> 3M 30M 300M
+> (d) SSP
+> number of procedural tokens
+
+Figure 6: Full-backbone transfer compared with attention-only transfer at increasing procedural token budgets. We report Lipophilicity benefit over the randomly initialized baseline. Error bars are ±1
+
+standard deviation over n = 3 seeds. Attention-only transfer decays more slowly than full transfer; DYCK and D YCK -S HUFFLE retain a benefit at the largest budgets, while R EVERSE and SSP still converge towards the baseline. 85 Conclusion and Open Questions 
+
+We showed that procedural pretraining on abstract, non-molecular data can improve molecular property prediction, even after subsequent pretraining on real molecular data. The gains are largest in low-data regimes, and in our strongest result, a simple sequence-reversal task recovers roughly 90% of the performance difference between our 250K-molecule baseline and the publicly released MoLFormer checkpoint pretrained on approximately 100M molecules. The benefit depends on the structure of the procedural data rather than on simple token-level statistics: shuffling token order removes the transfer advantage. Our results also show that more procedural pretraining is not always better. Across most tasks, downstream performance peaks at an intermediate training budget and deteriorates as the model approaches procedural convergence, suggesting a transition from learning broadly useful structure to task-specific specialization. For several tasks, much of the transferable information is retained in the attention layers, while the feed-forward layers appear to contribute more strongly to over-specialization. Several questions remain open. What properties make a procedural task transferable, and can they be identified without downstream evaluation? Can the optimal stopping point for procedural pretraining be predicted from procedural training dynamics alone, rather than from downstream validation? Our results were also inconclusive on FreeSolv and for the NCA task, which showed no clear downstream benefit at any procedural budget. Determining whether these outcomes reflect dataset size, task predictability, or a more fundamental mismatch remains an important direction for future work. More broadly, do these effects persist across larger models, alternative molecular representations, and other scientific domains? Our findings suggest that improving molecular learning may require not only more molecular data, but also better ways of shaping the model before it sees a single molecule. 9References 
+
+Manel Baradad Jurjo, Jonas Wulff, Tongzhou Wang, Phillip Isola, and Antonio Torralba. Learning to See by Looking at Noise. In Advances in Neural Information Processing Systems , volume 34, pages 2556– 2569. Curran Associates, Inc., 2021. URL https://proceedings.neurips.cc/paper/2021/hash/ 14f2ebeab937ca128186e7ba876faef9-Abstract.html .Cheng-Han Chiang and Hung-yi Lee. On the Transferability of Pre-trained Language Models: A Study from Artificial Datasets, September 2021. URL https://arxiv.org/abs/2109.03537v2 .Seyone Chithrananda, Gabriel Grand, and Bharath Ramsundar. ChemBERTa: Large-Scale Self-Supervised Pretraining for Molecular Property Prediction, October 2020. URL http://arxiv.org/abs/2010.09885 .arXiv:2010.09885 [cs.LG]. Michael Y. Hu, Jackson Petty, Chuan Shi, William Merrill, and Tal Linzen. Between Circuits and Chomsky: Pre-pretraining on Formal Languages Imparts Linguistic Biases, May 2025. URL http://arxiv.org/abs/ 2502.19249 . arXiv:2502.19249 [cs.CL]. John J. Irwin and Brian K. Shoichet. ZINC - A Free Database of Commercially Available Compounds for Virtual Screening. Journal of Chemical Information and Modeling , 45(1):177–182, December 2004. ISSN 1549-9596. doi: 10.1021/ci049714+. URL https://doi.org/10.1021/ci049714+ .Liangze Jiang, Zachary Shinnick, Anton van den Hengel, Hemanth Saratchandran, and Damien Teney. Procedural pretraining: Warming up language models with abstract data. In Proceedings of the International Conference on Machine Learning (ICML) , 2026. Hirokatsu Kataoka, Kazushige Okayasu, Asato Matsumoto, Eisuke Yamagata, Ryosuke Yamada, Nakamasa Inoue, Akio Nakamura, and Yutaka Satoh. Pre-training without Natural Images, January 2021. URL 
+
+http://arxiv.org/abs/2101.08515 . arXiv:2101.08515 [cs.CV]. Sunghwan Kim, Jie Chen, Tiejun Cheng, Asta Gindulyte, Jia He, Siqian He, Qingliang Li, Benjamin A Shoemaker, Paul A Thiessen, Bo Yu, Leonid Zaslavsky, Jian Zhang, and Evan E Bolton. PubChem 2019 update: improved access to chemical data. Nucleic Acids Research , 47(D1):D1102–D1109, January 2019. ISSN 0305-1048. doi: 10.1093/nar/gky1033. URL https://doi.org/10.1093/nar/gky1033 .Dan Lee, Seungwook Han, Akarsh Kumar, and Pulkit Agrawal. Training Language Models via Neural Cellular Automata, March 2026. URL http://arxiv.org/abs/2603.10055 . arXiv:2603.10055 [cs.LG]. Yoshinori Nomura. Listen and Chant Before You Read: The Ladder of Beauty in LM Pre-Training, April 2026. URL http://arxiv.org/abs/2604.21265 . arXiv:2604.21265 [cs.CL]. Isabel Papadimitriou and Dan Jurafsky. Learning Music Helps You Read: Using Transfer to Study Linguistic Structure in Language Models. In Bonnie Webber, Trevor Cohn, Yulan He, and Yang Liu, editors, Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP) , pages 6829–6839, Online, November 2020. Association for Computational Linguistics. doi: 10.18653/v1/2020.emnlp-main.554. URL https://aclanthology.org/2020.emnlp-main.554/ .Isabel Papadimitriou and Dan Jurafsky. Injecting structural hints: Using language models to study inductive biases in language learning. In Findings of the Association for Computational Linguistics: EMNLP 2023 ,2023. Jerret Ross, Brian Belgodere, Vijil Chenthamarakshan, Inkit Padhi, Youssef Mroueh, and Payel Das. Large-Scale Chemical Language Representations Capture Molecular Structure and Properties, December 2022. URL 
+
+http://arxiv.org/abs/2106.09553 . arXiv:2106.09553 [cs.LG]. Zachary Shinnick, Liangze Jiang, Hemanth Saratchandran, Anton van den Hengel, and Damien Teney. Trans-formers pretrained on procedural data contain modular structures for algorithmic reasoning. arXiv preprint arXiv:2505.22308 , 2025. Zachary Shinnick, Liangze Jiang, Hemanth Saratchandran, Damien Teney, and Anton van den Hengel. Can you learn to see without images? procedural warm-up for vision transformers. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , 2026. Yuhuai Wu, Felix Li, and Percy Liang. Insights into Pre-training via Simpler Synthetic Tasks. October 2022. URL https://openreview.net/forum?id=XiLasGufCM .Zhenqin Wu, Bharath Ramsundar, Evan N. Feinberg, Joseph Gomes, Caleb Geniesse, Aneesh S. Pappu, Karl Leswing, and Vijay Pande. MoleculeNet: A Benchmark for Molecular Machine Learning, October 2018. URL http://arxiv.org/abs/1703.00564 . arXiv:1703.00564 [cs.LG]. Shiyang Zhang, Aakash Patel, Syed A Rizvi, Nianchen Liu, Sizhuang He, Amin Karbasi, Emanuele Zappala, and David van Dijk. Intelligence at the edge of chaos, 2025. URL https://arxiv.org/abs/2410.02536 .
+
+10 A Reproducibility and Training Details 
+
+A.1 Training details 
+
+All three stages use the same MoLFormer encoder [Ross et al., 2022]: 12 layers, hidden size 768, 12 heads of dimension 64, feed-forward width 768, GELU activations, linear attention with 32 generalized random features, rotary position embeddings, a maximum length of 202 tokens and the released 2,362-token SMILES vocabulary (46.8M parameters with the MTM head, 48.0M with the regression head). All runs use one GPU (NVIDIA RTX 6000 24GB or A40 48GB), PyTorch 1.7.1 with PyTorch Lightning 1.1.5 and apex 22.03; procedural corpora are generated with numpy, RDKit and networkx (SSP) and the JAX generator of Lee et al. [2026] (NCA). Table 2 summarizes the training configuration for each stage. All stages use apex FusedLAMB with β1 = 0 .9, β2 = 0 .99 , ϵ = 10 −6, no weight decay, and global gradient-norm clipping at 1.0. The molecular-pretraining and fine-tuning configurations follow the released MoLFormer implementation [Ross et al., 2022], with three exceptions: for molecular pretraining we reduce the batch size from 1,200 to 256 and add a 500-step linear warm-up, and we fine-tune on QM9 for 400 rather than 500 epochs. Token embeddings remain fixed at their random initialization during procedural pretraining and are trainable during molecular pretraining and downstream fine-tuning. Fine-tuning targets are standardized using statistics computed from the training split, and the checkpoint with the lowest validation MAE is used for test evaluation. Each procedural and each molecular pretraining is a single run with seed 12345. Fine-tuning uses seeds 12345, 42 and 43 (FreeSolv additionally uses 44, 45 and 46). The seed also draws the QM9 training subset.                          
+
+> Parameter Procedural pretraining Molecular pretraining Downstream fine-tuning Objective MTM with task-specific masking MTM with 15% of tokens selected for prediction Regression from the mean-pooled encoder output; ℓ1loss on standardized targets Peak learning rate 2.4×10 −42.4×10 −43×10 −5
+> Learning-rate schedule 10% linear warm-up, followed by cosine decay to 10% of the peak rate 500-step linear warm-up, followed by a constant rate Constant; no warm-up Batch size 256 sequences 256 molecules 128 molecules Dropout probability 0.2 0.2 0.1 Training budget 500–24,000 steps 12 epochs 500 epochs for Lipophilicity and FreeSolv; 400 for QM9
+
+Table 2: Training configurations for the three stages of the experimental pipeline. 
+
+A.2 Procedural-task generation 
+
+Table 3 summarizes the construction and masking policy of each procedural task. The values evaluated for the task complexity parameters are reported in Figure 7. For R EVERSE and SSP, sequences are processed using the MoLFormer tokenizer and masked as in molecular pretraining: of the positions selected for prediction, 80% are replaced by [MASK] , 10% by a random token, and 10% remain unchanged. D YCK , D YCK -S HUFFLE , and NCA are represented directly as integer token IDs, and every selected position is replaced by [MASK] .For each task configuration and training budget of B steps, we generate B × 256 sequences once, using random seed 42, and train for a single pass over them; the checkpoint at step B, the end of the cosine schedule, is the one transferred, and no validation set is held out. 11 Task Generated sequence Complexity parameter Masking strategy REVERSE A sequence of L symbols drawn from an alphabet of 13 SMILES atom tokens, followed by . and the same symbols in reverse order Sequence length L Reversed tokens (pmask = 0 .5)DYCK A 64-token balanced bracket string with 
+
+k distinct bracket types. An opening bracket is sampled with probability 0.5 whenever permitted to form a valid balanced-bracket string Number of distinct bracket types k
+
+Closing brackets (pmask = 0 .5)DYCK -S HUFFLE Similar to D YCK , except that a closing bracket may match any currently open bracket of the same type, allowing bracket pairs to cross Number of distinct bracket types k
+
+Closing brackets (pmask = 0 .5)SSP The canonical SMILES representation of a random connected graph with 8–25 nodes and node degrees 1–4, followed by . and, for every node in SMILES order, its shortest-path distance to a source node marked as *
+
+– Distance tokens (pmask = 0 .5)NCA Ten frames of an 8 × 8 cellular automaton with six cell states, sampled two update steps apart. Each frame is represented by 16 tokens corresponding to non-overlapping 2 × 2 patches gzip-compressibility band of the update rule Uniformly across all patch tokens (pmask = 0 .15 )
+
+Table 3: Procedural-task generation and masking. For each task, we report the generated sequence, the complexity parameter varied in our experiments, and the tokens eligible for masking. Each eligible token is selected independently with probability pmask .
+
+## B Choosing Task Complexity and Procedural Budget 
+
+Figure 7 shows the validation grid used to select task complexity and procedural-pretraining budget for each task. 32 64 128                                                       
+
+> bracket types
+> 24k 12k 6k 3k 1k 500
+> pretraining steps
+> +0.6% +1.5% +9.1% +4.2% +0.9% +1.9% −8.9% −9.3% −11.2% −13.1% −11.2% −9.4% −9.2% −8.3% −7.0% −6.3% −5.6% −6.4%
+> (a) Dyck
+> 64 128
+> bracket types
+> 24k 12k 6k 3k 1k 500
+> pretraining steps
+> +0.1% +2.5% −4.8% +1.4% −9.4% −11.1% −11.1% −12.7% −6.3% −5.7% −7.0% −9.0%
+> (d) Dyck-Shuffle
+> 816 32 64
+> sequence length
+> 24k 12k 6k 3k 1k 500
+> pretraining steps
+> n/a +6.8% +7.7% +12.7%
+> n/a +3.9% +4.2% +1.2% −2.2% −5.5% −1.3% −0.8% −1.9% −6.7% −1.6% −0.7% −7.0% −4.8% −5.0% −0.0% −5.4% −4.2% −1.2% −3.1%
+> (b) Reverse
+> LMH
+> gzip complexity band
+> 6k 4k 3k 1k 750 250
+> pretraining steps
+> −1.0% −6.5% −5.4% −4.4% −6.2% −6.8% −7.9% −5.2% −3.3% −6.6% −4.8% −6.6% −4.7% −4.3%* −4.9% −3.0% +1.2%* −2.3%
+> (c) NCA
+> uniform 24k 12k 6k 3k 1k 500
+> pretraining steps
+> +6.6% +3.6% −0.5% −4.9% −4.8% −7.7%
+> (e) SSP
+> -10 -5 0510
+> Δ MAE vs baseline (%)
+
+Figure 7: Grid search over task complexity and procedural-pretraining budget. Cells report mean validation-set Lipophilicity benefit over the randomly initialized baseline across n = 3 seeds. 12 C Procedural Pretraining Losses and Bayes-Floor Estimates 
+
+In Table 4, we report the procedural loss reached at every budget and the downstream benefit of the respective model on Lipophilicity over the random initialization baseline. We also mention the Bayes-optimal achievable loss for each task setting where we are able to determine it. 
+
+Pretraining budget Task Metric b1 b2 b3 b4 b5 b6 L⋆
+
+Dyck 
+
+k=32 ∆ MAE (%) −7.0 −6.6 −6.2 −10 .6 −0.0 +2 .9
+
+procedural loss 1.46 0.72 0.266 0.0512 6.76 ×10 −3 5.62 ×10 −4 0
+
+k=64 ∆ MAE (%) −6.3 −7.7 −7.5 −4.0 +1 .2 +1 .5
+
+procedural loss 1.98 1.21 0.527 0.158 0.0144 8.73 ×10 −4 0
+
+k=128 ∆ MAE (%) −7.7 −6.1 −6.2 −9.6 +1 .3 +13 .3
+
+procedural loss 1.86 1.11 0.47 0.0943 1.45 6.81 ×10 −4 0
+
+Dyck-Shuffle 
+
+k=64 ∆ MAE (%) −6.4 −3.8 −6.8 −6.8 −0.6 −0.0
+
+procedural loss 2.12 1.58 1.44 1.34 1.27 1.26 1.250 
+
+k=128 ∆ MAE (%) −4.4 −5.7 −9.0 −5.0 +3 .8 +6 .9
+
+procedural loss 2.36 1.82 1.57 1.41 1.31 1.28 1.267 
+
+Reverse 
+
+L=8 ∆ MAE (%) −7.5 +1 .1 −0.8 −2.6 – –procedural loss 0.907 6.65 ×10 −4 4.39 ×10 −6 1.16 ×10 −5 – – 0
+
+L=16 ∆ MAE (%) −6.5 −4.2 −2.4 −4.0 +4 .4 +1 .7
+
+procedural loss 1.65 0.229 1.07 ×10 −4 1.37 ×10 −5 6.44 ×10 −7 1.28 ×10 −7 0
+
+L=32 ∆ MAE (%) −0.6 −2.4 −5.1 −3.1 +3 .4 +8 .9
+
+procedural loss 2.03 1.27 0.302 1.68 ×10 −4 4.77 ×10 −5 2×10 −6 0
+
+L=64 ∆ MAE (%) −2.0 +2 .9 −5.3 −1.4 +0 .7 +5 .0
+
+procedural loss 2.27 2.07 1.73 1.25 0.567 0.0474 0
+
+SSP 
+
+uni ∆ MAE (%) −4.9 −7.4 −6.5 −4.0 +6 .4 +5 .1
+
+procedural loss 0.894 0.691 0.592 0.463 0.176 0.0622 0
+
+NCA 
+
+band L ∆ MAE (%) −0.3 −3.0 −7.1 −4.0 +1 .2 −0.6
+
+procedural loss 2.47 2.28 2.13 1.86 1.78 1.73 unk. band M ∆ MAE (%) −2.2 −0.7 −3.6 −7.0 −4.9 −5.1
+
+procedural loss 3.75 3.58 3.46 3.41 3.36 3.27 unk. band H ∆ MAE (%) −1.3 +0 .3 −2.6 −2.7 −3.8 −1.3
+
+procedural loss 5.52 5.34 5.26 5.22 5.19 5.19 unk. 
+
+Table 4: Procedural loss and downstream benefit for each tested task-complexity-duration com-bination. L⋆ denotes the Bayes-optimal loss, which is unknown in closed form for NCA. Bud-gets b1–b6 are {500 , 1500 , 3000 , 6000 , 12000 , 24000 } optimizer steps for the sequence tasks and 
+
+{250 , 750 , 1500 , 3000 , 4500 , 6000 } for NCA. 13 D Shuffling Token Order Removes Downstream Benefit Across All Procedural Tasks 
+
+In Section 4.2.4, we found that shuffling the token order in the procedural sequences eliminates all downstream benefit. This section reports the shuffled-token ablation in the two-stage diagnostic setting for all five procedural tasks: procedural pretraining is directly followed by Lipophilicity fine-tuning. Figure 8 shows that every procedural task loses its downstream benefit when the token order within the sequences is shuffled. Dyck ( k=64) Dyck-Shuffle ( k=128) Reverse NCA SSP -10 -5 0510 
+
+> Δ MAE vs baseline (%) ↑ more benefit
+> structured (task colour) shuffled
+
+Figure 8: Token shuffling removes the downstream benefit of procedural pretraining across all five tasks in the two-stage diagnostic setting. Models are pretrained on either the structured corpus or a version in which tokens are shuffled within each sequence, and are then fine-tuned directly on Lipophilicity without molecular pretraining. Shuffling preserves each sequence’s length and token counts while disrupting order-dependent structure, indicating that marginal token statistics alone are insufficient to explain the observed benefit. 14

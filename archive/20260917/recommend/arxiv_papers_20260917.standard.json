@@ -1,0 +1,205 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-17T22:12:45.423511+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 5,
+    "deep_divecandidates": 1,
+    "deep_cap": 10,
+    "deep_selected": 1,
+    "quick_candidates": 3,
+    "quick_skim_target": 15,
+    "quick_selected": 3
+  },
+  "deep_dive": [
+    {
+      "id": "2609.17831v1",
+      "source": "arxiv",
+      "title": "Procedural Pretraining for Molecular Property Prediction",
+      "abstract": "Molecular property prediction is often limited by the small size of labeled downstream datasets, motivating pretraining on large corpora of unlabeled molecules. In this work, we ask whether useful inductive biases can instead be learned from abstract, procedurally generated data before a model sees any molecular data. We introduce a three-stage training pipeline consisting of procedural pretraining, molecular pretraining on SMILES, and downstream fine-tuning, and evaluate several procedural tasks spanning sequence structure, cellular automata, and graph reasoning. We find that procedural pretraining can improve molecular property prediction even after subsequent molecular pretraining: on Lipophilicity, \\textsc{Reverse} reduces test error by 4.8\\%. For context, the magnitude of this improvement is roughly 90\\% of the performance difference between our 250K-molecule baseline and the publicly released MoLFormer checkpoint pretrained on approximately 100M molecules. Our analysis shows that the benefit is strongest under downstream data scarcity, depends on the structure of the procedural data rather than only surface-level statistics, and does not increase monotonically with additional procedural training. Instead, transfer typically peaks at an intermediate procedural budget and deteriorates as the model approaches convergence on the procedural task. We further find that, for several tasks, much of the transferable information is localized in the attention layers, while feed-forward layers can contribute to over-specialization. These results show that procedural data can provide transferable structure for molecular learning and offer a complementary route to improving performance when labeled molecular data are limited.",
+      "authors": [
+        "Moritz Friedemann",
+        "Zachary Shinnick",
+        "Philip Torr",
+        "Bruno Andreis"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-15T20:48:50+00:00",
+      "link": "https://arxiv.org/pdf/2609.17831v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "molecular pretraining on large unlabeled data with a pretrain-finetune pipeline for property prediction",
+      "llm_evidence_cn": "大规模无标签分子预训练与预训练-微调范式用于性质预测",
+      "llm_evidence": "大规模无标签分子预训练与预训练-微调范式用于性质预测",
+      "canonical_evidence": "大规模无标签分子预训练与预训练-微调范式用于性质预测",
+      "llm_tldr_en": "This work introduces procedural pretraining before molecular pretraining on SMILES, showing abstract procedural tasks can improve molecular property prediction even after large-scale molecular pretraining.",
+      "llm_tldr_cn": "针对分子性质预测下游标注数据稀缺的问题，本文提出三阶段训练流程：先在程序化生成的抽象数据上预训练，再进行SMILES分子预训练，最后下游微调。实验涵盖序列结构、元胞自动机和图推理等程序化任务，结果显示程序化预训练在分子预训练之后仍能进一步提升性能，如在Lipophilicity任务上测试误差降低4.8%。该工作表明可迁移的归纳偏置可来自非分子的抽象数据，为利用无标签数据缓解冷启动表示缺失提供了新思路。",
+      "llm_tldr": "针对分子性质预测下游标注数据稀缺的问题，本文提出三阶段训练流程：先在程序化生成的抽象数据上预训练，再进行SMILES分子预训练，最后下游微调。实验涵盖序列结构、元胞自动机和图推理等程序化任务，结果显示程序化预训练在分子预训练之后仍能进一步提升性能，如在Lipophilicity任务上测试误差降低4.8%。该工作表明可迁移的归纳偏置可来自非分子的抽象数据，为利用无标签数据缓解冷启动表示缺失提供了新思路。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "molecular graph pretraining on unlabeled data",
+      "matched_requirement_id": "req-20",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.14491v1",
+      "source": "arxiv",
+      "title": "MIRAGE: Measuring Interpolation and Redundancy in Affinity GEneralization",
+      "abstract": "Deep learning now underpins structure-based drug design, from complex and affinity prediction to ligand ranking and pose generation. Recent co-folding models reportedly approach free-energy-perturbation accuracy at far lower cost. Yet standard evaluation, a single held-out correlation or pooled pose-success rate, cannot separate transferable binding principles from repeated exposure to related protein families in public databases, and practical success depends on genuinely novel targets. We introduce MIRAGE (Measuring Interpolation and Redundancy in Affinity GEneralization), a plug-in benchmark treating historical public family support (through 2019) as an explicit variable, applying a family-support axis to affinity and pose prediction via matched strata, family-disjoint controls, ligand-only baselines, and temporal evaluation. Co-folder affinity accuracy rises sharply with family support, while shallow controls that cannot exploit the test family stay flat, large for co-folders and near zero for every family-disjoint or trivial control. For Nesso-1 it survives covariate, conditioning, balancing, and clustering checks; Boltz-2's endpoint is limited by coverage. It localizes to family support rather than ligand chemistry, approaching a level from family identity alone. Rankings reverse on novel families, where a family-disjoint random forest leads both co-folders, significantly vs Nesso-1. On one external low-support target, neither co-folder beats molecular weight, corroborative rather than population-level evidence. gnina shows significant support dependence in rescoring whereas smina does not; MSA-free pose engines show larger gaps than smina redocking. This redundancy-driven inflation differs from conventional leakage. We propose reporting performance across family support plus excess over a support-insensitive baseline, and release MIRAGE as an installable benchmark and dataset.",
+      "authors": [
+        "Mehdi Yazdani-Jahromi",
+        "Sanjay Padhi",
+        "Ivan Garibay"
+      ],
+      "primary_category": "q-bio.QM",
+      "categories": [
+        "q-bio.QM"
+      ],
+      "published": "2026-09-13T12:56:32+00:00",
+      "link": "https://arxiv.org/pdf/2609.14491v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "benchmark separating transferable binding from redundant family exposure in affinity generalization",
+      "llm_evidence_cn": "区分可迁移结合规律与家族重复暴露的亲和力泛化基准",
+      "llm_evidence": "区分可迁移结合规律与家族重复暴露的亲和力泛化基准",
+      "canonical_evidence": "区分可迁移结合规律与家族重复暴露的亲和力泛化基准",
+      "llm_tldr_en": "The paper introduces MIRAGE, a plug-in benchmark that treats historical public family support as an explicit variable to separate transferable binding principles from redundant exposure to related protein families in affinity and pose prediction.",
+      "llm_tldr_cn": "深度学习已广泛用于结构药物设计，但常规评测仅报告单一留出相关性或姿态成功率，无法区分可迁移的结合规律与对公开数据库中相似蛋白家族的重复暴露。本文提出MIRAGE即插即用基准，将截至2019年的公开家族支持度设为显式变量，在匹配的家族支持轴上评估亲和力与姿态预测。结果显示该方法能揭示模型性能中插值与冗余的比例，突出真正新颖靶点上的泛化能力。该工作为评估药物设计模型的分布外泛化提供了更严格的框架。",
+      "llm_tldr": "深度学习已广泛用于结构药物设计，但常规评测仅报告单一留出相关性或姿态成功率，无法区分可迁移的结合规律与对公开数据库中相似蛋白家族的重复暴露。本文提出MIRAGE即插即用基准，将截至2019年的公开家族支持度设为显式变量，在匹配的家族支持轴上评估亲和力与姿态预测。结果显示该方法能揭示模型性能中插值与冗余的比例，突出真正新颖靶点上的泛化能力。该工作为评估药物设计模型的分布外泛化提供了更严格的框架。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "methods to evaluate molecular scaffold novelty for out-of-distribution generalization",
+      "matched_requirement_id": "req-38",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.14451v1",
+      "source": "arxiv",
+      "title": "Follow the Geometry, Not the Model: Cold Start Semi-Supervised Learning",
+      "abstract": "Modern semi-supervised learning (SSL) couples pseudo-label generation and classifier training, using the classifier's own confidence to select the pseudo-labels that are then used to update the model. In the cold-start regime, where at most a few labels per class are available, this coupling is ill-posed, since the classifier cannot supervise itself before it has learned.   To address this problem, we propose VAST (Veracity-Aware Semi-Supervised Training), which decouples these two stages. Probabilistic beliefs over the unlabeled set are first inferred directly from the geometry of a frozen self-supervised embedding and only then distilled into an inductive classifier.   The construction rests on the Veracity Matrix, a kernel-based structure that aggregates label evidence across the data manifold and admits an interpretation as a Dirichlet posterior under a per-observation powered-likelihood model. Additionally, we introduce Veracity Propagation, a self-terminating belief-spreading step that extends coverage beyond the kernel neighborhood of the labeled set.   Under a controlled protocol in which all methods receive identical frozen embeddings and labeled sets, VAST outperforms the strongest graph-based SSL baselines at every operating point across three datasets, with statistically significant gains in 7 of 9 comparisons, while producing a deployable inductive classifier rather than requiring transductive graph inference. Compared with end-to-end confidence-gated SSL, we further find that these methods underperform in this setting and, in our experiments, do not consistently exceed labeled-only performance.",
+      "authors": [
+        "Itai David",
+        "Daphna Weinshall"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-13T11:46:26+00:00",
+      "link": "https://arxiv.org/pdf/2609.14451v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "cold-start regime with few labels, decoupled pseudo-label inference transferable to cold-start prediction",
+      "llm_evidence_cn": "极少量标签的冷启动设定与解耦式伪标签推断",
+      "llm_evidence": "极少量标签的冷启动设定与解耦式伪标签推断",
+      "canonical_evidence": "极少量标签的冷启动设定与解耦式伪标签推断",
+      "llm_tldr_en": "Semi-supervised learning fails in cold-start regimes because the classifier supervises itself before it has learned. VAST decouples belief inference from classifier training by deriving probabilistic beliefs from the geometry of a frozen self-supervised embedding and then distilling them into an inductive classifier, improving cold-start accuracy and offering a transferable recipe for cold-start entity prediction.",
+      "llm_tldr_cn": "在每类仅有极少量标签的冷启动场景下，半监督学习让伪标签生成与分类器训练相互耦合，分类器尚未学好便需自我监督，导致性能退化。作者提出VAST方法，先基于冻结自监督嵌入的几何结构推断无标签样本的概率信念，再将其蒸馏为归纳式分类器，从而解耦两阶段。实验表明该方法在冷启动条件下取得更稳健的分类效果。该思路对冷启动推荐与冷启动实体预测具有可迁移价值。",
+      "llm_tldr": "在每类仅有极少量标签的冷启动场景下，半监督学习让伪标签生成与分类器训练相互耦合，分类器尚未学好便需自我监督，导致性能退化。作者提出VAST方法，先基于冻结自监督嵌入的几何结构推断无标签样本的概率信念，再将其蒸馏为归纳式分类器，从而解耦两阶段。实验表明该方法在冷启动条件下取得更稳健的分类效果。该思路对冷启动推荐与冷启动实体预测具有可迁移价值。",
+      "llm_tags": [
+        "query:ddi-transfer"
+      ],
+      "matched_query_tag": "query:ddi-transfer",
+      "matched_query_text": "Cold start recommendation and drug repositioning approaches transferable to cold start DDI prediction",
+      "matched_requirement_id": "req-19",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.18481v1",
+      "source": "arxiv",
+      "title": "Hyperbolic Graph Representation Learning for Differential Diagnosis on Biomedical Knowledge Graphs",
+      "abstract": "Biomedical knowledge graphs combine ontology-derived hierarchies with transversal associations among heterogeneous entities such as phenotypes, diseases, genes, proteins, and patients. This hybrid structure raises the question of whether hyperbolic embeddings, which naturally capture tree-like organization, remain useful beyond purely hierarchical graphs. We present a preliminary study of hyperbolic graph representation learning for Mendelian-disease differential diagnosis on a patient-integrated biomedical graph. Experiments on isolated ontology subgraphs show that hyperbolic models achieve strong performance in substantially lower dimensions than Euclidean baselines. We then evaluate the models on a link-prediction task that ranks candidate diseases for each patient. Results suggest that hyperbolic embeddings can exploit biomedical hierarchical structure while supporting diagnostic reasoning over heterogeneous patient-level graphs.",
+      "authors": [
+        "Pietro Miotto",
+        "Lucia Mellini",
+        "Tommaso Marzi",
+        "Cesare Alippi",
+        "Elena Casiraghi",
+        "Alberto Paccanaro",
+        "Giorgio Valentini",
+        "Mauricio Soto-Gomez"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-09-16T11:11:46+00:00",
+      "link": "https://arxiv.org/pdf/2609.18481v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "hyperbolic graph representation learning on biomedical knowledge graph with link prediction",
+      "llm_evidence_cn": "生物医学知识图谱表示学习与链接预测",
+      "llm_evidence": "生物医学知识图谱表示学习与链接预测",
+      "canonical_evidence": "生物医学知识图谱表示学习与链接预测",
+      "llm_tldr_en": "This preliminary study applies hyperbolic graph representation learning to a patient-integrated biomedical knowledge graph for Mendelian-disease differential diagnosis, testing whether hyperbolic embeddings help beyond purely hierarchical graphs.",
+      "llm_tldr_cn": "生物医学知识图谱同时包含本体层级与跨实体的横向关联，超曲嵌入能否在非纯层级结构上继续有效尚不明确。本文在整合患者信息的生物医学图上开展超曲图表征学习用于孟德尔病鉴别诊断，发现超曲模型在低得多的维度下即可媲美欧氏基线，并进一步在链接预测任务上评估其表现。该初步研究说明超曲嵌入在混合结构的生物医学图谱上仍有价值，为生物医学图谱表示学习与知识补全提供了参考。",
+      "llm_tldr": "生物医学知识图谱同时包含本体层级与跨实体的横向关联，超曲嵌入能否在非纯层级结构上继续有效尚不明确。本文在整合患者信息的生物医学图上开展超曲图表征学习用于孟德尔病鉴别诊断，发现超曲模型在低得多的维度下即可媲美欧氏基线，并进一步在链接预测任务上评估其表现。该初步研究说明超曲嵌入在混合结构的生物医学图谱上仍有价值，为生物医学图谱表示学习与知识补全提供了参考。",
+      "llm_tags": [
+        "query:cd"
+      ],
+      "matched_query_tag": "query:cd",
+      "matched_query_text": "biomedical knowledge graph representation learning for drug target interaction and drug repositioning",
+      "matched_requirement_id": "req-36",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
