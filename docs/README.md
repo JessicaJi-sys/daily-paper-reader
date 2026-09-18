@@ -48,17 +48,17 @@
 <section class="dpr-home-dashboard-card dpr-home-report-card">
   <div class="dpr-home-dashboard-header">
     <div>
-      <span class="dpr-home-dashboard-kicker">2026-09-17</span>
+      <span class="dpr-home-dashboard-kicker">2026-09-18</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">共 4 篇</strong>
+    <strong class="dpr-home-dashboard-count">共 2 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
     <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>1</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>3</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>0</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>2</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-09-17 22:15:58 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-09-18 21:57:02 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,10 +69,7 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>今日共生成 4 篇推荐（精读 1 篇，速读 3 篇）</p>
-<p>精读：《Procedural Pretraining for Molecular Property Prediction》（8.0/10）</p>
-<p>速读：《MIRAGE: Measuring Interpolation and Redundancy in Affinity GEneralization》（7.0/10）, 《Follow the Geometry, Not the Model: Cold Start Semi-Supervised Learning》（6.0/10）, 《Hyperbolic Graph Representation Learning for Differential Diagnosis on Biomedical Knowledge Graphs》（6.0/10）</p>
-<p>这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。</p>
+<p>今日速读两篇AI材料与图模型方向论文，聚焦可扩展材料设计与结构中心图基础模型。最值得关注的是《Robust and Efficient AI Frameworks for Scalable Material Design and Property Prediction》（7.0分），其框架兼顾鲁棒性与效率；另一篇SCGFM-ART（6.0分）则探索关系传输新思路。普通读者可优先了解AI辅助材料预测的落地框架，再按需跟进图基础模型方法。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -81,12 +78,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">精读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">1 篇</strong>
+    <strong class="dpr-home-dashboard-count">0 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Procedural Pretraining for Molecular Property Prediction">Procedural Pretraining for Molecular Property Prediction</span></li></ul>
+<p class="dpr-home-dashboard-empty">今日暂无推荐。</p>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">mgp <strong>1</strong></span></div>
+
 </section>
 <section class="dpr-home-dashboard-card dpr-home-skim-card">
   <div class="dpr-home-dashboard-header">
@@ -94,12 +91,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">速读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">3 篇</strong>
+    <strong class="dpr-home-dashboard-count">2 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="MIRAGE: Measuring Interpolation and Redundancy in Affinity GEneralization">MIRAGE: Measuring Interpolation and Redundancy in Affinity GEneralization</span></li><li><span class="dpr-home-dashboard-paper-title" title="Follow the Geometry, Not the Model: Cold Start Semi-Supervised Learning">Follow the Geometry, Not the Model: Cold Start Semi-Supervised Learning</span></li><li><span class="dpr-home-dashboard-paper-title" title="Hyperbolic Graph Representation Learning for Differential Diagnosis on Biomedical Knowledge Graphs">Hyperbolic Graph Representation Learning for Differential Diagnosis on Biomedical Knowledge Graphs</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Robust and Efficient AI Frameworks for Scalable Material Design and Property Prediction">Robust and Efficient AI Frameworks for Scalable Material Design and Property Prediction</span></li><li><span class="dpr-home-dashboard-paper-title" title="SCGFM-ART: Amortized Relational Transport for Structure-Centric Graph Foundation Models">SCGFM-ART: Amortized Relational Transport for Structure-Centric Graph Foundation Models</span></li></ul>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">cd <strong>1</strong></span><span class="dpr-home-dashboard-tag">ddi-transfer <strong>1</strong></span><span class="dpr-home-dashboard-tag">drug-ood-gen <strong>1</strong></span></div>
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">drug-ood-gen <strong>1</strong></span><span class="dpr-home-dashboard-tag">mgp <strong>1</strong></span></div>
 </section>
 </div>
 

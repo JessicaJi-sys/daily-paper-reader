@@ -1,0 +1,1877 @@
+Title: SCGFM-ART: Amortized Relational Transport for Structure-Centric Graph Foundation Models
+
+URL Source: https://arxiv.org/pdf/2609.20419v1
+
+Published Time: Fri, 18 Sep 2026 01:21:40 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+> 1
+
+# SCGFM-ART: Amortized Relational Transport for Structure-Centric Graph Foundation Models 
+
+Xiaodong He, Xincheng Wang, Zhao Kang 
+
+Abstract —Graph foundation models (GFMs) aim to learn transferable representations across severely heterogeneous graph domains. However, severe domain shifts in topology, graph scale, and feature semantics impede the construction of aunified, domain-agnostic representation space. To address this, we propose SCGFM-ART, a structure-centric GFM framework that aligns arbitrary graphs onto a shared relational atlas via Amortized Relational Transport (ART). The relational atlas serves as a universal coordinate system defined by a finite set of relational landmarks (bases), while ART directly predicts reusable, end-to-end graph-to-base transport plans, bypassing costly runtime Gromov-Wasserstein optimizations. Under this formulation, SCGFM-ART decomposes a graph into a unified representation: globally via its relational response coordinates relative to the atlas, and locally via its node-to-role structural correspondences. These correspondences project disparate node attributes into a canonical role space, resolving structural and semantic heterogeneity within a singular alignment interface. Rigorously modeling graphs and atlas bases as finite mea-sured relational spaces, we establish coordinate fidelity bounds, prove stability under predicted transport plans, and derive an amortized coverage bound that guarantees our learning objec-tive tightly surrogates ideal relational coverage. Benchmarked across 14 cross-domain graph- and node-level classification tasks, SCGFM-ART achieves state-of-the-art transferability, securing superior average ranks of 2.29 and 1.14, respectively. Topological perturbation analyses demonstrate that node-role transport re-tains fine-grained structural nuances beyond global coordinates. On real-world benchmarks, the amortized formulation yields 44.2×–85.1× faster frozen target-domain inference by avoiding iterative alignment at test time. 
+
+Index Terms —Large graph models, graph representation learning, Gromov–Wasserstein distance, amortized optimal trans-port, cross-domain transfer. 
+
+I. I NTRODUCTION 
+
+# FOUNDATION models have revolutionized representation learning across natural language processing and computer vision by leveraging large-scale pretraining to extract highly transferable representations [2]–[5]. This paradigm is rapidly extending to graph-structured domains, where Graph Founda-tion Models (GFMs) seek to capture domain-agnostic, reusable structural knowledge across diverse datasets and downstream tasks [6]–[9]. To this end, recent advances have explored unified task interfaces, multi-domain topological alignment, transferable structural vocabularies, and theoretical bounds on cross-domain knowledge transfer [7], [10]–[12]. 
+
+X. He, X. Wang, and Z. Kang are with the University of Electronic Science and Technology of China, Chengdu, China. This work has been submitted to the IEEE for possible publication. Copyright may be transferred without notice, after which this version may no longer be accessible. E-mail: hexiaodong24@126.com; Zkang@uestc.edu.cn. The source code is available at: https://github.com/Xd-He/SCGFM-ART. 
+
+A central obstacle in building general-purpose GFMs stems from the intrinsic non-Euclidean heterogeneity across graph domains. Graphs originating from distinct environments lack a universal representation space: their structures vary dramat-ically in scale, edge density, and relational topology, while node attributes frequently differ in dimensionality, semantics, or availability. Consequently, cross-domain graph pretraining demands a unified mechanism capable of reconciling both 
+
+structural heterogeneity and feature heterogeneity . A robust GFM must therefore establish a canonical reference interface through which topological structures can be directly compared and node attributes can be consistently aligned. Recent graph tokenization paradigms address this challenge by discretizing nodes, edges, or substructures into reusable structural tokens [18]–[20]. While this offers a shared vo-cabulary across architectures, relational comparability across graphs of varying scales and topological regimes remains constrained by underlying structural shifts. This raises a fun-damental question: Can heterogeneous graphs be embedded into a shared relational reference system that simultaneously acts as a universal coordinate space for topology and a local alignment interface for node attributes? 
+
+We address this question through a geometric perspec-tive. If a finite collection of universal relational structures can serve as shared landmarks , any arbitrary graph can be uniquely characterized by its geometric position relative to these landmarks—analogous to positioning an object within a global coordinate frame. Once a common set of landmarks is established, graphs with disparate cardinalities and domain-specific topologies can be projected into identical coordi-nate dimensions, establishing a shared structural interface for foundation-level representation learning. Gromov–Wasserstein (GW) geometry provides a mathemat-ically rigorous foundation for this formulation. By evaluat-ing objects through their internal pairwise relational struc-tures [13], and extending to weighted networks [14], GW alignment offers a metric space for comparing arbitrary re-lational geometries. Furthermore, optimal transport couplings under GW distances yield meaningful node-level correspon-dences for cross-domain matching and representation trans-fer [15]. These properties suggest that heterogeneous graphs can be effectively characterized by their relational distances and transport couplings relative to a finite set of shared reference bases. As illustrated in Fig. 1, we organize these shared references into a relational atlas . Under this construction, each graph is represented globally by its relational discrepancies to the atlas bases—forming its global atlas coordinate q(G)—and locally arXiv:2609.20419v1 [cs.LG] 17 Sep 2026 2Diverse Graphs               
+
+> β1
+> β2
+> β3
+> Relational Atlas
+> β3
+> β1
+> β2
+> Atlas Coordinates q(G)
+> Unified Atlas Space
+> Similar structures
+> →
+> Nearby coordinates
+> ART Mapping
+> Fig. 1. Geometric intuition of SCGFM-ART. Heterogeneous input graphs from diverse domains (left) with disparate scales and node semantics are mapped to ashared Relational Atlas (β1, β 2, . . . , β K)via Amortized Relational Transport (ART) . Graph–base relational discrepancies induce global response coordinates q(G)in a canonical structural reference space (right), positioning topologically similar graphs nearby regardless of original domain or size.
+
+by the corresponding graph–base transport couplings, which align graph nodes with shared relational roles. This yields a dual global–local interface that seamlessly addresses structural and feature heterogeneity. Building upon this formulation, we introduce SCGFM-ART , a structure-centric graph foundation model anchored by a shared relational atlas. The atlas provides a finite system of topological landmarks, while Amortized Relational Transport (ART) learns an end-to-end mapping from input graphs di-rectly to these landmarks. For any graph, ART produces both a global relational response coordinate and a fine-grained node-to-role structural mapping. The global coordinates project graphs into a canonical reference frame regardless of scale or node identity, whereas the local transport couplings map domain-specific node attributes into a canonical role space, resolving feature heterogeneity within the same alignment pipeline. By amortizing the optimal transport optimization via neural inference [17], ART bypasses costly runtime iterations, producing instantaneous graph–atlas alignment for unseen target graphs. We establish rigorous theoretical foundations for SCGFM-ART by modeling graphs and atlas bases as finite measured relational spaces. Assuming total boundedness of the task support, we prove that a finite relational atlas establishes a well-defined coordinate system with geometric distortion bounded by the atlas covering radius. We further quantify the excess error introduced by neural transport amortization and derive an amortized coverage bound, proving that our practical pretraining objective serves as a provably sound surrogate for ideal relational atlas coverage. Our main contributions are summarized as follows: 1) A Unified Dual-Level Framework: We introduce 
+
+SCGFM-ART , which maps heterogeneous graphs onto a shared relational atlas. Through ART, it unifies global relational coordinates and local node-to-role correspon-dences into a single interface for structural and semantic alignment. 2) Theoretical Foundations: We establish formal guar-antees for finite relational atlas learning, establishing coordinate fidelity under finite atlas coverage, quanti-fying amortization prediction error, and proving that our trainable coverage objective tightly bounds ideal relational alignment. 3) Extensive Empirical Validation: Across 14 cross-domain graph- and node-level benchmarks, SCGFM-ART demonstrates state-of-the-art transferability. Com-prehensive empirical studies validate component effi-cacy, atlas capacity, structural perturbation sensitivity, and computational scalability. 
+
+Relationship to Prior Conference Work. A preliminary version of this concept appeared as SCGFM [1], which introduced learnable geometric bases as a shared structural reference system. However, SCGFM lacked a predictive map-ping path, requiring computationally expensive, instance-wise Gromov–Wasserstein optimization for every unseen target graph during inference. This work overcomes this bottle-neck by proposing ART , which directly predicts reusable graph–base transport plans. By eliminating iterative target-time alignment, ART accelerates frozen-inference throughput by 44 .2 × –85 .1× over SCGFM on real-world benchmarks. Furthermore, we establish a comprehensive relational-atlas theoretical framework and substantially expand our empirical evaluations with additional baselines, topological perturbation experiments, and scalability analyses. II. R ELATED WORK 
+
+A. Self-Supervised Graph Pre-training 
+
+Self-supervised graph learning exploits unlabeled graph data to learn transferable representations. Contrastive methods such as DGI [21] and GraphCL [22] maximize agreement between related graph views or local–global representations, while masked modeling methods such as GraphMAE [23] recon-struct corrupted node attributes. FUG [24] extends contrastive pre-training across datasets by accommodating node features of different dimensionalities without rebuilding the graph en-coder. These approaches have established effective pre-training paradigms for graph representation learning. Graph foundation models further extend this objective from individual datasets to heterogeneous graph domains, where transferable represen-tations must accommodate substantial variations in topology and node attributes. 
+
+B. Graph Foundation Models 
+
+GFMs aim to acquire reusable knowledge across graph do-mains and downstream tasks [25]. Recent approaches explore different mechanisms for establishing shared representations. GIT [7] unifies node-, edge-, and graph-level tasks through task-trees, while RiemannGFM [12] constructs a structural vocabulary of trees and cycles in Riemannian spaces. For multi-domain transfer, SAMGPT [26] introduces structure tokens and prompting, MDGFM [10] aligns cross-domain topologies, and BRIDGE [11] learns domain-invariant rep-resentations with selective knowledge transfer. For robust downstream adaptation, GRAVER [27] constructs generative graph vocabularies from transferable subgraph patterns, while 3
+
+RAG-GFM [28] externalizes semantic andstructural knowl-edge through retrieval-augmented generation. Complement-ing these multi-domain alignment strategies, transfer-invariant feature modeling [29] maps node attributes with heteroge-neous dimensions into a shared structural space, providing a unified feature interface for general graphs. SCGFM [1] introduced learnable geometric bases and represented het-erogeneous graphs by their GW discrepancies to a shared structural reference system. Building on this structure-centric view, the present work learns a relational atlas together with graph-to-base correspondences, enabling each base to serve simultaneously as a global structural landmark and a local relational reference. 
+
+C. Gromov–Wasserstein Learning and Amortized Transport 
+
+Optimal transport (OT) compares probability measures through transport couplings, with entropic regularization en-abling efficient Sinkhorn optimization [16]. GW distance extends this principle to objects described by intrinsic pair-wise relations [13], and has been generalized to weighted networks [14]. GW-based methods have been applied to struc-tured graph comparison through Fused GW [30] and to joint graph matching and node embedding [15]. These formulations typically optimize transport separately for individual problem instances. Meta OT [17] instead learns to amortize repeated OT problems across input measures. ART adopts this amortization principle for relational graph matching: it predicts feasible graph-to-base couplings whose relational energies define atlas coordinates, while the same couplings support downstream feature recoding. III. P RELIMINARIES 
+
+Problem Setup. Let G ∼ P denote a graph drawn from the task domain. Each graph provides a finite node set V , an internal pairwise relation, and optional node attributes X ∈
+
+RN ×df . Throughout, N = |V | denotes graph size, and βk
+
+denotes the k-th relational geometric base, where K bases and M roles per base. We use Bk for the relation matrix of 
+
+βk, a superscript ∗ for an exact relational optimum, and a hat for an amortized prediction. 
+
+A. Relational problem formulation 
+
+Definition 1 (Finite measured relational structure) . A finite measured relational structure is a triplet G = (V, A, μ G),where A : V × V → [0 , 1] is a symmetric relation satisfying 
+
+A(i, i ) = 0 , and μG is a probability measure on V . Finite metric-measure spaces arise when A additionally satisfies the triangle inequality; normalized adjacency and kernel relations are included without requiring that condition. For graph G, we use the degree-smoothed measure 
+
+μG(i) = deg( i) + ϵu
+
+P 
+
+> j∈V
+
+[deg( j) + ϵu] , (1) where deg( i) denotes the degree of node i ∈ V , and ϵu is a small positive constant for numerical stability. Each relational geometric base uses the uniform measure 
+
+βk = ([ M ], B k, ν ), [M ] := {1, . . . , M }, (2) where Bk ∈ [0 , 1] M ×M is a symmetric relation matrix satisfy-ing Bk(a, a ) = 0 , and νa = 1 
+
+> M
+
+, a ∈ [M ]. G and βk may have different cardinalities; their comparison depends only on their internal relations and probability measures. For two measured relational structures G = ( V, A, μ G) and G′ = ( V ′, A ′, μ G′ ),let 
+
+Π( μG, μ G′ ) = {T ∈ R|V |×| V ′| 
+
+> +
+
+: T 1 = μG, T ⊤1 = μG′ } (3) be the set of coupling with prescribed marginals. For any T ∈
+
+Π( μG, μ G′ ), define its squared relational distortion as 
+
+E(A, A ′, T ) = X
+
+> i,j,m,n
+
+(Aij − A′
+
+> m,n
+
+)2Tim Tjn . (4) The corresponding relational GW discrepancy is 
+
+d(G, G ′) = 
+
+r
+
+min    
+
+> T∈Π( μG,μ G′)
+
+E(A, A ′; T ). (5) 
+
+Proposition 1 (Relational graph geometry) . Let d be the relational GW discrepancy defined in Eq. (5) . Then d is finite and invariant under node relabeling. Modulo zero-discrepancy equivalence, it defines a metric on X , which contains both input graphs and relational bases. B. Task-domain premise and finite atlas 
+
+Assumption 1 (Total boundedness of the task support) . Let 
+
+X0 = supp( P) ⊆ X be the support of the task graph distribution, equipped with the relational GW metric d defined in Eq.(5). We assume that (X0, d ) is totally bounded. Equiva-lently, at every resolution, X0 can be covered by finitely many relational neighborhoods. 
+
+Definition 2 (Finite relational atlas) . A K-base relational atlas is a finite collection 
+
+A = {β1, . . . , β K } ⊆ X . (6) Its covering radius over X0 and its induced ideal coordi-nate are ϵA := sup G∈X 0 min 1≤k≤K d(G, β k), q ∗A(G) := (d(G, β k)) Kk=1 . We write q∗ when A is clear from context. 
+
+Theorem 1 (Finite-atlas coordinate fidelity) . Let A be any finite atlas with covering radius ϵA over X0. Then, for any 
+
+G, G ′ ∈ X 0,
+
+d(G, G ′) − 2ϵA ≤ ∥ q∗A(G) − q∗A(G′)∥∞ ≤ d(G, G ′) (7) Theorem 1 establishes the geometric role of a finite re-lational atlas. The ideal coordinate q∗A(G) is non-expansive with respect to the relational discrepancy, while its pairwise information loss is controlled by the realized atlas radius ϵA.Thus, a sufficiently representative finite atlas provides a shared structural coordinate system for heterogeneous graphs. All proofs and additional theoretical details are provided in the supplementary material. The above analysis considers ideal coordinates derived from exact relational matching. In practice, however, solving a separate coupling optimization for every graph–base pair is computationally prohibitive. SCGFM-ART therefore adopts an amortized coupling predictor to approximate the optimal alignment efficiently. 4Stage I: Pretraining (Amortized Relational Atlas Learning) 
+
+1. Dual Structural Encoding     
+
+> Graph 𝐺 𝑔 = (𝐴 𝑔 , 𝑋 𝑠 )Node Embedding 𝑈 𝑔
+> [𝑁 × 𝐷 ℎ]
+
+2. ART Coupling Prediction 
+
+> Scaled Dot -Product + Sinkhorn
+
+3. Energy & Coverage Optimization    
+
+> Row -Wise Soft -Min Coverage
+> ℓmean (𝐺 𝑔 ) = −𝜏 𝑚 𝑙𝑜𝑔 1𝐾 ෍𝑘=1 𝐾
+> exp − 𝑒 𝑔𝑘
+> 𝜏 𝑚
+> Minimizes worst -case distance to the Atlas
+> Target Graph
+> 𝐺 = (𝐴, 𝑋)
+
+Stage II: Frozen Transfer 
+
+Frozen Pretrained SCGFM -ART       
+
+> Atlas Coordinate
+> 𝒒 𝑮 = [ 𝒆 𝟏 ,𝒆 𝟐 , … , 𝒆 𝑲 ]
+> Coupling Mixing
+> ෠𝑇 mix = ෍ 𝑘=1
+> 𝐾
+> 𝑤 𝑘 ෠𝑇 𝑘
+> Responsibilities
+> 𝑤(𝐺) = Softmax(− 𝑞(𝐺) 𝜏 𝐸
+> )
+
+Final Representation 
+
+𝒛(𝑮) = [𝒒(𝑮) || 𝐯𝐞𝐜(𝑯(𝑮))]  𝐻(𝐺) = 𝑁 ෠ 𝑇 mix (𝐺) ⊤𝑋      
+
+> Feature Recoding
+> Atlas { 𝐵 𝑘 }
+> [𝑀 × 𝑀] × 𝐾 Atlas { 𝐵 𝑘 }
+> [𝑀 × 𝑀] × 𝐾
+> Role
+> Embedding { 𝑅 𝑘 }
+> [𝑀 × 𝐷 ℎ] × 𝐾
+> Atlas { 𝐵 𝑘 }
+> [𝑀 × 𝑀] × 𝐾
+> Atlas { 𝐵 𝑘 }
+> [𝑀 × 𝑀] × 𝐾
+> Atlas { 𝐵 𝑘 }
+> [𝑀 × 𝑀] × 𝐾
+> Transport
+> Plan {෡ 𝑻 𝒌 }[𝑁 × 𝑀] × 𝐾
+> Transport Plan {෡ 𝑻 𝒌 }[𝑁 × 𝑀] × 𝐾
+> Relational Energy
+> 𝒆 𝒈 = [𝒆 𝒈𝟏 , 𝒆 𝒈𝟐 , … , 𝒆 𝒈𝑲 ]
+> [𝟏 × 𝑲]
+> Shared
+> GNN
+> encoder
+> Shared
+> Base
+> Encoder
+> Graph
+> Classification
+> Node
+> Classification
+
+· · ·  
+
+> 𝑒 𝑔𝑘 = ℰ(𝐴 𝑔 , 𝐵 𝑘 ; ෠ 𝑇 𝑘 )
+
+Fig. 2. Overview of SCGFM-ART. Stage I: Pretraining . Given an input graph, a structure-only GNN encodes normalized degree features Xs, while a shared base encoder embeds the learnable relational atlas. For each graph–base pair, ART predicts a feasible coupling through scaled dot-product and Sinkhorn projection, and evaluates the corresponding relational energy. The resulting graph–base energy matrix is optimized by row-wise soft-min mean coverage to jointly learn the atlas and ART. Stage II: Frozen Transfer . The pretrained model directly produces target couplings and energies. Energy-derived responsibilities are used to mix graph–base couplings, while the square-root energies form the atlas coordinate. Node attributes are transported to the shared base-role space via H(G) = N bT ⊤
+
+> mix
+
+X, and the final representation (z(G) = [ q(G)∥ vec( H(G))]) is used for downstream graph- and node-level tasks. 
+
+IV. M ETHOD 
+
+A. Overview 
+
+We propose SCGFM-ART , a Structure-Centric Graph Foundation Model based on Amortized Relational Transport. As illustrated in Fig. 2, SCGFM-ART learns shared relational atlas from unlabeled graph structures, predicts graph-to-base couplings via a ART module, and constructs transferable representations from the resulting relational coordinates and transport-conditioned features. 
+
+B. Amortized Relational Transport 
+
+The ART module amortizes relational matching across graphs and bases. It takes structure-only graph embeddings and learned base-role embeddings as input, predicts all graph-to-base couplings through shared compatibility scores and Sinkhorn projection, and converts the resulting relational en-ergies into atlas coordinates. This feed-forward construction avoids per-sample GW outer optimization while preserving the prescribed graph and base marginals. For observed graphs, A
+
+is the loop-free binary adjacency relation and is stored as a coalesced edge list E throughout the ART computation. 
+
+Structure-only Graph Encoder. For a graph G =(V, A, μ G), SCGFM-ART adopts normalized node degree as the only structural node-wise feature: 
+
+Xs(i) = deg( i)max j∈V deg( j) ∨ 1 , Xs ∈ RN (8) A two-layer GIN [34] shared across graph domains maps Xs
+
+to node embeddings: 
+
+U = GIN( A, X s) ∈ RN ×Dh (9) SCGFM-ART instantiates the finite atlas in Definition 2 with K learnable kernel relational geometric bases. For the 
+
+k-th base, let Zk ∈ RM ×M be an unconstrained trainable parameter matrix. Its entries are independently initialized from the standard normal distribution, Zk(a, b ) ∼ N (0 , 1) . Let 
+
+σ(t) = (1 + exp( −t)) −1 denote the element-wise sigmoid function, while Hollow( S) sets the diagonal of S to zero and leaves its off-diagonal entries unchanged. The relation matrix of the k-th base is parameterized as 
+
+Bk = Hollow 
+
+
+
+σ
+
+ Zk + Z⊤
+
+> k
+
+2
+
+ 
+
+. (10) Symmetrization, element-wise sigmoid, and diagonal removal make Bk a bounded, symmetric, hollow relation. Each base uses the uniform measure ν specified in Definition 1. Each 
+
+Bk is represented on the fixed index set [M ]. Its a-th row, 
+
+Bk(a, :) , records the relations between base node a and all base nodes. A shared MLP is applied row-wise to every base matrix: 
+
+Rk(a, :) = BaseEnc  Bk(a, :) , Rk ∈ RM ×Dh . (11) Given the graph-node embeddings U and the base-role embeddings Rk, we construct the graph-to-base compatibility logits using scaled dot-product similarity 
+
+Lk = (U W G)( RkWB )⊤
+
+√Dh
+
+∈ RN ×M (12) where WG, W B ∈ RDh×Dh are learnable linear projections shared across all graph–base pairs. The proposal logits are subsequently projected onto the transport polytope Π( μG, ν )
+
+using log-domain Sinkhorn normalization: 
+
+bTk = Sinkhorn( Lk; μG, ν ) ∈ Π( μG, ν ). (13) 5
+
+ART employs a single cross-transport stage. The shared en-coders provide the two structural representations, scaled dot-product compatibility constructs the pairwise proposal, and Sinkhorn enforces the prescribed marginals. 
+
+Lemma 1 (Feasibility and permutation equivariance of ART) .
+
+Assume that the proposal kernel and both marginals are strictly positive. Then the Sinkhorn limit bTk satisfies 
+
+bTk1M = μG, bT ⊤ 
+
+> k
+
+1N = ν. (14) 
+
+Moreover, for any node permutation matrix P ∈ { 0, 1}N ×N ,
+
+bTk(P AP ⊤, P μ G) = P bTk(A, μ G). (15) Therefore, the resulting graph–base relational energy is invariant under node permutations. For any feasible coupling T , the relational energy admits the compact form 
+
+E(A, B ; T ) = X
+
+> i,j
+
+A2 
+
+> ij
+
+μiμj + X
+
+> a,b
+
+B2
+
+> ab
+
+νaνb − 2⟨AT, T B ⟩F .
+
+(16) Eq. (16) is algebraically equivalent to the squared relational distortion defined in Eq. (4), replacing the explicit four-index summation with matrix operations. For the sparse binary input relation, the graph-side terms can be evaluated exactly through edge-wise reductions, without materializing a dense N × N
+
+relation matrix. ART replaces the exact graph-to-base optimization with the amortized coupling bTk. For the k-th base, we define 
+
+e∗
+
+> k
+
+(G) := min   
+
+> T∈Π( μG,ν )
+
+E(A, B k; T ) = d2(G, β k), (17) 
+
+ek(G) := E(A, B k; bTk) ≥ e∗
+
+> k
+
+(G), qk(G) := pek(G).
+
+(18) Since pe∗
+
+> k
+
+(G) = d(G, β k), the exact energies recover the ideal atlas coordinate q∗A(G) defined in Definition 2. Let 
+
+q(G) := ( qk(G)) Kk=1 , η(G) := ∥q(G) − q∗A(G)∥∞, where 
+
+η(G) measures the worst-case discrepancy between the amor-tized and ideal coordinates over the relational atlas. 
+
+Corollary 1 (Amortized Atlas Coordinate Fidelity) . Let A
+
+be a finite relational atlas with covering radius ϵA over X0.For the ART coordinate q(G) defined above, any G, G ′ ∈ X 0
+
+satisfy 
+
+d(G, G ′) − 2ϵA − η(G) − η(G′) ≤ ∥ q(G) − q(G′)∥∞
+
+≤ d(G, G ′) + η(G) + η(G′).
+
+(19) Corollary 1 separates two sources of distortion in the practical atlas representation. The term ϵA reflects the finite resolution of the learned atlas, whereas η(G) quantifies the additional coordinate error introduced by amortized transport. Therefore, ART preserves the relational-coordinate fidelity of the ideal atlas up to the combined effects of atlas resolution and amortization error. 
+
+C. Learning the Relational Atlas 
+
+The preceding analysis characterizes the representation in-duced by a given relational atlas and quantifies the additional distortion introduced by amortized coupling prediction. It re-mains to determine how the atlas and the ART predictor can be learned jointly from unlabeled graphs. We address this prob-lem through a relational coverage objective that encourages each graph to admit at least one low-energy correspondence to the shared atlas. 
+
+Mean Relational Coverage For a graph Gg in the current mini-batch and each relational base βk, we define egk =
+
+E(Ag , B k; bTgk ). The normalized soft-min coverage objective for Gg is 
+
+ℓmean (Gg ) = −τm log 
+
+"
+
+1
+
+K
+
+> K
+
+X
+
+> k=1
+
+exp 
+
+
+
+− egk 
+
+τm
+
+#
+
+, (20) where τm is a temperature parameter. The corresponding mini-batch objective is 
+
+Lmean = 1
+
+|I bat |
+
+X
+
+> g∈I bat
+
+ℓmean (Gg ), (21) where Ibat is the set of graphs per mini-batch. We optimize the atlas and ART parameters jointly using Lmean .The soft-min objective provides a differentiable approxima-tion to nearest-base assignment while allowing all bases to receive gradients. However, the energies used in Eq. (20) are evaluated at amortized couplings rather than exact relational optima. We therefore analyze how closely the optimized objective reflects the ideal finite-atlas coverage. 
+
+Theorem 2 (Amortized Coverage Bound) . Define the ideal and amortized nearest-base energies as 
+
+m∗(G) = min  
+
+> k
+
+e∗
+
+> k
+
+(G), bm(G) = min  
+
+> k
+
+ek(G). (22) 
+
+Let K∗(G) = arg min k e∗
+
+> k
+
+(G) denote the set of ideal nearest bases, and define the ART excess over these bases as 
+
+∆( G) = min  
+
+> k∈K ∗(G)
+
+[ek(G) − e∗
+
+> k
+
+(G)] ≥ 0. (23) 
+
+Because bTk implies ek(G) ≥ e∗
+
+> k
+
+(G), the normalized soft-min objective satisfies 
+
+m∗(G) ≤ ℓmean (G) ≤ m∗(G) + ∆( G) + τm log K. (24) Theorem 2 directly connects the trainable objective to ideal finite-atlas coverage. The relaxation gap is determined by two terms: the graph-dependent coupling excess ∆( G) introduced by amortized transport and the temperature-dependent soft-min approximation term τm log K.
+
+Corollary 2 (Finite-Atlas Coverage Consistency) . Let ϵA
+
+denote the covering radius of atlas A over the task support. For every G ∈ X 0: m∗(G) ≤ ϵ2
+
+> A
+
+. Combining this relation with Theorem 2 gives 
+
+0 ≤ ℓmean (G) ≤ ϵ2 
+
+> A
+
++ ∆( G) + τm log K. (25) Corollary 2 closes the connection between the ideal finite-atlas geometry and the objective optimized in practice. The 6
+
+achievable coverage is governed by three factors: the atlas radius ϵA, the amortized alignment excess ∆( G), and the soft-min relaxation τm log K.
+
+D. ART-full Representation for Transfer 
+
+Together, Theorem 1, Corollary 1, and Theorem 2 connect the learned SCGFM-ART representation to the underlying relational geometry: the finite atlas provides stable structural coordinates, while ART approximates graph–base alignment with controlled error under a tractable coverage objective. Beyond scalar relational energies, the learned couplings en-code fine-grained node-to-role correspondences between each graph and the shared atlas. These correspondences are directly reused to construct transport-conditioned feature representa-tions for downstream transfer. 
+
+1) Base Responsibility and Coupling Mixture: Given a target graph G, the frozen SCGFM-ART model produces the graph-to-base energies {ek(G)}Kk=1 , the corresponding atlas coordinate q(G), and the amortized couplings { bTk}Kk=1 . We convert the relational energies into base responsibilities as 
+
+wk(G) = exp ( −ek(G)/τ E )
+
+PKℓ=1 exp ( −eℓ(G)/τ E ) , (26) where τE > 0 is the responsibility temperature. The atlas coordinate q(G) retains the graph-to-base relational responses, whereas w(G) = ( wk(G)) Kk=1 determines the contribution of individual bases to feature recoding. Since all relational bases are defined on the common role index set [M ], their couplings can be combined directly: 
+
+Tmix (G) = 
+
+> K
+
+X
+
+> k=1
+
+wk(G) bTk ∈ Π( μG, ν ). (27) 
+
+Tmix (G) aggregates the corresponding node-to-role mappings for downstream feature recoding. 
+
+2) Transport-Conditioned Feature Recoding: The coupling mixture maps the node attributes X into the common base-role space: 
+
+H(G) = N T mix (G)⊤X ∈ RM ×df , (28) Graphs with different numbers of nodes are represented by a fixed number of M relational roles while retaining their graph-specific node attributes. 
+
+3) Final Graph Representation: The final ART-full repre-sentation concatenates the relational atlas coordinate with the vectorized transport-conditioned feature map: 
+
+z(G) = q(G)∥ vec  H(G) . (29) ART-full is invariant to permutations of the input nodes. Specifically, for any permutation matrix P acting on V , let 
+
+G′ = ( V, P AP ⊤, P μ G) denote the corresponding relabeled graph. Then z(G′) = z(G). The proof follows from the permutation equivariance of the ART couplings in Lemma 1.              
+
+> TABLE I LEADING PER -GRAPH COMPUTATIONAL COMPLEXITY OF SCGFM-ART.
+> Module Time Complexity
+> Sparse graph encoder O(N+|E|)
+> Base encoder O(KM 2)
+> Compatibility and Sinkhorn O(SKN M )
+> Sparse relational energy O K(|E|M+N M 2)
+
+E. Computational Complexity 
+
+We analyze the computational cost with fixed Sinkhorn iterations. For the sparse binary adjacency matrix A, the relational-energy computation uses the exact identities 
+
+(A bTk)( i, a ) = X
+
+> j:( i,j )∈E
+
+bTk(j, a ), (30) 
+
+X
+
+> i,j
+
+A2 
+
+> ij
+
+μG(i)μG(j) = X
+
+> (i,j )∈E
+
+μG(i)μG(j). (31) These identities enable exact sparse evaluation without O(N 2)
+
+relation storage. Treating the hidden dimension Dh and the number of GIN layers as constants, the leading per-graph computational costs are summarized in Table I. The resulting per-graph forward complexity is 
+
+O  N + |E| + KM 2 + SKN M + K|E|M + KN M 2 .
+
+(32) For fixed architectural parameters K, M , S, and Dh, the forward complexity scales linearly with the sparse graph size, i.e., O(N + |E|). Unlike iterative GW solvers, ART amortizes graph-to-base matching into a fixed-depth predictor followed by S Sinkhorn iterations, eliminating sample-specific outer optimization. The per-graph memory complexity is 
+
+O  N + |E| + KN M + KM 2 , (33) dominated by the sparse graph representation, graph-to-base couplings, and relational bases. In comparison, SCGFM in-curs ( O  KL (N log N + M log M ) + K2 + N M · iter ) in-ference cost due to iterative GW feature projection. ART removes this sample-specific outer optimization and achieves (O(N + |E|)) scaling for fixed architectural parameters. V. E XPERIMENTS 
+
+We organize the empirical study into five complementary tiers to evaluate SCGFM-ART from transfer performance to mechanism and scalability. 
+
+A. Cross-Domain Few-Shot Transfer 
+
+Experimental protocol. We evaluate all methods under a unified 5-shot cross-domain transfer protocol Each class provides five support samples and at most 50 disjoint queries, with results averaged over 50 fixed episodes. All methods share identical support/query splits, and normalization is fitted only on the support set. For graph classification, we use NCI1 [40], [41], BZR [42], COLLAB, IMDB-BINARY [44], and PROTEINS [43] for 7
+
+TABLE II CROSS -DOMAIN 5-SHOT GRAPH CLASSIFICATION RESULTS USING A PROTOTYPE CLASSIFIER . A CCURACY (%) IS REPORTED AS MEAN ± STANDARD DEVIATION OVER 50 FEW -SHOT EPISODES . B EST RESULTS ARE SHOWN IN BOLD .
+
+Method NCI1 BZR COLLAB IMDB-B PROTEINS COLORS-3 ogbg-molhiv Avg. Rank ↓
+
+GCN [32] 52 .86 ± 5.41 58 .66 ± 9.96 54 .08 ± 7.27 53 .32 ± 9.61 49 .96 ± 5.97 13 .12 ± 1.86 52 .64 ± 7.22 47.81 6.71 GAT [33] 52 .50 ± 6.30 59 .54 ± 9.96 44 .39 ± 3.86 51 .94 ± 5.19 59 .40 ± 9.01 11 .30 ± 1.35 54 .12 ± 7.33 47.60 7.14 GIN [34] 50 .50 ± 6.51 49 .40 ± 4.04 50 .79 ± 9.42 60 .26 ± 8.81 55 .18 ± 6.86 13 .13 ± 2.14 51 .94 ± 5.55 47.31 8.00 GraphCL [22] 59 .24 ± 9.47 58 .36 ± 8.79 46 .76 ± 5.88 49 .46 ± 5.37 62 .10 ± 9.02 9.89 ± 1.35 54 .98 ± 8.44 48.68 6.43 GraphMAE [23] 50 .34 ± 6.28 51 .28 ± 5.11 63 .71 ± 6.11 58 .10 ± 10 .08 52 .80 ± 7.00 12 .93 ± 1.46 54 .08 ± 7.64 49.03 7.00 GraphACL [35] 50 .80 ± 5.36 58 .18 ± 8.88 61 .31 ± 5.15 54 .46 ± 6.86 52 .18 ± 5.66 14 .08 ± 1.84 51 .54 ± 6.43 48.94 7.14 GraphGlue [36] 50 .90 ± 4.94 55 .98 ± 7.18 56 .96 ± 7.02 51 .86 ± 9.71 57 .32 ± 7.33 12 .68 ± 1.82 52 .44 ± 7.45 48.31 8.14 GCOPE [37] 58 .00 ± 7.27 53 .16 ± 7.91 45 .40 ± 6.12 48 .40 ± 4.81 59 .84 ± 10 .58 9.61 ± 1.30 53 .92 ± 8.36 46.90 8.71 GiT [7] 50 .32 ± 5.17 59 .88 ± 11 .02 56 .55 ± 6.61 51 .92 ± 7.44 54 .80 ± 7.66 12 .89 ± 1.99 50 .74 ± 5.83 48.16 8.57 MDGMIX [38] 51 .16 ± 3.72 53 .46 ± 6.77 56 .39 ± 6.36 52 .10 ± 9.35 52 .48 ± 6.16 10 .77 ± 2.02 51 .82 ± 4.98 46.88 9.29 RiemannGFM [12] 51 .88 ± 6.03 52 .42 ± 4.90 50 .77 ± 4.56 52 .12 ± 5.42 60 .30 ± 7.13 11 .26 ± 1.36 53 .66 ± 5.40 47.49 8.00 SCGFM [1] 57 .98 ± 8.04 56 .82 ± 6.97 63 .16 ± 5.67 52 .92 ± 6.46 65 .76 ± 5.82 23 .11 ± 2.86 54 .38 ± 8.51 53.45 3.57 
+
+SCGFM-ART 56 .30 ± 6.73 62 .36 ± 6.60 66 .33 ± 3.39 52 .96 ± 8.43 61 .06 ± 9.67 25 .31 ± 2.72 55 .40 ± 7.35 54 .25 2.29 
+
+TABLE III CROSS -DOMAIN 5-SHOT NODE CLASSIFICATION RESULTS USING A LINEAR CLASSIFIER . A CCURACY (%) IS REPORTED AS MEAN ± STANDARD DEVIATION OVER 50 FEW -SHOT EPISODES . B EST RESULTS ARE SHOWN IN BOLD .
+
+Method Cora CiteSeer PubMed Computers Photo Reddit ogbn-arxiv Avg. Rank ↓
+
+GCN [32] 60 .16 ± 3.67 34 .32 ± 4.27 52 .72 ± 7.52 70 .38 ± 2.89 78 .65 ± 3.73 66 .45 ± 1.73 29 .52 ± 1.10 56.03 8.43 GAT [33] 61 .89 ± 4.37 37 .03 ± 5.23 62 .61 ± 7.50 61 .74 ± 3.13 67 .50 ± 3.87 19 .39 ± 1.12 28 .85 ± 1.62 48.43 8.86 GIN [34] 59 .68 ± 4.36 33 .99 ± 4.27 48 .59 ± 6.72 59 .68 ± 2.74 19 .91 ± 2.02 32 .72 ± 1.97 14 .94 ± 1.13 38.50 11.43 GraphCL [22] 63 .24 ± 3.72 37 .26 ± 4.92 62 .15 ± 7.61 70 .72 ± 3.00 79 .00 ± 3.66 69 .44 ± 1.99 31 .44 ± 1.55 59.04 6.00 GraphMAE [23] 63 .59 ± 4.25 38 .14 ± 5.74 62 .07 ± 7.97 74 .82 ± 2.53 80 .28 ± 2.85 74 .30 ± 1.69 31 .50 ± 1.52 60.67 4.00 GraphACL [35] 64 .91 ± 4.10 37 .73 ± 4.52 42 .36 ± 5.26 74 .09 ± 2.93 81 .87 ± 3.41 77 .26 ± 1.43 31 .89 ± 1.60 58.59 4.57 GraphGlue [36] 57 .78 ± 4.31 34 .84 ± 4.50 52 .33 ± 6.15 67 .22 ± 3.12 72 .17 ± 4.32 53 .02 ± 1.74 21 .59 ± 1.32 51.28 10.00 GCOPE [37] 62 .28 ± 4.61 38 .68 ± 4.76 58 .17 ± 8.83 72 .13 ± 2.40 79 .02 ± 3.46 74 .14 ± 1.59 30 .28 ± 1.47 59.24 5.43 GiT [7] 62 .70 ± 4.69 35 .04 ± 4.78 51 .61 ± 5.90 71 .22 ± 2.90 74 .75 ± 4.06 55 .91 ± 1.71 25 .58 ± 1.43 53.83 8.29 MDGMIX [38] 40 .06 ± 4.34 27 .19 ± 4.11 36 .56 ± 5.11 47 .38 ± 4.09 52 .04 ± 3.95 22 .90 ± 1.47 7.68 ± 1.01 33.40 12.71 RiemannGFM [12] 57 .37 ± 4.65 37 .30 ± 4.81 46 .29 ± 6.81 72 .00 ± 3.47 79 .23 ± 3.89 66 .99 ± 1.58 23 .62 ± 1.59 54.69 8.14 SCGFM [1] 67 .55 ± 4.13 40 .31 ± 4.48 66 .97 ± 7.46 75 .76 ± 3.56 81 .69 ± 3.40 83 .76 ± 1.11 33 .65 ± 1.69 64.24 2.00 
+
+SCGFM-ART 68 .14 ± 3.84 41 .62 ± 4.18 66 .48 ± 5.78 76 .16 ± 3.00 83 .22 ± 2.43 84 .00 ± 1.03 35 .46 ± 1.42 65 .01 1.14 
+
+leave-one-dataset-out (LODO) evaluation, while COLORS-3 [39], [45] and ogbg-molhiv [46], [47] are evaluated using the checkpoint jointly pretrained on all five source datasets. We use a prototype classifier [31] as the primary graph-level readout and report Accuracy as the main metric. For node classification, we analogously perform LODO evaluation on Cora, CiteSeer, and PubMed [48], Computers, and Photo [49], with Reddit [50] and ogbn-arxiv [47] as additional unseen targets. Each node is represented by its Per-sonalized Page Rank (PPR) subgraph during pretraining [51]. Since node-feature dimensions vary across datasets and some baselines require a fixed input width, we apply the same fixed Gaussian random projection (seed 42) to all methods, mapping node attributes to 256 dimensions. We use a frozen linear classifier as the primary node-level readout and report Accuracy. 
+
+Baselines. We compare SCGFM-ART with three groups of baselines: (1) conventional GNNs, including GCN [32], GAT [33], and GIN [34]; (2) graph self-supervised learn-ing methods, including GraphCL [22], GraphMAE [23], and GraphACL [35]; and (3) graph foundation models, including GraphGlue [36], GCOPE [37], GiT [7], MDGMIX [38], RiemannGFM [12], and SCGFM [1]. For fair comparison, GCN, GAT, and GIN use three message-passing layers, while methods with a configurable graph encoder use a three-layer GCN backbone. We follow the official implementations and recommended training settings whenever available. 
+
+Graph classification results. As shown in Table II, SCGFM-ART achieves the highest macro-average Proto Accu-racy of 54.25% and the best average rank of 2.29 . Compared with SCGFM, it improves the average accuracy by 0.80 percentage points and reduces the average rank from 3.57 to 2.29, demonstrating more consistent cross-domain transfer across the evaluated graph datasets. 
+
+Node classification results. As shown in Table III, SCGFM-ART achieves the highest macro-average Linear Ac-curacy of 65.01% and the best average rank of 1.14 . It outperforms SCGFM by 0.77 percentage points on average and improves the average rank from 2.00 to 1.14, achieving the best performance on six of the seven target datasets. Overall, the Tier-A results answer: the relational atlas learned by SCGFM-ART yields a frozen representation that re-mains competitive across heterogeneous and previously unseen graph domains. The improvement over SCGFM is particularly reflected in average rank, indicating broader cross-domain competitiveness rather than an improvement confined to a small number of targets. 
+
+B. Core Component Analysis 
+
+We examine which components of SCGFM-ART contribute to the learned representation and how the parameterization of the relational atlas affects downstream performance. We select BZR and PROTEINS as representative graph-level datasets and Cora and Computers as representative node-level datasets. 8BZR PROTEINS Cora Computers 20 40 60 80         
+
+> Accuracy (%)
+> (a) Representation
+> qvec( H)ART-full
+> BZR PROTEINS Cora Computers 55 60 65 70 75 80
+> Accuracy (%)
+> (b) Atlas Parameterization
+> Frozen Tied Learnable
+> Fig. 3. Component analysis of SCGFM-ART on representative graph- and node-level datasets. Bars denote mean accuracy over five matched pretraining seeds, and error bars denote standard deviations.
+
+All component variants follow the same unsupervised pre-training objective and downstream protocol used by the full model. Each pretrained model is evaluated over the same 50 deterministic 5-shot episodes and across 5 different random seeds. 
+
+Representation decomposition. SCGFM-ART combines two complementary quantities: the relational atlas coordi-nate q(G) and the transport-conditioned feature representation 
+
+H(G). To isolate their contributions without introducing addi-tional optimization variation, we extract three representations from the same frozen full-model checkpoint for each seed: 
+
+q(G), vec( H(G)) , [q(G)∥ vec( H(G))] .As shown in Fig. 3, H carries most transferable information on feature-rich targets. Compared with the coordinate-only representation, full model improves accuracy by 7.01, 23.50, and 50.12 points, respectively, with particularly large gains on node classification. In contrast, q contributes more at the graph level: adding it to vec( H) raises the graph-level average from 61.78% to 62.32%, including a 1.02-point gain on PROTEINS. Notably, PROTEINS favors structural information, where q
+
+alone reaches 63.04%, 1.76 points above ART-full. These results suggest that q captures compact global structure, while 
+
+H primarily encodes role-conditioned attribute information. 
+
+Atlas parameterization . For the relational atlas, indepen-dent learnable bases achieve the best graph-level average of 62.32%, compared with 61.54% for frozen random bases and 61.68% for a tied atlas. Sharing a single relational kernel across all K slots reduces accuracy by 2.05, 0.54, and 1.20 points on BZR, Cora, and Computers, respectively, supporting the benefit of multiple relational references. On the two node-level targets, however, frozen and learned independent atlases perform almost identically (72.19% vs. 72.16%), indicating 4 8 12 16 32 8 16 32 64 128 60.0 62.5 65.0 67.5 70.0 72.5 75.0 77.5          
+
+> Accuracy (%)
+> BZR PROTEINS Computers Cora
+> Ksweep
+> Msweep Default
+> Fig. 4. Sensitivity of SCGFM-ART to the atlas capacity on representative graph- and node-level datasets. Solid and dashed curves show the effects of varying the number of bases ( K) and the base size ( M), respectively. Dotted vertical lines mark the default configuration, K= 16 and M= 32 .
+
+that graph-to-role transport already provides strong structural routing in feature-rich settings. 
+
+Atlas capacity. We further examine the sensitivity to the number of relational bases K and the number of roles per base M . Fig. 4 varies one dimension while fixing the other at its default value, K = 16 and M = 32 . Graph-level performance is evaluated on BZR and PROTEINS, and node-level performance on Cora and Computers. Fig. 4 shows that graph-level transfer is more sensitive to atlas capacity than node-level transfer. Increasing K improves PROTEINS while leaving BZR largely unchanged, whereas both Cora and Computers remain stable over the evaluated range. This pattern is consistent with K primarily controlling the breadth of the structural reference system: additional bases can increase coverage of heterogeneous graph structures, while providing limited additional benefit when downstream discrim-ination is already dominated by transported node attributes. The effect of M is qualitatively different. Increasing the number of roles does not yield monotonic improvements: BZR reaches its highest accuracy at an intermediate resolution, while PROTEINS gradually decreases as M becomes large. A larger role space increases the resolution and degrees of freedom of each graph–base correspondence, but the additional capacity need not translate into more informative transport when the available structural signal is limited. The node-level results are again comparatively insensitive to M , indicating that SCGFM-ART does not rely on a narrowly tuned role cardinality for these targets. Overall, K and M are not interchangeable capacity param-eters. K mainly controls the breadth of the relational atlas, whereas M controls the granularity of individual graph–base correspondences. The default setting (K, M ) = (16 , 32) lies in a stable operating region across both graph- and node-level tasks, while avoiding the additional computation associated with unnecessarily large atlases or role spaces. 9                       
+
+> TABLE IV COMPARISON OF AMORTIZED AND ITERATIVE RELATIONAL ALIGNMENT ON BZR, COLLAB, C ORA ,AND COMPUTERS .
+> Method ρTop-1 (%) Acc. (%) ms/pair Speedup
+> ART 0.703 41.0 68 .30 3.04 24 .3×
+> ART + 10-step refinement 0.997 99 .467.09 4.49 16 .4×
+> Iterative reference 1.000 100.0 67.09 73.79 1.0×
+
+C. Amortized Relational Alignment 
+
+Experimental protocol. We evaluate whether ART can replace iterative graph–base alignment while preserving the utility of the resulting representations. Experiments are con-ducted on BZR, COLLAB, Cora, and Computers using the corresponding frozen LODO checkpoints. For each target dataset, we stratify 128 target objects and evaluate all K = 16 
+
+graph–base pairs. We compare three inference schemes: direct ART prediction, ART followed by 10 iterative refinement steps, and an iterative relational solver used as the numerical reference. The reference solver runs for 200 outer iterations with at most 500 Sinkhorn iterations per outer step; three deterministic initializations are evaluated for each graph–base pair, and the solution with the lowest relational energy is retained. Alignment consistency is measured by the Spearman correlation between the K graph–base energy responses and by agreement on the minimum-energy base. We further recon-struct the downstream representation from the corresponding couplings and report classification accuracy under the same 5-shot protocol, together with end-to-end latency per graph–base pair. 
+
+Results. Table IV shows that direct ART reduces the aver-age alignment latency from 73.79 to 3.04 ms per graph–base pair, yielding a 24 .3× speedup over the iterative reference. Despite moderate agreement with the reference ( ρ = 0 .703 
+
+and 41.0% Top-1 agreement), ART achieves the highest down-stream accuracy of 68.30%, exceeding the iterative reference by 1.21 percentage points on average. A small amount of iterative refinement nearly recovers the numerical reference: 10 refinement steps increase ρ from 0.703 to 0.997 and Top-1 agreement from 41.0% to 99.4%, while retaining a 16 .4× speedup. Its downstream accuracy, however, decreases to 67.09%, matching that of the iterative reference. The same pattern is visible across individual targets. Direct ART improves over the reference by 2.76 and 2.02 percentage points on BZR and COLLAB, respectively, while the differences on Cora and Computers remain within 0.2 points. These results show that reproducing the numerical reference more closely does not translate into higher downstream accu-racy in this setting. Direct ART provides the strongest trans-fer performance at the lowest inference cost, whereas short iterative refinement offers an optional route to near-reference alignment when higher numerical agreement is required. 
+
+D. Structure-Conditioned Representation and Atlas Interpre-tation 
+
+Experimental protocol. We examine the structural infor-mation retained by the frozen ART representation on un-seen target graphs and how this information is organized across the learned relational atlas. Experiments use the LODO checkpoints for BZR, COLLAB, Cora, and Computers, with 128 stratified target objects sampled from each dataset. The analysis consists of two complementary diagnostics. First, we apply controlled topology perturbations while preserving node degrees and attributes, and measure the resulting changes in atlas coordinates, graph-to-base couplings, and transport-conditioned features. Second, we examine how the K rela-tional bases are utilized across target objects and whether their response profiles remain differentiated. All model parameters are frozen throughout the analysis. 
+
+Controlled topology perturbation. For each target object, we generate perturbed graphs using undirected double-edge swaps with requested rewiring ratios p ∈ { 0, 0.1, 0.2, 0.4, 0.6}.The perturbation preserves the degree of every node and leaves node attributes unchanged, while progressively modifying graph connectivity. We report the realized rewiring ratio and quantify representation changes at three stages of SCGFM-ART: 
+
+∆q = 1 − cos 
+
+
+
+q(G), q (G(p))
+
+
+
+, (34) 
+
+∆T = 1
+
+K
+
+> K
+
+X
+
+> k=1
+
+∥ bTk − bT (p) 
+
+> k
+
+∥F
+
+∥ bTk∥F + ϵ , (35) 
+
+∆H = 1 − cos 
+
+
+
+vec( H(G)) , vec( H(G(p))) 
+
+
+
+, (36) where cos( ·, ·) denotes cosine similarity, and ϵ > 0 is a small constant for numerical stability. The three rewiring repeats are first averaged within each object, after which 95% confidence intervals are computed over the 128 target objects. A structure-independent attribute-pooling representation is evaluated under the same perturbations as a control. 
+
+Perturbation results. Fig. 5 (a) shows that coupling vari-ation increases consistently as progressively more edges are rewired. At the largest realized perturbation, ∆T reaches 
+
+1.197 ± 0.011 on BZR, 0.468 ± 0.044 on COLLAB, 0.841 ±
+
+0.033 on Cora, and 0.847 ± 0.015 on Computers. In contrast, 
+
+∆q remains below 6 × 10 −6 throughout the experiment. The graph-to-base energy responses are therefore considerably more stable under degree-preserving rewiring than the under-lying node-to-role correspondences. The response of H exhibits stronger dataset dependence, even when the corresponding changes in ART couplings are comparable. This behavior is consistent with Eq. (28) where topology perturbations alter the transport assignments encoded by Tmix , while the resulting feature-space variation also de-pends on the distribution of node attributes over the reassigned nodes. Consequently, comparable changes in coupling space can produce markedly different responses in H across target domains. The invariant attribute-pooling control further local-izes this effect to the structure-conditioned redistribution of fixed node attributes. These observations separate two levels of structural infor-mation in SCGFM-ART. The coordinate q provides a stable global response to the relational atlas, whereas the couplings retain substantially finer variation in node-to-role correspon-dence. The latter variation is subsequently reflected in H10 0.0 0.1 0.2 0.4 0.6         
+
+> Realized rewiring ratio
+> 0.0 0.2 0.4 0.6 0.8 1.0 1.2
+> Coupling change  ΔT
+> maxΔ q< 6 × 10 −6
+> (a) Response of graph-to-base couplings
+> BZR COLLAB Cora Computers 0.0 0.1 0.2 0.4 0.6
+> Realized rewiring ratio
+> 0.00 0.05 0.10 0.15 0.20 0.25 0.30 0.35
+> Feature change  ΔH
+> (b) Response of transport-conditioned features
+> Pooling control BZR COLLAB Cora Computers
+> 0.0 0.2 0.4 0.6 0.00 0.02 0.04 0.06
+> Inset
+
+Fig. 5. Response of the frozen ART representation to degree-preserving topology perturbations. The horizontal axis reports the realized rewiring ratio. (a) Relative variation ∆T of graph-to-base couplings. (b) Variation ∆H
+
+of the transport-conditioned feature representation. Error bars denote 95% confidence intervals over 128 target objects after averaging three rewiring repeats within each object. The structure-independent pooling control remains unchanged, while ∆q stays below 6 × 10 −6 across all perturbation levels. 
+
+according to the interaction between the learned transport and target attributes. 
+
+Relational-atlas interpretation. We examine whether the differentiated correspondence behavior observed above is sup-ported by a diverse utilization of the learned atlas. For each target dataset, we compute the average responsibility of base 
+
+k as 
+
+¯wk = 1
+
+|G| 
+
+X
+
+> G∈G
+
+wk(G), (37) and summarize the resulting distribution by the effective number of bases 
+
+Neff = exp −
+
+> K
+
+X
+
+> k=1
+
+¯wk log ¯ wk
+
+!
+
+. (38) For each base, we additionally retain the eight target objects with the largest responsibilities. We measure the mean pair-wise Jaccard overlap between these top-response sets and the number of distinct objects contained in their union. Finally, we compute the maximum total-variation (TV) distance between the responsibility-weighted class composition associated with an individual base and the overall class distribution of the dataset. 
+
+Atlas results. Table V shows that the learned atlas remains broadly utilized across all four target datasets. The effective number of bases are all close to the maximum value K = 16 ,
+
+TABLE V UTILIZATION AND RESPONSE DIFFERENTIATION OF THE LEARNED RELATIONAL ATLAS . Neff DENOTES THE EFFECTIVE NUMBER OF BASES .JACCARD IS THE MEAN PAIRWISE OVERLAP BETWEEN THE TOP -8 
+
+> RESPONSE SETS OF DIFFERENT BASES
+
+, AND UNIQUE IS THE SIZE OF THEIR UNION . M AX TV DENOTES THE LARGEST DEVIATION BETWEEN A BASE -SPECIFIC RESPONSIBILITY -WEIGHTED CLASS COMPOSITION AND THE DATASET -LEVEL CLASS DISTRIBUTION .
+
+Dataset Neff Top-8 Jaccard Unique Max TV 
+
+BZR 16.000 0.053 73 0.0004 COLLAB 15.998 0.046 74 0.0140 Cora 16.000 0.075 60 0.0023 Computers 15.996 0.059 71 0.0051 
+
+indicating that responsibility mass remains distributed across the atlas rather than concentrating on a small subset of bases. The object-level response profiles are considerably more differentiated. The mean pairwise overlap between the top-8 response sets is only 0.046–0.075, while their unions cover 60– 74 of the 128 sampled objects. Thus, similar aggregate utiliza-tion across bases coexists with distinct high-response object sets. The learned atlas consequently maintains broad global participation while preserving base-dependent responses at the level of individual target structures. The class-composition diagnostic provides an additional characterization of this differentiation. The maximum TV distance remains below 0.015 on every dataset, showing that the different response profiles are accompanied by only minor changes in class composition. The learned bases therefore organize relational variation that extends across target classes rather than simply partitioning objects according to down-stream labels. Taken together, the two diagnostics characterize comple-mentary aspects of the ART representation. Degree-preserving perturbations reveal fine-grained structural sensitivity in the graph-to-role couplings beyond the comparatively stable atlas coordinates, while the atlas-level statistics show that these cor-respondences are supported by broadly utilized and differenti-ated relational references. This provides empirical support for the two-part SCGFM-ART construction: q summarizes global graph-to-atlas responses, whereas the learned couplings retain finer structural correspondence that conditions the transported feature representation H.
+
+E. End-to-End Efficiency and Scalability 
+
+Experimental protocol. We examine how amortized rela-tional transport changes the computational profile and scalabil-ity of SCGFM. The controlled synthetic experiment therefore focuses on SCGFM and SCGFM-ART, isolating the effect of replacing the per-instance geometric alignment in SCGFM with amortized graph–base prediction. We evaluate two quan-tities that directly characterize this change: frozen-inference latency and peak training memory. The former measures the transfer-time cost of relational alignment, while the latter measures the additional memory required to maintain and optimize graph–base couplings during atlas learning. For broader computational context, we additionally bench-mark GraphGlue, GCOPE, GiT, MDGMIX, RiemannGFM, 11 32 64 128 256 512 1024 2048 4096                
+
+> Number of nodes N
+> 0.10 1.0 10 100 1000
+> Latency (ms/graph)
+> >4 h
+> (a) Frozen inference latency
+> 279 × faster
+> 974 × faster
+> 32 64 128 256 512 1024 2048 4096
+> Number of nodes N
+> 0.01 0.10 1.0 10
+> Peak allocated memory (GiB)
+> (b) Peak training memory
+> SCGFM SCGFM-ART
+> Fig. 6. Controlled scalability of SCGFM and SCGFM-ART on synthetic sparse graphs with average degree ¯d= 8 . (a) Frozen-inference latency as graph size increases. (b) Peak allocated GPU memory during training.
+
+SCGFM, and SCGFM-ART on COLLAB graphs and Reddit PPR subgraphs. All methods process the same saved graph instances within each benchmark. Each configuration is exe-cuted in a separate process with CUDA synchronization and repeated five times. The synthetic benchmark uses 10 warm-up and 30 timed iterations with batch size 32, while the real-world benchmark uses 10 warm-up and 20 timed iterations with batch size 64. Runtime statistics are reported as medians over the five repeats, and memory denotes peak allocated GPU memory. 
+
+Computational effect of amortized relational transport. 
+
+We generate synthetic sparse graphs with fixed average degree 
+
+¯d = 8 and vary the number of node N . The same graph batch is used by SCGFM and SCGFM-ART at each scale. 
+
+Synthetic scaling results. Fig. 6 (a) shows that the com-putational effect of ART. At N = 256 , SCGFM-ART reduces the inference latency of SCGFM by 279 ×, and the reduction reaches 974 × at N = 1024 . At N = 2048 , the corresponding latencies are 2.031 and 1621.75 ms per graph. The separation continues to increase at the largest scale: the SCGFM run at N = 4096 exceeds four hours totally, whereas SCGFM-ART completes inference in 3.979 ms per graph. This trend reflects the replacement of repeated target-specific alignment with an amortized prediction path whose execution depth does not increase with graph size. Fig. 6 (b) characterizes the corresponding space cost dur-ing pretraining. SCGFM-ART requires additional memory to      
+
+> TABLE VI END -TO -END EFFICIENCY ON COLLAB AND REDDIT PPR SUBGRAPHS .
+
+Dataset Method Train ↑ Infer. ↓ Mem. ↓
+
+(G/s) (ms) (GiB) 
+
+COLLAB GraphGlue 4917.13 0.087 0.239 COLLAB GCOPE 2697.96 0.152 0.102 COLLAB GiT 271.45 0.026 0.095 COLLAB MDGMIX 1409.52 0.025 0.029 
+
+COLLAB RiemannGFM 199.91 4.298 0.773 COLLAB SCGFM 10191 .93 11.567 0.296 COLLAB SCGFM-ART 1794.78 0.262 1.396 Reddit GraphGlue 983.12 0.328 5.127 Reddit GCOPE 873.64 0.371 2.208 Reddit GiT 56.89 0.234 2.065 Reddit MDGMIX 1282.96 0.235 0.362 
+
+Reddit RiemannGFM 143.84 4.623 26.862 Reddit SCGFM 7391 .40 139.843 0.770 Reddit SCGFM-ART 302.53 1.643 4.028 
+
+retain the K graph–base couplings and their intermediate computations, but its memory growth remains regular over the full range. From N = 256 to 4096 , graph size increases by 16 ×, while peak training memory increases from 0.874 to 13.69 GiB, approximately 15 .7×. The empirical log–log scal-ing exponent is 0.99, closely matching the linear dependence on sparse graph size predicted for fixed K and M . Thus, the additional coupling memory introduced by ART changes the constant computational cost of pretraining without introducing a higher-order dependence on N over the evaluated regime. Taken together, the two panels expose the computational trade-off introduced by amortization. SCGFM-ART allocates additional memory to learn graph–base correspondences dur-ing pretraining, while eliminating the rapidly growing per-instance alignment cost during frozen transfer. The resulting computation is shifted from repeated target-time optimization to the reusable pretrained ART predictor. 
+
+Real-world efficiency. We further evaluate the same com-putational trade-off on COLLAB and Reddit PPR subgraphs. The real-world benchmark reports training throughput, frozen-inference latency, and peak training memory, and additionally includes representative GFMs to provide a broader runtime context. Table VI confirms that the transfer-time gains of amortized relational transport persist on real graph workloads. Compared with SCGFM, SCGFM-ART reduces frozen-inference latency by 44 .2× on COLLAB and 85 .1× on Reddit. The larger gain on Reddit is consistent with the widening separation observed with increasing graph size in Fig. 6, showing that the benefit of amortization becomes more pronounced on larger target graphs. SCGFM-ART shifts relational alignment from repeated target-time optimization into the learned atlas and ART predic-tor. This shift increases the computation and memory required during pretraining, while substantially reducing the recurring cost of frozen transfer. Together with the controlled scaling results, the real-world benchmarks show that ART converts the dominant per-instance alignment cost of SCGFM into a reusable prediction process, yielding a substantially more scal-able computational profile for structure-centric graph transfer. 12 
+
+VI. C ONCLUSION 
+
+We presented SCGFM-ART, a structure-centric foundation framework that unifies heterogeneous graphs by mapping them onto a shared relational atlas via Amortized Relational Transport (ART). This dual formulation captures global atlas response coordinates alongside fine-grained node-to-role struc-tural correspondences, providing a canonical reference frame for cross-domain transfer. We established theoretical guar-antees for coordinate fidelity and coverage bounds, proving that our amortized objective reliably proxies ideal relational alignment.Across 14 cross-domain benchmarks, SCGFM-ART achieves state-of-the-art few-shot transfer performance at both node and graph levels while preserving fine-grained topologi-cal nuances. By replacing iterative target-time alignment with amortized prediction, SCGFM-ART scales linearly with sparse graph size and delivers 44.2×–85.1× faster frozen inference on real-world benchmarks, establishing relational atlases and amortized transport as a scalable paradigm for graph founda-tion models. ACKNOWLEDGMENTS 
+
+This work was supported by the National Natural Science Foundation of China (No. U24A20323). REFERENCES [1] X. He, H. He, R. Fang, M. Sun, and Z. Kang, “Structure-centric graph foundation model via geometric bases,” in Proc. 43rd International Conference on Machine Learning (ICML) , ser. Proceedings of Machine Learning Research, vol. 306, 2026. [2] J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, “BERT: Pre-training of deep bidirectional transformers for language understanding,” in Proc. NAACL-HLT , 2019, pp. 4171–4186. [3] T. B. Brown et al. , “Language models are few-shot learners,” in Advances in Neural Information Processing Systems , vol. 33, 2020, pp. 1877–1901. [4] A. Dosovitskiy et al. , “An image is worth 16 ×16 words: Transformers for image recognition at scale,” in Proc. International Conference on Learning Representations (ICLR) , 2021. [5] K. He, X. Chen, S. Xie, Y. Li, P. Doll´ ar, and R. Girshick, “Masked autoencoders are scalable vision learners,” in Proc. IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , 2022, pp. 16000– 16009. [6] H. Mao, Z. Chen, W. Tang, J. Zhao, Y. Ma, T. Zhao, N. Shah, M. Galkin, and J. Tang, “Position: Graph foundation models are already here,” in Proc. 41st International Conference on Machine Learning (ICML) ,PMLR, vol. 235, 2024, pp. 34670–34692. [7] Z. Wang, Z. Zhang, T. Ma, N. V. Chawla, C. Zhang, and Y. Ye, “Towards graph foundation models: Learning generalities across graphs via task-trees,” in Proc. 42nd International Conference on Machine Learning (ICML) , PMLR, vol. 267, 2025, pp. 65518–65555. [8] D. He, A. Yang, J. Zhao, and D. Jin, “A graph foundation model with cross-modal alignment and modality-aware expert fusion for multi-modal graphs,” in Proc. 43rd International Conference on Machine Learning (ICML) , ser. Proceedings of Machine Learning Research, vol. 306, 2026. [9] C. Hu, T. Liao, G. Lan, X. Zhang, J. Li, P. Cui, and Z. Zhang, “Surpris-ingly simple and effective multi-domain graph foundation model through graph-to-table alignment,” arXiv preprint arXiv:2607.11374 , 2026. [10] S. Wang, B. Wang, Z. Shen, B. Deng, and Z. Kang, “Multi-domain graph foundation models: Robust knowledge transfer via topology alignment,” in Proc. 42nd International Conference on Machine Learning (ICML) ,PMLR, vol. 267, 2025, pp. 64806–64821. [11] H. Yuan, Q. Sun, J. Shi, X. Fu, B. Hooi, J. Li, and P. S. Yu, “How much can transfer? BRIDGE: Bounded multi-domain graph foundation model with generalization guarantees,” in Proc. 42nd International Conference on Machine Learning (ICML) , PMLR, vol. 267, 2025, pp. 73604–73644. [12] L. Sun, Z. Huang, S. Zhou, Q. Wan, H. Peng, and P. S. Yu, “RiemannGFM: Learning a graph foundation model from Rieman-nian geometry,” in Proc. ACM Web Conference (WWW) , 2025, doi: 10.1145/3696410.3714952. [13] F. M´ emoli, “Gromov–Wasserstein distances and the metric approach to object matching,” Foundations of Computational Mathematics , vol. 11, no. 4, pp. 417–487, 2011. [14] S. Chowdhury and F. M´ emoli, “The Gromov–Wasserstein distance between networks and stable network invariants,” Information and In-ference: A Journal of the IMA , vol. 8, no. 4, pp. 757–787, 2019. [15] H. Xu, D. Luo, H. Zha, and L. Carin, “Gromov–Wasserstein learning for graph matching and node embedding,” in Proc. 36th International Conference on Machine Learning (ICML) , PMLR, vol. 97, 2019, pp. 6932–6941. [16] M. Cuturi, “Sinkhorn distances: Lightspeed computation of optimal transport,” in Advances in Neural Information Processing Systems , vol. 26, pp. 2292–2300, 2013. [17] B. Amos, G. Luise, S. Cohen, and I. Redko, “Meta optimal transport,” in Proc. 40th International Conference on Machine Learning (ICML) ,PMLR, vol. 202, 2023, pp. 791–813. [18] J. Kim, D. Nguyen, S. Min, S. Cho, M. Lee, H. Lee, and S. Hong, “Pure transformers are powerful graph learners,” in Advances in Neural Information Processing Systems , vol. 35, pp. 14582–14595, 2022. [19] L. Wang, K. Hassani, S. Zhang, D. Fu, B. Yuan, W. Cong, Z. Hua, H. Wu, N. Yao, and B. Long, “Learning graph quantized tokenizers,” in Proc. International Conference on Learning Representations (ICLR) ,2025. [20] Y. Chen, Q. Yao, J. Zhang, J. Cheng, and Y. Bian, “Hierarchical graph tokenization for molecule-language alignment,” in Proc. 42nd International Conference on Machine Learning (ICML) , PMLR, vol. 267, 2025, pp. 9664–9690. [21] P. Veliˇ ckovi´ c, W. Fedus, W. L. Hamilton, P. Li` o, Y. Bengio, and R. D. Hjelm, “Deep graph infomax,” in Proc. Int. Conf. Learn. Represent. (ICLR) , 2019. [22] Y. You, T. Chen, Y. Sui, T. Chen, Z. Wang, and Y. Shen, “Graph contrastive learning with augmentations,” in Adv. Neural Inf. Process. Syst. , vol. 33, pp. 5812–5823, 2020. [23] Z. Hou, X. Liu, Y. Cen, Y. Dong, H. Yang, C. Wang, and J. Tang, “GraphMAE: Self-supervised masked graph autoencoders,” in Proc. 28th ACM SIGKDD Conf. Knowl. Discovery Data Mining , 2022, pp. 594–604. [24] J. Zhao, D. Jin, M. Ge, L. Shan, X. Wang, D. He, and Z. Feng, “FUG: Feature-universal graph contrastive pre-training for graphs with diverse node features,” in Advances in Neural Information Processing Systems ,vol. 37, 2024, pp. 4003–4034. [25] J. Liu, C. Yang, Z. Lu, J. Chen, Y. Li, M. Zhang, T. Bai, Y. Fang, L. Sun, P. S. Yu, and C. Shi, “Graph foundation models: Concepts, opportunities and challenges,” IEEE Trans. Pattern Anal. Mach. Intell. , vol. 47, no. 6, pp. 5023–5044, Jun. 2025. [26] X. Yu, Z. Gong, C. Zhou, Y. Fang, and H. Zhang, “SAMGPT: Text-free graph foundation model for multi-domain pre-training and cross-domain adaptation,” in Proc. ACM Web Conf. (WWW) , 2025, pp. 1142–1153. [27] H. Yuan, Q. Sun, J. Shi, X. Fu, B. Hooi, J. Li, and P. S. Yu, “GRAVER: Generative graph vocabularies for robust graph foundation models fine-tuning,” in Advances in Neural Information Processing Systems , vol. 38, 2025, pp. 18738–18783. [28] H. Yuan, Q. Sun, J. Tao, X. Fu, and J. Li, “RAG-GFM: Overcoming in-memory bottlenecks in graph foundation models via retrieval-augmented generation,” in Proc. ACM Web Conference (WWW) , 2026, pp. 626–637. [29] J. Zhao, Y. Wang, Y. Li, D. He, D. Jin, Z. Feng, and W. Zhang, “Towards graph foundation model: Node feature transfer invariant modeling on general graphs,” in Proc. ACM Web Conference (WWW) , 2026, pp. 810– 821. [30] T. Vayer, N. Courty, R. Tavenard, L. Chapel, and R. Flamary, “Optimal transport for structured data with application on graphs,” in Proc. 36th Int. Conf. Mach. Learn. (ICML) , vol. 97, pp. 6275–6284, 2019. [31] J. Snell, K. Swersky, and R. S. Zemel, “Prototypical networks for few-shot learning,” in Adv. Neural Inf. Process. Syst. , vol. 30, pp. 4077–4087, 2017. [32] T. N. Kipf and M. Welling, “Semi-supervised classification with graph convolutional networks,” in Proc. Int. Conf. Learn. Represent. (ICLR) ,2017. [33] P. Veliˇ ckovi´ c, G. Cucurull, A. Casanova, A. Romero, P. Li` o, and Y. Bengio, “Graph attention networks,” in Proc. Int. Conf. Learn. Represent. (ICLR) , 2018. [34] K. Xu, W. Hu, J. Leskovec, and S. Jegelka, “How powerful are graph neural networks?” in Proc. Int. Conf. Learn. Represent. (ICLR) , 2019. [35] T. Xiao, H. Zhu, Z. Chen, and S. Wang, “Simple and asymmetric graph contrastive learning without augmentations,” in Adv. Neural Inf. Process. Syst. , vol. 36, pp. 16129–16152, 2023. 13 
+
+[36] L. Sun, Z. Huang, S. Chen, L. Yang, J. Ye, S. Su, and P. S. Yu, “Multi-domain Riemannian graph gluing for building graph foundation models,” in Proc. Int. Conf. Learn. Represent. (ICLR) , 2026. [37] H. Zhao, A. Chen, X. Sun, H. Cheng, and J. Li, “All in One and One for All: A Simple yet Effective Method towards Cross-domain Graph Pretraining,” in Proc. 30th ACM SIGKDD Conf. Knowl. Discovery Data Mining , 2024, pp. 4443–4454. [38] Z. Zheng, Y. Yang, Z. Guan, W. Zhao, and X. Huang, “MDGMIX: Boundary-aware subgraph mixing for multi-domain graph pre-training,” in Proc. 43rd Int. Conf. Mach. Learn. (ICML) , ser. Proceedings of Machine Learning Research, vol. 306, 2026. [39] C. Morris, N. M. Kriege, F. Bause, K. Kersting, P. Mutzel, and M. Neumann, “TUDataset: A collection of benchmark datasets for learning with graphs,” in Proc. ICML Workshop Graph Representation Learning and Beyond , 2020. [40] N. Wale, I. A. Watson, and G. Karypis, “Comparison of descriptor spaces for chemical compound retrieval and classification,” Knowl. Inf. Syst. , vol. 14, no. 3, pp. 347–375, 2008. [41] N. Shervashidze, P. Schweitzer, E. J. van Leeuwen, K. Mehlhorn, and K. M. Borgwardt, “Weisfeiler–Lehman graph kernels,” J. Mach. Learn. Res. , vol. 12, pp. 2539–2561, 2011. [42] J. J. Sutherland, L. A. O’Brien, and D. F. Weaver, “Spline-fitting with a genetic algorithm: A method for developing classification structure– activity relationships,” J. Chem. Inf. Comput. Sci. , vol. 43, no. 6, pp. 1906–1915, 2003. [43] K. M. Borgwardt, C. S. Ong, S. Sch¨ onauer, S. V. N. Vishwanathan, A. J. Smola, and H.-P. Kriegel, “Protein function prediction via graph kernels,” 
+
+Bioinformatics , vol. 21, suppl. 1, pp. i47–i56, 2005. [44] P. Yanardag and S. V. N. Vishwanathan, “Deep graph kernels,” in Proc. 21st ACM SIGKDD Int. Conf. Knowl. Discovery Data Mining , 2015, pp. 1365–1374. [45] B. Knyazev, G. W. Taylor, and M. R. Amer, “Understanding attention and generalization in graph neural networks,” in Adv. Neural Inf. Process. Syst. , vol. 32, 2019. [46] Z. Wu, B. Ramsundar, E. N. Feinberg, J. Gomes, C. Geniesse, A. S. Pappu, K. Leswing, and V. Pande, “MoleculeNet: A benchmark for molecular machine learning,” Chem. Sci. , vol. 9, no. 2, pp. 513–530, 2018. [47] W. Hu, M. Fey, M. Zitnik, Y. Dong, H. Ren, B. Liu, M. Catasta, and J. Leskovec, “Open graph benchmark: Datasets for machine learning on graphs,” in Adv. Neural Inf. Process. Syst. , vol. 33, pp. 22118–22133, 2020. [48] Z. Yang, W. W. Cohen, and R. Salakhutdinov, “Revisiting semi-supervised learning with graph embeddings,” in Proc. 33rd Int. Conf. Mach. Learn. , ser. Proceedings of Machine Learning Research, vol. 48, 2016, pp. 40–48. [49] O. Shchur, M. Mumme, A. Bojchevski, and S. G¨ unnemann, “Pitfalls of graph neural network evaluation,” in Relational Representation Learning Workshop, NeurIPS , 2018. [50] W. L. Hamilton, R. Ying, and J. Leskovec, “Inductive representation learning on large graphs,” in Adv. Neural Inf. Process. Syst. , vol. 30, pp. 1024–1034, 2017. [51] A. Bojchevski, J. Gasteiger, B. Perozzi, A. Kapoor, M. Blais, B. R´ ozemberczki, M. Lukasik, and S. G¨ unnemann, “Scaling graph neural networks with approximate PageRank,” in Proc. 26th ACM SIGKDD Int. Conf. Knowl. Discovery Data Mining , 2020, pp. 2464–2473. [52] D. P. Kingma and J. Ba, “Adam: A method for stochastic optimization,” in Proc. Int. Conf. Learn. Represent. (ICLR) , 2015. [53] I. Loshchilov and F. Hutter, “Decoupled weight decay regularization,” in Proc. Int. Conf. Learn. Represent. (ICLR) , 2019. 14                                              
+
+> TABLE VII STATISTICS AND NODE -FEATURE CONFIGURATIONS OF THE GRAPH -CLASSIFICATION DATASETS .|V|DENOTES THE NUMBER OF GRAPHS . N ODE AND EDGE COUNTS ARE AVERAGES PER GRAPH ,WITH EACH UNDIRECTED EDGE COUNTED ONCE .
+> Dataset |V|Classes Avg. nodes Avg. edges Role
+> NCI1 4,110 229.87 32.30 LODO source/target BZR 405 235.75 38.36 LODO source/target COLLAB 5,000 374.49 2,457.22 LODO source/target IMDB-BINARY 1,000 219.77 96.53 LODO source/target PROTEINS 1,113 239.06 72.82 LODO source/target COLORS-3 10,500 11 61.31 91.03 Unseen target
+> ogbg-molhiv 41,127 225.51 27.47 Unseen target
+
+SUPPLEMENTARY MATERIAL FOR SCGFM-ART APPENDIX ADATASET DETAILS 
+
+We evaluate SCGFM-ART on 14 datasets spanning molec-ular, biological, social, citation, and product co-purchase graphs. The graph-classification benchmarks contain inde-pendent graphs with graph-level labels, whereas each node-classification benchmark is a single large graph with labels attached to its nodes. Statistics in Tables VII and VIII are com-puted before the episodic sampling used in our experiments. For the TU datasets, an edge is counted once; for the node-classification datasets, the edge counts follow the PyTorch Geometric storage convention, under which an undirected edge is represented in both directions. The edge count of 
+
+ogbn-arxiv is instead the number of directed citation edges. 
+
+A. Graph-Classification Datasets 
+
+The TU datasets are distributed through the TUDataset collection [39]. NCI1, BZR, COLLAB, IMDB-BINARY, and PROTEINS serve as the five source domains in leave-one-dataset-out (LODO) evaluation: when one of these datasets is the target, the model is pretrained on the other four. For the two additional unseen targets, COLORS-3 and ogbg-molhiv ,we use the checkpoint jointly pretrained on all five source datasets. Each target class contributes five support graphs and at most 50 disjoint query graphs in each episode, as specified in the main paper.  
+
+> •
+
+NCI1. NCI1 is a molecular graph benchmark derived from chemical compounds screened for anti-cancer activ-ity [40], [41]. Each node represents an atom, each edge represents a chemical bond, and the categorical node label specifies the atom type. The 4,110 compounds form a binary graph classification task according to their assay activity. NCI1 is relatively sparse and is used to test transfer to molecular topology without continuous node attributes.  
+
+> •
+
+BZR. BZR contains 405 molecular compounds collected for a quantitative structure–activity relationship study [42]. Graph labels distinguish active and inactive ligands of the benzodiazepine receptor. Atoms and chemical bonds form the nodes and edges, respectively. In addi-tion to categorical atom labels, the TU release provides three-dimensional node coordinates; consequently, BZR supplies both discrete identity and continuous geometric attributes.  
+
+> •
+
+COLLAB. COLLAB is a scientific collaboration bench-mark introduced with Deep Graph Kernels [44]. Each graph is an ego-network of a researcher, nodes are re-searchers, and an edge indicates coauthorship. The target is the research field of the ego researcher—high-energy physics, condensed-matter physics, or astrophysics— yielding three classes. COLLAB has no intrinsic node labels or attributes and is much denser than the other graph-level datasets.  
+
+> •
+
+IMDB-BINARY. IMDB-BINARY is also an ego-network benchmark [44]. Nodes denote actors and an edge joins two actors who appeared in the same film. Each of the 1,000 graphs is labeled by one of two movie genres (Action or Romance). The dataset does not provide intrinsic node features, making its prediction primarily dependent on collaboration structure.  
+
+> •
+
+PROTEINS. PROTEINS contains 1,113 protein graphs and asks whether a protein is an enzyme [43]. Nodes represent secondary-structure elements, and edges encode neighborhood relations in the amino-acid sequence or in three-dimensional space. The TU release provides categorical secondary-structure labels together with one continuous node attribute. This dataset therefore com-bines biological topology with node-side information.  
+
+> •
+
+COLORS-3. COLORS-3 is a synthetic structural bench-mark introduced by Knyazev et al. [45]. It contains 10,500 randomly generated graphs with color-derived node attributes. The graph label is determined by the number of green nodes, producing 11 classes. Because the relevant evidence must be aggregated over the entire graph, COLORS-3 tests whether a representation learned from the five real-world source domains can transfer to a controlled counting task.  
+
+> •
+
+ogbg-molhiv. ogbg-molhiv is the OGB version of the HIV molecular-property dataset from MoleculeNet [46], [47]. It contains 41,127 molecules processed with RDKit. Nodes are atoms and edges are chemical bonds. The dataset provides nine categorical atom-feature fields (e.g., atomic number, chirality, formal charge, and ring membership), together with categorical bond attributes. In our experiments, however, the encoders use the atom features and unweighted graph connectivity; the bond attributes are not included in the model input. The binary label indicates whether a molecule inhibits HIV replica-tion. OGB defines a scaffold split and ROC-AUC as its standard benchmark protocol; in our cross-domain study, 15                                                
+
+> TABLE VIII STATISTICS OF THE NODE -CLASSIFICATION DATASETS . T HE COUNTS FOLLOW THE PROCESSED PYTORCH GEOMETRIC /OGB VERSIONS USED IN OUR EXPERIMENTS . F OR THE SIX UNDIRECTED PYTORCH GEOMETRIC GRAPHS ,THE TABLE REPORTS STORED DIRECTED EDGE ENTRIES ;O G B N -A R X I V
+> RETAINS DIRECTED CITATION EDGES .
+> Dataset Nodes Edges Features Classes Role
+> Cora 2,708 10,556 1,433 7LODO source/target CiteSeer 3,327 9,104 3,703 6LODO source/target PubMed 19,717 88,648 500 3LODO source/target Computers 13,752 491,722 767 10 LODO source/target Photo 7,650 238,162 745 8LODO source/target Reddit 232,965 114,615,892 602 41 Unseen target
+> ogbn-arxiv 169,343 1,166,243 128 40 Unseen target
+
+however, it is treated as an unseen target under the same episodic 5-shot protocol as the other datasets. 
+
+B. Node-Classification Datasets 
+
+Cora, CiteSeer, PubMed, Computers, and Photo form the five node-level domains used for LODO pretraining and evaluation. Reddit and ogbn-arxiv are additional unseen targets evaluated using the checkpoint pretrained jointly on the five source domains. To expose a common graph-level interface during pretraining, we represent each target node by its Personalized PageRank (PPR) subgraph [51]. As raw feature widths differ markedly across domains we construct a deterministic Gaussian projection matrix for each input width using the same random seed (42), and map all node features to 256 dimensions. The original feature dimensions reported below are those before this projection.  
+
+> •
+
+Cora, CiteSeer, and PubMed. These Planetoid citation networks [48] represent scientific documents as nodes and citation relations as edges. Sparse bag-of-words vectors provide node features, and the node labels denote docu-ment topics. The processed graphs contain 2,708, 3,327, and 19,717 nodes and have 7, 6, and 3 classes, respec-tively. They provide three related but differently sized citation domains for measuring cross-domain transfer.  
+
+> •
+
+Computers and Photo. The Amazon co-purchase net-works were introduced for controlled GNN evaluation [49]. Nodes are products, and two products are linked when they are frequently purchased together. Bag-of-words representations of product reviews form the node features, while labels correspond to product categories. Computers contains 13,752 products in 10 classes; Photo contains 7,650 products in 8 classes.  
+
+> •
+
+Reddit. Reddit is the large inductive node-classification benchmark released with GraphSAGE [50]. A node is a Reddit post, and two posts are connected when the same user comments on both. Each post has a 602-dimensional feature vector, and its label is the community in which it was posted. The processed graph contains 232,965 nodes, 114,615,892 stored edge entries, and 41 classes. Its scale and dense local neighborhoods make it a challenging unseen transfer domain.  
+
+> •
+
+ogbn-arxiv. ogbn-arxiv is a directed citation network of 169,343 Computer Science papers indexed by the Microsoft Academic Graph [47]. Each node has a 128-dimensional feature obtained by averaging skip-gram em-beddings of words in its title and abstract; each directed edge represents a citation. The prediction target is one of 40 primary arXiv subject areas. OGB conventionally uses a temporal split (training through 2017, validation in 2018, and testing from 2019 onward), whereas our exper-iment treats the graph as an unseen domain and constructs fixed 5-shot support/query episodes from disjoint labeled nodes. APPENDIX BEXPERIMENTAL DETAILS 
+
+This appendix provides additional implementation and eval-uation details for the cross-domain few-shot transfer experi-ment reported in the main paper. Unless otherwise specified, the same protocol is used for all graph- and node-classification targets. 
+
+A. Cross-Domain Few-Shot Setup 
+
+For the five LODO targets at each task level, the target dataset is excluded from pretraining and the remaining four source datasets are used to learn the encoder. COLORS-3 and 
+
+ogbg-molhiv are evaluated using the graph-level check-point pretrained on all five graph source domains, whereas Reddit and ogbn-arxiv use the node-level checkpoint pretrained on all five node source domains. The pretrained encoder is frozen throughout downstream evaluation; only the task-specific downstream head is constructed from the support set. For every target dataset, we generate 50 deterministic episodes. Within each episode, five support samples are drawn without replacement from every class, followed by at most 50 query samples from the remaining examples of that class. Thus, the support and query sets are disjoint within an episode, while examples may be reused across different episodes. Feature standardization is fitted exclusively on the support em-beddings and then applied to the query embeddings, preventing query statistics from entering downstream training. For graph classification, class prototypes are computed as the means of the support embeddings, and each query is assigned to its nearest prototype in Euclidean distance. For node classification, a linear classifier is fitted on the support embeddings of each episode. We report the mean and standard deviation of Accuracy over the 50 episodes. 
+
+B. Input Preprocessing 
+
+For graph-classification datasets, intrinsic node attributes and categorical node labels are concatenated when both are 16                                    
+
+> TABLE IX DEFAULT SETTINGS FOR THE CROSS -DOMAIN FEW -SHOT TRANSFER EXPERIMENT .
+> Category Parameter Default value
+> Few-shot evaluation Support samples per class 5Few-shot evaluation Maximum query samples per class 50 Few-shot evaluation Number of episodes per target 50 Few-shot evaluation Graph-level downstream head Prototype classifier [31] Few-shot evaluation Node-level downstream head Linear classifier Relational atlas Number of bases K16 Relational atlas Number of roles per base M32 Graph preprocessing Unified node-feature width 56 Node preprocessing Projected node-feature width 256 Node preprocessing Gaussian projection seed 42 Node preprocessing Maximum PPR ego-graph size 400 nodes Node preprocessing PPR restart probability α0.15 Node preprocessing Local-push residual threshold 10 −4
+> Node preprocessing Maximum local-push operations per center 10 6
+> Node preprocessing Maximum center nodes per class 300
+
+available. Datasets without intrinsic node features use a con-stant scalar of one for every node. The resulting node inputs are zero-padded to a common width of 56 dimensions. For 
+
+ogbg-molhiv , the encoders use the nine categorical atom-feature fields and the unweighted molecular connectivity; categorical bond attributes are not included in the model input. For node classification, both source pretraining and target evaluation operate on PPR ego-graphs [51] centered at labeled nodes. We use approximate local-push PPR with restart proba-bility α = 0 .15 , residual threshold 10 −4, and at most 10 6 push operations per center. Each ego-graph contains at most 400 nodes, and at most 300 center nodes are sampled from each class when building the reusable graph cache. Because the raw feature dimensions differ across domains, a deterministic Gaussian random projection with seed 42 maps every node feature vector to 256 dimensions. 
+
+C. Default Configuration 
+
+Table IX summarizes the default settings used in the cross-domain transfer experiment. SCGFM-ART uses a relational atlas containing K = 16 bases, with each base defined over a shared set of M = 32 relational roles. Accordingly, the atlas coordinate satisfies q(G) ∈ RK , each graph–base coupling satisfies bTk ∈ RN ×M , and the transported feature map satisfies 
+
+H(G) ∈ RM ×df . The default values (K, M ) = (16 , 32) are used in the main comparisons and all analyses unless otherwise stated. In the atlas-capacity analysis, one of K and M is varied while the other is fixed at its default value. For the compared methods, we use the official or recommended optimization settings whenever available; configurable message-passing en-coders use three layers, as stated in the main paper. Table X summarizes the pretraining configurations of the comparison methods. Here, E, B, η, and λwd denote the number of training epochs, batch size, learning rate, and weight decay, respectively. The configurations are fixed across target datasets at each task level. For graph-level pretraining, GCN, GAT, GIN, and GiT are optimized using AdamW [53], while the remaining com-parison methods use Adam [52]. For node-level pretraining, GraphCL and SCGFM use Adam, whereas the other com-parison methods use AdamW. No learning-rate scheduler is employed. The graph-level encoders use a hidden dimension of 64, with GCN, GAT, and GIN producing 192-dimensional graph representations. At the node level, GCN, GAT, GIN, Graph-MAE, GraphACL, GraphGlue, GCOPE, GiT, and MDGMIX use a hidden dimension of 128, whereas GraphCL and Rie-mannGFM use a hidden dimension of 64. We use step = 20 Sinkhorn iterations throughout all experiments. In practice, this is sufficient for stable marginal projection, with the maximum marginal residual typically below 10 −7 during training. 
+
+D. Implementation and Hardware 
+
+The experiments are implemented in Python using PyTorch and PyTorch Geometric (PyG), with CUDA acceleration for model training and inference. Unless otherwise stated, each experiment is executed on a single NVIDIA A800 GPU with 80 GB of memory. The host machine is equipped with an Intel(R) Xeon(R) Gold 6348 CPU running at 2.60 GHz. APPENDIX CSUPPLEMENTARY THEORETICAL ANALYSIS 
+
+A. Relational Structures and Quotient Geometry 1) Basic definitions: 
+
+Definition 1 (Finite measured relational structure) . A finite measured relational structure is a triplet 
+
+G = ( V, A, μ G), (39) where V is a finite set, A : V × V → [0 , 1] is symmetric with 
+
+A(i, i ) = 0 , and μG is a probability measure on V .For two measured relational structures G = ( V, A, μ G) and 
+
+G′ = ( V ′, A ′, μ G′ ), define the transport polytope 
+
+Π( μG, μ G′ ) = 
+
+n
+
+T ∈ R|V |×| V ′| 
+
+> +
+
+: T 1 = μG, T ⊤1 = μG′
+
+o
+
+.
+
+(40) For any T ∈ Π( μG, μ G′ ), the squared relational distortion is 
+
+E(A, A ′; T ) = X
+
+> i,j,a,b
+
+(Aij − A′
+
+> ab
+
+)2Tia Tjb . (41) 17                                                                                                                                                              
+
+> TABLE X PRETRAINING CONFIGURATIONS OF THE COMPARISON METHODS .
+> Graph classification Node classification Method EBηλwd EBηλwd
+> GCN / GAT / GIN 100 512 1×10 −30100 256 1×10 −30GraphCL 100 128 1×10 −30100 128 1×10 −30GraphMAE 100 128 1×10 −35×10 −4100 128 1×10 −35×10 −4
+> GraphACL 100 128 1×10 −31×10 −6100 128 1×10 −35×10 −4
+> GraphGlue 100 128 1×10 −35×10 −4100 128 1×10 −35×10 −4
+> GCOPE 100 128 1×10 −31×10 −5100 128 1×10 −35×10 −4
+> GiT 100 128 1×10 −31×10 −8100 128 1×10 −35×10 −4
+> MDGMIX 100 128 1×10 −31×10 −6100 128 1×10 −35×10 −4
+> RiemannGFM 100 64 1×10 −31×10 −6100 128 1×10 −35×10 −4
+> SCGFM 100 128 2×10 −2060 64 1×10 −20
+
+The associated relational discrepancy is 
+
+d(G, G ′) = 
+
+r
+
+min    
+
+> T∈Π( μG,μ G′)
+
+E(A, A ′; T ). (42) 
+
+Proposition 1 (Relational graph geometry) . The discrepancy d
+
+is finite, symmetric, and invariant to node relabeling. Modulo zero-discrepancy equivalence, it induces a metric on a quotient space X containing both observed graphs and relational bases. Proof. We first establish boundedness. Because Aij , A ′ 
+
+> ab
+
+∈
+
+[0 , 1] , for every feasible T ,
+
+0 ≤ E (A, A ′; T ) = X
+
+> i,j,a,b
+
+(Aij − A′
+
+> ab
+
+)2Tia Tjb 
+
+≤ X
+
+> i,j,a,b
+
+Tia Tjb . (43) Since T has unit total mass, 
+
+X
+
+> i,a
+
+Tia = 1 , (44) and therefore 
+
+X
+
+> i,j,a,b
+
+Tia Tjb =
+
+X
+
+> i,a
+
+Tia 
+
+
+
+> 2
+
+= 1 . (45) Hence 
+
+0 ≤ d(G, G ′) ≤ 1. (46) Symmetry follows by transposing the coupling. Specifically, 
+
+T ∈ Π( μG, μ G′ ) if and only if T ⊤ ∈ Π( μG′ , μ G), and direct reindexing gives 
+
+E(A, A ′; T ) = E(A′, A ; T ⊤). (47) Taking minima over the corresponding feasible sets yields 
+
+d(G, G ′) = d(G′, G ).We next prove invariance to node relabeling. Let P and P ′
+
+be permutation matrices acting on V and V ′, respectively, and define 
+
+eA = P AP ⊤, eA′ = P ′A′P ′⊤ . (48) The map 
+
+T 7 −→ eT = P T P ′⊤ (49) is a bijection from Π( μG, μ G′ ) to Π( P μ G, P ′μG′ ). Moreover, reindexing the summation in Eq. (41) gives 
+
+E( eA, eA′; eT ) = E(A, A ′; T ). (50) Taking minima therefore preserves the discrepancy. The remaining metric structure follows from the standard order-2 network Gromov–Wasserstein result for finite measure networks [14]. In particular, the discrepancy satisfies the triangle inequality and vanishes exactly on weak-isomorphism classes. Define 
+
+G ∼d G′ ⇐⇒ d(G, G ′) = 0 (51) and 
+
+X = G/ ∼d . (52) If G ∼d eG and G′ ∼d eG′, the triangle inequality gives 
+
+d(G, G ′) − d( eG, eG′) ≤ d(G, eG) + d(G′, eG′) = 0 . (53) Thus the distance between equivalence classes is independent of the representatives. After quotienting out zero-discrepancy pairs, identity of indiscernibles holds and the other metric axioms are inherited from d.
+
+2) Finite relational atlas: Let X0 = supp( P) ⊆ X denote the support of the task distribution. We assume that (X0, d )
+
+is totally bounded. Thus, for every ϵ > 0 there exists a finite collection of relational structures whose ϵ-balls cover X0.
+
+Definition 2 (Finite relational atlas) . A K-base relational atlas is 
+
+A = {β1, . . . , β K } ⊆ X . (54) Its covering radius over X0 is 
+
+ϵA := sup 
+
+> G∈X 0
+
+min  
+
+> 1≤k≤K
+
+d(G, β k), (55) and its ideal relational coordinate is 
+
+q∗A(G) :=  d(G, β k)Kk=1 . (56) Total boundedness guarantees that finite relational atlases exist at every positive resolution. The following result quanti-fies the information retained by a realized atlas. 
+
+Theorem 1 (Finite-atlas coordinate fidelity) . Let A be a finite relational atlas with covering radius ϵA over X0. Then, for any G, G ′ ∈ X 0,
+
+d(G, G ′) − 2ϵA ≤ ∥ q∗A(G) − q∗A(G′)∥∞ ≤ d(G, G ′). (57) 18 
+
+Proof. For any atlas element βk, the triangle inequality gives 
+
+d(G, β k) ≤ d(G, G ′) + d(G′, β k). (58) Exchanging G and G′ yields 
+
+|d(G, β k) − d(G′, β k)| ≤ d(G, G ′). (59) Taking the maximum over k gives 
+
+∥q∗A(G) − q∗A(G′)∥∞ ≤ d(G, G ′). (60) For the lower bound, choose an index r such that 
+
+d(G, β r ) = min  
+
+> k
+
+d(G, β k) ≤ ϵA. (61) Again by the triangle inequality, 
+
+d(G′, β r ) ≥ d(G, G ′) − d(G, β r ) ≥ d(G, G ′) − ϵA. (62) Therefore, 
+
+|d(G′, β r ) − d(G, β r )| ≥ d(G′, β r ) − d(G, β r )
+
+≥ d(G, G ′) − 2ϵA. (63) Since the ℓ∞ norm is at least the magnitude of any individual coordinate, 
+
+∥q∗A(G) − q∗A(G′)∥∞ ≥ d(G, G ′) − 2ϵA. (64) Combining Eqs. (60) and (64) proves the theorem. 
+
+B. Theoretical Properties of Amortized Relational Transport 
+
+For the k-th relational base βk = ([ M ], B k, ν ), ART produces proposal logits Lk ∈ RN ×M and applies Sinkhorn normalization with marginals μG and ν. The theoretical oper-ator below denotes the converged Sinkhorn projection; a fixed-iteration implementation can be quantified by its marginal residual. 
+
+Lemma 1 (Feasibility and permutation equivariance of ART) .
+
+Assume that the proposal kernel and both marginals are strictly positive. Then the Sinkhorn limit bTk satisfies 
+
+bTk1M = μG, bT ⊤ 
+
+> k
+
+1N = ν. (65) 
+
+Moreover, for any permutation matrix P acting on the input nodes, bTk(P AP ⊤, P μ G) = P bTk(A, μ G). (66) 
+
+Consequently, the relational energy induced by ART is invari-ant to input-node relabeling. Proof. Let the strictly positive Sinkhorn kernel be 
+
+Ξia = exp 
+
+ Lk(i, a )
+
+τsk 
+
+
+
+> 0. (67) Sinkhorn scaling constructs matrices of the form 
+
+T = diag( u)Ξ diag( v), (68) with alternating updates 
+
+u ← μG ⊘ (Ξ v), v ← ν ⊘ (Ξ ⊤u), (69) where ⊘ denotes element-wise division. For a strictly positive kernel and strictly positive marginals of equal total mass, the classical Sinkhorn scaling theorem gives convergence to a matrix satisfying the desired row and column marginals. Hence Eq. (65) holds and bTk ∈ Π( μG, ν ).We next establish equivariance. Under the node relabeling 
+
+A′ = P AP ⊤, μ′ 
+
+> G
+
+= P μ G, (70) the normalized degree feature transforms as X′ 
+
+> s
+
+= P X s. The shared GNN encoder is permutation equivariant, so 
+
+U ′ = P U. (71) The base-role embeddings are unchanged because the permu-tation acts only on the input graph. Therefore, the compatibil-ity logits and positive kernel obey 
+
+L′ 
+
+> k
+
+= P L k, Ξ′ 
+
+> k
+
+= P Ξk. (72) Sinkhorn normalization consists only of graph-side row scaling and base-side column scaling. Consequently, every graph-side scaling vector is permuted by P , while the base-side scaling vector is unchanged. Thus 
+
+bT ′ 
+
+> k
+
+= P bTk, (73) which proves Eq. (66). Finally, substituting A′ = P AP ⊤ and bT ′ 
+
+> k
+
+= P bTk into Eq. (41), followed by reindexing of the graph nodes, gives 
+
+E(A′, B k; bT ′
+
+> k
+
+) = E(A, B k; bTk). (74) Hence the graph-level ART energy is invariant to node rela-beling. For a finite number of Sinkhorn iterations, feasibility can be monitored by 
+
+Res marg (T ) = max ∥T 1M − μG∥∞, ∥T ⊤1N − ν∥∞ .
+
+(75) 
+
+1) Fast relational-energy identity: 
+
+Proposition 2 (Fast relational-energy identity) . For any fea-sible coupling T ∈ Π( μG, ν ) and symmetric relations A and 
+
+B,
+
+E(A, B ; T ) = χ(A) + χ(B) − 2⟨AT, T B ⟩F , (76) 
+
+where 
+
+χ(A) = X
+
+> i,j
+
+A2 
+
+> ij
+
+μG(i)μG(j), χ(B) = X
+
+> a,b
+
+B2
+
+> ab
+
+νaνb.
+
+(77) 
+
+Proof. Expanding the square gives 
+
+(Aij − Bab )2 = A2 
+
+> ij
+
++ B2 
+
+> ab
+
+− 2Aij Bab . (78) For the first term, feasibility gives 
+
+X
+
+> i,j,a,b
+
+A2 
+
+> ij
+
+Tia Tjb = X
+
+> i,j
+
+A2
+
+> ij
+
+X
+
+> a
+
+Tia 
+
+! X
+
+> b
+
+Tjb 
+
+!
+
+= X
+
+> i,j
+
+A2 
+
+> ij
+
+μG(i)μG(j) = χ(A). (79) 19 
+
+Similarly, 
+
+X
+
+> i,j,a,b
+
+B2
+
+> ab
+
+Tia Tjb = X
+
+> a,b
+
+B2
+
+> ab
+
+X
+
+> i
+
+Tia 
+
+! X
+
+> j
+
+Tjb 
+
+
+
+= X
+
+> a,b
+
+B2
+
+> ab
+
+νaνb = χ(B). (80) For the cross term, symmetry of A and B yields 
+
+X
+
+> i,j,a,b
+
+Aij Bab Tia Tjb = tr( T ⊤AT B )= ⟨AT, T B ⟩F . (81) Combining the three terms proves Eq. (76). For a loop-free binary adjacency relation, A2 
+
+> ij
+
+= Aij and the graph-side quantities admit the exact sparse forms 
+
+χ(A) = X
+
+> (i,j )∈E
+
+μG(i)μG(j), (82) and 
+
+(AT )( i, a ) = X
+
+> j:( i,j )∈E
+
+T (j, a ). (83) Thus, the energy can be evaluated without materializing an 
+
+N × N dense relation matrix. 
+
+2) Amortized atlas coordinate fidelity: For each base, define the ideal and amortized energies 
+
+e∗
+
+> k
+
+(G) := min   
+
+> T∈Π( μG,ν )
+
+E(A, B k; T ) = d2(G, β k), (84) 
+
+ek(G) := E(A, B k; bTk) ≥ e∗
+
+> k
+
+(G), qk(G) := pek(G).
+
+(85) Let 
+
+q(G) := ( qk(G)) Kk=1 , η(G) := ∥q(G) − q∗A(G)∥∞. (86) 
+
+Corollary 1 (Amortized atlas coordinate fidelity) . Let A be a finite relational atlas with covering radius ϵA over X0. For any G, G ′ ∈ X 0,
+
+d(G, G ′) − 2ϵA − η(G) − η(G′) ≤ ∥ q(G) − q(G′)∥∞
+
+≤ d(G, G ′) + η(G) + η(G′).
+
+(87) 
+
+Proof. By the triangle inequality, 
+
+∥q(G) − q(G′)∥∞ ≤ ∥ q(G) − q∗A(G)∥∞ + ∥q∗A(G) − q∗A(G′)∥∞
+
++ ∥q∗A(G′) − q(G′)∥∞. (88) By the definition of η(·) and Theorem 1, 
+
+∥q(G) − q(G′)∥∞ ≤ d(G, G ′) + η(G) + η(G′). (89) Conversely, applying the triangle inequality to q∗A(G) −
+
+q∗A(G′) gives 
+
+∥q(G) − q(G′)∥∞ ≥ ∥ q∗A(G) − q∗A(G′)∥∞
+
+− ∥ q(G) − q∗A(G)∥∞ − ∥ q(G′) − q∗A(G′)∥∞.
+
+(90) Again using Theorem 1, 
+
+∥q(G) − q(G′)∥∞ ≥ d(G, G ′) − 2ϵA − η(G) − η(G′). (91) Combining Eqs. (89) and (91) proves the result. The bound separates two sources of distortion: the finite-atlas resolution ϵA and the coordinate approximation error 
+
+η(G) introduced by amortized transport. 
+
+C. Amortized Relational Coverage 
+
+For a graph G and atlas A, the normalized soft-min coverage is 
+
+ℓmean (G) = −τm log 
+
+"
+
+1
+
+K
+
+> K
+
+X
+
+> k=1
+
+exp 
+
+
+
+− ek(G)
+
+τm
+
+#
+
+. (92) We first record the elementary soft-min bound used by the main theorem. 
+
+Lemma 2 (Normalized soft-min bound) . For arbitrary non-negative energies e1, . . . , e K and τm > 0,
+
+min  
+
+> k
+
+ek ≤ − τm log 
+
+"
+
+1
+
+K
+
+> K
+
+X
+
+> k=1
+
+e−ek /τ m
+
+#
+
+≤ min  
+
+> k
+
+ek + τm log K. 
+
+(93) 
+
+Proof. Let m = min k ek. Since ek ≥ m,
+
+1
+
+K
+
+> K
+
+X
+
+> k=1
+
+e−ek /τ m ≤ e−m/τ m . (94) Applying −τm log( ·) gives the lower bound. If j satisfies ej =
+
+m, then 
+
+1
+
+K
+
+> K
+
+X
+
+> k=1
+
+e−ek /τ m ≥ 1
+
+K e−m/τ m , (95) which yields the upper bound after applying −τm log( ·).Define the ideal and amortized nearest-base energies by 
+
+m∗(G) := min  
+
+> k
+
+e∗
+
+> k
+
+(G), bm(G) := min  
+
+> k
+
+ek(G). (96) Let 
+
+K∗(G) := arg min  
+
+> k
+
+e∗
+
+> k
+
+(G) (97) and define the ART excess on the ideal nearest bases as 
+
+∆( G) := min  
+
+> k∈K ∗(G)
+
+[ek(G) − e∗
+
+> k
+
+(G)] ≥ 0. (98) 
+
+Theorem 2 (Amortized coverage bound) . For every graph G,
+
+m∗(G) ≤ ℓmean (G) ≤ m∗(G) + ∆( G) + τm log K. (99) 
+
+Proof. Because bTk ∈ Π( μG, ν ) and e∗
+
+> k
+
+(G) is the minimum of 
+
+E(A, B k; T ) over the same feasible set, 
+
+ek(G) − e∗
+
+> k
+
+(G) ≥ 0 for every k. (100) Taking minima over k gives 
+
+m∗(G) ≤ bm(G). (101) Choose 
+
+k† ∈ arg min  
+
+> k∈K ∗(G)
+
+[ek(G) − e∗
+
+> k
+
+(G)] . (102) By definition, 
+
+e∗ 
+
+> k†
+
+(G) = m∗(G), ek† (G) − e∗ 
+
+> k†
+
+(G) = ∆( G). (103) 20 
+
+Therefore, 
+
+bm(G) = min  
+
+> k
+
+ek(G)
+
+≤ ek† (G)= m∗(G) + ∆( G). (104) Applying Lemma 2 to the amortized energies gives 
+
+bm(G) ≤ ℓmean (G) ≤ bm(G) + τm log K. (105) Combining this inequality with Eqs. (101) and (104) proves Eq. (99). The quantities η(G) and ∆( G) describe complementary effects of amortization. The former controls the largest coor-dinate discrepancy over the entire atlas and therefore appears in pairwise representation fidelity. The latter only measures excess energy on an ideal nearest base, which is sufficient for analyzing the soft-min coverage objective. 
+
+Corollary 2 (Finite-atlas coverage consistency) . Let ϵA be the covering radius of A over X0. For every G ∈ X 0,
+
+0 ≤ ℓmean (G) ≤ ϵ2 
+
+> A
+
++ ∆( G) + τm log K. (106) 
+
+Proof. By the definition of the covering radius, for every G ∈X0 there exists an atlas element βj such that 
+
+d(G, β j ) ≤ ϵA. (107) Therefore, 
+
+m∗(G) = min  
+
+> k
+
+d2(G, β k)
+
+≤ d2(G, β j ) ≤ ϵ2
+
+> A
+
+. (108) Substituting this inequality into the upper bound of Theorem 2 gives 
+
+ℓmean (G) ≤ ϵ2 
+
+> A
+
++ ∆( G) + τm log K. (109) Moreover, ek(G) ≥ 0 implies exp( −ek(G)/τ m) ≤ 1. Hence the normalized average inside the logarithm in Eq. (92) is at most one and ℓmean (G) ≥ 0. Combining the two inequalities proves the corollary. 
+
+1) Population-risk implication: Define the ideal atlas risk and its trainable surrogate by 
+
+R∗(A) := EG∼P[m∗(G)] , bR(A, θ ) := EG∼P[ℓmean (G)] .
+
+(110) Taking expectations in Theorem 2 yields 
+
+R∗(A) ≤ bR(A, θ ) ≤ R ∗(A) + EG[∆( G)] + τm log K. (111) Thus, mean relational coverage is a tractable surrogate upper bound on the ideal finite-atlas risk. Its excess is determined by the amortized alignment error and the soft-min relaxation. 
+
+2) Variational interpretation: Let 
+
+∆K =
+
+(
+
+ρ ∈ RK 
+
+> +
+
+:
+
+> K
+
+X
+
+> k=1
+
+ρk = 1 
+
+)
+
+(112) be the probability simplex. Define 
+
+Φ( ρ) = 
+
+> K
+
+X
+
+> k=1
+
+ρkek + τmKX
+
+> k=1
+
+ρk log( Kρ k). (113) 
+
+Proposition 3 (Variational form of mean coverage) . The normalized soft-min objective satisfies 
+
+ℓmean = min 
+
+> ρ∈∆K
+
+Φ( ρ), (114) 
+
+with minimizer 
+
+ρ∗ 
+
+> k
+
+= exp( −ek/τ m)
+
+PKℓ=1 exp( −eℓ/τ m) . (115) 
+
+Proof. Introduce a Lagrange multiplier α for P 
+
+> k
+
+ρk = 1 . The stationarity condition is 
+
+ek + τm [log( Kρ k) + 1] + α = 0 . (116) Therefore, 
+
+ρk ∝ exp( −ek/τ m), (117) and normalization gives Eq. (115). Substituting the minimizer into Eq. (113) yields 
+
+min 
+
+> ρ∈∆K
+
+Φ( ρ) = −τm log 
+
+"
+
+1
+
+K
+
+> K
+
+X
+
+> k=1
+
+exp( −ek/τ m)
+
+#
+
+= ℓmean , (118) which proves the proposition. 
+
+D. Permutation Invariance of the ART-Full Representation 
+
+At transfer time, SCGFM-ART forms energy-based respon-sibilities 
+
+wk(G) = exp( −ek(G)/τ E )
+
+PKℓ=1 exp( −eℓ(G)/τ E ) , (119) and the coupling mixture 
+
+Tmix (G) = 
+
+> K
+
+X
+
+> k=1
+
+wk(G) bTk. (120) The transported feature map and final representation are 
+
+H(G) = N T mix (G)⊤X, (121) and 
+
+z(G) = [ q(G)∥ vec( H(G))] . (122) 
+
+Proposition 4 (Permutation invariance of ART-full) . Let P be an N × N permutation matrix and define the relabeled input by 
+
+A′ = P AP ⊤, X′ = P X, μ′ 
+
+> G
+
+= P μ G. (123) 
+
+Then 
+
+q(G′) = q(G), H(G′) = H(G), z(G′) = z(G).
+
+(124) 21 
+
+Proof. By Lemma 1, 
+
+bT ′ 
+
+> k
+
+= P bTk. (125) The same lemma also gives energy invariance, 
+
+ek(G′) = ek(G) for every k. (126) Hence 
+
+q(G′) = q(G) (127) and 
+
+wk(G′) = wk(G). (128) Using Eq. (120), 
+
+Tmix (G′) = 
+
+> K
+
+X
+
+> k=1
+
+wk(G′) bT ′
+
+> k
+
+=
+
+> K
+
+X
+
+> k=1
+
+wk(G)P bTk
+
+= P T mix (G). (129) Therefore, 
+
+H(G′) = N T mix (G′)⊤X′
+
+= N T mix (G)⊤P ⊤P X 
+
+= N T mix (G)⊤X = H(G). (130) Combining q(G′) = q(G) and H(G′) = H(G) yields 
+
+z(G′) = z(G). (131) 
+
+E. Sparse Evaluation and Complexity Details 
+
+For completeness, we detail the complexity stated in the main paper. The sparse graph encoder requires O(N + |E|)
+
+operations for fixed hidden width and depth. Encoding all relational bases costs O(KM 2). Constructing K graph–base compatibility matrices costs O(KN M ), and S Sinkhorn iter-ations cost O(SKN M ). By Eqs. (82)–(83), evaluating AT k
+
+over all bases costs O(K|E|M ). The multiplication TkBk
+
+costs O(KN M 2), after which the Frobenius inner product is 
+
+O(KN M ). Hence the complete leading forward complexity is 
+
+O  N + |E| + KM 2 + SKN M + K|E|M + KN M 2 .
+
+(132) For fixed architectural parameters K, M , S, and hidden width, this is linear in the sparse graph representation, 
+
+O(N + |E|). (133) The principal stored quantities are the sparse graph, graph-node embeddings, K graph–base couplings, and K relational bases. The resulting per-graph memory complexity is 
+
+O  N + |E| + KN M + KM 2 . (134) No term requires an N × N dense relation tensor. 
+
+F. Additional Fixed-Coupling Identity 
+
+This final identity is not required by the learning objective or the transfer representation, but it is useful for implementation verification. For a feasible coupling T ∈ Π( μG, ν ), let 
+
+Dν = diag( ν), ΛT = D−1 
+
+> ν
+
+T ⊤, (135) and define the relation transported into the common base-role space as 
+
+AT = Λ T AΛ⊤ 
+
+> T
+
+= D−1 
+
+> ν
+
+T ⊤AT D −1 
+
+> ν
+
+. (136) For C, D ∈ RM ×M , define 
+
+⟨C, D ⟩ν = X
+
+> a,b
+
+Cab Dab νaνb, ∥C∥2 
+
+> ν
+
+= ⟨C, C ⟩ν . (137) 
+
+Proposition 5 (Fixed-coupling energy decomposition) . For every feasible T ,
+
+E(A, B ; T ) = ∥B − AT ∥2 
+
+> ν
+
++ V(A; T ), (138) 
+
+where 
+
+V(A; T ) = X
+
+> i,j
+
+A2 
+
+> ij
+
+μG(i)μG(j) − ∥ AT ∥2 
+
+> ν
+
+≥ 0. (139) 
+
+Proof. From Eq. (136), 
+
+⟨B, A T ⟩ν = X
+
+> a,b
+
+Bab 
+
+ P  
+
+> i,j
+
+Tia Aij Tjb 
+
+νaνb
+
+
+
+νaνb
+
+= X
+
+> i,j,a,b
+
+Aij Bab Tia Tjb . (140) Using Proposition 2, 
+
+E(A, B ; T ) = X
+
+> i,j
+
+A2 
+
+> ij
+
+μG(i)μG(j) + ∥B∥2 
+
+> ν
+
+− 2⟨B, A T ⟩ν
+
+= ∥B − AT ∥2 
+
+> ν
+
++ V(A; T ), (141) which proves the decomposition. It remains to show nonnegativity. Since 
+
+X
+
+> i
+
+Tia 
+
+νa
+
+= 1 , (142) the coefficients Tia /ν a define a probability distribution over input nodes conditional on role a. Jensen’s inequality gives, for each (a, b ),
+
+AT (a, b )2 ≤ X
+
+> i,j
+
+A2
+
+> ij
+
+Tia 
+
+νa
+
+Tjb 
+
+νb
+
+. (143) Multiplying by νaνb, summing over (a, b ), and using T 1M =
+
+μG yields 
+
+∥AT ∥2 
+
+> ν
+
+≤ X
+
+> i,j
+
+A2 
+
+> ij
+
+μG(i)μG(j). (144) Therefore V(A; T ) ≥ 0.

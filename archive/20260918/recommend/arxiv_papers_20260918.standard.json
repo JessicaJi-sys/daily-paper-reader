@@ -1,0 +1,107 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-18T21:51:31.595529+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 5,
+    "deep_divecandidates": 0,
+    "deep_cap": 10,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 15,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.17646v1",
+      "source": "arxiv",
+      "title": "Robust and Efficient AI Frameworks for Scalable Material Design and Property Prediction",
+      "abstract": "This thesis develops robust and efficient AI frameworks for accelerating crystalline materials discovery by addressing both major stages of the materials-design pipeline: crystal property prediction and crystal structure generation. Motivated by the high computational cost of Density Functional Theory (DFT) and the limited availability of labeled materials data, the thesis explores graph representation learning, pretraining, multimodal learning, and generative modeling for scalable materials design.   For property prediction, the thesis first introduces CrysXPP, which learns transferable crystal representations through unsupervised graph autoencoding, reducing dependence on large property-labeled datasets. It then proposes CrysGNN, a large-scale self-supervised graph pretraining framework that captures atomic connectivity, chemical attributes, and global structural information and transfers this knowledge to downstream property predictors through knowledge distillation. CrysMMNet further enriches crystal representations by jointly modeling graph structure and textual descriptions, thereby incorporating both local chemical and global structural knowledge.   For crystal generation, the thesis introduces TGDMat, a text-guided joint diffusion framework that jointly models lattice parameters, atomic types, and atomic coordinates while incorporating textual structural knowledge during denoising. This enables the generation of more valid and stable periodic materials while also supporting conditional generation from natural-language descriptions.   Overall, the thesis establishes a unified AI-based framework for data-efficient property prediction and controllable crystal generation, demonstrating how graph learning, multimodal representations, and generative models can reduce computational cost and improve the scalability of materials",
+      "authors": [
+        "Kishalay Das"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci",
+        "cs.LG"
+      ],
+      "published": "2026-09-15T15:15:21+00:00",
+      "link": "https://arxiv.org/pdf/2609.17646v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "unsupervised graph autoencoding for transferable molecular/crystal representation pretraining",
+      "llm_evidence_cn": "无监督图自编码预训练可迁移分子表示",
+      "llm_evidence": "无监督图自编码预训练可迁移分子表示",
+      "canonical_evidence": "无监督图自编码预训练可迁移分子表示",
+      "llm_tldr_en": "Motivated by costly DFT and scarce labeled materials data, the thesis develops CrysXPP and CrysGNN, using unsupervised graph autoencoding and pretraining to learn transferable crystal representations with less labeled data.",
+      "llm_tldr_cn": "针对密度泛函理论计算成本高、带标签材料数据稀缺的问题，论文围绕晶体性质预测与结构生成构建鲁棒高效的AI框架。其提出CrysXPP，通过无监督图自编码学习可迁移的晶体表示，并进一步提出CrysGNN等图表示学习与预训练方法。实验表明这些方法能降低对大规模性质标签的依赖并在预测任务上保持稳健高效。该工作验证了图自编码预训练在表示迁移上的价值，其思路可迁移到分子预训练与冷启动药物表示学习。",
+      "llm_tldr": "针对密度泛函理论计算成本高、带标签材料数据稀缺的问题，论文围绕晶体性质预测与结构生成构建鲁棒高效的AI框架。其提出CrysXPP，通过无监督图自编码学习可迁移的晶体表示，并进一步提出CrysGNN等图表示学习与预训练方法。实验表明这些方法能降低对大规模性质标签的依赖并在预测任务上保持稳健高效。该工作验证了图自编码预训练在表示迁移上的价值，其思路可迁移到分子预训练与冷启动药物表示学习。",
+      "llm_tags": [
+        "query:mgp"
+      ],
+      "matched_query_tag": "query:mgp",
+      "matched_query_text": "self-supervised representation learning for molecules",
+      "matched_requirement_id": "req-21",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.20419v1",
+      "source": "arxiv",
+      "title": "SCGFM-ART: Amortized Relational Transport for Structure-Centric Graph Foundation Models",
+      "abstract": "Graph foundation models (GFMs) aim to learn transferable representations across severely heterogeneous graph domains. However, severe domain shifts in topology, graph scale, and feature semantics impede the construction of a unified, domain-agnostic representation space. To address this, we propose SCGFM-ART, a structure-centric GFM framework that aligns arbitrary graphs onto a shared relational atlas via Amortized Relational Transport (ART). The relational atlas serves as a universal coordinate system defined by a finite set of relational landmarks (bases), while ART directly predicts reusable, end-to-end graph-to-base transport plans, bypassing costly runtime Gromov-Wasserstein optimizations. Under this formulation, SCGFM-ART decomposes a graph into a unified representation: globally via its relational response coordinates relative to the atlas, and locally via its node-to-role structural correspondences. These correspondences project disparate node attributes into a canonical role space, resolving structural and semantic heterogeneity within a singular alignment interface. Rigorously modeling graphs and atlas bases as finite measured relational spaces, we establish coordinate fidelity bounds, prove stability under predicted transport plans, and derive an amortized coverage bound that guarantees our learning objective tightly surrogates ideal relational coverage. Benchmarked across 14 cross-domain graph- and node-level classification tasks, SCGFM-ART achieves state-of-the-art transferability, securing superior average ranks of 2.29 and 1.14, respectively. Topological perturbation analyses demonstrate that node-role transport retains fine-grained structural nuances beyond global coordinates. On real-world benchmarks, the amortized formulation yields 44.2 to 85.1 times faster frozen target-domain inference by avoiding iterative alignment at test time.",
+      "authors": [
+        "Xiaodong He",
+        "Xincheng Wang",
+        "Zhao Kang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-17T14:01:44+00:00",
+      "link": "https://arxiv.org/pdf/2609.20419v1",
+      "tags": [
+        "keyword:cd",
+        "keyword:cold-DDI",
+        "keyword:ddi-transfer",
+        "keyword:drug-ood-gen",
+        "keyword:mgp",
+        "query:cd",
+        "query:cold-DDI",
+        "query:ddi-transfer",
+        "query:drug-ood-gen",
+        "query:mgp"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "graph foundation models across heterogeneous domains with severe topology and feature domain shifts",
+      "llm_evidence_cn": "跨异构图域的图基础模型，应对拓扑与特征域偏移",
+      "llm_evidence": "跨异构图域的图基础模型，应对拓扑与特征域偏移",
+      "canonical_evidence": "跨异构图域的图基础模型，应对拓扑与特征域偏移",
+      "llm_tldr_en": "SCGFM-ART tackles severe domain shifts in topology, scale and feature semantics that hinder unified graph representations. It aligns arbitrary graphs onto a shared relational atlas via amortized relational transport, avoiding costly runtime Gromov-Wasserstein optimization for transferable representations.",
+      "llm_tldr_cn": "图基础模型希望学习跨高度异构图域的可迁移表示，但拓扑、图规模与特征语义的严重域偏移阻碍了统一表示空间的构建。作者提出SCGFM-ART，通过摊销关系传输（ART）把任意图对齐到由有限关系地标构成的关系图集上，端到端预测可复用的图到基传输方案，绕过昂贵的Gromov-Wasserstein优化。实验表明该框架可分解并复用结构信息，提升跨域迁移能力。该归纳式图泛化思路与图分布外泛化需求相关。",
+      "llm_tldr": "图基础模型希望学习跨高度异构图域的可迁移表示，但拓扑、图规模与特征语义的严重域偏移阻碍了统一表示空间的构建。作者提出SCGFM-ART，通过摊销关系传输（ART）把任意图对齐到由有限关系地标构成的关系图集上，端到端预测可复用的图到基传输方案，绕过昂贵的Gromov-Wasserstein优化。实验表明该框架可分解并复用结构信息，提升跨域迁移能力。该归纳式图泛化思路与图分布外泛化需求相关。",
+      "llm_tags": [
+        "query:drug-ood-gen"
+      ],
+      "matched_query_tag": "query:drug-ood-gen",
+      "matched_query_text": "inductive graph generalization on unseen nodes and edges with distribution shift",
+      "matched_requirement_id": "req-40",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
