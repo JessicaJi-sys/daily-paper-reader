@@ -1,0 +1,2186 @@
+Title: Multi-source conformal prediction: leveraging heterogeneity via localization
+
+URL Source: https://arxiv.org/pdf/2609.14531v1
+
+Published Time: Tue, 15 Sep 2026 01:24:31 GMT
+
+Number of Pages: 36
+
+Markdown Content:
+# Multi-source conformal prediction: leveraging heterogeneity via localization 
+
+Rohan Hore 1, Anirban Chatterjee 2, and Sayantan Choudhury †31Department of Statistics, Stanford University 
+
+> 2
+
+Department of Mathematics and Statistics, Boston University 
+
+> 3
+
+Department of Computing and Mathematical Sciences, MBZUAI September 15, 2026 
+
+Abstract 
+
+Many modern prediction tasks involve data from multiple heterogeneous sources, while the test distribution may differ substantially from any individual source. Although heterogeneity poses challenges, it also offers an opportunity: different sources may provide complementary information, with some regions of the feature space better represented in one source than another. We propose Multi-Source Randomly Localized Conformal Prediction (MS-RLCP), which builds on the local coverage properties of randomly localized conformal prediction (RLCP) [Hore and Barber, 2025] and extends it to multiple sources through data-adaptive source selection. Under the widely adopted assumption of a shared response distribution conditional on the features across sources and the test population, we establish finite-sample coverage bounds using an interpretable notion of envelope distribution that captures their aggregate feature-space representation. Our analysis allows the test feature distribution to be absolutely continuous with respect to the envelope, extending beyond mixtures of source distributions. Under additional regularity conditions, we also establish asymptotic test-conditional coverage. Simulations and real-world experiments demonstrate the effectiveness of MS-RLCP across varying levels of data heterogeneity. 
+
+Keywords: Multi-source predictive inference, covariate shift, conformal prediction, local coverage, multi-environment prediction 
+
+# 1 Introduction 
+
+Recent advances in machine learning methods have led to their increased adoption in safety-critical applications, including autonomous driving [Bojarski et al., 2016], medical diagnosis [Kompa et al., 2021; Bhatt et al., 2021], and financial risk assessment [Mashrur et al., 2020]. This has made reliable uncertainty quantification increasingly important in these settings (see Guo et al. [2017]; He et al. [2026]; Ovadia et al. [2019] and references therein). Conformal prediction [Vovk et al., 2005] provides a simple yet powerful distribution-free framework for 
+
+> ∗
+
+These authors contributed equally to this work. 
+
+> †
+
+Now at Amazon, India. 
+
+1arXiv:2609.14531v1 [stat.ML] 13 Sep 2026 constructing prediction sets with finite-sample coverage guarantees. These guarantees typically rely on exchangeability, an assumption satisfied when training and test data are drawn i.i.d. from the same population. However, many applications rely on multiple heterogeneous sources collecting data under different conditions or protocols [Crammer et al., 2008; Mansour et al., 2008; Zhao et al., 2018]. For instance, in healthcare, predicting a new patient’s response to a drug may involve clinical data from hospitals serving different patient populations [Ali et al., 2022; Jochems et al., 2016]. Similarly, sensor networks combine measurements from devices operating under different environmental conditions [McMahan et al., 2017; Zhao et al., 2025]. Such differences across source populations can violate the exchangeability assumption underlying standard conformal prediction. While the challenges posed by heterogeneity are well recognized in the literature, the op-portunity to combine complementary information from different sources remains less explored, particularly when some sub-populations are better represented in one source than another. This motivates our central question: how can we bring together such local information to construct efficient conformal prediction sets? We describe our formal setup and goal below. 
+
+1.1 Problem setup 
+
+Let N denote the set of natural numbers and consider K ∈ N heterogeneous data sources. For each k ∈ [K], let Dk = {(Yi,k , X i,k ) : 1 ≤ i ≤ nk} consist of nk ∈ N independent samples from a distribution Pk. We also assume that the datasets Dk are independent across k. Here, Xi,k ∈ X 
+
+is a feature vector and Yi,k ∈ Y is the corresponding response. Write D = SKk=1 Dk for the combined dataset and n = |D| for its total sample size. Let 2 Y denote the power set of Y. The aim of this work is to construct a prediction set ˆCn : X → 2Y that satisfies 
+
+PD× Ptest 
+
+
+
+Yn+1 ∈ ˆCn(Xn+1 )
+
+
+
+≥ 1 − α for all Ptest . (1.1) Here, the probability is taken over the randomness of the observed data D and a test sample (Yn+1 , X n+1 ) drawn from Ptest independently of D.While (1.1) may at first glance seem a meaningful goal, without assumptions on the source and test distributions, nontrivial prediction sets cannot generally satisfy (1.1), even with a single source ( K = 1). This is closely tied to the difficulty of achieving distribution-free conditional coverage [Vovk, 2012; Foygel Barber et al., 2021; Lei and Wasserman, 2014]; see Hore and Barber [2025, Section 1] for a formal connection between the two. A natural starting point is therefore to adopt the widely used covariate shift assumption [Tibshirani et al., 2019]: Pk = PY |X × Pk,X for all k ∈ [K] and Ptest = PY |X × Ptest ,X . In other words, the marginal feature distributions may differ, while the conditional distribution of the response given the features, PY |X , is shared across sources and the test environment. Even under this covariate shift assumption, exact coverage guarantees remain difficult to attain in practice, including when K = 1. For instance, the weighted conformal method of Tibshirani et al. [2019] provides an exact coverage guarantee when the true shift function dPtest ,X 
+
+> dP1,X
+
+is known. In practice, this function must typically be estimated, which can be challenging when the distributions are supported on high-dimensional spaces. To address this difficulty, a rich literature seeks approximate coverage guarantees for the setting K = 1 (see Gibbs and Candes [2021]; Podkopaev and Ramdas [2021]; Liu et al. [2024] 2and references therein). In line with these works, we also work under covariate shift and aim to construct prediction sets from heterogeneous multi-source data with approximate coverage: the guarantee in (1.1) holds up to a provably small deviation from the nominal level 1 − α for any finite K ≥ 1. 
+
+1.2 Related work 
+
+Given the widespread relevance of multi-source predictive inference in practical problems, a substantial body of literature has studied it from different perspectives. Below, we provide a selective review of existing work. 
+
+Federated conformal prediction. A prominent line of work arises from the federated learning literature, where methods combine information across heterogeneous sources [Lu et al., 2023; Plassier et al., 2024; Zhu et al., 2024]. For example, Lu et al. [2023] establish coverage under partial exchangeability, while Liu et al. [2024] develop target-population inference using influence-function-based estimation and adaptive source weighting. Some methods further reduce communication and data sharing; notably, Humbert et al. [2023] propose a quantile-of-quantiles procedure requiring only one round of communication. These considerations are particularly relevant in healthcare, where sharing individual observations can be restricted [Sun et al., 2026; Adnan et al., 2022]. A common formulation in this literature takes the test population to be a mixture of source populations, as in Lu et al. [2023]; guarantees under this formulation do not directly extend to test distributions outside the mixture class. 
+
+Aggregation across sources. Since conformal prediction can be viewed through the lens of testing, a natural approach is to construct source-specific conformal prediction sets or p-values and then aggregate them. Yang and Jin [2026] develop max-based aggregation of conformal p-values, while Ying et al. [2024] study aggregation of source-specific weighted conformal prediction sets. However, the efficiency of aggregation depends on score design: scores that perform well separately need not yield efficient prediction sets after aggregation. 
+
+Group-conditional coverage. When different sources are interpreted as groups or classes, multi-source predictive inference is closely related to group-conditional coverage. Several works study coverage guarantees within specified groups or classes [Romano et al., 2020; Jung et al., 2022; Ding et al., 2023; Bairaktari et al., 2025]. Coverage of at least 1 − α within every group also ensures coverage under any mixture of those group distributions. A related formulation considers covariate shift determined by changes in group proportions [Bhattacharyya and Barber, 2026]. However, guarantees are limited to test distributions falling within the mixture class. 
+
+Hierarchical conformal prediction. Distributed data are also studied through hierarchical models, in which source distributions are first drawn from a common higher-level population and observations within each source are then sampled conditionally on its distribution. Dunn et al. [2023]; Lee et al. [2023]; Duchi et al. [2025] develop conformal procedures for hierarchical or multi-environment data. Guarantees based on this structure require similar hierarchical structure for test distribution. 3Coverage under distribution shift. More broadly, since we allow Ptest to differ from the source populations, our goal is closely connected to robust conformal prediction under distribution shift. In the single-source setting, weighted conformal prediction accounts for covariate shift through likelihood-ratio weighting when the shift is known [Tibshirani et al., 2019]. Cauchois et al. [2024]; Xu et al. [2025]; Aolaritei et al. [2026] further study robustness to general distributional shifts through different notions of distributional discrepancy. 
+
+Conformal prediction with local coverage guarantees. When distribution shift is re-stricted to covariate shift, constructing robust prediction sets is naturally linked to achieving good local coverage. Despite the challenges of distribution-free test-conditional coverage, several works develop theoretically grounded conformal methods with local or conditional coverage guarantees under appropriate assumptions or relaxations [Chernozhukov et al., 2021; Gibbs et al., 2025; Guan, 2023; Hore and Barber, 2025]. 
+
+1.3 Our approach 
+
+We approach the multi-source prediction problem by constructing a conformal prediction set at each source and selecting among these sets using a data-adaptive rule. The intuition, supported by empirical evidence, is that local coverage of conformal prediction sets is typically better in regions that are more strongly represented in the data. With multiple sources available, we can match a test point to a source with stronger local representation and use its conformal prediction set to help improve coverage at that test point. To implement this idea, we first revisit RLCP framework of Hore and Barber [2025], which constructs prediction sets with provable local coverage guarantees in the single-source setting. We then propose Multi-Source Randomly Localized Conformal Prediction ( MS-RLCP ), which forms source-specific RLCP prediction sets for each of the K sources and adaptively selects one at test time. Integrating data-adaptive source selection into RLCP yields the following useful properties: 
+
+• Local training without data sharing. Each source-specific RLCP prediction set can use its own conformal score, allowing each source to train its prediction model independently without sharing training data. This reduces the communication burden associated with centralized training. Moreover, MS-RLCP can serve as a wrapper around ready-to-use source-specific models, without requiring any model aggregation or global calibration. 
+
+• Meaningful coverage beyond mixtures of sources. We introduce an interpretable notion of envelope distribution that captures the aggregate representation of the feature space across sources. We provide finite-sample upper bounds on coverage under Ptest that are absolutely continuous with respect to this envelope. In particular, the test covariate distribution need not be a mixture of the source distributions; it may only be absolutely continuous with respect to any such mixture. 
+
+• Asymptotic test-conditional coverage. Beyond marginal coverage, we characterize coverage conditional on the test feature and establish that MS-RLCP inherits the asymptotic conditional coverage guarantees of RLCP, despite data-adaptive source selection. Our approach is related to data-adaptive selection among conformal prediction sets, as studied by Yang and Kuchibhotla [2025]; Liang et al. [2026]; Wang and Wang [2026]. These works, however, typically focus on choosing among prediction models in a single-source setting to 4improve efficiency while preserving validity. In our setting, the test distribution may differ from every source, so relying on any single source may lead to coverage far below the nominal level. Establishing meaningful coverage guarantees through source selection is therefore the primary challenge. 
+
+# 2 Multi-Source Randomly Localized Conformal Prediction 
+
+In this section, we formally introduce the Multi-Source Randomly Localized Conformal Prediction (MS-RLCP ) algorithm for constructing reliable prediction sets from heterogeneous data sources. First, in Section 2.1, we illustrate its guiding principles in a simplified setting with known source alignment. We then review RLCP, the building block of our approach, in Section 2.2, before presenting the full MS-RLCP method in Section 2.3. 
+
+2.1 A Structured Multi-Source Setting with Known Alignment 
+
+To illustrate the key ideas underlying our approach, we begin with a simple multi-source setting in which constructing a prediction set reduces to selecting the source aligned with a given test point. Assume a known partition of the feature space X = FKk=1 Xk such that, for every k ∈ [K], the test feature distribution matches the k-th source feature distribution when restricted to Xk.Formally, 
+
+Ptest ,X |X∈X k = Pk,X |X∈X k , for all k ∈ [K]. (2.1) Equivalently, the test feature distribution is a mixture of the conditional distributions 
+
+Pk,X |X∈X k , k ∈ [K]. In this setting, the coverage guarantee in (1.1) can be achieved through a simple extension of split conformal prediction. For each source k ∈ [K], construct a source-specific prediction set ˆCnk ,k : X → 2Y , where nk = |D k|, by applying split conformal prediction [Vovk et al., 2005; Papadopoulos et al., 2002] to the samples in Dk whose features lie in Xk. This prediction set satisfies the following conditional coverage guarantee (see Lei and Wasserman [2012]): 
+
+PPk ×D k
+
+
+
+Yn+1 ∈ ˆCnk ,k (Xn+1 ) Xn+1 ∈ X k
+
+
+
+≥ 1 − α. (2.2) That is, ˆCnk ,k provides valid coverage for a test sample drawn from Pk conditional on 
+
+{Xn+1 ∈ X k} We then define a global prediction rule ˆCn : X → 2Y by setting ˆCn(x) = ˆCnk ,k (x)whenever x ∈ X k, for k ∈ [K]. Under covariate shift, combining the alignment condition in (2.1) with the coverage guarantee in (2.2) shows that ˆCn satisfies (1.1) without an approximation error. The guiding principles of this construction, which also underlies our general proposal, are as follows: 
+
+• Construct source-specific prediction sets with local coverage guarantees. 
+
+• For each test point, identify the source with the most appropriate local representation in the feature space. Intuitively, we select the source that best represents the neighborhood of a new test point and report its locally calibrated prediction set as the final prediction set. In the structured setting above, the known partition determines this selection; in our general method, we select the source using a data-adaptive rule. The formal details are given in Section 2.3. 52.2 RLCP and local coverage 
+
+We briefly review Randomly Localized Conformal Prediction (RLCP) from Hore and Barber [2025], which constructs prediction sets with provable local coverage guarantees and forms a key component of our MS-RLCP method. Consider the single-source setting. With a slight abuse of notation, let D = {(Yi, X i) : 1 ≤
+
+i ≤ n} denote observations generated independently from an unknown distribution P . Let (Yn+1 , X n+1 ) denote an independent test sample from the same distribution P .For a user-specified kernel H(·, ·) (assumed symmetric in its arguments, with H(x, ·) a density for all x ∈ X ), generate a perturbed test feature ˜Xn+1 ∼ H(Xn+1 , ·) conditional on Xn+1 . Using the original test feature Xn+1 and the perturbed feature ˜Xn+1 , RLCP aims to construct a prediction set ˆCn(Xn+1 , ˜Xn+1 ) satisfying 
+
+P
+
+
+
+Yn+1 ∈ ˆCn(Xn+1 , ˜Xn+1 ) | ˜Xn+1 
+
+
+
+≥ 1 − α. (2.3) For a suitably localized kernel H, we expect ˜Xn+1 ≈ Xn+1 . The notion of conditional coverage in (2.3) can be interpreted as coverage conditional on a random neighborhood of Xn+1 .For X = Rd with d ≥ 1, natural choices of kernel H include the Gaussian and box kernels: 
+
+H(x, y ) = 1(2 π)d/ 2hd exp 
+
+
+
+− ∥x − y∥22
+
+2h2
+
+
+
+,H(x, y ) = 1
+
+Vdhd 1{∥ x − y∥2 ≤ h}, x, y ∈ Rd, (2.4) where h > 0 is the bandwidth and Vd denotes the volume of the unit ball in Rd. The Gaussian kernel corresponds to perturbing Xn+1 with Gaussian noise, i.e., generating ˜Xn+1 = Xn+1 + hZ 
+
+with Z ∼ N d(0 , I d), while the box kernel corresponds to sampling ˜Xn+1 uniformly from the Euclidean ball of radius h centered at Xn+1 .To achieve the local coverage guarantee in (2.3), RLCP adopts the weighted conformal approach originally proposed in Tibshirani et al. [2019]. To begin, define a nonconformity score s : X × Y → R, where larger values indicate greater nonconformity of a sample with respect to the observed data D. In practice, a split-conformal approach is adopted, where D
+
+is first partitioned into a training set Dtrain = {(Yi, X i) : 1 ≤ i ≤ ntrain } and a calibration set 
+
+Dcal = {(Yi, X i) : ntrain + 1 ≤ i ≤ n}. The score is learned using the training data Dtrain , for instance by fitting a predictive model and defining the score through its residuals. In a regression setting, one may use s(x, y ) = |y − ˆf (x)|, where ˆf is the fitted predictor. Given s, the calibration set Dcal is used to determine a data-dependent threshold. Let δx
+
+denote the Dirac measure at x. We define the weighted empirical distribution 
+
+> n
+
+X
+
+> i=ntrain +1
+
+˜wi δs(Xi,Y i) + ˜ wn+1 δ+∞ with ˜wi = H(Xi, ˜Xn+1 )
+
+Pn+1  
+
+> j=ntrain +1
+
+H(Xj , ˜Xn+1 ) , ∀i ∈ [n + 1] \ [ntrain ].
+
+(2.5) The RLCP prediction set is then defined as ˆCRLCP  
+
+> n
+
+(Xn+1 , ˜Xn+1 ; Dtrain , Dcal ) = 
+
+n
+
+y ∈ Y : s(Xn+1 , y ) ≤ ˆq1−α(Xn+1 , ˜Xn+1 )
+
+o
+
+, (2.6) where ˆ q1−α(Xn+1 , ˜Xn+1 ) denotes the (1 − α)-quantile of the weighted empirical distribution in (2.5). Hore and Barber [2025, Proposition 1] shows that ˆCRLCP  
+
+> n
+
+achieves the coverage guarantee in (2.3). We restate this result below for later reference. 6Algorithm 1 Multi-Source Randomly Localized Conformal Prediction ( MS-RLCP )
+
+Require: Source datasets {D k}Kk=1 , test feature Xn+1 , kernel H, target miscoverage level α, and score-fitting routine FitScore . Randomize Test Feature 
+
+1: Draw ˜Xn+1 ∼ H(Xn+1 , ·); 
+
+Train & Align Sources 
+
+2: for k = 1 , . . . , K do 
+
+3: Split Dk = Dk, train ⊔ D k, cal and fit sk ← FitScore (Dk, train ); 
+
+4: Compute the local source alignment score ˆwk ← 1
+
+|D k, train |
+
+X
+
+> (Y,X )∈D k, train
+
+H(X, ˜Xn+1 ); 
+
+5: end for 
+
+6: Select ˆk ← arg max k∈[K] ˆwk;
+
+Local Calibration 
+
+7: For each ( Yi, ˆk, X i, ˆk) ∈ D ˆk, cal , set Si, ˆk ← sˆk(Xi, ˆk, Y i, ˆk); 
+
+8: Set Z ← H(Xn+1 , ˜Xn+1 ) + P
+
+> Dˆk, cal
+
+H(Xi, ˆk, ˜Xn+1 ); 
+
+9: Set wi, ˆk ← H(Xi, ˆk, ˜Xn+1 )/Z and wn+1 ← H(Xn+1 , ˜Xn+1 )/Z ;
+
+10: Compute ˆ q ← Quantile 1−α
+
+P
+
+> Dˆk, cal
+
+wi, ˆkδSi, ˆk + wn+1 δ+∞
+
+
+
+;
+
+Predict 11: Return ˆCn(Xn+1 ) ← { y ∈ Y : sˆk(Xn+1 , y ) ≤ ˆq}.
+
+Lemma 2.1 (Proposition 1, Hore and Barber [2025]) . The RLCP prediction set constructed in 
+
+(2.6) satisfies 
+
+P
+
+
+
+Yn+1 ∈ ˆCRLCP  
+
+> n
+
+(Xn+1 , ˜Xn+1 ; Dtrain , Dcal ) | ˜Xn+1 , Dtrain 
+
+
+
+≥ 1 − α. 
+
+We next introduce our main method, MS-RLCP , for reliable predictive coverage with heteroge-neous data. 
+
+2.3 Multi-Source RLCP 
+
+We now formally present our main method, MS-RLCP . Following the intuition from Section 2.1 and the outline in Section 1.3, we combine the local coverage properties of source-specific RLCP prediction sets with a data-driven rule that selects the source with the strongest local representation near the test point. Consider a test sample ( Yn+1 , X n+1 ) drawn from an unknown test distribution Ptest =
+
+PY |X × Ptest ,X . Given a kernel H, generate the perturbed test feature conditional on Xn+1 :˜Xn+1 ∼ H(Xn+1 , ·). (2.7) 
+
+Step I: Source-Specific Prediction Sets with Local Coverage. To construct prediction sets with good local coverage, we apply the RLCP framework from Section 2.2 independently within each source. For each k ∈ [K], we partition the data Dk = Dk, train 
+
+F Dk, cal into training and calibration subsets and construct an RLCP prediction set as in (2.6): ˆCk
+
+
+
+Xn+1 , ˜Xn+1 
+
+
+
+= ˆCRLCP 
+
+> nk
+
+
+
+Xn+1 , ˜Xn+1 ; Dk, train , Dk, cal 
+
+
+
+. (2.8) This is achieved by training a source-specific score function sk on Dk, train and calibrating it using the data-dependent quantile threshold computed from Dk, cal .7Step II: Source Identification through Data-Dependent Alignment. Next, to complete the construction of the prediction set, we align the test observation with the most appropriate source. Specifically, for each source, we evaluate how likely the observed perturbed test point ˜Xn+1 would be if the original feature were drawn from that source and then perturbed according to (2.7). To that end, for each k ∈ [K] let Pk, ˜X be the distribution of ˜X, where ˜X is obtained by first sampling X ∼ Pk,X and then generating ˜X | X ∼ H(X, ·). Thus, Pk, ˜X admits the density ˜x 7 → EX∼Pk,X [H(X, ˜x)] . (2.9) We select the source under which the perturbed test point has the largest density, giving the oracle source selection rule 
+
+koracle ( ˜Xn+1 ) := arg max  
+
+> k∈[K]
+
+EX∼Pk,X 
+
+h
+
+H(X, ˜Xn+1 )
+
+i
+
+. (2.10) Since the population density in (2.9) is unknown, we estimate it using the empirical mean based on the training samples Dk, train . This leads to the following data-dependent source selection rule: ˆk( ˜Xn+1 ) = arg max 
+
+> k∈[K]
+
+1
+
+nk, train 
+
+> nk, train
+
+X
+
+> i=1
+
+H
+
+
+
+Xi,k , ˜Xn+1 
+
+
+
+, (2.11) where nk, train = |D k, train |. Ties in both selection rules can be resolved using a pre-fixed rule. With this choice of source, we report the MS-RLCP prediction set ˆCn(Xn+1 ) := ˆCˆk( ˜Xn+1 )
+
+
+
+Xn+1 , ˜Xn+1 
+
+
+
+, (2.12) where the prediction set on the right-hand side is defined in (2.8). The resulting procedure is summarized in Algorithm 1. 
+
+Remark 2.1. A key feature of our framework is that we allow source-specific scores in Step I .In particular, each source k ∈ [K] is free to choose its score function sk. This flexibility allows each source to draw on its own strengths and account for its particular data characteristics and sample diversity. In contrast to conformal approaches that aggregate data and learn a single score function from the pooled dataset [Lu et al., 2023; Plassier et al., 2024; Zhu et al., 2024], our approach requires no data sharing during model training, substantially reducing the corresponding communication burdens. In Section 3, we establish the validity of the MS-RLCP prediction set defined in (2.12). Before turning to that result, we further examine the role of the perturbed test feature ˜Xn+1 in our procedure. 
+
+2.4 Role of ˜Xn+1 in MS-RLCP 
+
+The perturbed test feature ˜Xn+1 plays a central role in constructing the MS-RLCP prediction set in (2.12): in Step I , it is used to construct source-specific prediction sets with local coverage guarantees, and in Step II , it is used to identify an appropriate source. We now examine its role in both components and provide justification for its use in both components of the procedure. 8Prediction Sets with Local Coverage using ˜Xn+1 . A unifying principle underlying our construction, first illustrated in Section 2.1 and developed further in Section 2.3, is that each source-specific prediction set aims to satisfy a notion of local coverage . We introduce the perturbed test feature ˜Xn+1 to define such a notion. A natural question is whether one can avoid this additional randomness and instead seek stronger, test-conditional coverage guarantees. At the extreme, one might hope to construct, for each source k ∈ [K], a prediction set ˆCk such that 
+
+P Yn+1 ∈ ˆCk(Xn+1 ) | Xn+1 
+
+ ≥ 1 − α. This requirement is strictly stronger than those in (2.2) and (2.3). If such a construction were possible, choosing any source based on the test feature would preserve the desired coverage guarantee. However, even in the single-source setting, such conditional coverage guarantees are generally impossible without producing uninformative prediction sets, that results in infinite length in regression settings [Vovk et al., 2005]. We sidestep this limitation by adopting a principled notion of local coverage through the perturbed feature ˜Xn+1 , as in (2.3). While the framework could, in principle, accommodate alternative relaxations of conditional coverage, such as targeting coverage within small balls in the feature space X , we adopt this approach for its tractability. It enables a precise theoretical analysis and the coverage guarantees presented in Section 3. 
+
+Source Identification through the Perturbed Test Feature ˜Xn+1 . The goal of source identification is to select the source that is most likely to have generated the test feature 
+
+Xn+1 . Assuming that each source feature distribution Pk,X admits a density fk,X , a natural oracle strategy would be to select a source in arg max k∈[K] fk,X (Xn+1 ). In practice, however, accurately estimating these densities under minimal assumptions is challenging, particularly in high-dimensional settings [Tsybakov, 2008]. We circumvent this difficulty by introducing the perturbed test feature ˜Xn+1 . In particular from (2.9) recall that the marginal density of the perturbed feature under source k, evaluated at ˜ x, is EX∼Pk,X [H(X, ˜x)]. This quantity can be easily estimated at each source using an empirical average, making it useful for source selection. As a result, the perturbed test feature ˜Xn+1 provides a principled and computationally tractable way to compare local representation across sources, aligning source selection with the notion of local coverage introduced in Step I .
+
+# 3 Theoretical Guarantees 
+
+We now establish coverage guarantees for MS-RLCP . We begin by introducing an envelope distri-bution that captures the aggregate representation of the feature space across sources and plays a central role in our theoretical analysis. Suppose that each source feature distribution Pk,X admits a density fk,X with respect to a common dominating measure ν. This imposes no additional assumption, since one can always choose ν = 1
+
+> K
+
+PKk=1 Pk,X and note that for each k ∈ [K], Pk,X ≪ ν. With this notation laid out, we define the envelope distribution as follows. 
+
+Definition 1. Define the envelope density by ¯fX (x) = B−1 max k∈[K] fk,X (x), where B =R 
+
+> X
+
+max k∈[K] fk,X (x) d ν(x) is the normalizing constant. We denote the corresponding envelope distribution by ¯PX .The name “envelope” reflects that the unnormalized density max k∈[K] fk,X is the smallest function that upper bounds all source densities pointwise. After normalization, it defines a distribution that captures local representation across sources, as illustrated in Figure 1. 96 4 2 0 2 4 6   
+
+> x
+> 0.0 0.1 0.2 0.3 0.4
+> Density
+> N(2, 1) N(0, 1) N(2, 1)
+> Source 1 Source 2 Source 3 Envelope
+
+Figure 1: Illustration of the envelope density for X = R with K = 3 source distributions 
+
+P1,X , P 2,X , P 3,X given by N( −2, 1), N(0 , 1), and N(2 , 1), respectively, shown as black curves. The corresponding envelope density ¯fX (shaded) captures the aggregate representation of the feature space across sources. By construction, each source feature distribution Pk,X is absolutely continuous with respect to ¯PX . Consequently, the density gk,X = d Pk,X /d ¯PX is well defined. The following lemma records this fact. 
+
+Lemma 3.1. For every k ∈ [K], the source feature distribution Pk,X admits a density gk,X with respect to ¯PX . Moreover, max k∈[K] gk,X (x) = B for ¯PX -almost every x, where B is defined in Definition 1. 
+
+By Lemma 3.1, we may also write B = max k∈[K] ∥gk,X ∥∞, where ∥g∥∞ = ess sup x∈X |g(x)|
+
+denotes the L∞( ¯PX ) norm of a measurable function g : X → R.For weights λk > 0 satisfying PKk=1 λk = 1, let Qλ,X := PKk=1 λkPk,X . The following lemma shows that every such mixture shares the same null sets as the envelope distribution. 
+
+Lemma 3.2. Let λmin := min k∈[K] λk > 0. Then, 
+
+Bλ min ¯PX ≤ Qλ,X ≤ B ¯PX .
+
+In particular, Qλ,X and ¯PX are equivalent measures (i.e., absolutely continuous w.r.t. each other). 
+
+Beyond the covariate shift assumption, we impose no structural assumption on the test distribution Ptest except the following: 
+
+Assumption 1. The test feature distribution Ptest ,X is absolutely continuous with respect to the envelope distribution ¯PX , and we write gtest ,X to denote the corresponding density. Assumption 1 ensures that the test feature distribution assigns no mass to sets that have zero probability under every source. This is necessary for informative distribution-free prediction, since 10 otherwise, the source data can provide no information about the feature–response relationship on those sets. By Lemma 3.2, any Ptest that is absolutely continuous with respect to any mixture of the source distributions (with possibly zero mixture weights) satisfies Assumption 1. Existing multi-source conformal methods [Yang and Jin, 2026; Lu et al., 2023; Ying et al., 2024] often assume that the test feature distribution itself is a mixture of the source distributions. Our framework allows a substantially broader class: the test distribution need not be a mixture, but may only be absolutely continuous with respect to one. 
+
+3.1 Finite-sample bound on coverage 
+
+We now state finite-sample lower bounds on the coverage of MS-RLCP . For clarity of exposition, we defer the general result to Theorem B.1, stated and proved in Appendix B, and present a simplified bound here. Specifically, we assume that the densities g1,X , . . . , g K,X and gtest ,X are globally L-Lipschitz. Let neff := min k∈[K] nk, train denote the smallest training split size among the K sources, which we refer to as the effective training sample size. 
+
+Theorem 3.3. Fix α ∈ (0 , 1) . Suppose X = Rd for some integer d ≥ 1, Assumption 1 holds, and the densities g1,X , . . . , g K,X and gtest ,X are globally L-Lipschitz, with ∥gtest ,X ∥∞ < ∞. Let 
+
+H be a kernel as in Section 2.2, with ∥H∥∞ < ∞ and EX∼ ¯PX , ˜X|X∼H(X, ·)∥X − ˜X∥2 < ∞, and suppose neff ≥ 2. Then the MS-RLCP prediction set satisfies 
+
+P Yn+1 ∈ ˆCn(Xn+1 ) ≥
+
+
+
+1 − α − 1
+
+neff 
+
+
+
+− 2L
+
+
+
+1 + 2∥gtest ,X ∥∞
+
+B
+
+
+
+E X∼ ¯PX
+
+> ˜X|X∼H(X, ·)
+
+∥X − ˜X∥2
+
+− P X∼Ptest ,X 
+
+> ˜X|X∼H(X, ·)
+
+
+
+max  
+
+> k∈[K]
+
+EX′∼Pk,X 
+
+h
+
+H(X′, ˜X)
+
+i
+
+≤ tneff 
+
+
+
+, (3.1) 
+
+where tneff := 2 ∥H∥∞
+
+p2 log(2 Kn eff )/n eff .
+
+The proof is given in Appendix A.3. For further discussion, we simplify this bound for the special case of box kernel. 
+
+Corollary 3.4. Consider the setting of Theorem 3.3, and suppose that H is the box kernel, defined in (2.4) . Then, 
+
+
+
+1 − α − 1
+
+neff 
+
+
+
+− 2Lh 
+
+
+
+1 + 2∥gtest ,X ∥∞
+
+B
+
+
+
+− P X∼Ptest ,X 
+
+> ˜X|X∼H(X, ·)
+
+
+
+max  
+
+> k∈[K]
+
+Pk,X 
+
+ Bh( ˜X) ≤ τneff 
+
+
+
+,
+
+where Bh(x) denotes the closed Euclidean ball of radius h centered at x, and τneff := 2 
+
+q 2 log(2 Kn eff ) 
+
+> neff
+
+.
+
+Since for box kernel, ∥X − ˜X∥2 ≤ h almost surely, the corollary is immediate from Theorem 3.3. Each of the terms in the bound can be interpreted as follows: 
+
+(a) The first term is the target coverage level 1 − α, reduced by a finite-sample correction 1 /n eff 
+
+that vanishes as the sample size at every source grows. 
+
+(b) The second term accounts for localization and perturbation and is of order O(h) for the box kernel. Choosing a smaller h reduces this term but can lead to larger prediction sets. A typical 11 approach is to let h vary with neff ; we return to this tradeoff later in the section. For a general kernel, the corresponding quantity is the average perturbation distance EX∼ ¯PX , ˜X|X∼H(X, ·)∥X −
+
+˜X∥2.
+
+(c) The final term measures how often the perturbed test feature falls in a region that is poorly represented across sources. Under the Lipschitz assumption and the envelope construction, max  
+
+> k∈[K]
+
+Pk,X 
+
+ Bh(˜ x) ≥ ch ¯PX
+
+ Bh(˜ x), ch := ( B − 2Lh ) ∨ BK > 0.
+
+Here, ¯PX (Bh(˜ x)) is the envelope mass within a ball of radius h around ˜ x; a small value indicates limited representation in that neighborhood. Consequently, under Assumption 1 and the boundedness of gtest ,X ,
+
+P X∼Ptest ,X 
+
+> ˜X|X∼H(X, ·)
+
+
+
+¯PX
+
+ Bh( ˜X) ≤ τneff 
+
+ch
+
+
+
+≤ ∥ gtest ,X ∥∞ · P X∼ ¯PX
+
+> ˜X|X∼H(X, ·)
+
+
+
+¯PX
+
+ Bh( ˜X) ≤ τneff 
+
+ch
+
+
+
+.
+
+For fixed h, K, and source and test distributions, we have τneff /c h → 0 as neff → ∞ . Moreover, noting that ¯PX (Bh(˜ x)) /(Vdhd) is the marginal density of ˜X, by the dominated convergence theorem, the final probability term vanishes in large sample setting. The general result in Theorem B.1 allows non-Lipschitz densities while retaining the same three components and their corresponding interpretations, with Lipschitz parameters replaced by modulus of continuities defined in (B.1). 
+
+Remark 3.1. Even the simplified result allows considerable irregularity in the source and test distributions: the Lipschitz assumption concerns only their densities with respect to ¯PX . Thus, their original densities may have discontinuities or other irregularities, provided their variation relative to the envelope is smooth. As an illustration, let r be any symmetric probability density on [ −1, 1], which need not satisfy standard smoothness assumptions. Consider a two-source prediction problem with 
+
+f1,X (x) = 
+
+
+
+1 + x
+
+2
+
+
+
+r(x), f2,X (x) = 
+
+
+
+1 − x
+
+2
+
+
+
+r(x), ftest ,X (x) = r(x).
+
+Symmetry ensures that both source densities integrate to one. The corresponding envelope density is ¯fX (x) = B−1(1 + |x|/2) r(x), giving the density ratios 
+
+g1,X (x) = B(1 + x/ 2) 1 + |x|/2 , g2,X (x) = B(1 − x/ 2) 1 + |x|/2 , gtest ,X (x) = B
+
+1 + |x|/2 .
+
+These ratios are Lipschitz on [ −1, 1] regardless of the irregularities in r.
+
+Remark 3.2 (Benefit of heterogeneity) . Observe that in Theorem 3.3, the leading miscoverage term scales as O(h) for moderate sample sizes and holds whenever the test distribution admits a Lipschitz density with respect to the envelope distribution. In contrast, the single-source RLCP result [Hore and Barber, 2025, Theorem 3] yields a similar O(h) rate, but requires Lipschitz smoothness relative to a single source distribution. The class of distributions that are Lipschitz with respect to the envelope is strictly richer, highlighting the advantage of localization in improving robustness to distribution shift by exploiting heterogeneity across sources. 12 3.2 Asymptotic test-conditional coverage 
+
+Since MS-RLCP is built upon the RLCP method, it is worth investigating whether MS-RLCP inherits the strong local coverage properties of RLCP. In particular, here we will study the coverage of 
+
+MS-RLCP prediction sets, conditional on the true test feature. We adopt the multi-source setting with fixed K sources from the previous section. For simplicity of the exposition, we assume balanced source datasets, with each Dk containing 2 n
+
+observations, split equally between Dk, train and Dk, cal . Further, we take X = Rd, with d ≥ 1, and use the box kernel in (2.4) with a deterministic bandwidth hn > 0 at total sample size 2 nK .
+
+Theorem 3.5. Fix α ∈ (0 , 1) and x0 ∈ Rd. Under Assumptions (A1)–(A5), stated formally in Appendix C, we have that 
+
+PY ∼PY |X=x0
+
+
+
+Y ∈ ˆCn(X) X = x0
+
+
+
+−→ 1 − α as n → ∞ .
+
+While we have deferred the formal description of the assumptions, to put informally, our main assumptions require (1) shrinking bandwidth such that hn → 0 and nh dn → ∞ (2) positive envelope density near x0, (3) smoothness of the learned score distributions under total variation measure. Such assumptions are atypical in studying test-conditional coverages, and appear in existing works (for e.g., see [Guan, 2023; Hore and Barber, 2025]). The proof of this result is given in Appendix A.4, and it follows from a more general finite-sample bound on test conditional coverage, we give in Theorem C.1. 
+
+# 4 Numerical Experiments 
+
+Now, we evaluate MS-RLCP on both synthetic and real datasets. In all simulations, we use a Gaussian kernel (see (2.4)) and employ the smoothed RLCP construction for source-specific prediction sets to reduce over-coverage (see Appendix B of Hore and Barber [2025] for more details). 
+
+4.1 Simulations 
+
+We first evaluate MS-RLCP on a synthetic setting designed to induce systematic heterogeneity. Let 
+
+X = R5 and consider K = 10 source distributions with taking Pk,X = N (νk, I 5). To construct 
+
+{νk}, enumerate all 10 pairs ( i1, i 2) with 1 ≤ i1 < i 2 ≤ 5, and for the kth pair ( i1, i 2) we define 
+
+νk = ( νk, 1, . . . , ν k, 5) by (νk)j =
+
+(
+
+−ν, j ∈ { i1, i 2},ν, otherwise .
+
+This construction induces structured heterogeneity, with each source emphasizing a distinct subpopulation of the feature space. The conditional model is shared across sources and is given by 
+
+Y = sin( X1 + X2) + cos( X3) + X4 + 2 X5 + ϵ
+
+with ϵ ∼ N (0 , 1). 13 -2.0 -1.6 -1.1 -0.7 -0.2 0.2 0.7 1.1 1.6 2.0            
+
+> 0.80 0.85 0.90 0.95 1.00
+> Coverage
+> -2.0 -1.6 -1.1 -0.7 -0.2 0.2 0.7 1.1 1.6 2.0
+> 45678
+> Predicted Interval Length
+> MS-RLCP Max aggregation Mean aggregation
+
+Figure 2: MS-RLCP achieves coverage close to the target level 0 .9 while producing substantially shorter prediction intervals than competing methods. Left: empirical coverage in Experiment 1. Right: average prediction set length in Experiment 1. 
+
+Experiment 1: beyond mixture settings. In Section 3 we establish robust coverage of 
+
+MS-RLCP beyond the standard mixture setting (i.e., where the test population is a mixture of the 10 source distributions). We define Ptest with the same conditional PY |X and Ptest ,X =
+
+> 110
+
+P10  
+
+> k=1
+
+N (ν(μ) 
+
+> k
+
+, I 5), where ν(μ) 
+
+> k
+
+is defined analogously to νk with ν replaced by μ. The case 
+
+ν = μ recovers the exact mixture setting with uniform weights, while varying μ ∈ [−2, 2] induces controlled departures from it. For each source, we generate 5 , 000 training observations and evaluate all methods on 1 , 000 test samples. The experiment is repeated 100 times, and we report the empirical coverage and average prediction set length across repetitions. As shown in Figure 2 left panel, MS-RLCP maintains coverage close to the target level across all μ.Since MS-RLCP can be cast as a data-dependent aggregation of source-specific confidence sets, it is natural to compare MS-RLCP with other aggregation-based baselines, i.e., applying RLCP within each source to obtain p-values ( pk)k∈[K], followed by a max - and a mean -aggregation [Yang and Jin, 2026; Ying et al., 2024]. These baselines while natural are highly conservative (i.e., empirical coverage is close to 1), whereas MS-RLCP attains near-nominal coverage (0 .9) with substantially shorter prediction sets (Figure 2 right panel) 
+
+Experiment 2: benefit of heterogeneity. As suggested in Remark 3.2, MS-RLCP leverages heterogeneity via localization. To assess this, we generate the test distribution as in Experiment 1 and vary ν ∈ { 0, 0.5, 1.0}, where note that larger ν corresponds to greater heterogeneity across sources. Figure 3 left panel shows that for small ν, coverage becomes conservative as μ increases, indicating sensitivity to distribution shift. In contrast, for larger ν, coverage remains close to the target level even for extreme μ, confirming that heterogeneity improves robustness. Moreover, for larger ν, MS-RLCP yields noticeably shorter prediction sets, reflecting improved learning of the feature–response relationship across the heterogeneous sources (Figure 3 right panel). 14 0.85 0.90 0.95 1.00 0.85 0.90 0.95 1.00                    
+
+> Coverage
+> -2.0 -1.6 -1.1 -0.7 -0.2 0.2 0.7 1.1 1.6 2.0
+> 0.85 0.90 0.95 1.00 -2.0 -1.5 -1.0 -0.5 0.0 0.5 1.0 1.5 2.0
+> 4.1 4.2 4.3 4.4 4.5
+> Median interval length (MS-RLCP)
+> = 0.00 = 0.50 = 1.00
+
+Figure 3: Heterogenrity results in more robust coverage and shorter set-lengths for MS-RLCP .Left: empirical coverage in Experiment 2. Right: average prediction set length in Experiment 2. 
+
+4.2 Real Data Experiments 
+
+4.2.1 FMoW Classification under Geographic Distribution Shift 
+
+Machine learning models are widely used for satellite imagery tasks such as land-use mapping, resource allocation, and risk assessment [Cong et al., 2022; Jean et al., 2016; Wang et al., 2018; Rußwurm and K¨ orner, 2020]. A key challenge for reliable inference in such settings is subpopulation shift due to geographic and imaging variability. We evaluate MS-RLCP to tackle such distribution shifts and perform reliable predictive inference from satellite imagery. We use the Functional Map of the World (2016 slice) dataset [Christie et al., 2018], covering 249 countries/regions and 62 classes. We define Africa, the Americas, Asia, Europe, and Oceania as source domains. From each, 40% of samples are used to train a shared DenseNet feature extractor [Huang et al., 2017] (ImageNet-initialized). Remaining data are split into train, calibration, and test sets. Source-specific heads are trained on PCA-reduced (16 components) features. We compute conformal scores using RAPS [Ding et al., 2023; Angelopoulos et al.] and construct RLCP prediction sets from the calibration split with target coverage 1 − α = 0 .9. For the test set, we pool test partitions across all sources, which simulates a mixture of the source populations for the test population. Over 50 repetitions, the method achieves 88 .59 ±0.82% overall coverage with median set width 7 .12 ± 0.33 labels. We also compute coverage of MS-RLCP 
+
+within each region. From Figure 4a, the coverage in Africa, the Americas, and Oceania are near or above the 0 .9 target, while Asia and Europe are more challenging. Correspondingly, from Figure 4c, set sizes increase in these harder regions, indicating that the method adapts uncertainty locally rather than enforcing a single global set size. Additional experimental details are provided in Appendix D.1. 
+
+4.2.2 MEPS Healthcare Utilization 
+
+We now evaluate MS-RLCP on the MEPS healthcare-utilization benchmark [Romano et al., 2020] (panels 19–21), using sources defined by the sensitive attribute race (White vs non-White) as 15 Overall Africa Americas Asia Europe Oceania 
+
+> 70 75 80 85 90 95 100
+> Coverage (%)
+
+(a) FMoW: Coverage 0.00 0.25 0.50 0.75 1.00    
+
+> 70 75 80 85 90 95 100
+> Coverage (%)
+> Panel 19 Panel 20 Panel 21
+
+(b) MEPS: Coverage Overall Africa Americas Asia Europe Oceania 
+
+> 0123456789
+> Set Length
+
+(c) FMoW: Set Length 0.00 0.25 0.50 0.75 1.00    
+
+> 012345
+> Set Length
+> Panel 19 Panel 20 Panel 21
+
+(d) MEPS: Set Length 
+
+Figure 4: Figure 4a and 4c plot coverage and set length for FMOW experiment. Figure 4b and 4d plot the effect of latent test-mixture shift in the MEPS experiment. 
+
+Table 1: MEPS results averaged over 50 repetitions. 
+
+Panel Coverage (%) Set Length Overall White Non-White Overall White Non-White 
+
+19 89.8 88.3 90.7 2.86 3.04 2.72 20 89.4 88.2 90.1 2.89 3.05 2.71 21 89.7 88.1 90.8 2.88 3.05 2.71 
+
+in prior works Romano et al. [2020] and Yang and Jin [2026]. The goal is to predict medical care utilization. We retain continuous features and apply log transforms to both features and response. Within each source, we split data into train, calibration, and test sets and fit a heteroskedastic Gaussian gradient-boosted model (see (D.1)). Calibration scores are computed as absolute residuals normalized by estimated conditional standard deviation. We target coverage 1 − α = 0 .9 and pool test data across sources, reporting overall and source-specific coverage as well as interval width (on the log-transformed scale). Table 1 confirms that coverage remains close to the target level 0 .9 overall and within each source. We further evaluate robustness to latent mixture shift by varying the White fraction 
+
+η ∈ { 0, 0.25 , 0.5, 0.75 , 1} in synthetic test sets (with fixed total size per panel). Figure 4b and 16 Figure 4d show that coverage and median interval length remain stable across all mixture proportions, with slightly increased difficulty as the test set becomes more White-dominated, consistent with the smaller sample size in that source. Additional details are presented in Appendix D.2. 
+
+# 5 Discussion 
+
+In this work, we propose MS-RLCP , which combines the local coverage properties of single-source RLCP with data-adaptive source selection. We introduce an envelope distribution that captures the collective representation of the feature space across sources and provides a common reference for theoretical analysis. Under a shared conditional response distribution PY |X and absolute continuity of the test feature distribution with respect to the envelope, we derive interpretable coverage lower bound. A natural direction for future work is to extend source selection to local weighting of multiple sources. Such an extension could draw on more calibration observations near each test point, potentially improving the efficiency of the prediction sets while retaining coverage guarantees. 
+
+# Acknowledgments 
+
+During the preparation of this manuscript, the authors used AI tools for coding assistance, proofreading, and improving the manuscript’s presentation. The authors have carefully reviewed the manuscript and take full responsibility for its content and conclusions. 
+
+# References 
+
+M. Adnan, S. Kalra, J. C. Cresswell, G. W. Taylor, and H. R. Tizhoosh. Federated learning and differential privacy for medical image analysis. Scientific reports , 12(1):1953, 2022. M. Ali, F. Naeem, M. Tariq, and G. Kaddoum. Federated learning for privacy preservation in smart healthcare systems: A comprehensive survey. IEEE journal of biomedical and health informatics , 27(2):778–789, 2022. A. N. Angelopoulos, S. Bates, M. Jordan, and J. Malik. Uncertainty sets for image classifiers using conformal prediction. In International Conference on Learning Representations .L. Aolaritei, J. Zhu, O. Wang, M. Jordan, and Y. Marzouk. Conformal prediction under l´ evy-prokhorov distribution shifts: Robustness to local and global perturbations. Advances in Neural Information Processing Systems , 38:63811–63840, 2026. K. Bairaktari, J. Wu, and Z. S. Wu. Kandinsky conformal prediction: Beyond class-and covariate-conditional coverage. arXiv preprint arXiv:2502.17264 , 2025. U. Bhatt, J. Antor´ an, Y. Zhang, Q. V. Liao, P. Sattigeri, R. Fogliato, G. Melan¸ con, R. Krishnan, J. Stanley, O. Tickoo, et al. Uncertainty as a form of transparency: Measuring, communicating, and using uncertainty. In Proceedings of the 2021 AAAI/ACM Conference on AI, Ethics, and Society , pages 401–413, 2021. 17 A. Bhattacharyya and R. F. Barber. Group-weighted conformal prediction. Electronic Journal of Statistics , 20(1):1171–1199, 2026. M. Bojarski, D. Del Testa, D. Dworakowski, B. Firner, B. Flepp, P. Goyal, L. D. Jackel, M. Monfort, U. Muller, J. Zhang, et al. End to end learning for self-driving cars. arXiv preprint arXiv:1604.07316 , 2016. M. Cauchois, S. Gupta, A. Ali, and J. C. Duchi. Robust validation: Confident predictions even when distributions shift. Journal of the American Statistical Association , 119(548):3033–3044, 2024. V. Chernozhukov, K. W¨ uthrich, and Y. Zhu. Distributional conformal prediction. Proceedings of the National Academy of Sciences , 118(48):e2107794118, 2021. G. Christie, N. Fendley, J. Wilson, and R. Mukherjee. Functional map of the world. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition , pages 6172–6180, 2018. Y. Cong, S. Khanna, C. Meng, P. Liu, E. Rozi, Y. He, M. Burke, D. Lobell, and S. Ermon. Satmae: Pre-training transformers for temporal and multi-spectral satellite imagery. Advances in Neural Information Processing Systems , 35:197–211, 2022. K. Crammer, M. Kearns, and J. Wortman. Learning from multiple sources. Journal of machine learning research , 9(8), 2008. T. Ding, A. Angelopoulos, S. Bates, M. Jordan, and R. J. Tibshirani. Class-conditional conformal prediction with many classes. Advances in neural information processing systems , 36:64555– 64576, 2023. J. C. Duchi, S. Gupta, K. Jiang, and P. Sur. Predictive inference in multi-environment scenarios. 
+
+Statistical Science , 40(3):392–416, 2025. R. Dunn, L. Wasserman, and A. Ramdas. Distribution-free prediction sets for two-layer hierar-chical models. Journal of the American Statistical Association , 118(544):2491–2502, 2023. R. Foygel Barber, E. J. Candes, A. Ramdas, and R. J. Tibshirani. The limits of distribution-free conditional predictive inference. Information and Inference: A Journal of the IMA , 10(2): 455–482, 2021. I. Gibbs and E. Candes. Adaptive conformal inference under distribution shift. Advances in Neural Information Processing Systems , 34:1660–1672, 2021. I. Gibbs, J. J. Cherian, and E. J. Cand` es. Conformal prediction with conditional guarantees. 
+
+Journal of the Royal Statistical Society Series B: Statistical Methodology , 87(4):1100–1126, 2025. L. Guan. Localized conformal prediction: A generalized inference framework for conformal prediction. Biometrika , 110(1):33–50, 2023. C. Guo, G. Pleiss, Y. Sun, and K. Q. Weinberger. On calibration of modern neural networks. In 
+
+International conference on machine learning , pages 1321–1330. PMLR, 2017. 18 W. He, Z. Jiang, T. Xiao, Z. Xu, and Y. Li. A survey on uncertainty quantification methods for deep learning. ACM Computing Surveys , 58(7):1–35, 2026. R. Hore and R. F. Barber. Conformal prediction with local weights: randomization enables robust guarantees. Journal of the Royal Statistical Society Series B: Statistical Methodology ,87(2):549–578, 2025. G. Huang, Z. Liu, L. Van Der Maaten, and K. Q. Weinberger. Densely connected convolutional networks. In Proceedings of the IEEE conference on computer vision and pattern recognition ,pages 4700–4708, 2017. P. Humbert, B. Le Bars, A. Bellet, and S. Arlot. One-shot federated conformal prediction. In 
+
+International Conference on Machine Learning , pages 14153–14177. PMLR, 2023. N. Jean, M. Burke, M. Xie, W. M. Alampay Davis, D. B. Lobell, and S. Ermon. Combining satellite imagery and machine learning to predict poverty. Science , 353(6301):790–794, 2016. A. Jochems, T. M. Deist, J. Van Soest, M. Eble, P. Bulens, P. Coucke, W. Dries, P. Lambin, and A. Dekker. Distributed learning: developing a predictive model based on data from multiple hospitals without data leaving the hospital–a real life proof of concept. Radiotherapy and Oncology , 121(3):459–467, 2016. C. Jung, G. Noarov, R. Ramalingam, and A. Roth. Batch multivalid conformal prediction. arXiv preprint arXiv:2209.15145 , 2022. B. Kompa, J. Snoek, and A. L. Beam. Second opinion needed: communicating uncertainty in medical machine learning. NPJ Digital Medicine , 4(1):4, 2021. Y. Lee, R. Barber, and R. Willett. Distribution-free inference with hierarchical data. ACM Journal of Data Science , 2023. J. Lei and L. Wasserman. Distribution free prediction bands. arXiv preprint arXiv:1203.5422 ,2012. J. Lei and L. Wasserman. Distribution-free prediction bands for non-parametric regression. 
+
+Journal of the Royal Statistical Society Series B: Statistical Methodology , 76(1):71–96, 2014. R. Liang, W. Zhu, and R. F. Barber. Conformal prediction after data-dependent model selection. 
+
+Journal of the American Statistical Association , pages 1–26, 2026. Y. Liu, A. W. Levis, S.-L. Normand, and L. Han. Multi-source conformal inference under distribution shift. Proceedings of machine learning research , 235:31344, 2024. C. Lu, Y. Yu, S. P. Karimireddy, M. Jordan, and R. Raskar. Federated conformal predictors for distributed uncertainty quantification. In International Conference on Machine Learning ,pages 22942–22964. PMLR, 2023. Y. Mansour, M. Mohri, and A. Rostamizadeh. Domain adaptation with multiple sources. Advances in neural information processing systems , 21, 2008. A. Mashrur, W. Luo, N. A. Zaidi, and A. Robles-Kelly. Machine learning for financial risk management: a survey. Ieee Access , 8:203203–203223, 2020. 19 B. McMahan, E. Moore, D. Ramage, S. Hampson, and B. A. y Arcas. Communication-efficient learning of deep networks from decentralized data. In Artificial intelligence and statistics ,pages 1273–1282. Pmlr, 2017. Y. Ovadia, E. Fertig, J. Ren, Z. Nado, D. Sculley, S. Nowozin, J. Dillon, B. Lakshminarayanan, and J. Snoek. Can you trust your model’s uncertainty? evaluating predictive uncertainty under dataset shift. Advances in neural information processing systems , 32, 2019. H. Papadopoulos, K. Proedrou, V. Vovk, and A. Gammerman. Inductive confidence machines for regression. In European conference on machine learning , pages 345–356. Springer, 2002. V. Plassier, N. Kotelevskii, A. Rubashevskii, F. Noskov, M. Velikanov, A. Fishkov, S. Horvath, M. Takac, E. Moulines, and M. Panov. Efficient conformal prediction under data heterogeneity. In International Conference on Artificial Intelligence and Statistics , pages 4879–4887. PMLR, 2024. A. Podkopaev and A. Ramdas. Distribution-free uncertainty quantification for classification under label shift. In Uncertainty in artificial intelligence , pages 844–853. PMLR, 2021. Y. Romano, R. F. Barber, C. Sabatti, and E. Cand` es. With malice toward none: Assessing uncertainty via equalized coverage. Harvard Data Science Review , 2(2):4, 2020. M. Rußwurm and M. K¨ orner. Self-attention for raw optical satellite time series classification. 
+
+ISPRS journal of photogrammetry and remote sensing , 169:421–435, 2020. G. Shafer and V. Vovk. A tutorial on conformal prediction. Journal of machine learning research ,9(3), 2008. G. Sun, W. Wu, Z. Guo, Z. Wang, P. Khosravi, and C. Chen. Unlocking multi-site clinical data: A federated approach to privacy-first child autism behavior analysis. arXiv preprint arXiv:2604.02616 , 2026. R. J. Tibshirani, R. Foygel Barber, E. Candes, and A. Ramdas. Conformal prediction under covariate shift. Advances in neural information processing systems , 32, 2019. A. B. Tsybakov. Nonparametric estimators. In Introduction to Nonparametric Estimation , pages 1–76. Springer, 2008. V. Vovk. Conditional validity of inductive conformal predictors. In Asian conference on machine learning , pages 475–490. PMLR, 2012. V. Vovk, A. Gammerman, and G. Shafer. Algorithmic learning in a random world . Springer, 2005. A. X. Wang, C. Tran, N. Desai, D. Lobell, and S. Ermon. Deep transfer learning for crop yield prediction with remote sensing data. In Proceedings of the 1st ACM SIGCAS Conference on Computing and Sustainable Societies , pages 1–5, 2018. Y. Wang and T. Wang. Localized conformal model selection. arXiv preprint arXiv:2602.19284 ,2026. 20 R. Xu, C. Chen, Y. Sun, P. Venkitasubramaniam, and S. Xie. Wasserstein-regularized conformal prediction under general distribution shift. arXiv preprint arXiv:2501.13430 , 2025. Y. Yang and Y. Jin. Multi-distribution robust conformal prediction. arXiv preprint arXiv:2601.02998 , 2026. Y. Yang and A. K. Kuchibhotla. Selection and aggregation of conformal prediction sets. Journal of the American Statistical Association , 120(549):435–447, 2025. M. Ying, W. Guo, K. Khamaru, and Y. Hung. Informativeness of weighted conformal prediction. 
+
+arXiv preprint arXiv:2405.06479 , 2024. F. Zhao, B. Yang, Z. Su, C. Li, and Y. Ding. A blockchain-enabled privacy-preserving and incentive mechanism-driven federated learning scheme for iov. Computer Networks , 264:111262, 2025. H. Zhao, S. Zhang, G. Wu, J. M. Moura, J. P. Costeira, and G. J. Gordon. Adversarial multiple source domain adaptation. Advances in neural information processing systems , 31, 2018. M. Zhu, M. Zecchin, S. Park, C. Guo, C. Feng, and O. Simeone. Federated inference with reliable uncertainty quantification over wireless channels via conformal prediction. IEEE Transactions on Signal Processing , 72:1235–1250, 2024. 21 Appendix 
+
+# Contents 
+
+1 Introduction 1
+
+1.1 Problem setup . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21.2 Related work . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31.3 Our approach . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+
+2 Multi-Source Randomly Localized Conformal Prediction 5
+
+2.1 A Structured Multi-Source Setting with Known Alignment . . . . . . . . . . . . . 52.2 RLCP and local coverage . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 62.3 Multi-Source RLCP . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 72.4 Role of ˜Xn+1 in MS-RLCP . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+
+3 Theoretical Guarantees 9
+
+3.1 Finite-sample bound on coverage . . . . . . . . . . . . . . . . . . . . . . . . . . . 11 3.2 Asymptotic test-conditional coverage . . . . . . . . . . . . . . . . . . . . . . . . . 13 
+
+4 Numerical Experiments 13 
+
+4.1 Simulations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 4.2 Real Data Experiments . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15 4.2.1 FMoW Classification under Geographic Distribution Shift . . . . . . . . . 15 4.2.2 MEPS Healthcare Utilization . . . . . . . . . . . . . . . . . . . . . . . . . 15 
+
+5 Discussion 17 A Proof of results from Section 3 23 
+
+A.1 Proof of Lemma 3.1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 A.2 Proof of Lemma 3.2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 A.3 Proof of Theorem 3.3 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 A.4 Proof of Theorem 3.5 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24 
+
+B General finite-sample coverage guarantee for MS-RLCP 24 
+
+B.1 Supporting lemmas and their proofs . . . . . . . . . . . . . . . . . . . . . . . . . 26 
+
+C Test-Conditional Coverage of MS-RLCP 31 D Additional details on numerical experiments 35 
+
+D.1 Additional details for the FMoW experiment . . . . . . . . . . . . . . . . . . . . 35 D.2 Additional details for the MEPS experiment . . . . . . . . . . . . . . . . . . . . . 35 22 A Proof of results from Section 3 
+
+A.1 Proof of Lemma 3.1 
+
+Fix any k ∈ [K]. For any measurable set A ⊆ X , we have that 
+
+Pk,X (A) ≤
+
+Z
+
+> A
+
+max  
+
+> k∈[K]
+
+fk(x) d ν(x) = B
+
+Z
+
+> A
+
+¯f (x) d ν(x) = B ¯PX (A).
+
+Consequently, Pk,X ≪ ¯PX for each k ∈ [K], and hence gk = dPk,X   
+
+> d¯PX
+
+exists. Moreover, by construction, for any x ∈ X and for any k ∈ [K], 
+
+gk(x) ≤ max  
+
+> k∈[K]
+
+gk(x) = max 
+
+> k∈[K]dPk,X
+> dν
+> d ¯PX
+> dν
+
+(x) = max 
+
+> k∈[K]
+
+fk(x)¯f (x) = B. 
+
+This proves the second part. □
+
+A.2 Proof of Lemma 3.2 
+
+Since λk ≥ λmin and PKk=1 λk = 1, for every x ∈ X ,
+
+λmin max  
+
+> k∈[K]
+
+fk,X (x) ≤
+
+> K
+
+X
+
+> k=1
+
+λkfk,X (x) ≤ max  
+
+> k∈[K]
+
+fk,X (x).
+
+Using max k∈[K] fk,X = B ¯fX and integrating over any measurable set A ⊆ X gives the stated measure inequalities. Since Bλ min > 0, the two measures have the same null sets and are therefore equivalent measures. □
+
+A.3 Proof of Theorem 3.3 
+
+We start with the coverage decomposition in (B.5) from the proof of Theorem B.1, which gives 
+
+P Yn+1 ∈ ˆCn(Xn+1 ) ≥ 1 − α − ∆G,2 − ∆G,1.
+
+∆G,2 can be controlled by Lemma B.2. In particular, ∆G,2 ≤ inf 
+
+> 0<δ< 1
+
+n
+
+δ + P ˜Xn+1 ∼Ptest , ˜X
+
+
+
+μkoracle ( ˜Xn+1 )( ˜Xn+1 ) ≤ tδ
+
+o 
+
+.
+
+With the choice of δ = 1 
+
+> neff
+
+, tδ reduces to tneff where the latter is as defined in the theorem statement. Further, noting that 
+
+μkoracle ( ˜Xn+1 )( ˜Xn+1 ) = max  
+
+> k∈[K]
+
+EX′∼Pk,X 
+
+h
+
+H(X′, ˜Xn+1 )
+
+i
+
+,
+
+we obtain ∆G,2 ≤ 1
+
+neff 
+
++ P X∼Ptest ,X 
+
+> ˜X|X∼H(X, ·)
+
+
+
+max  
+
+> k∈[K]
+
+EX′∼Pk,X 
+
+h
+
+H(X′, ˜X)
+
+i
+
+≤ tneff 
+
+
+
+.
+
+On the other hand, Lemma B.4, yields ∆G,1 ≤ 2L
+
+
+
+1 + 2∥gtest ,X ∥∞
+
+B
+
+
+
+E X∼ ¯PX
+
+> ˜X|X∼H(X, ·)
+
+∥X − ˜X∥2.
+
+Substituting these two bounds into (B.5) proves (3.1). □
+
+23 A.4 Proof of Theorem 3.5 
+
+By Assumption (A4), choose c > 0 and r > 0 such that ¯fX (x) ≥ c for almost every x ∈ Br(x0). By Assumption (A3), 2 hn < r for all sufficiently large n. For every ˜ x ∈ Bhn (x0), we then have max  
+
+> k∈[K]
+
+Pk,X (Bhn (˜ x)) = max 
+
+> k∈[K]
+
+Z 
+
+> Bhn (˜ x)
+
+fk,X (x) d x
+
+≥ 1
+
+K
+
+Z 
+
+> Bhn (˜ x)
+> K
+
+X
+
+> k=1
+
+fk,X (x) d x ≥ BK
+
+Z 
+
+> Bhn (˜ x)
+
+¯fX (x) d x ≥ BcV d
+
+K hdn.
+
+The first expectation in (C.1) is therefore bounded by 2K exp 
+
+
+
+− BcV d
+
+36 K nh dn
+
+
+
++ 2K
+
+(n + 1) BcV dhdn
+
+,
+
+which tends to zero because nh dn → ∞ .The Kolmogorov disyance in (C.3) is bounded by one. Its convergence in probability under Assumption (A5) therefore implies convergence of its expectation to zero. Applying Theorem C.1 completes the proof. □
+
+# B General finite-sample coverage guarantee for MS-RLCP 
+
+We establish the main coverage theorem for MS-RLCP , which underlies the simplified guarantees in the main text. The bound separates the coverage error into two parts: one arising from data-dependent source selection and the other from differences between the source and test distributions within local neighborhoods. We retain the setup and notation from Section 3. In particular, ¯PX denotes the envelope distribution, B its normalizing constant, and gk,X and gtest ,X the source and test feature densities with respect to ¯PX . The conditional response distribution PY |X is shared across the sources and the test environment. For each source, the perturbation kernel H induces a marginal distribution Pk, ˜X and a conditional distribution Pk,X | ˜X . We use analogous notation for the test and envelope distributions. Their perturbed feature densities, with respect to the base measure μ of the kernel, are 
+
+μk(˜ x) := EPk,X [H(X, ˜x)] , μtest (˜ x) := EPtest ,X [H(X, ˜x)] , ¯μ(˜ x) := E ¯PX [H(X, ˜x)] .
+
+To describe local variation in the density ratios, for a measurable set A ⊆ X , define 
+
+ωk,A := sup 
+
+> x,y ∈Ax̸=y
+
+|gk,X (x) − gk,X (y)|∥x − y∥2
+
+, ωtest ,A := sup 
+
+> x,y ∈Ax̸=y
+
+|gtest ,X (x) − gtest ,X (y)|∥x − y∥2
+
+, (B.1) and write ωA := max k∈[K] ωk,A . These are local Lipschitz seminorms, with the supremum over an empty set taken to be zero. For ϵ > 0, also define ∆(˜ x; A, ϵ ) := ¯PX| ˜X=˜ x(Ac) + ¯PX| ˜X=˜ x
+
+ ∥X − ˜x∥2 > ϵ . (B.2) This quantity measures the conditional envelope mass outside A or outside an ϵ-neighborhood of ˜x. Together, the seminorms and ∆ allow us to control local variation on A while accounting for the remaining probability mass. 24 We use ∥gtest ,X ∥∞ and ∥H∥∞ for the essential suprema with respect to ¯PX and ¯PX ⊗ μ,respectively. We fix versions of the densities satisfying their essential bounds and interpret fractions with zero denominators as + ∞. Infima over A below are over measurable sets; if a pointwise infimum is not measurable, its expectation is interpreted as an outer expectation. 
+
+Theorem B.1 (General coverage guarantee) . Fix α ∈ (0 , 1) . Suppose Assumption 1 holds, 
+
+∥gtest ,X ∥∞ < ∞, and ∥H∥∞ < ∞. Further, define 
+
+neff := min  
+
+> k∈[K]
+
+nk, train , tδ := 2 ∥H∥∞
+
+s
+
+2 log(2 K/δ )
+
+neff 
+
+, 0 < δ < 1.
+
+Then the MS-RLCP prediction set satisfies 
+
+P Yn+1 ∈ ˆCn(Xn+1 ) ≥ 1 − α − inf 
+
+> 0<δ< 1
+
+n
+
+δ + P ˜Xn+1 ∼Ptest , ˜X
+
+
+
+μkoracle ( ˜Xn+1 )( ˜Xn+1 ) ≤ tδ
+
+o 
+
+− E ˜Xn+1 ∼ ¯P ˜X
+
+ inf 
+
+> A⊆X
+> ϵ> 0
+
+2
+
+ ∥gtest ,X ∥∞ 
+
+> B
+
+ωA + ωtest ,A 
+
+
+
+ϵ + 2 ∥gtest ,X ∥∞∆( ˜Xn+1 ; A, ϵ )
+
+
+
+1 − 2ωAϵB − 2∆( ˜Xn+1 ; A, ϵ )
+
+
+
+∨ 1
+
+> K
+
+ . (B.3) 
+
+Here, koracle is as defined in (2.10) , and the probability on the left is taken over the randomness of all source data D, the test sample (Xn+1 , Y n+1 ), and the perturbed test ˜Xn+1 .Proof. We start by recalling that by (2.12), the MS-RLCP prediction set is obtained by reporting the RLCP prediction set for the source ˆk. We write Dtrain = S 
+
+> k∈[K]
+
+Dk, train and, for brevity, ˆk = ˆk( ˜Xn+1 ). Then, the MS-RLCP prediction set is given by ˆCn(Xn+1 ) = ˆCˆk(Xn+1 , ˜Xn+1 ) = ˆCRLCP 
+
+> nˆk
+
+
+
+Xn+1 , ˜Xn+1 ; Dˆk, train , Dˆk, cal 
+
+
+
+.
+
+Conditional on ˜Xn+1 and Dtrain , the selected source ˆk is fixed. Since source selection does not use the calibration data, under the above conditioning, the selected source’s calibration observations are still i.i.d. from Pˆk.We first define the set 
+
+G := 
+
+
+
+˜x ∈ X : μˆk(˜ x)(˜ x) > 12 μkoracle (˜ x)(˜ x)
+
+
+
+. (B.4) This set depends on the training data Dtrain and contains the perturbations for which the ‘selected source is roughly as good as the oracle choice’. Fix ˜ x ∈ G and Dtrain . Then μˆk(˜ x) > 0, so the conditional distribution Pˆk,X | ˜X=˜ x is well defined. Now, draw X′ ∼ Pˆk,X | ˜X=˜ x and then Y ′ | X′ ∼ PY |X (· | X′), independently of the calibration data. Applying Lemma 2.1 to the selected source then gives 
+
+P
+
+
+
+Y ′ ∈ ˆCˆk(X′, ˜x) ˜Xn+1 = ˜ x, Dtrain 
+
+
+
+≥ 1 − α, 
+
+where the probability is over ( X′, Y ′) and Dˆk, cal . Note that conditioning on the other sources’ training data does not affect this guarantee, since those data are independent of the selected source’s calibration data and the auxiliary sample ( X′, Y ′). Our goal, however, is to control coverage for the actual test sample, whose corresponding conditional feature distribution is Ptest ,X | ˜X=˜ x. Under covariate shift, both the auxiliary sample and the test sample share the same conditional response law PY |X .25 Thus, the difference between their coverage probabilities is bounded by the total variation distance between their conditional feature distributions. Consequently, 
+
+P
+
+
+
+Yn+1 /∈ ˆCˆk(Xn+1 , ˜x) ˜Xn+1 = ˜ x, Dtrain 
+
+
+
+≤ α + TV 
+
+
+
+Ptest ,X | ˜X=˜ x, P ˆk,X | ˜X=˜ x
+
+
+
+.
+
+For perturbations ˜ x outside G, we use the trivial upper bound of one on miscoverage. Applying the tower property and splitting according to whether ˜Xn+1 ∈ G , we obtain 
+
+P Yn+1 /∈ ˆCn(Xn+1 ) ≤ α P( ˜Xn+1 ∈ G ) + ∆ G,1 + ∆ G,2
+
+≤ α + ∆ G,1 + ∆ G,2,
+
+where we define ∆G,2 := PPtest , ˜X ×D train 
+
+ ˜Xn+1 /∈ G 
+
+
+
+,
+
+∆G,1 := EPtest , ˜X ×D train 
+
+h
+
+TV 
+
+
+
+Ptest ,X | ˜X= ˜Xn+1 , P ˆk,X | ˜X= ˜Xn+1 
+
+
+
+1{ ˜Xn+1 ∈G} 
+
+i
+
+.
+
+The inner term defining ∆ G,1 is taken to be zero outside G. Equivalently, 
+
+P Yn+1 ∈ ˆCn(Xn+1 ) ≥ 1 − α − ∆G,2 − ∆G,1. (B.5) It remains to bound these two error terms. Lemma B.2 controls ∆ G,2, the probability of selecting a source with insufficient local mass. Lemma B.3 controls ∆ G,1, the expected discrepancy between the conditional feature distributions of the test population and selected source population on G. Substituting their bounds into (B.5) completes the proof. 
+
+B.1 Supporting lemmas and their proofs 
+
+We prove the two lemmas used to control ∆ G,2 and ∆ G,1 in the proof of Theorem B.1. 
+
+Lemma B.2. Under the conditions of Theorem B.1, 
+
+∆G,2 ≤ inf 
+
+> 0<δ< 1
+
+n
+
+δ + P ˜Xn+1 ∼Ptest , ˜X
+
+
+
+μkoracle ( ˜Xn+1 )( ˜Xn+1 ) ≤ tδ
+
+o 
+
+,
+
+where tδ is as defined in Theorem B.1. Proof. For brevity, we write μk = μk( ˜Xn+1 ), ˆk = ˆk( ˜Xn+1 ), and koracle = koracle ( ˜Xn+1 ). Further, define the empirical counterpart of μk by ˆμk := 1
+
+nk, train 
+
+> nk, train
+
+X
+
+> i=1
+
+H(Xi,k , ˜Xn+1 ).
+
+By the definition of G in (B.4), ∆G,2 = PPtest , ˜X ×D train 
+
+ μˆk ≤ 12 μkoracle 
+
+ .
+
+Since ˆk maximizes ˆ μk, we always have ˆ μˆk ≥ ˆμkoracle . Hence, 
+
+μˆk − μkoracle = ( μˆk − ˆμˆk) + (ˆ μˆk − ˆμkoracle ) + (ˆ μkoracle − μkoracle )
+
+≥ − 2 max  
+
+> k∈[K]
+
+|ˆμk − μk|.
+
+26 If μˆk ≤ μkoracle /2, this inequality implies max k∈[K] |ˆμk − μk| ≥ μkoracle /4. Thus, for any t > 0, it follows that ∆G,2 ≤ P(μkoracle ≤ t) + P  μˆk ≤ 12 μkoracle , μ koracle > t 
+
+≤ P(μkoracle ≤ t) + P
+
+
+
+max  
+
+> k∈[K]
+
+|ˆμk − μk| ≥ t/ 4
+
+
+
+.
+
+The first probability depends only on the perturbed test feature ˜Xn+1 , while the second one is over the randomness of both ˜Xn+1 and the training data Dtrain .To bound the second probability, we condition on ˜Xn+1 . under this conditioning, the training observations remain independent, and each H(Xi,k , ˜Xn+1 ) has mean μk and lies in [0 , ∥H∥∞]almost surely. Hoeffding’s inequality therefore gives 
+
+P
+
+
+
+|ˆμk − μk| ≥ t/ 4 ˜Xn+1 
+
+
+
+≤ 2 exp 
+
+
+
+− nk, train t2
+
+8∥H∥2
+
+> ∞
+
+
+
+.
+
+Taking a union bound over k ∈ [K], using nk, train ≥ neff , and taking an expectation over ˜Xn+1 
+
+yields 
+
+P
+
+
+
+max  
+
+> k∈[K]
+
+|ˆμk − μk| ≥ t/ 4
+
+
+
+≤ 2K exp 
+
+
+
+− neff t2
+
+8∥H∥2
+
+> ∞
+
+
+
+.
+
+For any 0 < δ < 1, choosing t = tδ = 2 ∥H∥∞
+
+p2 log(2 K/δ )/n eff makes the right hand side of the aforementioned inequality to δ. Consequently, ∆G,2 ≤ δ + P ˜Xn+1 ∼Ptest , ˜X
+
+
+
+μkoracle ( ˜Xn+1 )( ˜Xn+1 ) ≤ tδ
+
+
+
+.
+
+Taking the infimum over 0 < δ < 1 completes the proof. 
+
+Lemma B.3. Under the conditions of Theorem B.1, 
+
+∆G,1 ≤ E ˜Xn+1 ∼ ¯P ˜X
+
+ inf 
+
+> A⊆X
+> ϵ> 0
+
+2
+
+ ∥gtest ,X ∥∞ 
+
+> B
+
+ωA + ωtest ,A 
+
+
+
+ϵ + 2 ∥gtest ,X ∥∞∆( ˜Xn+1 ; A, ϵ )
+
+
+
+1 − 2ωAϵB − 2∆( ˜Xn+1 ; A, ϵ )
+
+
+
+∨ 1
+
+> K
+
+ .
+
+Proof. We start by recalling that ∆G,1 := EPtest , ˜X ×D train 
+
+h
+
+TV 
+
+
+
+Ptest ,X | ˜X= ˜Xn+1 , P ˆk,X | ˜X= ˜Xn+1 
+
+
+
+1{ ˜Xn+1 ∈G} 
+
+i
+
+.
+
+We first express the inner total variation distance in terms of the densities of source and test distributions with respect to the envelope distribution. Fix k ∈ [K] and a perturbed feature ˜x ∈ G so that the relevant conditional distributions are well defined. By Bayes’ formula, dPtest ,X | ˜X=˜ x
+
+d ¯PX
+
+(x) = gtest ,X (x)H(x, ˜x)
+
+EPtest ,X [H(X, ˜x)] , dPk,X | ˜X=˜ x
+
+d ¯PX
+
+(x) = gk,X (x)H(x, ˜x)
+
+EPk,X [H(X, ˜x)] .
+
+Consequently, TV 
+
+
+
+Ptest ,X | ˜X=˜ x, P k,X | ˜X=˜ x
+
+
+
+= 12
+
+Z
+
+H(x, ˜x) gtest ,X (x)
+
+EPtest ,X [H(X, ˜x)] − gk,X (x)
+
+EPk,X [H(X, ˜x)] d ¯PX (x).
+
+27 Let Q˜x := ¯PX| ˜X=˜ x and note that dQ˜x
+
+d ¯PX
+
+(x) = H(x, ˜x)
+
+E ¯PX [H(X, ˜x)] .
+
+Therefore, a change of measure gives TV 
+
+
+
+Ptest ,X | ˜X=˜ x, P k,X | ˜X=˜ x
+
+
+
+= E ¯PX [H(X, ˜x)] 2 EQ˜x
+
+gtest ,X (X)
+
+EPtest ,X [H(X, ˜x)] − gk,X (X)
+
+EPk,X [H(X, ˜x)] . (B.6) For each source k, we have 
+
+EPk,X [H(X, ˜x)] = E ¯PX [gk,X (X)H(X, ˜x)] = E ¯PX [H(X, ˜x)] EQ˜x [gk,X (X)] ,
+
+and the same identity holds for the test distribution. Let X, X ′ be independent draws from Q˜x.Applying the above identity, for fixed X,
+
+gtest ,X (X)EPk,X [H(X, ˜x)] − gk,X (X)EPtest ,X [H(X, ˜x)] = E ¯PX [H(X, ˜x)] EX′∼Q˜x
+
+gtest ,X (X)gk,X (X′) − gk,X (X)gtest ,X (X′) .
+
+Taking absolute values and applying Jensen’s inequality to the inner expectation over X′, followed by (B.6), yields TV 
+
+
+
+Ptest ,X | ˜X=˜ x, P k,X | ˜X=˜ x
+
+
+
+≤ E ¯PX [H(X, ˜x)] 2
+
+2EPtest ,X [H(X, ˜x)] EPk,X [H(X, ˜x)] Tk(˜ x), (B.7) where we define 
+
+Tk(˜ x) := EX,X ′iid  
+
+> ∼Q˜x
+
+gtest ,X (X)gk,X (X′) − gk,X (X)gtest ,X (X′) . (B.8) We now apply this bound to ∆ G,1. The perturbed test and envelope distributions have densities EPtest ,X [H(X, ˜x)] and E ¯PX [H(X, ˜x)], respectively, with respect to μ. Thus, by a change of measure gives ∆G,1 = E ¯P ˜X ×D train 
+
+
+
+TV 
+
+
+
+Ptest ,X | ˜X= ˜Xn+1 , P ˆk,X | ˜X= ˜Xn+1 
+
+
+
+1{ ˜Xn+1 ∈G} × EPtest ,X [H(X, ˜Xn+1 )] 
+
+E ¯PX [H(X, ˜Xn+1 )] 
+
+
+
+.
+
+Substituting (B.7), we obtain ∆G,1 ≤ E ¯P ˜X ×D train 
+
+" E ¯PX [H(X, ˜Xn+1 )] 2EPˆk,X [H(X, ˜Xn+1 )] Tˆk( ˜Xn+1 )1{ ˜Xn+1 ∈G} 
+
+#
+
+.
+
+The term inside the expectation is taken to be zero outside G.By definition of G in (B.4) and then dropping the indicator, we conclude that ∆G,1 ≤ E ¯P ˜X ×D train 
+
+h
+
+T ( ˜Xn+1 )Tˆk( ˜Xn+1 )
+
+i
+
+, (B.9) where we define 
+
+T (˜ x) := E ¯PX [H(X, ˜x)] 
+
+EPkoracle (˜ x),X [H(X, ˜x)] . (B.10) Note that the denominator is positive for ¯P ˜X -almost every ˜ x: since PKk=1 gk,X ≥ B almost everywhere, at least one source has positive local mass. We complete the proof by deriving upper bounds on Tk(˜ x) and 1 /T (˜ x). 28 Controlling Tˆk( ˜Xn+1 ). Fix a measurable set A ⊆ X and ϵ > 0. For x, x ′ ∈ A with ∥x − x′∥2 ≤
+
+2ϵ, the triangle inequality gives 
+
+gtest ,X (x)gk,X (x′) − gk,X (x)gtest ,X (x′)
+
+≤ gtest ,X (x)|gk,X (x′) − gk,X (x)| + gk,X (x)|gtest ,X (x) − gtest ,X (x′)|≤ (∥gtest ,X ∥∞ωk,A + Bω test ,A ) ∥x − x′∥2
+
+≤ 2 ( ∥gtest ,X ∥∞ωA + Bω test ,A ) ϵ. 
+
+Here, we used gk,X ≤ B and gtest ,X ≤ ∥ gtest ,X ∥∞. On the other hand, for arbitrary x, x ′, the absolute difference is at most B∥gtest ,X ∥∞, since both products lie between zero and this value. For independent X, X ′ iid 
+
+∼ Q˜x, a union bound and the triangle inequality give 
+
+PX,X ′iid  
+
+> ∼Q˜x
+
+ X / ∈ A or X′ /∈ A or ∥X − X′∥2 > 2ϵ
+
+≤ 2Q˜x(Ac) + 2 Q˜x
+
+ ∥X − ˜x∥2 > ϵ  = 2∆(˜ x; A, ϵ ).
+
+Applying the local bound when both points belong to A and are within distance 2 ϵ, and the uniform bound otherwise, yields 
+
+Tk(˜ x) ≤ 2 ( ∥gtest ,X ∥∞ωA + Bω test ,A ) ϵ + 2 B∥gtest ,X ∥∞∆(˜ x; A, ϵ ). (B.11) This bound holds for every k ∈ [K]. 
+
+Controlling T ( ˜Xn+1 ). Let ¯k(x) ∈ arg max k∈[K] gk,X (x), with a fixed rule for resolving ties, and draw X′ ∼ Q˜x independent of all the data. Conditional on X′, the index ¯k(X′) is fixed. By the definition of the oracle choice, 
+
+EPkoracle (˜ x),X [H(X, ˜x)] ≥ EP¯k(X′),X [H(X, ˜x)] .
+
+Applying the above inequality, and then change of measures to ¯PX and then to Q˜x, we obtain 1
+
+T (˜ x) ≥ EP¯k(X′),X [H(X, ˜x)] 
+
+E ¯PX [H(X, ˜x)] = E ¯PX [g¯k(X′),X (X)H(X, ˜x)] 
+
+E ¯PX [H(X, ˜x)] = EX∼Q˜x [g¯k(X′),X (X)] 
+
+≥ g¯k(X′),X (X′) − EX∼Q˜x
+
+h
+
+|g¯k(X′),X (X) − g¯k(X′),X (X′)|
+
+i
+
+.
+
+By Lemma 3.1, g¯k(X′),X (X′) = B almost surely. Since the left-hand side does not depend on X′,taking expectation over X′ gives 1
+
+T (˜ x) ≥ B − EX,X ′iid  
+
+> ∼Q˜x
+
+h
+
+|g¯k(X′),X (X) − g¯k(X′),X (X′)|
+
+i
+
+.
+
+For x, x ′ ∈ A with ∥x − x′∥2 ≤ 2ϵ, the absolute difference inside this expectation is at most 2ωAϵ. This holds even though the source index depends on x′, because ωA bounds the local Lipschitz seminorm of every source density. For arbitrary x, x ′, the difference is at most B.Applying the same union bound as in the argument of bounding the numerator, we obtain 
+
+EX,X ′iid  
+
+> ∼Q˜x
+
+h
+
+|g¯k(X′),X (X) − g¯k(X′),X (X′)|
+
+i
+
+≤ 2ωAϵ + 2 B∆(˜ x; A, ϵ ).
+
+29 Consequently, 1
+
+T (˜ x) ≥ (B − 2ωAϵ − 2B∆(˜ x; A, ϵ )) ∨ 0.
+
+Further, since max k∈[K] gk,X = B almost everywhere, we have PKk=1 gk,X ≥ B. Consequently, we obtain 1
+
+T (˜ x) = max k∈[K] E ¯PX [gk,X (X)H(X, ˜x)] 
+
+E ¯PX [H(X, ˜x)] ≥
+
+E ¯PX
+
+hPKk=1 gk,X (X)H(X, ˜x)
+
+i
+
+KE ¯PX [H(X, ˜x)] ≥ BK .
+
+Combining this with the preceding lower bound gives 1
+
+T (˜ x) ≥ (B − 2ωAϵ − 2B∆(˜ x; A, ϵ )) ∨ BK . (B.12) Combining (B.11) and (B.12), and dividing the numerator and denominator by B, gives 
+
+T (˜ x)Tk(˜ x) ≤
+
+2
+
+ ∥gtest ,X ∥∞ 
+
+> B
+
+ωA + ωtest ,A 
+
+
+
+ϵ + 2 ∥gtest ,X ∥∞∆(˜ x; A, ϵ )
+
+ 1 − 2ωAϵB − 2∆(˜ x; A, ϵ ) ∨ 1
+
+> K
+
+for every k ∈ [K]. Taking the infimum over A and ϵ gives a bound that is independent of the selected source or the training data. Substituting this bound into (B.9) and taking expectation over ˜Xn+1 ∼ ¯P ˜X completes the proof. 
+
+Lemma B.4. Under the conditions of Theorem B.1, suppose additionally that g1,X , . . . , g K,X 
+
+and gtest ,X are globally L-Lipschitz, and that E X∼ ¯PX
+
+> ˜X|X∼H(X, ·)
+
+∥X − ˜X∥2 < ∞. Then, 
+
+∆G,1 ≤ 2L
+
+
+
+1 + 2∥gtest ,X ∥∞
+
+B
+
+
+
+E X∼ ¯PX
+
+> ˜X|X∼H(X, ·)
+
+∥X − ˜X∥2.
+
+Proof. We revisit the proof of Lemma B.3. Under global Lipschitzness, we can simplify the arguments and the bound. Recall that Q˜x := ¯PX| ˜X=˜ x, and T (˜ x) is as defined in (B.10). Further, define 
+
+ℓ(˜ x) := EPtest ,X [H(X, ˜Xn+1 )] 
+
+E ¯PX [H(X, ˜Xn+1 )] EDtrain 
+
+h
+
+TV 
+
+
+
+Ptest ,X | ˜X=˜ x, P ˆk,X | ˜X=˜ x
+
+
+
+1{˜x∈G} 
+
+i
+
+,
+
+where ˆk = ˆk(˜ x). The integrand is taken to be zero outside G. By construction, ∆ G,1 =
+
+E ˜X∼ ¯P ˜X
+
+[ℓ( ˜X)]. Moreover, we have 
+
+EPtest ,X [H(X, ˜Xn+1 )] 
+
+E ¯PX [H(X, ˜Xn+1 )] = EQ˜x [gtest ,X (X)] ≤ ∥ gtest ,X ∥∞,
+
+and the inner total variation term is at most one, so that we have 0 ≤ ℓ(˜ x) ≤ ∥ gtest ,X ∥∞. From the proof of Lemma B.3, we note that by (B.7), together with the definition of G in (B.4), gives that (B.9): 
+
+ℓ(˜ x) ≤ T (˜ x)EDtrain 
+
+Tˆk(˜ x)1{˜x∈G} 
+
+ .
+
+Here Tk is defined in (B.8). 30 By Lipschitzness of the densities and the bounds gk,X ≤ B and gtest ,X ≤ ∥ gtest ,X ∥∞, we have that 
+
+Tk(˜ x) ≤ EX,X ′iid  
+
+> ∼Q˜x
+
+h
+
+gtest ,X (X) gk,X (X′) − gk,X (X) + gk,X (X) gtest ,X (X) − gtest ,X (X′)
+
+i
+
+≤ L(∥gtest ,X ∥∞ + B) EX,X ′iid  
+
+> ∼Q˜x
+
+∥X − X′∥2.
+
+Consequently, it follows that 
+
+ℓ(˜ x)
+
+T (˜ x) = EDtrain 
+
+Tˆk(˜ x)1{˜x∈G} 
+
+ ≤ L(∥gtest ,X ∥∞ + B) · EX,X ′iid  
+
+> ∼Q˜x
+
+∥X − X′∥2. (B.13) Next, we may similarly repeat the calculation for proving lower bound on 1 /T (˜ x), preced-ing (B.12) in the proof of Lemma B.3. In particular, we derive 1
+
+T (˜ x) ≥ B − EX,X ′iid  
+
+> ∼Q˜x
+
+g¯k(X′),X (X) − g¯k(X′),X (X′)
+
+≥ B − L EX,X ′iid  
+
+> ∼Q˜x
+
+∥X − X′∥2.
+
+Combining the above inequality with (B.13) and further recalling ℓ(˜ x) ≤ ∥ gtest ,X ∥∞ yields 
+
+Bℓ (˜ x) ≤
+
+ 1
+
+T (˜ x) + LEX,X ′iid  
+
+> ∼Q˜x
+
+∥X − X′∥2.
+
+
+
+ℓ(˜ x)
+
+≤ L(∥gtest ,X ∥∞ + B)EX,X ′iid  
+
+> ∼Q˜x
+
+∥X − X′∥2. + L∥gtest ,X ∥∞EX,X ′iid  
+
+> ∼Q˜x
+
+∥X − X′∥2.
+
+= L(B + 2 ∥gtest ,X ∥∞)EX,X ′iid  
+
+> ∼Q˜x
+
+∥X − X′∥2.. 
+
+Finally, taking expectations, we obtain ∆G,1 ≤ L
+
+
+
+1 + 2∥gtest ,X ∥∞
+
+B
+
+
+
+E ˜X∼ ¯P ˜X
+
+[EX,X ′iid  
+
+> ∼Q˜x
+
+∥X − X′∥2].
+
+Finally, the triangle inequality and the tower property give 
+
+E ˜X∼ ¯P ˜X
+
+[EX,X ′iid  
+
+> ∼Q˜x
+
+∥X − X′∥2] ≤ 2E ˜X∼ ¯P ˜X
+
+EX∼Q ˜X ∥X − ˜X∥2 = 2 E X∼ ¯PX
+
+> ˜X|X∼H(X, ·)
+
+∥X − ˜X∥2.
+
+Substituting this into the preceding bound proves the result. 
+
+# C Test-Conditional Coverage of MS-RLCP 
+
+In this section, we study the coverage of MS-RLCP conditional on a fixed test feature Xn+1 = x0,namely, 
+
+P
+
+
+
+Yn+1 ∈ ˆCn(Xn+1 ) | Xn+1 = x0
+
+
+
+.
+
+As discussed earlier, exact distribution-free conditional coverage is generally impossible with finite prediction sets [Vovk, 2012; Foygel Barber et al., 2021]. A large body of literature therefore imposes additional distributional assumptions and seeks such guarantees in the asymptotic regime. 31 We follow the same approach and develop analogous results for MS-RLCP in the heterogeneous multi-source setting. We adopt the multi-source setting from Section 3. We assume balanced source datasets, with each Dk containing 2 n observations, split equally between Dk, train and Dk, cal . To simplify the exposition, throughout this section we take X = Rd, with d ≥ 1, and use the box kernel in (2.4) with a deterministic bandwidth hn > 0 at total sample size 2 nK .We further impose the following conditions on the source distributions and learned scores: (A1) Each source feature distribution Pk,X admits a Lebesgue density fk,X satisfying fk,X > 0almost everywhere. (A2) For each k ∈ [K], conditional on Dk, train , the score sk(X, Y ) has a non-atomic distribution under an independent draw ( Y, X ) ∼ Pk, almost surely with respect to the training data. As before, write Dtrain = S 
+
+> k∈[K]
+
+Dk, train . For probability measures P, Q on R, we define the Kolmogorov distance between P and Q by 
+
+dKol (P, Q ) := sup 
+
+> t∈R
+
+|P (( −∞ , t ]) − Q(( −∞ , t ]) | .
+
+Further, for a feature value x, let 
+
+Qk,n (x) := L sk(X, Y ) | D train , X = x, Y ∼ PY |X (· | x),
+
+denote the score distribution at the kth source, conditional on the feature value x and the training data Dtrain . The subscript n records its dependence on the training sample size. 
+
+Theorem C.1. Under the above setting and Assumptions (A1)–(A2), for every fixed x0 ∈ Rd,
+
+P
+
+
+
+Yn+1 ∈ ˆCn(Xn+1 ) Xn+1 = x0
+
+
+
+− (1 − α)
+
+≤ E ˜X∼Hn(x0,·)
+
+"
+
+2K exp 
+
+
+
+− n
+
+36 max  
+
+> k∈[K]
+
+Pk,X (Bhn ( ˜X)) 
+
+
+
++ 2(n + 1) max k∈[K] Pk,X (Bhn ( ˜X)) 
+
+#
+
++ EDtrain 
+
+"
+
+max  
+
+> k∈[K]
+
+sup  
+
+> x∈B2hn (x0)
+
+dKol 
+
+ Qk,n (x), Q k,n (x0)#
+
+. (C.1) 
+
+Proof. Conditional on ˜Xn+1 and Dtrain , the selected source ˆk = ˆk( ˜Xn+1 ) is fixed. Index the calibration observations from this source by i ∈ [n] and write 
+
+Si := sˆk(Xi, ˆk, Y i, ˆk), Sn+1 := sˆk(Xn+1 , Y n+1 ).
+
+Further, let 
+
+I( ˜Xn+1 ) := {i ∈ [n] : Xi, ˆk ∈ Bhn ( ˜Xn+1 )}, Nn := |I( ˜Xn+1 )|.
+
+The box kernel assigns equal weights to the calibration observations in I( ˜Xn+1 ) and the test point. Thus, the prediction threshold reduces to ˆq1−α = Quantile 1−α
+
+ {Si : i ∈ I( ˜Xn+1 )}, +∞,
+
+and the MS-RLCP prediction set covers the test response if and only if Sn+1 ≤ ˆq1−α.32 Now fix the training data Dtrain , the test feature Xn+1 = x0, the perturbed test feature ˜Xn+1 = ˜ x, and the index set I(˜ x). The scores corresponding to the indices in I(˜ x) are independent draws from 
+
+Qloc ˆk,n (˜ x) := 
+
+Z 
+
+> Bhn (˜ x)
+
+Qˆk,n (x) d Pˆk,X |X∈Bhn (˜ x)(x).
+
+The conditioning event {X ∈ Bhn (˜ x)} has positive probability by Assumption (A1). By Assump-tion (A2), the resulting conditional score distribution Qloc ˆk,n (˜ x) is non-atomic. Under the same conditioning on the training data, test feature, perturbation, and index set, the test score is independent of the calibration scores and has distribution Qˆk,n (x0). Consider an independent draw S′ 
+
+> n+1
+
+∼ Qloc ˆk,n (˜ x). Since we have conditioned on I(˜ x), Nn is also fixed. The resulting Nn + 1 scores are i.i.d. draws from a non-atomic distribution. The standard conformal rank argument [Vovk et al., 2005; Shafer and Vovk, 2008] therefore gives 
+
+P
+
+
+
+S′ 
+
+> n+1
+
+≤ ˆq1−α I(˜ x), ˜Xn+1 = ˜ x, X n+1 = x0, Dtrain 
+
+
+
+= ⌈(Nn + 1)(1 − α)⌉
+
+Nn + 1 ,
+
+which differs from 1 − α by at most 1 /(Nn + 1). Returning to the original coverage event {Sn+1 ≤ ˆq1−α}, the change in its probability is bounded by the Kolmogorov distance between the two score distributions. In particular, 
+
+P
+
+
+
+Sn+1 ≤ ˆq1−α I(˜ x), ˜Xn+1 = ˜ x, X n+1 = x0, Dtrain 
+
+
+
+− (1 − α)
+
+≤ 1
+
+Nn + 1 + dKol 
+
+ Qloc ˆk,n (˜ x), Q ˆk,n (x0).
+
+By convexity of total variation under mixing, TV  Qloc ˆk,n (˜ x), Q ˆk,n (x0) ≤
+
+Z 
+
+> Bhn (˜ x)
+
+dKol 
+
+ Qˆk,n (x), Q ˆk,n (x0) dPˆk,X |X∈Bhn (˜ x)(x)
+
+≤ max  
+
+> k∈[K]
+
+sup  
+
+> x∈B2hn (x0)
+
+dKol 
+
+ Qk,n (x), Q k,n (x0),
+
+where the last inequality follows from ˜ x ∈ Bhn (x0) and Bhn (˜ x) ⊆ B2hn (x0). Taking expectations over Dtrain , ˜Xn+1 , and I( ˜Xn+1 ) therefore yields 
+
+P
+
+
+
+Yn+1 ∈ ˆCn(Xn+1 ) Xn+1 = x0
+
+
+
+− (1 − α)
+
+≤ E
+
+ 1
+
+Nn + 1 Xn+1 = x0
+
+
+
++ EDtrain 
+
+"
+
+max  
+
+> k∈[K]
+
+sup  
+
+> x∈B2hn (x0)
+
+dKol 
+
+ Qk,n (x), Q k,n (x0)#
+
+. (C.2) It remains to bound the first error term. Fix ˜Xn+1 = ˜ x and Xn+1 = x0. For the box kernel, the source-selection rule satisfies ˆk = ˆk(˜ x) ∈ arg max 
+
+> k∈[K]
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+1{Xtrain  
+
+> i,k
+
+∈ Bhn (˜ x)}.
+
+Following the argument in Lemma B.2, we obtain 
+
+Pˆk,X (Bhn (˜ x)) ≥ max  
+
+> k∈[K]
+
+Pk,X (Bhn (˜ x)) 
+
+− 2 max 
+
+> k∈[K]
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+1{Xtrain  
+
+> i,k
+
+∈ Bhn (˜ x)} − Pk,X (Bhn (˜ x)) .
+
+33 The indicators are independent Bernoulli variables. Each 1{Xtrain  
+
+> i,k
+
+∈ Bhn (˜ x)} has mean 
+
+Pk,X (Bhn (˜ x)) and variance at most max j∈[K] Pj,X (Bhn (˜ x)). Applying Bernstein’s inequality to the kth source gives 
+
+PDtrain 
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+1{Xtrain  
+
+> i,k
+
+∈ Bhn (˜ x)} − Pk,X (Bhn (˜ x)) ≥ 14 max  
+
+> j∈[K]
+
+Pj,X (Bhn (˜ x)) 
+
+!
+
+≤ 2 exp 
+
+
+
+− n
+
+36 max  
+
+> j∈[K]
+
+Pj,X (Bhn (˜ x)) 
+
+
+
+.
+
+A union bound then yields 
+
+PDtrain 
+
+
+
+Pˆk,X (Bhn (˜ x)) ≤ 12 max  
+
+> k∈[K]
+
+Pk,X (Bhn (˜ x)) 
+
+
+
+≤ 2K exp 
+
+
+
+− n
+
+36 max  
+
+> k∈[K]
+
+Pk,X (Bhn (˜ x)) 
+
+
+
+.
+
+Conditional on Dtrain and ˜Xn+1 = ˜ x, Nn ∼ Binomial  n, P ˆk,X (Bhn (˜ x)) . Moreover, for 
+
+N ∼ Binomial( n, p ) with p > 0, 
+
+E
+
+ 1
+
+N + 1 
+
+
+
+≤ 1(n + 1) p .
+
+On the event {Pˆk,X (Bhn (˜ x)) > 12 max k∈[K] Pk,X (Bhn (˜ x)) }, this inequality gives 
+
+E
+
+ 1
+
+Nn + 1 Xn+1 = x0, ˜Xn+1 = ˜ x, Dtrain 
+
+
+
+≤ 2(n + 1) max k∈[K] Pk,X (Bhn (˜ x)) .
+
+On the complementary event, we use 1 /(Nn + 1) ≤ 1. Averaging over the training data, we obtain 
+
+E
+
+ 1
+
+Nn + 1 ˜Xn+1 = ˜ x, X n+1 = x0
+
+
+
+≤ 2K exp 
+
+
+
+− n
+
+36 max  
+
+> k∈[K]
+
+Pk,X (Bhn (˜ x)) 
+
+
+
++ 2(n + 1) max k∈[K] Pk,X (Bhn (˜ x)) .
+
+Taking an expectation over ˜Xn+1 and substituting into (C.2) completes the proof. To establish asymptotic conditional coverage, we impose the following additional conditions: (A3) The number of sources K is fixed, hn → 0, and nh dn → ∞ .(A4) The envelope distribution admits a Lebesgue density ¯fX that is bounded away from zero in a neighborhood of x0.(A5) The learned score distributions satisfy max  
+
+> k∈[K]
+
+sup  
+
+> x∈B2hn (x0)
+
+dKol 
+
+ Qk,n (x), Q k,n (x0) P
+
+−→ 0, (C.3) where convergence is with respect to the randomness of the training data. The complete proof of asymptotic test-conditional coverage is given in Appendix A.4. 34 D Additional details on numerical experiments 
+
+In this section, we present additional details about the experiments in Section 4.2. In the simulations in Section 4.1, we used a per-source sample size of 5000 and a train-calibration split of 0 .5. The test sample size was 1000, and results are reported over 100 repetitions. 
+
+D.1 Additional details for the FMoW experiment 
+
+We use the 2016 FMoW [Christie et al., 2018] slice and treat the geographical regions Africa, the Americas, Asia, Europe, and Oceania as individual sources. For each region, the initial 40% split is used only for the shared backbone. The remaining 60% is split into 5 /8 training, 2 /8calibration, and 1 /8 test data, corresponding to 37.5%, 15%, and 7.5% of the full regional slice. Images are resized to 224 × 224 and normalized using ImageNet statistics. The DenseNet–121 backbone is fine-tuned for 30 epochs with AdamW, a learning rate of 10 −4, weight decay of 10 −4,and a batch size of 32. After the backbone is frozen, each server trains a two-layer classifier head with ReLU and dropout 0.2 for 50 epochs using Adam with a learning rate of 10 −3, weight decay of 10 −4, and a batch size of 128. For this experiment, we used one NVIDIA RTX A6000 GPU. Let e(x) be the normalized DenseNet feature. We fit PCA 16 on pooled server-training features and use z(x) = PCA 16 (e(x)) only for routing and calibration. For each test set, we use the Gaussian kernel in (2.4) to generate perturbed versions of z(·). The kernel bandwidth h is chosen using the median-distance heuristic over server calibration features and multiplied by 0.35. We use RAPS scores with kreg = 5 and λ = 0 .01, at miscoverage level α = 0 .1. We repeat the downstream split, head training, calibration, and evaluation for 50 repetitions, using a fixed backbone feature cache and up to 500 test examples per region per repetition. 
+
+D.2 Additional details for the MEPS experiment 
+
+For each MEPS panel, we use the public regression-form files and retain only continuous covariates. One-hot categorical columns are removed from the features. Negative continuous entries are treated as missing-value sentinels, and rows with missing covariates, invalid race labels (the sensitive attribute/source indicator), or invalid utilization values are discarded. We apply a log transformation to both the features and the response. In each repetition, White and Non-White examples are split separately into 60% training, 20% calibration, and 20% test sets. Feature standardization is fitted using the pooled training data and then applied to all splits. Each source k fits a heteroskedastic Gaussian model: 
+
+Y | X = x, k ∼ N (ˆ μk(x), ˆσ2
+
+> k
+
+(x)) . (D.1) The mean model is a gradient-boosted regressor. The variance model is a second gradient-boosted regressor trained on five-fold out-of-fold squared residuals. Both boosting models use 300 estimators, a learning rate of 0 .05, maximum depth 3, minimum leaf size 10, and a subsampling rate of 0 .8. For source k, the calibration scores are 
+
+Si,k = |Yi − ˆμk(Xi)|
+
+ˆσk(Xi) .
+
+When the bandwidth is not fixed manually, h is chosen as the median of the server-wise median pairwise distances among at most 256 calibration covariates, with a lower bound of 10 −3.35 To perturb a test feature x, we sample ˜ x = x + ε, where ε ∼ N (0 , h 2I) and h is chosen as described above. At the selected source, we compute the weighted 0 .9-quantile of the calibration scores, aug-mented with an infinite test-point pseudo-score. Calibration weights are exp( −∥ Xi − ˜x∥22/(2 h2)), and the test-point weight is exp( −∥ x − ˜x∥22/(2 h2)). The final interval is 
+
+bC(x) = max {0, ˆμˆk(x) − τ (x)ˆ σˆk(x)}, ˆμˆk(x) + τ (x)ˆ σˆk(x) .
+
+We repeat the full pipeline over 50 repetitions for each panel and report means and standard deviations across seeds. 36
