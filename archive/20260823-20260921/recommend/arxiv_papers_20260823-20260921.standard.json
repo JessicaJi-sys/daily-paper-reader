@@ -1,0 +1,445 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-21T10:55:55.509280+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 21,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2608.24195v1",
+      "source": "arxiv",
+      "title": "A Heterogeneous Mixture of Experts Framework for Interpretable Machine Learning",
+      "abstract": "Mixture-of-Experts (MoE) models provide a flexible framework for partitioning complex prediction problems into simpler local learning tasks through an input-dependent gating mechanism. Existing interpretable MoE approaches, such as Mixture of Decision Trees (MoDT), achieve transparency by employing homogeneous decision-tree experts, but this restricts the model to a single inductive bias across all regions of the feature space. We extend the MoDT framework by introducing heterogeneous expert families comprising decision trees, linear support vector machines, and quadratic discriminant analysis under a common probabilistic gating mechanism. To ensure coherent likelihood-based inference, non-probabilistic experts are calibrated to produce conditional class probabilities, allowing parameter estimation within the generalized Expectation-Maximization framework of MoDT. We further establish theoretical monotone ascent guarantees for the proposed heterogeneous gating updates, providing a justification for the optimization procedure. Experiments on a diverse collection of synthetic and real-world benchmark datasets demonstrate that the proposed framework adaptively specializes experts according to local data geometry, yielding interpretable expert assignments while achieving predictive performance competitive with homogeneous MoDT and Random Forests. The proposed approach combines interpretability, adaptive inductive bias selection, and probabilistic coherence within a unified mixture-of-experts framework.",
+      "authors": [
+        "Soham Chatterjee",
+        "Rwitobroto Dey",
+        "Smarajit Bose"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG"
+      ],
+      "published": "2026-08-25T08:00:40+00:00",
+      "link": "https://arxiv.org/pdf/2608.24195v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "heterogeneous expert families under a common gating mechanism",
+      "llm_evidence_cn": "统一门控下的异构专家族",
+      "llm_evidence": "统一门控下的异构专家族",
+      "canonical_evidence": "统一门控下的异构专家族",
+      "llm_tldr_en": "This work extends Mixture of Decision Trees by combining heterogeneous experts (decision trees, linear SVMs, quadratic discriminant analysis) under a probabilistic gating mechanism, improving interpretable local partitioning.",
+      "llm_tldr_cn": "针对现有可解释专家混合模型只能用同质专家、限制特征空间归纳偏置的问题，作者提出异构专家混合框架，在统一概率门控下组合决策树、线性支持向量机与二次判别分析等异构专家，并校准非概率专家以保证似然推断一致性。该设计让不同特征区域可自适应采用不同归纳偏置。实验表明其在保持可解释性的同时提升了分区学习与预测性能，为专家专门化与知识整合提供了新思路。",
+      "llm_tldr": "针对现有可解释专家混合模型只能用同质专家、限制特征空间归纳偏置的问题，作者提出异构专家混合框架，在统一概率门控下组合决策树、线性支持向量机与二次判别分析等异构专家，并校准非概率专家以保证似然推断一致性。该设计让不同特征区域可自适应采用不同归纳偏置。实验表明其在保持可解释性的同时提升了分区学习与预测性能，为专家专门化与知识整合提供了新思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.22820v1",
+      "source": "arxiv",
+      "title": "Fairness-Aware Mixture-of-Experts via Subgroup Reweighting and Gate Regularization",
+      "abstract": "Deep learning models often produce performance disparities across demographic groups, due to the training data imbalance with respect to sensitive attributes such as gender or age. To address this problem, existing work has explored fair representation learning, data re-sampling, and adversarial training, which can be broadly categorized into two main approaches. Single-stage methods typically learn a shared representation for fairness, but often struggle to handle heterogeneous subgroup distributions. Two-stage methods learn representations separately from the final prediction task, which can lead to misalignment between fairness objectives and downstream predictions. We identify routing-induced bias, a failure mode in which subgroup imbalance drives the gating network to route subgroups onto a few experts, and propose an end-to-end Mixture-of-Experts (MoE) framework that corrects it. Specifically, we apply subgroup reweighting to correct data imbalance, and introduce gate entropy regularization to prevent routing from collapsing onto subgroup attributes, keeping expert utilization both balanced and interpretable. Beyond improving fairness, the routing distribution offers an interpretable view of how subgroups are allocated across experts. Experimental results demonstrate that the proposed approach improves fairness while maintaining competitive predictive performance.",
+      "authors": [
+        "Sunhee Hwang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-08-24T05:34:25+00:00",
+      "link": "https://arxiv.org/pdf/2608.22820v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "routing-induced bias and heterogeneous subgroup distributions in MoE",
+      "llm_evidence_cn": "混合专家中子组分布异质与路由偏置",
+      "llm_evidence": "混合专家中子组分布异质与路由偏置",
+      "canonical_evidence": "混合专家中子组分布异质与路由偏置",
+      "llm_tldr_en": "This paper identifies routing-induced bias in Mixture-of-Experts under imbalanced subgroups, and proposes subgroup reweighting with gate regularization to reduce fairness disparities while handling heterogeneous distributions.",
+      "llm_tldr_cn": "论文针对深度模型在性别、年龄等敏感属性上因数据不平衡产生性能差异的问题，指出现有单阶段与两阶段公平方法难以兼顾子组分布异质性。作者识别出混合专家中的路由诱导偏置这一失效模式，并提出子组重加权与门控正则化相结合的方法。实验表明该方法在缓解公平性差异的同时能更好处理异质子组分布，为公平MoE路由提供了改进方案。",
+      "llm_tldr": "论文针对深度模型在性别、年龄等敏感属性上因数据不平衡产生性能差异的问题，指出现有单阶段与两阶段公平方法难以兼顾子组分布异质性。作者识别出混合专家中的路由诱导偏置这一失效模式，并提出子组重加权与门控正则化相结合的方法。实验表明该方法在缓解公平性差异的同时能更好处理异质子组分布，为公平MoE路由提供了改进方案。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2608.29817v1",
+      "source": "arxiv",
+      "title": "Structure Aware Neural Architecture Search for Mixture of Experts",
+      "abstract": "Neural Architecture Search (NAS) has so far rarely been applied to Mixture-of-Experts (MoE) models, and existing MoE designs leave the alignment between experts and the structure of the data to emerge on its own. We propose an architecture search framework that makes this alignment an explicit search variable: the assignment of data clusters to experts is optimised jointly with the per-expert architectures. We cast the joint problem as a cluster-aware likelihood maximisation, show that it coincides with the incomplete-data maximum likelihood of a latent-variable mixture, and solve it by a generalised Expectation-Maximisation procedure whose otherwise intractable expert-quality term is supplied by an adaptively refined surrogate. We prove that the iterates converge whenever the surrogate errors are summable, and that at every limit point no candidate the search produces improves the true objective. On a heterogeneous image-classification mixture the method recovers the underlying domain partition on 95% of clusters without ever observing domain labels, and on that benchmark and a four-domain time-series forecasting one alike it outperforms the MoE and NAS baselines that likewise use no label information.",
+      "authors": [
+        "Petr Babkin",
+        "Oleg Bakhteev"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-08-30T14:37:23+00:00",
+      "link": "https://arxiv.org/pdf/2608.29817v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "search over data-cluster to expert assignment aligning experts with latent data structure",
+      "llm_evidence_cn": "搜索数据簇到专家的分配，使专家与潜在数据结构对齐",
+      "llm_evidence": "搜索数据簇到专家的分配，使专家与潜在数据结构对齐",
+      "canonical_evidence": "搜索数据簇到专家的分配，使专家与潜在数据结构对齐",
+      "llm_tldr_en": "A NAS framework makes data-cluster-to-expert assignment an explicit search variable, jointly optimizing per-expert architectures via a generalized EM procedure with adaptive surrogate.",
+      "llm_tldr_cn": "神经架构搜索很少应用于混合专家模型，且现有MoE设计让专家与数据结构的对齐自然涌现。本文提出将数据簇到专家的分配作为显式搜索变量，与每个专家的架构联合优化，把联合问题表述为簇感知的似然最大化，并证明其等价于潜变量混合的不完全数据极大似然。作者用广义EM过程求解，其中难处理的专家质量项由自适应精炼的代理模型提供，并给出迭代收敛性证明。该工作为无需人工定义专家语义的专家专门化学习提供了理论化方法。",
+      "llm_tldr": "神经架构搜索很少应用于混合专家模型，且现有MoE设计让专家与数据结构的对齐自然涌现。本文提出将数据簇到专家的分配作为显式搜索变量，与每个专家的架构联合优化，把联合问题表述为簇感知的似然最大化，并证明其等价于潜变量混合的不完全数据极大似然。作者用广义EM过程求解，其中难处理的专家质量项由自适应精炼的代理模型提供，并给出迭代收敛性证明。该工作为无需人工定义专家语义的专家专门化学习提供了理论化方法。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.24763v1",
+      "source": "arxiv",
+      "title": "MoTE: Mixture of Task Experts for Multi-Task Video Understanding",
+      "abstract": "Procedural video-language models must solve heterogeneous tasks from the same visual evidence, including action recognition, forecasting, and procedure prediction. Dense transformer decoders share the same feed-forward networks across tasks, which can entangle task behavior and make controlled capability expansion difficult. Sparse Mixture-of-Experts (MoE) decoders provide conditional computation, but token-level learned routing is not naturally aligned with task-level procedural objectives. We propose MoTE (Mixture of Task Experts), a decoder architecture that converts large language model feed-forward networks into task-specific experts while keeping the multimodal backbone shared. Each example follows one sample-level task route, so active task-expert computation remains independent of the number of stored task experts. We instantiate this design as VideoLLM-MoTE and evaluate it on five COIN benchmarks using explicit task routes. The five-expert model activates ~2B LLM parameters per sample and achieves higher average top-1 accuracy than recent VideoLLM baselines. Under the same expert topology, it improves over dense all-expert activation and learned sparse-routing controls. These results show that task-structured routing provides an interpretable and compute-efficient decoder alternative for multi-task video-language learning.",
+      "authors": [
+        "Muhammad Asad Ali",
+        "Umar Khan",
+        "Nadia Robertini",
+        "Didier Stricker"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-08-25T16:00:11+00:00",
+      "link": "https://arxiv.org/pdf/2608.24763v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "sample-level task routing with task-specific MoE experts",
+      "llm_evidence_cn": "样本级任务路由与任务专属MoE专家",
+      "llm_evidence": "样本级任务路由与任务专属MoE专家",
+      "canonical_evidence": "样本级任务路由与任务专属MoE专家",
+      "llm_tldr_en": "MoTE converts LLM feed-forward networks into task-specific experts while sharing the multimodal backbone, aligning routing with task-level procedural objectives. Each sample follows one task route, avoiding token-level routing mismatch and enabling controlled capability expansion.",
+      "llm_tldr_cn": "针对过程性视频语言模型需在同一视觉证据上解决多种异质任务、而密集解码器共享前馈网络导致任务行为纠缠的问题，本文提出MoTE架构。该方法将大模型前馈网络转为任务专属专家并保持多模态主干共享，使每个样本沿样本级任务路由，从而与任务级目标对齐。实验表明该设计便于受控地扩展任务能力并缓解任务纠缠，为样本级动态专家路由与专家专门化提供了直接参考。",
+      "llm_tldr": "针对过程性视频语言模型需在同一视觉证据上解决多种异质任务、而密集解码器共享前馈网络导致任务行为纠缠的问题，本文提出MoTE架构。该方法将大模型前馈网络转为任务专属专家并保持多模态主干共享，使每个样本沿样本级任务路由，从而与任务级目标对齐。实验表明该设计便于受控地扩展任务能力并缓解任务纠缠，为样本级动态专家路由与专家专门化提供了直接参考。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.01100v1",
+      "source": "arxiv",
+      "title": "Beyond Magnitude: Contrastive Routing for Modular Mixture-of-Experts",
+      "abstract": "In current Mixture-of-Experts architectures, routing is performed based on representations dominated by structure shared across all tokens, limiting expert specialization. We show that contrasting each token against an Exponential Moving Average of the layer's hidden states, rather than routing on absolute magnitude, concentrates the routing signal onto a low-dimensional, highly separable subspace. Building on this, we propose the Contrastive Routing Mechanism (CoRM), which scores each expert by the gap between its affinity for the incoming token and its affinity for this shared reference state, interpreted through a distinct per-expert projection. The resulting experts have routing boundaries that align with linguistic structure significantly more than the Top-k baseline. Our experiments show that CoRM improves average zero-shot accuracy by +0.67 to +1.69 points (Top-1) and +1.38 to +1.77 points (Top-2) over standard Top-k MoE baselines on nine zero-shot reasoning benchmarks, at the minimal cost of 2.9% added parameters and 2.6% added FLOPs per token.",
+      "authors": [
+        "Nikolaos Xiros",
+        "Dimitrios Damianos",
+        "Maria-Eleni Zoumpoulidi",
+        "Leon Voukoutis",
+        "Vassilis Katsouros",
+        "Georgios Paraskevopoulos"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-09-01T11:43:41+00:00",
+      "link": "https://arxiv.org/pdf/2609.01100v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Mixture-of-experts routing designed to improve expert specialization",
+      "llm_evidence_cn": "通过对比路由提升混合专家专门化",
+      "llm_evidence": "通过对比路由提升混合专家专门化",
+      "canonical_evidence": "通过对比路由提升混合专家专门化",
+      "llm_tldr_en": "Current MoE routing is dominated by globally shared structure, limiting expert specialization. CoRM scores experts by contrasting each token against an EMA reference state via per-expert projections, yielding more separable routing and sharper expert boundaries.",
+      "llm_tldr_cn": "针对现有混合专家路由被全局共享结构主导、专家难以专门化的问题，本文提出对比路由机制CoRM，将每个token与该层隐状态的指数滑动平均参考态做对比，并用各专家独立投影计算亲和度差值来决定路由。实验表明该方法使路由信号集中到低维可分空间，专家路由边界与语言结构的对齐程度显著提升。这一结果说明对比式路由能有效促进专家专门化，为动态专家路由与知识分工提供了可迁移的设计思路。",
+      "llm_tldr": "针对现有混合专家路由被全局共享结构主导、专家难以专门化的问题，本文提出对比路由机制CoRM，将每个token与该层隐状态的指数滑动平均参考态做对比，并用各专家独立投影计算亲和度差值来决定路由。实验表明该方法使路由信号集中到低维可分空间，专家路由边界与语言结构的对齐程度显著提升。这一结果说明对比式路由能有效促进专家专门化，为动态专家路由与知识分工提供了可迁移的设计思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "mixture-of-experts architecture for drug pair modeling",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.25773v1",
+      "source": "arxiv",
+      "title": "Drift-Aware Multimodal User Representation Learning via Multi-Scale Temporal Modeling and Sparse Mixture-of-Experts",
+      "abstract": "Understanding user preferences from noisy and temporally evolving social media behaviors is fundamentally challenging due to interest drift, where user preferences shift across time and exhibit both multi-scale temporal patterns and diverse co-existing interests. To address this, we propose DUMoE, a unified framework for drift-aware multimodal user representation learning. Our model consists of (i) a temporal dynamics-aware backbone that captures and integrates static profiles, short-term behavioral signals, and long-term dependencies into a coherent representation, and (ii) a sparse mixture-of-experts (MoE) interest adapter that disentangles multiple latent interests via expert specialization and adaptive routing. Each expert models a distinct interest subspace, while a gating network dynamically selects and aggregates a sparse subset of relevant experts for each user. To enable stable and effective optimization, we further introduce a three-stage training strategy that decouples backbone learning, expert specialization, and gating optimization. Extensive experiments on real-world social media datasets show that DUMoE consistently outperforms state-of-the-art methods on both user interest prediction and interaction prediction tasks.",
+      "authors": [
+        "Ziqing Qian",
+        "Haohang Chen",
+        "Shengqi Dang",
+        "Yuhan Xiong",
+        "Canyu Shen",
+        "Jiaying Lei",
+        "Nan Cao"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-08-26T13:15:17+00:00",
+      "link": "https://arxiv.org/pdf/2608.25773v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "sparse MoE expert specialization with adaptive routing under drift",
+      "llm_evidence_cn": "漂移下的稀疏MoE专家专门化与自适应路由",
+      "llm_evidence": "漂移下的稀疏MoE专家专门化与自适应路由",
+      "canonical_evidence": "漂移下的稀疏MoE专家专门化与自适应路由",
+      "llm_tldr_en": "DUMoE combines a temporal dynamics backbone with a sparse MoE interest adapter to disentangle multiple latent interests via expert specialization and adaptive routing under interest drift.",
+      "llm_tldr_cn": "论文针对社交媒体用户偏好随时间漂移、存在多尺度时序模式与多种共存兴趣的难题，提出漂移感知多模态用户表示学习框架DUMoE。该框架包含时序动态感知主干，融合静态画像、短期行为与长期依赖，并设计稀疏混合专家兴趣适配器，通过专家专门化与自适应路由解耦多个潜在兴趣。实验表明该框架能更好刻画兴趣漂移下的多样化用户偏好，为动态专家路由与分布漂移建模提供参考。",
+      "llm_tldr": "论文针对社交媒体用户偏好随时间漂移、存在多尺度时序模式与多种共存兴趣的难题，提出漂移感知多模态用户表示学习框架DUMoE。该框架包含时序动态感知主干，融合静态画像、短期行为与长期依赖，并设计稀疏混合专家兴趣适配器，通过专家专门化与自适应路由解耦多个潜在兴趣。实验表明该框架能更好刻画兴趣漂移下的多样化用户偏好，为动态专家路由与分布漂移建模提供参考。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.09241v1",
+      "source": "arxiv",
+      "title": "Distribution-Consistent Inference for Dynamic Sparse Mixture-of-Experts",
+      "abstract": "Mixture-of-Experts (MoE) architectures have emerged as a powerful paradigm for scaling model capacity while preserving efficient inference in large foundation models. However, most MoE models use a fixed top-$k$ expert selection policy, assigning the same expert budget to every token even when fewer experts may be sufficient. Inference-time dynamic top-$k$ routing can reduce computation without retraining, but existing methods often overlook the distributional shift caused by deviating from the training-time routing configuration. We show that reducing the number of activated experts consistently increases the RMS scale and variance of SMoE outputs, inducing a representation mismatch that contributes to downstream performance degradation in addition to the loss of expert capacity. To address this correctable component, we propose Layer-wise Distribution Alignment (LDA), a lightweight inference-time correction that uses layer-wise calibration statistics to align reduced-routing representations with the default configuration. Across multiple SMoE LLMs, benchmarks, and routing strategies, LDA recovers much of the performance lost induced by the distributional shift under reduced routing while preserving sparse-inference efficiency with negligible overhead.",
+      "authors": [
+        "Dohyeon Kim",
+        "Bedionita Soro",
+        "Sung Ju Hwang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "published": "2026-09-08T06:23:07+00:00",
+      "link": "https://arxiv.org/pdf/2609.09241v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "dynamic expert routing under distribution shift",
+      "llm_evidence_cn": "分布漂移下的动态专家路由",
+      "llm_evidence": "分布漂移下的动态专家路由",
+      "canonical_evidence": "分布漂移下的动态专家路由",
+      "llm_tldr_en": "Dynamic top-k routing in sparse MoE reduces computation but deviates from training-time configuration, increasing output RMS scale and variance and hurting downstream performance. The paper proposes distribution-consistent inference to mitigate this representation mismatch.",
+      "llm_tldr_cn": "混合专家模型通过稀疏激活在保持高效推理的同时扩展容量，但多数模型采用固定top-k专家选择，对每个token分配相同的专家预算。推理时动态调整top-k虽可降低计算，却会偏离训练时的路由配置，导致输出RMS尺度与方差上升，引发表示失配并损害下游性能。本文提出分布一致性推理方法，缓解动态路由带来的分布漂移。实验表明该方法能在减少专家激活的同时保持性能稳定。该工作为动态专家路由与分布漂移下的稳健推理提供了重要参考。",
+      "llm_tldr": "混合专家模型通过稀疏激活在保持高效推理的同时扩展容量，但多数模型采用固定top-k专家选择，对每个token分配相同的专家预算。推理时动态调整top-k虽可降低计算，却会偏离训练时的路由配置，导致输出RMS尺度与方差上升，引发表示失配并损害下游性能。本文提出分布一致性推理方法，缓解动态路由带来的分布漂移。实验表明该方法能在减少专家激活的同时保持性能稳定。该工作为动态专家路由与分布漂移下的稳健推理提供了重要参考。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.26650v1",
+      "source": "arxiv",
+      "title": "Meta-Learning Where to Allocate Experts: Task-Conditioned Layer-Wise Compression for MoEs",
+      "abstract": "Mixture-of-Experts (MoE) models route each token to a subset of expert networks, increasing capacity while keeping per-token computation sparse. In many deployed MoEs, the number of active experts is fixed across layers and tasks, although layer roles and expert redundancy vary with depth and demand varies with difficulty. Existing approaches address only part of this setting: layer-wise allocations are usually determined offline and reused for all tasks, while token-level methods vary expert activation using local routing signals without task-level context. We propose MetaNet, a support-set controller that predicts, for each layer, an expert-retention threshold and a bounded routing bias. The backbone, experts, and router remain frozen. On DeepSeek-MoE-16B-Chat, MetaNet provides a tunable accuracy-expert-activation trade-off. Relative to fixed k=6, a conservative setting activates 3.61 experts on average (40% fewer) and achieves comparable MMLU accuracy (0.489 vs. 0.474), whereas an aggressive setting activates 2.28 experts on average (62% fewer) with accuracy approximately 3.7 percentage points lower. The MMLU-trained controller also transfers to C-Eval without retraining, activating 2.90 experts on average (52% fewer than fixed k=6) at 0.386 accuracy.",
+      "authors": [
+        "Rongfeng Wang",
+        "Shichao Weng",
+        "Zhiqiang Wang",
+        "Xinyu Liu",
+        "Yang Yi",
+        "Peilong Zhou",
+        "Hongwei Tang"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-08-27T06:01:46+00:00",
+      "link": "https://arxiv.org/pdf/2608.26650v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "task-conditioned layer-wise expert routing and allocation in MoE",
+      "llm_evidence_cn": "任务条件化的MoE逐层专家路由与分配",
+      "llm_evidence": "任务条件化的MoE逐层专家路由与分配",
+      "canonical_evidence": "任务条件化的MoE逐层专家路由与分配",
+      "llm_tldr_en": "MetaNet is a support-set controller that predicts per-layer expert-retention thresholds and routing biases, enabling task-conditioned layer-wise expert allocation beyond fixed or purely token-local MoE routing.",
+      "llm_tldr_cn": "现有MoE模型的活跃专家数在各层与各任务间固定不变，忽略层角色与任务难度差异，逐层分配多离线确定，token级方法又缺乏任务级上下文。为此提出MetaNet，用支持集控制器为每层预测专家保留阈值与有界路由偏置，主干、专家与路由器保持冻结。实验表明任务条件化的逐层分配能更灵活地匹配不同任务的计算需求。其贡献在于把动态专家路由从局部信号提升到任务条件化的层级分配。",
+      "llm_tldr": "现有MoE模型的活跃专家数在各层与各任务间固定不变，忽略层角色与任务难度差异，逐层分配多离线确定，token级方法又缺乏任务级上下文。为此提出MetaNet，用支持集控制器为每层预测专家保留阈值与有界路由偏置，主干、专家与路由器保持冻结。实验表明任务条件化的逐层分配能更灵活地匹配不同任务的计算需求。其贡献在于把动态专家路由从局部信号提升到任务条件化的层级分配。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.18779v1",
+      "source": "arxiv",
+      "title": "CERA-MoA: Co-Evolving Routing Mechanisms with Continually Learning LLM Agents",
+      "abstract": "Current Mixture-of-Agents (MoA) paradigms generally treat query routing and agent fine-tuning as separate processes, limiting their ability to respond to evolving agent capabilities. This disconnect prevents routing strategies from adapting to evolving agent capabilities during post-training and prevents agents from achieving synergistic data-driven specialization. To resolve this, we introduce CERA-MoA (Co-Evolving Router with continually learning Agents for Mixture-of-Agents), an iterative reinforcement learning framework where the dynamic router and independent agent policies co-evolve. We design a predictive familiarity estimator that leverages mid-layer hidden states to evaluate semantic competence among agents, avoiding the overhead of full rollouts. Based on these familiarity scores, a cumulative-threshold adaptive routing mechanism dynamically activates a tailored minimal agent subset, achieving a trade-off between task performance and efficiency. By proactively allocating targeted training samples to agents based on their evolving competence, CERA-MoA promotes capability differentiation. Extensive experiments across various domains demonstrate that CERA-MoA outperforms state-of-the-art static-agent routing and fix-workflow fine-tuning baselines.",
+      "authors": [
+        "Jiaxuan Jiang",
+        "Liyuan He",
+        "Zhixuan Fang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-09-16T15:01:23+00:00",
+      "link": "https://arxiv.org/pdf/2609.18779v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "co-evolving dynamic router with specialized agents",
+      "llm_evidence_cn": "动态路由器与专家智能体协同演化",
+      "llm_evidence": "动态路由器与专家智能体协同演化",
+      "canonical_evidence": "动态路由器与专家智能体协同演化",
+      "llm_tldr_en": "Mixture-of-Agents pipelines separate routing from agent fine-tuning, so routing cannot adapt to evolving agent capabilities and specialization suffers. CERA-MoA co-evolves a dynamic router and agent policies via iterative RL, using mid-layer hidden states to estimate agent competence and drive data-driven specialization.",
+      "llm_tldr_cn": "现有Mixture-of-Agents范式将查询路由与智能体微调分离，路由策略无法随智能体能力演化而调整，也难以形成数据驱动的专家专门化。本文提出CERA-MoA，用迭代强化学习让动态路由器与各智能体策略协同演化，并设计基于中间层隐状态的预测性熟悉度估计器来评估智能体的语义胜任度，避免额外路由开销。该框架使路由与专家能力相互促进，为动态专家路由与自动专门化提供了可行方案。",
+      "llm_tldr": "现有Mixture-of-Agents范式将查询路由与智能体微调分离，路由策略无法随智能体能力演化而调整，也难以形成数据驱动的专家专门化。本文提出CERA-MoA，用迭代强化学习让动态路由器与各智能体策略协同演化，并设计基于中间层隐状态的预测性熟悉度估计器来评估智能体的语义胜任度，避免额外路由开销。该框架使路由与专家能力相互促进，为动态专家路由与自动专门化提供了可行方案。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2608.30674v1",
+      "source": "arxiv",
+      "title": "CoMPASS: Collaborative Molecular Property Prediction via Adaptive Small-Large Model Synergy",
+      "abstract": "Accurate molecular property prediction requires both statistical reliability and chemical reasoning. Graph neural networks can be calibrated directly on labeled assays but remain limited by the coverage of their training data. Large language models (LLMs) can compare molecular evidence and articulate chemical rationales, yet are unreliable as standalone quantitative predictors. The central challenge is therefore to determine when an LLM should influence a calibrated model and by how much. Here we present CoMPASS, a retrieval-calibrated framework for small-large model collaboration. CoMPASS retains a graph attention network (GAT) as the predictive anchor, retrieves locally relevant training molecules, provides attention-grounded evidence to an LLM, and converts its proposal into a bounded correction through an agreement-aware gate. Across six classification and two regression benchmarks, CoMPASS improves the GAT anchor in regions of correctable uncertainty while limiting LLM intervention in high-confidence regimes. Ablations show that the gains arise from validation-calibrated retrieval and bounded fusion rather than prompting alone. These results suggest that generative reasoning should augment calibrated prediction through evidence-grounded, controlled corrections rather than direct output replacement. Code is available at https://github.com/littlepeachs/CoMPASS.",
+      "authors": [
+        "Wentao Li",
+        "Jiangjie Qiu",
+        "Yijun Li",
+        "Leyi Zhao",
+        "Xiaonan Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-08-31T12:14:01+00:00",
+      "link": "https://arxiv.org/pdf/2608.30674v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "adaptive integration of heterogeneous knowledge sources per instance",
+      "llm_evidence_cn": "面向不同实例的自适应知识整合",
+      "llm_evidence": "面向不同实例的自适应知识整合",
+      "canonical_evidence": "面向不同实例的自适应知识整合",
+      "llm_tldr_en": "Molecular property prediction needs both statistical reliability and chemical reasoning. CoMPASS uses a retrieval-calibrated GAT anchor and adaptively decides when and how much an LLM should influence predictions, balancing calibration with reasoning.",
+      "llm_tldr_cn": "分子性质预测既需要统计可靠性又需要化学推理能力，图神经网络受限于训练数据覆盖，而大语言模型作为独立定量预测器并不可靠，关键挑战在于判断LLM应在何时、以多大程度影响校准模型。本文提出检索校准的协同框架CoMPASS，以图注意力网络为预测锚点，检索局部相关训练分子并提供注意力证据，自适应调节大模型的影响。实验表明该协同机制能在保持校准可靠性的同时引入化学推理。其价值在于为异构知识源在不同实例上的动态整合提供了通用范式。",
+      "llm_tldr": "分子性质预测既需要统计可靠性又需要化学推理能力，图神经网络受限于训练数据覆盖，而大语言模型作为独立定量预测器并不可靠，关键挑战在于判断LLM应在何时、以多大程度影响校准模型。本文提出检索校准的协同框架CoMPASS，以图注意力网络为预测锚点，检索局部相关训练分子并提供注意力证据，自适应调节大模型的影响。实验表明该协同机制能在保持校准可靠性的同时引入化学推理。其价值在于为异构知识源在不同实例上的动态整合提供了通用范式。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can models dynamically adapt knowledge integration strategies to different drug pairs when heterogeneous knowledge sources contribute unequally across instances?",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2608.30726v1",
+      "source": "arxiv",
+      "title": "Multimodal Adaptive Expert Selection with Text Routing and Ordinal Prototype Optimization for Sentiment Analysis",
+      "abstract": "Multimodal Sentiment Analysis (MSA) is a fundamental component of affective computing that aims to decipher complex emotional states by integrating verbal content with non-verbal cues including vocal intonation and facial micro-expressions. While recent disentanglement-based approaches have advanced the field, their potential is hindered by two methodological challenges. First, static computation graphs process all samples indiscriminately regardless of semantic complexity, which leads to suboptimal representation for diverse emotional expressions and contextual scenarios. Second, generic contrastive objectives often neglect the intrinsic ordinal hierarchy of sentiment intensities. To systematically address these limitations, we introduce Multimodal Adaptive Expert Selection with Text Routing and Ordinal prototype optimization (MAESTRO), a novel framework designed to dynamically orchestrate and refine multimodal representations. Drawing inspiration from an orchestra conductor, we design a Text-Guided Hybrid Mixture-of-Experts (MoE) mechanism. Unlike static fusion, this module utilizes linguistic context as a routing signal to dynamically activate specific audio-visual experts, thereby resolving cross-modal ambiguity through adaptive feature enhancement. Furthermore, to capture fine-grained sentiment gradations, we propose an Ordinal-aware Prototype Contrastive Learning (O-PCL). By incorporating distance-based penalties into the prototype learning objective, O-PCL enforces a structured latent space that preserves the natural order of emotion. Extensive experiments on the CMU-MOSI and CMU-MOSEI benchmarks demonstrate that MAESTRO achieves state-of-the-art performance, and qualitative analysis further confirms the interpretability of our dynamic routing paradigm.",
+      "authors": [
+        "Xiaode Chen",
+        "Jiakang Yu",
+        "Hongtao Deng",
+        "Huina Qu",
+        "Xun Zhu",
+        "Yinxia Lou"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-08-31T12:59:37+00:00",
+      "link": "https://arxiv.org/pdf/2608.30726v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "sample-level adaptive expert selection and text routing",
+      "llm_evidence_cn": "样本级自适应专家选择与文本路由",
+      "llm_evidence": "样本级自适应专家选择与文本路由",
+      "canonical_evidence": "样本级自适应专家选择与文本路由",
+      "llm_tldr_en": "MSA uses static computation graphs ignoring sample complexity. This work proposes multimodal adaptive expert selection with text routing, dynamically choosing experts per sample by semantic complexity plus ordinal prototype optimization, improving representation for diverse expressions.",
+      "llm_tldr_cn": "针对多模态情感分析中静态计算图对所有样本不加区分、通用对比目标忽视情感强度序数层级的问题，本文提出多模态自适应专家选择框架，利用文本路由按样本语义复杂度动态选择专家，并结合序数原型优化提升表示质量。实验表明该机制能针对不同复杂度样本自适应分配计算，改善多样情感表达的建模。其样本级动态专家路由思想对药物对级MoE路由具有方法迁移价值。",
+      "llm_tldr": "针对多模态情感分析中静态计算图对所有样本不加区分、通用对比目标忽视情感强度序数层级的问题，本文提出多模态自适应专家选择框架，利用文本路由按样本语义复杂度动态选择专家，并结合序数原型优化提升表示质量。实验表明该机制能针对不同复杂度样本自适应分配计算，改善多样情感表达的建模。其样本级动态专家路由思想对药物对级MoE路由具有方法迁移价值。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
