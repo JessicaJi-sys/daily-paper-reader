@@ -1,0 +1,1294 @@
+Title: CurvFlow-DTA: dual-graph discrete Ricci curvature flow for drug–target affinity prediction
+
+URL Source: https://arxiv.org/pdf/2609.22862v1
+
+Published Time: Tue, 22 Sep 2026 00:43:02 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+# CurvFlow-DTA: dual-graph discrete Ricci curvature flow for drug–target affinity prediction 
+
+Jicheng Ma a, Yunyan Yang a, Juan Zhao a, Liang Zhao b, ∗
+
+> aSchool of Mathematics, Renmin University of China, Beijing, 100872, China
+> bSchool of Mathematical Sciences, Key Laboratory of Mathematics and Complex Systems of MOE, Beijing Normal University, Beijing, 100875, China
+
+Abstract 
+
+Graph neural networks are widely used for drug–target affinity (DTA) prediction, and discrete Ricci curvature has recently been used to characterize molecular graph geometry. Existing curvature-aware DTA approaches mainly use static curvature on the drug graph while representing proteins primarily with sequence-derived features. This leaves pair-adaptive use of graph geometry underexplored, which may limit adaptation to unseen entities in cold-start settings relevant to practical screening. We present CurvFlow-DTA, which replaces a single static curvature representation with weighted Forman curvature flow on both molecular and protein residue–residue contact graphs. A label-independent flow trajectory is precomputed for each entity, and a pair-conditioned selector determines the horizons read by a dual-branch Flow-GINE. A frozen ESM-2 supplies residue-level representations and contact scores used to construct the protein graph. Inference requires only SMILES strings and protein sequences, without a bound complex structure. On Davis and KIBA, CurvFlow-DTA improves on the protocol-matched Ricci-GraphDTA baseline in every warm and cold-start setting. Warm-split mean squared error (MSE) decreases by 19 .9% on Davis and 18 .9% on KIBA. Across the six cold-start comparisons, MSE decreases by 14 .3–27 .4% , with higher concordance index (CI) throughout. Within our compiled set of literature baselines, CurvFlow-DTA achieves the lowest MSE on both warm benchmarks and across four out of six cold-start evaluation settings. 
+
+Keywords: drug–target affinity, Ricci curvature flow, graph neural network, cold-start generalization 
+
+1. Introduction 
+
+Quantifying the binding affinity between small molecules and protein targets is a central task in drug discovery. Drug–target affinity (DTA) prediction supports virtual screening, lead optimization, and drug repurposing by providing a continuous measure of interaction strength that enables more fine-grained ranking than a binary inter-action label. Experimental affinity measurements remain resource-intensive relative to the large chemical–target search space. Accurate computational affinity prediction narrows this gap by focusing experimental effort on the most promising candidates. The Davis kinase panel and the KIBA integrated bioactivity dataset have become widely used benchmarks for DTA prediction (Davis et al., 2011; Tang et al., 2014; Öztürk et al., 2018). Early DTA approaches used drug and target similarities or engineered pair features, as in kernel-based regularized least squares (Pahikkala et al., 2015) and the gradient-boosting model SimBoost (He et al., 2017). DeepDTA sub-sequently learned representations directly from SMILES   
+
+> ∗Corresponding author.
+> Email address: liangzhao@bnu.edu.cn (Liang Zhao)
+
+strings and protein sequences with convolutional neural networks (Öztürk et al., 2018), while TransformerCPI in-troduced a Transformer-based multi-head attention mech-anism to model compound–protein interaction features more explicitly (Chen et al., 2020). GraphDTA replaced the string-based drug encoder with a molecular graph neu-ral network while retaining a sequence-based protein en-coder (Nguyen et al., 2021), whereas DGraphDTA fur-ther represented the protein using a predicted residue con-tact graph (Jiang et al., 2020). More recently, protein language models such as ESM-2 have provided residue-level representations containing rich sequence and struc-tural information (Rives et al., 2021; Lin et al., 2023), and PGraphDTA explored protein language models to-gether with predicted contact information for affinity pre-diction (Bal et al., 2023). These developments make it pos-sible to construct informative representations on both sides of a drug–target pair without requiring an experimentally determined bound complex. Evaluation on entity-disjoint splits is correspondingly important for assessing predic-tion when drugs or targets have not been observed during training (Pahikkala et al., 2015). Message passing in graph neural networks (GNNs) is influenced by the topology and geometry of the underly-arXiv:2609.22862v1 [cs.LG] 19 Sep 2026 ing graph. When information from many distant nodes must propagate through a limited set of connections, it can be compressed during message passing, a phenomenon commonly referred to as over-squashing (Alon and Ya-hav, 2021). Curvature-based analyses have linked neg-atively curved graph regions to such structural bottle-necks and motivated geometry-aware graph rewiring (Top-ping et al., 2022). Among discrete notions of graph cur-vature, Forman–Ricci curvature provides an edge-based combinatorial measure that can be computed efficiently on weighted graphs (Forman, 2003; Sreejith et al., 2016). Forman curvature flows have also been used to evolve edge weights in complex networks (Weber et al., 2017), while other discrete Ricci-flow formulations have been studied for network analysis (Ni et al., 2019). More re-cently, Graph Neural Ricci Flow introduced time-varying curvature into feature evolution on general attributed graphs (Chen et al., 2025). Within DTA, Ricci-GraphDTA incorporates static Forman curvature into molecular mes-sage passing while representing the target from its amino-acid sequence (Zheng et al., 2026). These studies moti-vate the use of graph curvature in representation learning, but the use of an evolving curvature-guided edge metric on both drug and protein graphs, with its effective scale selected for a particular drug–target pair, remains under-explored. We therefore introduce CurvFlow-DTA, a dual-graph DTA framework that applies weighted Forman curvature flow to both the molecular graph and the protein contact graph. For each entity, a label-independent flow trajectory is precomputed once and reused across all pairs containing that entity. A pair-conditioned selector predicts separate flow horizons for the drug and protein branches, so that the geometric scale read from each trajectory can vary with the drug–target pair. The selected edge metrics are incorpo-rated through parallel Flow-GINE encoders, whose pooled representations are subsequently fused for affinity predic-tion. Protein node representations and contact scores are obtained from a frozen ESM-2 model. Consequently, infer-ence requires only a SMILES string and a protein sequence and does not require a bound drug–protein complex struc-ture. The main contributions are: • Dual-graph curvature flow. We extend curvature-aware DTA from static curvature representations to weighted Forman curvature flow trajectories on both molecular and protein graphs. The flow evolves edge metrics while preserving graph topology, providing an ordered set of curvature-guided graph states for down-stream message passing. • Pair-conditioned flow scale selection. Alightweight pair-conditioned selector uses information from both entities to determine separate flow horizons for the drug and protein branches. Flow-GINE then reads trajectory states at pair-dependent flow scales from trajectories that are precomputed independently of affinity labels. • Controlled evaluation under warm and cold-start settings. We evaluate CurvFlow-DTA un-der warm, cold-drug, cold-target, and dual-cold set-tings on Davis and KIBA, together with matched con-trols that separately test static curvature, flow evo-lution, pair conditioning, edge–trajectory correspon-dence, and drug- versus protein-side flow. The result-ing ablations consistently support the contributions of curvature evolution, pair-conditioned horizon se-lection, and dual-graph flow across the evaluated set-tings. On Davis and KIBA, CurvFlow-DTA improves on the protocol-matched curvature baseline under both warm and cold-start evaluation. Comparisons against a range of pub-lished DTA baselines further show that CurvFlow-DTA is a competitive DTA predictor, with low regression error across both warm and cold evaluation settings. We con-duct matched ablation experiments across these settings. We also examine protein-branch attributions on two held-out kinase complexes to check their agreement with crys-tallographic binding pockets. 
+
+2. Related work Protein-aware DTA without bound com-plexes. DTA models increasingly enrich sequence-based protein encoders with predicted structural information and pretrained protein representations. DGraphDTA rep-resents both entities as graphs, constructing the protein graph from a predicted residue contact map (Jiang et al., 2020). Interaction-aware architectures allow informa-tion from one entity to influence the representation of the other. GEFA uses an early-fusion graph-in-graph architec-ture (Nguyen et al., 2022), whereas FusionDTA combines pretrained protein representations with attention-based feature aggregation (Yuan et al., 2022). NHGNN-DTA in-tegrates drug and protein graphs into a hybrid graph (He et al., 2023). CSCo-DTA connects molecular representa-tions with drug–target network representations through cross-scale graph contrastive learning (Wang et al., 2024). PGraphDTA combines protein language model represen-tations with predicted contact maps (Bal et al., 2023), while KANPM-DTA constructs an ESM-guided protein graph using residue representations and contact infor-mation (Rakib et al., 2026). LLMDTA uses pretrained molecular and protein features for cold-start affinity pre-diction (Tang et al., 2025). PMMR combines pretrained protein and molecular representations with drug-graph features (Ouyang et al., 2025). PCIM-DTA derives a pair-specific condition vector to modulate interaction rep-resentations and affinity prediction (Zhou et al., 2026). These studies demonstrate the value of predicted protein structure, pretrained representations, and cross-entity in-teraction modeling in DTA prediction. CurvFlow-DTA addresses the same prediction task, but focuses on a dif-ferent aspect. It evolves edge metrics on both entity 2graphs, caches trajectories independently of their interac-tion partners, and selects the flow horizon read by each branch for a particular pair. 
+
+Graph curvature and curvature flows. Discrete Ricci curvature provides a practical tool to characterize connec-tivity and motivates geometry-aware graph learning (Top-ping et al., 2022). Forman–Ricci curvature offers an efficiently computable edge-based construction (Forman, 2003; Sreejith et al., 2016), and associated Forman geomet-ric flows have previously been studied on weighted complex networks (Weber et al., 2017). Curvature has also been applied to molecular and binding-affinity problems. Per-sistent Forman–Ricci descriptors have been constructed from three-dimensional protein–ligand complexes (Wee and Xia, 2021), while CurvAGN incorporates curvature-based graph representations for protein–ligand affinity pre-diction (Wu et al., 2023). Dynamic curvature has sub-sequently been incorporated into graph-learning architec-tures. CurvFlow-Transformer uses curvature-flow-based masked attention for molecular property prediction (Chen et al., 2024), whereas Graph Neural Ricci Flow couples time-varying curvature with continuous node-feature evo-lution on general attributed graphs (Chen et al., 2025). Recent theoretical work has further studied weighted For-man and Lin–Lu–Yau Ricci flows and their convergence properties on graphs (Bai et al., 2026). These studies es-tablish important precedents for curvature evolution, but differ from CurvFlow-DTA in the prediction task, graph representation, or manner in which curvature flow is in-corporated into the learning architecture. 
+
+Curvature-aware DTA and our position. Within DTA, Ricci-GraphDTA is the most closely related prior model to CurvFlow-DTA. It incorporates static Forman curvature into the molecular graph encoder, while rep-resenting the target with a sequence-based BiLSTM– attention module (Zheng et al., 2026). CurvFlow-DTA instead uses weighted Forman curvature-flow trajectories on both the molecular graph and the protein residue con-tact graph. These trajectories are computed indepen-dently for individual entities, while a pair-conditioned se-lector determines the flow horizon read by each branch for a particular drug–target pair. The resulting framework therefore combines dual-graph curvature evolution with pair-conditioned flow-scale selection, distinguishing it from both static curvature-aware DTA models and curvature-flow methods developed for single-entity graph learning tasks. 
+
+3. Methods 
+
+3.1. Problem formulation and model overview 
+
+Given a drug d, a target protein p, and a measured binding affinity ydp , the DTA task is to learn a predic-tor ˆydp = fθ (d, p ). CurvFlow-DTA represents the drug as a molecular graph GD and the target as a residue contact graph GP , and separates graph-geometric preprocessing from pair-specific prediction. Previous curvature-aware DTA models employ static curvature representations and encode each drug identi-cally, regardless of its paired target. By contrast, for each unique drug or protein entity, CurvFlow-DTA uses an entity-specific stage to precompute a label-independent weighted Forman curvature-flow trajectory of edge met-rics over a fixed graph topology. This trajectory depends only on the corresponding entity graph and is cached once for reuse across all drug–target pairs containing that en-tity. For a particular pair (d, p ), a pair-conditioned selec-tor then determines separate flow horizons for the drug and protein branches. The same entity can therefore be read at different points along its precomputed trajectory when paired with different partners, without recomputing the curvature flow. CurvFlow-DTA comprises four main components (Fig. 1): (i) construction of the molecular and protein residue graphs; (ii) offline weighted Forman curvature flow that generates an ordered edge-metric trajectory for each entity; (iii) pair-conditioned flow-horizon selection that de-termines the horizon read by each branch; and (iv) drug and protein Flow-GINE encoders that incorporate the se-lected edge metrics into message passing, followed by rep-resentation fusion and affinity prediction. The following subsections describe these components in detail. 
+
+3.2. Molecular and protein graph construction 
+
+Molecular graph. For each drug, we construct a molecu-lar graph GD = ( VD , E D ) from its SMILES representation using RDKit. For multi-fragment inputs, the largest or-ganic connected component is retained. Nodes correspond to heavy atoms and edges to covalent bonds, with stan-dard RDKit atom and bond attributes used as node and edge features (Supplementary S2). The Forman curvature used in this work is defined on the undirected graph, so each covalent bond is treated as a single undirected edge during curvature-flow computation and is duplicated into two directed edges only for message passing. Self-loops are not included in the curvature calculation and are handled through the GINE self-term. All molecular edges are initialized with unit metric, 
+
+dD, 0 
+
+> e
+
+= 1 . Thus, the initial edge metric encodes only which atoms are bonded and is not derived from hand-set bond lengths or a 3D conformer, while variations in the initial Forman curvature arise solely from the molec-ular graph topology. Subsequent curvature-flow updates evolve these edge metrics while leaving the molecular con-nectivity fixed. 
+
+Protein residue contact graph. Each target protein of length N is represented as a residue graph GP = ( VP , E P ),with one node for each residue. The initial node repre-sentation concatenates a frozen ESM-2 residue embedding (esm2_t30_150M_UR50D ) (Lin et al., 2023), an amino-acid-type embedding, and a sinusoidal positional encoding. The concatenated features are projected to the hidden dimen-sion by a linear layer followed by LayerNorm. 3Figure 1: Overview of CurvFlow-DTA. (a) For each drug and target, weighted Forman curvature flow evolves the edge metrics of the molecular graph and the ESM-2–derived residue contact graph at fixed topology. The resulting trajectory and Forman profile are precomputed once per entity and reused across all pairs. (b) For a given drug–target pair, a pair-conditioned selector reads the pooled features and Forman profiles of both entities and predicts two horizons HD , H P that set how far each branch reads its trajectory. (c) Drug and protein Flow-GINE encoders read the selected curvature states through a per-edge geometric gate, and their pooled representations are fused to predict affinity 
+
+> ˆy. Inference requires only a SMILES string and a protein sequence. Molecule and graphs are schematic. This explanatory workflow diagram was prepared with assistance from OpenAI Codex (GPT-5.6 Sol), used to help create the workflow illustration.
+
+The protein graph contains backbone and long-range contact edges. Backbone edges e(i,i +1) connect consecu-tive residues and ensure graph connectivity. Long-range edges are selected from symmetrized ESM-2 contact pre-dictions. We consider residue pairs with sequence separa-tion |i − j| ≥ 6 to exclude near-neighbour pairs dominated by local sequence connectivity. Candidate contacts are ranked by their predicted contact scores in descending or-der, and we take the global top-K (K = N ) and cap each residue’s long-range degree at 8.The contact scores are used only to determine graph connectivity and are not used as initial edge metrics. Each retained edge is assigned the unit metric dP, 0 
+
+> e
+
+= 1 , while its edge feature indicates whether it is a backbone or long-range contact edge. Details of contact selection and the processing of sequences exceeding the ESM-2 context length are provided in Supplementary S2. 
+
+3.3. Weighted Forman curvature and offline flow 
+
+For an edge e = ( u, v ) with metric dte > 0 and unit node weights, we use the one-dimensional weighted Forman cur-vature (Forman, 2003; Sreejith et al., 2016), 
+
+F te = dte
+
+
+
+1
+
+dte
+
++ 1
+
+dte
+
+−X  
+
+> f∋uf̸=e
+
+1
+
+q
+
+dtedtf
+
+−X 
+
+> g∋vg̸=e
+
+1
+
+pdtedtg
+
+ .
+
+With the unit initial metric, this reduces to F 0 
+
+> e
+
+= 4 −
+
+deg( u) − deg( v). Thus, the initial curvature is determined by local graph topology, with lower values assigned to edges whose endpoints have larger combined degree. After each metric update, the curvature is recomputed from the evolved edge metrics in O(|E|), so subsequent curvature states depend on both the fixed graph topology and the evolving relative edge geometry. Following the general idea of evolving edge metrics un-der Forman curvature (Weber et al., 2017), we use a stabi-lized and graph-normalized update to generate an ordered trajectory of edge metrics. At step t, the length-weighted mean curvature is 
+
+¯F t =
+
+P 
+
+> e∈E
+
+dteF te
+
+P 
+
+> e∈E
+
+dte
+
+.
+
+A fixed per-graph curvature scale is estimated from the initial state as 
+
+ξG = RMS e∈E
+
+ F 0 
+
+> e
+
+− ¯F 0 + ϵ, 
+
+where ϵ > 0 prevents division by zero when the initial curvature variation is zero. The metric is then updated by 
+
+qte = tanh 
+
+ F te − ¯F t
+
+ξG
+
+
+
+, edt+1  
+
+> e
+
+= dte exp( −ηq te).
+
+The transformed curvature deviation qte ∈ (−1, 1) sets the update direction. The tanh transformation bounds the 4magnitude of the log-metric update, and the fixed scale 
+
+ξG reduces sensitivity to differences in curvature dispersion across graphs. The multiplicative update is equivalent to an additive step in log dte and preserves metric positivity before normalization. Edges with below-average curvature are lengthened, whereas edges with above-average curva-ture are shortened, producing a sequence of curvature-guided edge metrics for downstream message passing. The provisional metric edt+1 is mapped to the bounded, unit-mean constraint set 
+
+C =
+
+(
+
+d : ℓ ≤ de ≤ u, 1
+
+|E|
+
+X
+
+> e∈E
+
+de = 1 
+
+)
+
+through 
+
+dt+1  
+
+> e
+
+=
+
+h
+
+ΠC
+
+ edt+1 i 
+
+> e
+
+= clip 
+
+
+
+ct edt+1  
+
+> e
+
+, ℓ, u 
+
+
+
+,
+
+1 = 1
+
+|E|
+
+X
+
+> e∈E
+
+dt+1  
+
+> e
+
+.
+
+Here ΠC applies a single global scale ct > 0 and then clips. ct is the unique value for which the clipped met-rics have mean one, found by one-dimensional bisection. This bounded mean normalization keeps the flow numeri-cally stable, preventing individual metrics from collapsing toward zero or diverging while removing variation in the global metric scale. We use ℓ = 0 .25 , u = 4 , T = 8 flow steps, and a step size 
+
+η = 0 .1, giving a maximum flow horizon Hmax = T η = 0 .8.For each unique entity, we cache the states {log dt}Tt=0 and the corresponding curvatures {F t}Tt=0 . Log-metric states are stored because both the multiplicative flow update and the trajectory interpolation described in Section 3.4 are naturally expressed in log space. We additionally compute a 22 -dimensional Forman re-sponse profile, 
+
+sG = Stats( F 0), Stats( F T ) − Stats( F 0) ,
+
+which summarizes the initial curvature distribution and its change over the cached trajectory. The profile is used only by the pair-conditioned horizon selector. Its component statistics and numerical conventions are given in Supple-mentary S2, and the profile standardization parameters are fit using the training data only. 
+
+3.4. Pair-conditioned flow horizons 
+
+Let XD and XP denote the drug and protein node rep-resentations after projection to the common hidden di-mension and before Flow-GINE message passing. Coarse entity representations are obtained by mean pooling, 
+
+cD = MeanPool( XD ), cP = MeanPool( XP ).
+
+A lightweight pair-conditioned selector combines these rep-resentations with the Forman response profiles, 
+
+rdp = [ cD , c P , c D ⊙ cP , |cD − cP |, Proj( sD ), Proj( sP ) ] ,
+
+and predicts separate flow horizons, 
+
+HD = Hmax σ MLP D (rdp ),HP = Hmax σ MLP P (rdp ).
+
+The drug and protein profiles use two separate projec-tions, each a Linear(22 → 256) followed by LayerNorm and GELU. For a particular pair, its horizons HD and HP
+
+are bounded by Hmax and determine how far along the cor-responding cached trajectory each branch reads. The sum-mary profiles sD and sP are used only by the horizon selec-tor. They are not provided to the Flow-GINE encoders or the affinity decoder. The encoders receive curvature-flow information through the selected edge metrics. For branch s ∈ { D, P } with Ls Flow-GINE layers, the selected horizon is distributed uniformly across layers, 
+
+τs,l = l − 1
+
+Ls − 1 Hs, l = 1 , . . . , L s.
+
+Thus, the first layer always uses the initial metric ( τs, 1 =0), the last layer uses the selected horizon ( τs,L s = Hs), and the intermediate layers read the trajectory at ordered flow times between these endpoints. The offline trajectory contains the cached states {dt}Tt=0 ,where t is the discrete flow-step index and dt corresponds to flow time tη . Hence the cached trajectory covers the interval [0 , T η ] = [0 , H max ]. For an arbitrary read time 
+
+τ ∈ [0 , H max ], let 
+
+j(τ ) = min 
+
+ τη
+
+
+
+, T − 1
+
+
+
+, δ(τ ) = τη − j(τ ).
+
+The metric at τ is obtained by linear interpolation in log space, 
+
+log de(τ ) = [1 − δ(τ )] log dj(τ ) 
+
+> e
+
++ δ(τ ) log dj(τ )+1  
+
+> e
+
+.
+
+This definition gives de(0) = d0 
+
+> e
+
+and de(Hmax ) = dTe , ex-plicitly handling the terminal cached state. The result-ing layer schedule preserves the order of the flow trajec-tory. Successive Flow-GINE layers read nondecreasing flow times from the initial state to the pair-selected hori-zon rather than treating the cached states as an unordered collection of edge features. 
+
+3.5. Flow-GINE encoders and affinity prediction 
+
+For branch s ∈ { D, P }, the interpolated metric at layer l
+
+is converted into a positive scalar gate for each undirected edge, 
+
+g(l) 
+
+> e
+
+= exp  −de(τs,l )
+
+mean f ∈Es exp  −df (τs,l ) .
+
+This fixed exponential mapping assigns smaller gates to edges with larger flow metrics and larger gates to edges with smaller metrics. The normalization enforces unit mean over the undirected edge set, so the flow changes the 5relative weighting of edges without introducing a graph-dependent shift in the mean gate value. For message pass-ing, the same gate is assigned to the two directed copies of each undirected edge. The gated messages are aggregated within a residual GINE update (Xu et al., 2019; Hu et al., 2020), 
+
+m(l) 
+
+> v
+
+= X 
+
+> u∈N (v)
+
+g(l) 
+
+> uv
+
+ϕl
+
+
+
+h(l−1)  
+
+> u
+
+, e uv 
+
+
+
+,h(l) 
+
+> v
+
+= LayerNorm 
+
+h
+
+h(l−1) 
+
+> v
+
++ MLP l
+
+
+
+(1 + ϵl)h(l−1)  
+
+> v
+
++ m(l)
+
+> v
+
+i 
+
+.
+
+Here h(l) 
+
+> v
+
+denotes the representation of node v, euv the cor-responding edge feature, and ϕl the edge-aware message transformation used by the GINE layer. The geometric gate therefore modulates the contribution of each exist-ing edge according to the flow metric read at the current layer. It changes message weights without altering graph topology. The drug and protein encoders use the same message-passing formulation but have independent parameters. The drug branch contains 5 layers and the protein branch 
+
+3 layers. Both use hidden dimension 256 and dropout 0.1.After the final Flow-GINE layer, we use global mean pool-ing on each branch to produce one representation for each entity. We use mean rather than sum pooling so that the pooled representation does not scale directly with the num-ber of atoms or residues. The pooled representations are normalized with LayerNorm and combined as 
+
+zdp = [ zD , z P , z D ⊙ zP , |zD − zP | ].
+
+A two-layer MLP maps the fused representation zdp to the predicted affinity ˆydp .
+
+4. Results 
+
+4.1. Experimental setup 
+
+Datasets and data splits. We evaluate CurvFlow-DTA on the Davis (Davis et al., 2011) and KIBA (Tang et al., 2014) benchmarks. Davis dissociation constants are con-verted to pK d, whereas the integrated KIBA scores are used as the regression targets for KIBA. Dataset statis-tics and the complete preprocessing details are provided in Supplementary S1 and S2. For warm evaluation, we use the five-fold split files re-leased with DeepDTA (Öztürk et al., 2018), alongside an independent held-out test set. In our model-selection pro-tocol, folds 0–3 are used for training and fold 4 is used for validation, including early stopping and hyperparameter selection. After model selection, the selected configuration is refit on folds 0–4 and evaluated once on the held-out test set, which is not used at any stage of model selection. For cold-start evaluation, we construct entity-disjoint partitions without using affinity. Cold-drug splits separate compounds by Bemis–Murcko scaffold (Bemis and Mur-cko, 1996), cold-target splits separate proteins by cluster-ing their sequences with MMseqs2 (Steinegger and Söding, 2017) at a 40% identity threshold, and dual-cold splits hold out both drug and target groups from training. The split construction targets an 80:10:10 train/validation/test ra-tio. 
+
+Training. The trainable components of CurvFlow-DTA, such as the selector, both encoders, and the decoder, are trained end to end with a single Huber loss ( δ = 1 ) on standardized labels. The frozen ESM-2 backbone and the precomputed curvature-flow trajectories are not updated during training. We use AdamW with a learning rate of 10 −4, weight de-cay of 10 −5, and batch size 64 . Training proceeds for at most 300 epochs, with early stopping after 30 epochs with-out improvement in validation MSE. Full hyperparameter settings are reported in Supplementary S4. 
+
+4.2. Evaluation and comparison protocol 
+
+We evaluate prediction accuracy using mean squared er-ror (MSE), concordance index (CI), and R2
+
+> m
+
+. MSE mea-sures regression error, CI evaluates pairwise ranking con-sistency, and R2 
+
+> m
+
+assesses agreement between measured and predicted affinities in external validation. Predictions are transformed back to the original dataset label scale be-fore evaluation, and all reported metrics are computed on that scale. The comparison combines literature-reported results with a controlled reproduction. Complete tables and the source-selection rationale are provided in Supplemen-tary S9. Because Ricci-GraphDTA (Zheng et al., 2026) is the most closely related curvature-aware DTA model and serves as the primary methodological baseline for CurvFlow-DTA, we reproduce it within our experimen-tal pipeline. To ensure a controlled comparison, the re-production uses the same data preprocessing, split files, validation-based model-selection procedure, and evalua-tion code as CurvFlow-DTA. In particular, the test parti-tion is reserved exclusively for final evaluation and is not used for hyperparameter selection. 
+
+4.3. Warm-split performance 
+
+CurvFlow-DTA shows strong performance under the warm-split evaluation (Table 1). In the controlled com-parison with the reproduced Ricci-GraphDTA baseline, CurvFlow-DTA improves all three reported metrics on both datasets. On Davis, it achieves a CI of 0.902 , an MSE of 0.185 , and an R2 
+
+> m
+
+of 0.711 , compared with 0.891 , 0.231 ,and 0.699 , respectively, for Ricci-GraphDTA. The reduc-tion in MSE is approximately 20% . On KIBA, CurvFlow-DTA reduces MSE from 0.169 to 0.137 (approximately 
+
+19% ), while increasing CI from 0.868 to 0.887 and R2
+
+> m
+
+from 0.735 to 0.790 . These consistent gains under a com-mon preprocessing, model-selection, and evaluation proto-col show that the improvement over the closest curvature-65 6 7 8 9 10             
+
+> Measured affinity
+> 5678910
+> Predicted affinity
+> Davis
+> Predicted value Ideal ( y=x)
+> 6810 12 14 16
+> Measured affinity
+> 6810 12 14 16
+> Predicted affinity
+> KIBA
+> Predicted value Ideal ( y=x)Figure 2: Predicted versus measured affinities for CurvFlow-DTA on the Davis and KIBA warm-split test sets. Each point represents one drug–target pair, and the dashed identity line denotes perfect agreement ( y=x).
+
+aware baseline persists independently of cross-study pro-tocol differences. The numerical comparison with the broader set of pub-lished baselines is also favorable. CurvFlow-DTA has the lowest Davis MSE ( 0.185 ) and the highest CI ( 0.902 ). Its 
+
+R2 
+
+> m
+
+of 0.711 is close to, but below, GRA-DTA ( 0.715 ). On KIBA, CurvFlow-DTA has the lowest listed MSE ( 0.137 ), and the highest R2 
+
+> m
+
+(0.790 ). Its CI of 0.887 is below the best listed value of 0.891 , reported for GraphDTA (GAT– GCN) and MGPLI. It attains the best numerical value in four of the six warm metric columns, with consistent ad-vantages in regression error. Thus, CurvFlow-DTA com-bines clear improvements over the protocol-matched cur-vature baseline with performance at or near the strongest reported results across both warm-split benchmarks. Predicted-versus-measured affinities in Fig. 2 show clear overall correspondence between predictions and measure-ments on both test sets, while also revealing the residual dispersion and the characteristic concentration of Davis observations at pK d = 5 .
+
+4.4. Cold-start performance 
+
+Cold-start evaluation provides a more stringent test of prediction on entities not observed during model train-ing. Our cold-drug, cold-target, and dual-cold settings hold out drug scaffold groups, protein homology groups, or both. Table 2 summarizes representative literature results and the matched comparison. The complete inventory is provided in Supplementary S9. Because R2 
+
+> m
+
+is not consis-tently available for the literature baselines under cold-start evaluation, the comparative table focuses on MSE and CI. Shared scenario names specify which entity is held out, but do not imply identical test entities or grouping rules across publications. On Davis, CurvFlow-DTA has the lowest listed MSE in all three cold-start settings. It also has the highest listed CI under cold-drug ( 0.782 ) and dual-cold ( 0.723 ) evalua-tion. Under cold-target evaluation, its CI of 0.833 is sec-ond to DMFF ( 0.840 ). Relative to the Ricci-GraphDTA values on Davis, CurvFlow-DTA reduces MSE by 14 .3% ,
+
+27 .4% , and 20 .1% under cold-drug, cold-target, and dual-cold evaluation, respectively, while improving CI in all three settings. On KIBA, CurvFlow-DTA has the lowest listed cold-target MSE ( 0.383 ), while its CI of 0.746 is second to DMFF ( 0.748 ). Under cold-drug evaluation, its MSE of 
+
+0.347 is second to GRA-DTA ( 0.337 ), and its CI of 0.748 
+
+is below the best listed value ( 0.765 , GRA-DTA). Un-der dual-cold evaluation, CurvFlow-DTA has the highest listed CI ( 0.674 ), and its MSE of 0.445 is close to GRA-DTA ( 0.441 ). It therefore has the lowest or second-lowest MSE across all six cold-start settings, including four nu-merical minima, while ranking performance varies with the scenario. In the matched KIBA comparison, CurvFlow-DTA improves over Ricci-GraphDTA in all three cold-start settings, reducing MSE from 0.406 to 0.347 , from 0.462 to 
+
+0.383 , and from 0.534 to 0.445 . These correspond to re-ductions of 14 .5% , 17 .1% , and 16 .7% , respectively. CI in-creases from 0.726 to 0.748 , from 0.710 to 0.746 , and from 
+
+0.590 to 0.674 .The matched cold-start results show that our gains over the closest curvature-aware baseline hold for unseen drugs and targets on both benchmarks. Comparisons with other published results further show consistently low regression error and competitive ranking performance. 
+
+4.5. Ablation analysis 
+
+To examine the contribution of the geometric design choices, we compare CurvFlow-DTA with a graded set of controls. No curvature sets g(l) 
+
+> e
+
+≡ 1 for every edge and layer, retaining the same dual-graph encoders and affin-ity decoder while removing curvature-based edge gating. 
+
+Static Forman keeps a curvature-derived gate but never advances the flow. The per-edge gate is computed once from the initial Forman curvature F 0 and held fixed across all layers, so the model still sees curvature geometry but only as a single static snapshot rather than an evolving trajectory. This isolates the value of evolving the geome-try from the value of using curvature and provides a static curvature-gating comparator. Fixed flow removes the pair-conditioned horizon selector and fixes HD = HP = Hmax 
+
+for every drug–target pair. Each branch nevertheless re-tains the ordered curvature-flow trajectory and reads it ac-cording to the same pair-independent layer-wise flow-time schedule. Entity-only horizon restores adaptive horizon selection but determines the horizon from each entity in-dependently, without information from its paired partner. 
+
+Metric-flow shuffle preserves the cached metric trajecto-ries and their per-step distributions but randomly reas-signs trajectories among edges, breaking the correspon-dence between an edge and its own flow evolution. Fi-nally, Drug-flow only and Protein-flow only enable curva-ture flow and apply flow-based gating to only one branch while retaining uniform gating ( ge ≡ 1) on the other. Ta-bles 3 and 4 report MSE and CI across warm and all three cold-start settings. 7Table 1: Warm-split prediction performance on Davis and KIBA. Boldface indicates the best numerical value among the entries listed for each metric and dataset                                                                          
+
+> Davis KIBA Method MSE ↓CI ↑R2
+> m↑MSE ↓CI ↑R2
+> m↑
+> DeepDTA (Öztürk et al., 2018) 0.261 0.878 0.630 0.194 0.863 0.673
+> GraphDTA (GIN) (Nguyen et al., 2021) 0.229 0.893 —0.147 0.882 —GraphDTA (GAT-GCN) (Nguyen et al., 2021) 0.245 0.881 —0.139 0.891 —FusionDTA (Yuan et al., 2022) 0.226 0.891 0.686 0.155 0.882 0.750
+> MGraphDTA (Yang et al., 2022) 0.228 0.883 0.679 0.152 0.884 0.766
+> MGPLI (Wang et al., 2022) 0.218 0.884 0.620 0.159 0.891 0.753
+> GRA-DTA (Tang et al., 2024) 0.225 0.897 0.715 0.142 0.890 0.784
+> DMFF (He et al., 2025) 0.218 0.894 0.702 0.144 0.889 0.773
+> Ricci-GraphDTA (Zheng et al., 2026) 0.231 0.891 0.699 0.169 0.868 0.735
+> CurvFlow-DTA 0.185 0.902 0.711 0.137 0.887 0.790
+
+The graded controls show a consistent monotonic or-dering. Across both datasets and all four evaluation set-tings, performance improves along No curvature → Static Forman → Fixed flow → Entity-only horizon → the full model, for both MSE and CI. This pattern supports the in-cremental value of curvature-informed gating, evolved edge metrics, adaptive trajectory readout, and pair-conditioned horizon selection. The magnitude of the improvement varies across settings. The largest MSE gain over No curvature occurs for Davis cold-target prediction, where MSE decreases from 0.401 to 0.300 , a relative reduction of approximately 25% . For CI, the improvement over no curvature is larger in every cold-start setting than on the corresponding warm split for both datasets. The three intermediate controls, Static Forman , Fixed flow and Entity-only horizon , further show that it is the evolution of curvature, not merely its presence, that con-tributes to the performance improvement. Static Forman 
+
+improves over no curvature in every reported cell, show-ing that curvature-informed gating is already useful with-out flow evolution. Replacing static curvature with an or-dered flow trajectory under a fixed, pair-independent hori-zon yields a further improvement throughout. Allowing an entity-dependent horizon improves performance again, and conditioning that horizon on the complete drug–target pair gives the best result in every cell. For example, Davis cold-target MSE decreases successively from 0.401 with 
+
+No curvature to 0.344 with Static Forman . Introducing the ordered flow trajectory with a fixed pair-independent horizon further reduces MSE to 0.323 . Allowing the hori-zon to adapt to each entity lowers it to 0.311 , and condi-tioning the horizon on the complete drug–target pair gives the best value of 0.300 .The metric-flow shuffle provides a complementary con-trol on whether the observed improvement can be ex-plained by added edge-metric variations. Although this variant preserves the per-step distribution of cached met-rics, it performs below the full model in every MSE and CI column and falls below No curvature in several settings. This indicates that the distribution of flow-derived edge metrics alone is insufficient. Their correspondence with the graph edges is important for predictive performance. The single-branch controls also favor applying flow-based gating on both entity graphs. The full model out-performs both Drug-flow only and Protein-flow only in every reported setting. Notably, for Davis cold-target pre-diction, the two single-branch variants yield MSE values of 0.440 and 0.453 , respectively, compared with 0.401 for 
+
+No curvature and 0.300 for the full model. Thus, applying flow to only one side is not sufficient to reproduce the gain of the dual-graph formulation and can underperform No curvature in some settings. Because the No curvature control retains the same downstream encoder and decoder capacity, the consistent advantage of the full model also argues against parame-ter count alone as an explanation for the observed gains. Taken together, these ablations support the combined con-tribution of curvature-guided edge gating, flow evolution, pair-conditioned horizon selection, and flow-based encod-ing on both drug and protein graphs. 
+
+4.6. Case study: protein attribution and crystallographic binding pockets 
+
+If CurvFlow-DTA transfers to unseen targets by reading genuine protein geometry, the residues its protein branch relies on most should fall inside the true binding pocket, even on a target held out of training. We test this directly on two cold-target complexes. We attribute predictions on the protein contact graph with an edge-level counterfactual. For each undirected edge we restore its flow metric to the initial state t=0 ,and record the resulting change in predicted affinity. Aresidue’s importance is the summed importance of its in-cident edges, averaged as a percentile rank across the five trained seeds. The ground-truth pocket is defined structurally as the set of protein residues within 4 Å of any ligand heavy atom in the co-crystal. Because high-degree residues accumulate incident edges and could dom-inate any edge-based score, we benchmark each residue-importance ranking against two null models: the random 8Table 2: Cold-start results for representative baselines. Boldface indicates the best numerical value among the entries listed within each dataset and scenario.                                                                                                                     
+
+> Cold-drug Cold-target Dual-cold Method MSE ↓CI ↑MSE ↓CI ↑MSE ↓CI ↑
+> Davis
+> GraphDTA 0.557 0.735 0.439 0.770 0.656 0.607
+> MGPLI 0.895 0.584 0.457 0.792 0.654 0.556
+> GRA-DTA 0.578 0.725 0.376 0.827 0.560 0.690
+> GDilatedDTA 0.500 0.761 0.382 0.810 0.718 0.633
+> FusionDTA 0.581 0.737 0.364 0.826 0.876 0.645
+> MGraphDTA 0.563 0.729 0.359 0.813 0.874 0.636
+> DMFF 0.548 0.742 0.330 0.840 0.759 0.655
+> Ricci-GraphDTA 0.554 0.734 0.413 0.796 0.616 0.696
+> CurvFlow-DTA 0.475 0.782 0.300 0.833 0.492 0.723
+> KIBA
+> GraphDTA 0.349 0.761 0.519 0.651 0.473 0.647
+> MGPLI 0.500 0.725 0.531 0.673 0.640 0.611
+> GRA-DTA 0.337 0.765 0.435 0.692 0.441 0.657
+> FusionDTA 0.429 0.748 0.439 0.685 0.587 0.641
+> MGraphDTA 0.425 0.746 0.435 0.674 0.590 0.626
+> DMFF 0.408 0.753 0.410 0.748 0.567 0.667
+> Ricci-GraphDTA 0.406 0.726 0.462 0.710 0.534 0.590
+> CurvFlow-DTA 0.347 0.748 0.383 0.746 0.445 0.674
+
+pocket proportion and the residue degree itself. We present two representative cold-target test pairs, both kinases with an exact high-resolution co-crystal and a five-seed mean prediction error within our preset accep-tance range ( < 1.5). Both are held out under the cold-target split. The first is MET (UniProt P08581), a recep-tor tyrosine kinase and established oncology target, bound to a small-molecule inhibitor (PDB 3U6H, ligand 03X, 
+
+2.0 Å, 21 pocket residues). PDB 3U6H is a wild-type hu-man c-MET construct, so its sequence matches the model input. The second is cyclin-dependent kinase 2 (CDK2, UniProt P24941), a central cell-cycle regulator, bound to olomoucine (PDB 1W0X, 2.20 Å, 12 pocket residues). For this MET complex, residue importance attains an AUPRC of 0.198 , above both the random ( 0.075 ) and residue-degree ( 0.179 ) baselines. It recovers 3 and 5 pocket residues among the top-10 and top-20 attributed residues, a 3.2× enrichment over chance among its top-K residues (K the pocket size). The five-seed prediction error on this pair is small ( 0.024 ). The recovered residues are hydropho-bic liners of the ATP cleft (Ile1084, Val1092, Ala1108, Val1155, and Leu1157), rather than surface residues. For CDK2–olomoucine the pattern holds. It yields an AUPRC of 0.171 (random 0.043 , degree 0.122 ), representing a 
+
+40 .2% improvement over the degree baseline, and a 3.9×
+
+enrichment. Top-ranked residues such as Ile10, Val18, and Ala31 line the ATP pocket. In both complexes the highest-importance residues concentrate around the ATP-binding cleft rather than spreading over the surface or tracking node degree (Fig. 3). The attribution exceeds the residue-degree baseline, so the ranking is not merely a preference for well-connected residues. The model reads only sequence at inference and never sees the bound complex, yet its most important residues fall in the crystallographic pocket. These two se-lected examples show enrichment of attributed residues in crystallographic binding pockets, supporting the struc-tural relevance of the protein-branch attribution in these cases. 
+
+5. Discussion 
+
+Two patterns in these results help explain the behavior of CurvFlow-DTA. First, replacing a single static curva-ture representation with an ordered curvature-flow trajec-tory provides the encoder with a range of geometric scales rather than one fixed scale. The pair-conditioned selector further allows the same entity to be read at different flow horizons when paired with different partners. This intro-duces curvature-guided message-reweighting patterns that can be read at a pair-dependent horizon. Second, applying the same curvature-aware formulation to the protein residue contact graph allows the model to retain graph structure rather than representing the tar-get only through a sequence-level summary. ESM-2 sup-plies frozen residue representations and sequence-derived contact information, while curvature flow acts on the re-sulting contact graph through the evolving edge metrics. Importantly, the ablation controls retain the same protein features and contact-graph construction while altering or removing the flow-based edge reweighting. Their consis-tent gap from the full model therefore shows that the ob-9Table 3: Ablation analysis of CurvFlow-DTA in terms of MSE ( ↓) across warm, cold-drug, cold-target, and dual-cold evaluation on Davis and KIBA. The controls modify the curvature representation, trajectory readout, or graph branch. Boldface indicates the best value in each column. 
+
+Model variant Davis KIBA Warm Cold-drug Cold-target Dual-cold Warm Cold-drug Cold-target Dual-cold No curvature 0.231 0.513 0.401 0.542 0.151 0.363 0.406 0.470 Static Forman 0.221 0.501 0.344 0.523 0.148 0.358 0.399 0.465 Fixed flow 0.204 0.487 0.323 0.507 0.143 0.352 0.392 0.454 Entity-only horizon 0.194 0.481 0.311 0.498 0.140 0.349 0.387 0.449 Metric-flow shuffle 0.226 0.526 0.360 0.560 0.153 0.374 0.403 0.483 Drug-flow only 0.218 0.497 0.440 0.553 0.149 0.357 0.411 0.476 Protein-flow only 0.226 0.532 0.453 0.548 0.150 0.377 0.399 0.474 Full CurvFlow-DTA 0.185 0.475 0.300 0.492 0.137 0.347 0.383 0.445 
+
+> Table 4: Ablation analysis of CurvFlow-DTA in terms of CI ( ↑) across warm, cold-drug, cold-target, and dual-cold evaluation on Davis and KIBA. Boldface indicates the best value in each column.
+
+Model variant Davis KIBA Warm Cold-drug Cold-target Dual-cold Warm Cold-drug Cold-target Dual-cold No curvature 0.889 0.764 0.807 0.700 0.883 0.739 0.726 0.662 Static Forman 0.895 0.771 0.817 0.708 0.884 0.742 0.733 0.667 Fixed flow 0.899 0.777 0.828 0.716 0.885 0.745 0.740 0.671 Entity-only horizon 0.901 0.780 0.831 0.720 0.886 0.746 0.743 0.672 Metric-flow shuffle 0.899 0.756 0.824 0.688 0.882 0.728 0.732 0.648 Drug-flow only 0.899 0.771 0.801 0.694 0.884 0.743 0.732 0.655 Protein-flow only 0.897 0.748 0.775 0.697 0.883 0.724 0.738 0.658 Full CurvFlow-DTA 0.902 0.782 0.833 0.723 0.887 0.748 0.746 0.674 
+
+served benefit cannot be explained by the protein language model or contact representation alone, and supports an ad-ditional contribution from curvature-guided processing of the protein graph. The selected baseline compilation places CurvFlow-DTA among strong DTA predictors. It has the lowest listed MSE on both warm benchmarks and in four of the six cold settings, with second-lowest MSE in the other two. The controlled evidence is the improvement over Ricci-GraphDTA in all eight dataset–setting combinations, sup-ported by ablations that retain the same protein features and graph construction. For the two structural case stud-ies, protein-branch importance corresponds to crystallo-graphic pocket residues without using the bound complex during prediction. Several limitations define the scope of the present study. The evaluation is restricted to two kinase-dominated benchmarks. Literature baselines use different dataset versions, partitions, and model-selection procedures, so their numerical ranks do not establish superiority under a common test set. The attribution analysis concerns selected structural examples rather than a population-wide localization assessment. These boundaries moti-vate broader benchmarks and controlled comparisons us-ing shared entity-group partitions. 
+
+6. Conclusion 
+
+We introduced CurvFlow-DTA, a drug–target affinity model that replaces static discrete Ricci curvature with a weighted Forman curvature flow and applies it on both molecular and protein residue-contact graphs. A dual-branch Flow-GINE reads the resulting curvature-flow tra-jectories, while a pair-conditioned selector determines the flow horizon used by each branch for a given drug–target pair. Across Davis and KIBA, CurvFlow-DTA consistently improves on protocol-matched Ricci-GraphDTA under warm, cold-drug, cold-target, and dual-cold evaluation. The literature-reported comparison further shows low re-gression error across the two benchmarks, subject to source-specific evaluation protocols. Ablations show that each design choice contributes: removing curvature gating, freezing the flow, fixing the horizon, or restricting flow to a single graph each degrades accuracy. These results sup-port dual-graph curvature flow as an effective component of DTA prediction, including prediction for previously un-seen entities. 10 A MET 03X (PDB 3U6H)  
+
+> AUPRC 0.198 (degree 0.179); Top-K pocket enrichment 3.2×
+
+B CDK2 olomoucine (PDB 1W0X)      
+
+> AUPRC 0.171 (degree 0.122); Top-K pocket enrichment 3.9×
+> Ligand 4 Å pocket residue Model top residue Overlap H-bond
+
+Figure 3: Protein-graph attribution on two held-out cold-target co-crystals: (A) MET–03X (PDB 3U6H) and (B) CDK2–olomoucine (PDB 1W0X), shown as PyMOL binding-pocket close-ups. The inhibitor is drawn as yellow sticks, the 4 Å crystallographic pocket residues in blue, the model’s top-20 attributed residues in red, residues in both in purple, and ligand–protein hydrogen bonds as orange dashes. Each panel is annotated with the pocket-recovery AUPRC (versus the residue-degree baseline) and the top-K enrichment over chance. Both crystal structures are wild-type constructs matching the model’s input sequences. 
+
+CRediT authorship contribution statement 
+
+Jicheng Ma (Conceptualization, Methodology, Software, Formal analysis, Investigation, Writing – original draft), Yunyan Yang (Investigation, Validation, Writing – review & editing), Juan Zhao (Data curation, Validation, Writing – review & editing), and Liang Zhao (Conceptualization, Supervision, Funding acquisition, Writing – review & edit-ing). 
+
+Funding 
+
+This work was supported by the National Natural Sci-ence Foundation of China [No. 12271039]. The funder had no role in the study design, data processing, preparation of the manuscript, or decision to submit the article for publication. 
+
+References 
+
+U. Alon and E. Yahav. On the bottleneck of graph neural networks and its practical implications. In International Conference on Learning Representations (ICLR) , 2021. S. Bai, S. Liu, and X. Lai. The weighted Forman and Lin–Lu–Yau Ricci flow on graphs. arXiv preprint arXiv:2601.02673 , 2026. R. Bal, Y. Xiao, and W. Wang. PGraphDTA: Improving drug target interaction prediction using protein language models and contact maps. arXiv preprint arXiv:2310.04017 , 2023. G. W. Bemis and M. A. Murcko. The properties of known drugs. 1. molecular frameworks. Journal of Medicinal Chemistry , 39(15): 2887–2893, 1996. J. Chen, B. Deng, Z. Wang, C. Chen, and Z. Zheng. Graph neural Ricci flow: Evolving feature from a curvature perspective. In 
+
+International Conference on Learning Representations (ICLR) ,2025. L. Chen, X. Tan, D. Wang, F. Zhong, X. Liu, T. Yang, X. Luo, K. Chen, H. Jiang, and M. Zheng. TransformerCPI: improving compound–protein interaction prediction by sequence-based deep learning with self-attention mechanism and label reversal experi-ments. Bioinformatics , 36(16):4406–4414, 2020. Y. Chen, Z. Wan, Y. Li, X. He, X. Wei, and J. Han. Graph curvature flow-based masked attention. Journal of Chemical Information and Modeling , 64(21):8153–8163, 2024. M. I. Davis, J. P. Hunt, S. Herrgard, P. Ciceri, L. M. Wodicka, G. Pal-lares, M. Hocker, D. K. Treiber, and P. P. Zarrinkar. Comprehen-sive analysis of kinase inhibitor selectivity. Nature Biotechnology ,29(11):1046–1051, 2011. R. Forman. Bochner’s method for cell complexes and combinatorial ricci curvature. Discrete & Computational Geometry , 29(3):323– 374, 2003. H. He, G. Chen, and C. Y.-C. Chen. NHGNN-DTA: a node-adaptive hybrid graph neural network for interpretable drug–target binding affinity prediction. Bioinformatics , 39(6):btad355, 2023. H. He, G. Chen, Z. Tang, and C. Y.-C. Chen. Dual modality feature fused neural network integrating binding site information for drug target affinity prediction. npj Digital Medicine , 8(1):67, 2025. T. He, M. Heidemeyer, F. Ban, A. Cherkasov, and M. Ester. Sim-Boost: a read-across approach for predicting drug–target binding affinities using gradient boosting machines. Journal of Chemin-formatics , 9(1):24, 2017. W. Hu, B. Liu, J. Gomes, M. Zitnik, P. Liang, V. Pande, and J. Leskovec. Strategies for pre-training graph neural networks. In 
+
+International Conference on Learning Representations (ICLR) ,2020. M. Jiang, Z. Li, S. Zhang, S. Wang, X. Wang, Q. Yuan, and Z. Wei. Drug–target affinity prediction using graph neural network and contact maps. RSC Advances , 10(35):20701–20712, 2020. Z. Lin, H. Akin, R. Rao, B. Hie, Z. Zhu, W. Lu, N. Smetanin, R. Verkuil, O. Kabeli, Y. Shmueli, A. dos Santos Costa, M. Fazel-
+
+11 Zarandi, T. Sercu, S. Candido, and A. Rives. Evolutionary-scale prediction of atomic-level protein structure with a language model. 
+
+Science , 379(6637):1123–1130, 2023. T. Nguyen, H. Le, T. P. Quinn, T. Nguyen, T. D. Le, and S. Venkatesh. GraphDTA: predicting drug–target binding affin-ity with graph neural networks. Bioinformatics , 37(8):1140–1147, 2021. T. M. Nguyen, T. Nguyen, T. M. Le, and T. Tran. GEFA: Early fusion approach in drug-target affinity prediction. IEEE/ACM Transactions on Computational Biology and Bioinformatics , 19 (2):718–728, 2022. C.-C. Ni, Y.-Y. Lin, F. Luo, and J. Gao. Community detection on networks with Ricci flow. Scientific Reports , 9(1):9984, 2019. X. Ouyang, Y. Feng, C. Cui, Y. Li, L. Zhang, and H. Wang. Im-proving generalizability of drug–target binding prediction by pre-trained multi-view molecular representations. Bioinformatics , 41 (1):btaf002, 2025. H. Öztürk, A. Özgür, and E. Ozkirimli. DeepDTA: deep drug– target binding affinity prediction. Bioinformatics , 34(17):i821– i829, 2018. T. Pahikkala, A. Airola, S. Pietilä, S. Shakyawar, A. Szwajda, J. Tang, and T. Aittokallio. Toward more realistic drug–target interaction predictions. Briefings in Bioinformatics , 16(2):325– 337, 2015. M. D. Y. K. Rakib, M. H. Alamin, J. Li, S. S. Mamun, K. A. Gobena, and S. Ren. KANPM-DTA: improving drug–target affinity pre-diction with Kolmogorov–Arnold networks and pretrained models. 
+
+Briefings in Bioinformatics , 27(2):bbag112, 2026. A. Rives, J. Meier, T. Sercu, S. Goyal, Z. Lin, J. Liu, D. Guo, M. Ott, C. L. Zitnick, J. Ma, and R. Fergus. Biological structure and func-tion emerge from scaling unsupervised learning to 250 million pro-tein sequences. Proceedings of the National Academy of Sciences ,118(15):e2016239118, 2021. R. P. Sreejith, K. Mohanraj, J. Jost, E. Saucan, and A. Samal. For-man curvature for complex networks. Journal of Statistical Me-chanics: Theory and Experiment , 2016(6):063206, 2016. M. Steinegger and J. Söding. MMseqs2 enables sensitive protein sequence searching for the analysis of massive data sets. Nature Biotechnology , 35(11):1026–1028, 2017. J. Tang, A. Szwajda, S. Shakyawar, T. Xu, P. Hintsanen, K. Wen-nerberg, and T. Aittokallio. Making sense of large-scale kinase inhibitor bioactivity data sets: a comparative and integrative anal-ysis. Journal of Chemical Information and Modeling , 54(3):735– 743, 2014. W. Tang, Q. Zhao, and J. Wang. LLMDTA: improving cold-start prediction in drug–target affinity with biological LLM. IEEE Transactions on Computational Biology and Bioinformatics , 22 (6):2398–2409, 2025. X. Tang, X. Lei, and Y. Zhang. Prediction of drug-target affinity us-ing attention neural network. International Journal of Molecular Sciences , 25(10):5126, 2024. J. Topping, F. Di Giovanni, B. P. Chamberlain, X. Dong, and M. M. Bronstein. Understanding over-squashing and bottlenecks on graphs via curvature. In International Conference on Learning Representations (ICLR) , 2022. J. Wang, J. Hu, H. Sun, M. Xu, Y. Yu, Y. Liu, and L. Cheng. MG-PLI: exploring multigranular representations for protein–ligand interaction prediction. Bioinformatics , 38(21):4859–4867, 2022. J. Wang, Y. Xiao, X. Shang, and J. Peng. Predicting drug–target binding affinity with cross-scale graph contrastive learning. Brief-ings in Bioinformatics , 25(1):bbad516, 2024. M. Weber, E. Saucan, and J. Jost. Characterizing complex net-works with Forman–Ricci curvature and associated geometric flows. Journal of Complex Networks , 5(4):527–550, 2017. J. Wee and K. Xia. Forman persistent Ricci curvature (FPRC)-based machine learning models for protein–ligand binding affinity prediction. Briefings in Bioinformatics , 22(6):bbab136, 2021. J. Wu, H. Chen, M. Cheng, and H. Xiong. CurvAGN: Curvature-based adaptive graph neural networks for predicting protein-ligand binding affinity. BMC Bioinformatics , 24(1):378, 2023. K. Xu, W. Hu, J. Leskovec, and S. Jegelka. How powerful are graph neural networks? In International Conference on Learning Rep-resentations (ICLR) , 2019. Z. Yang, W. Zhong, L. Zhao, and C. Y.-C. Chen. MGraphDTA: deep multiscale graph neural network for explainable drug–target bind-ing affinity prediction. Chemical Science , 13(3):816–833, 2022. W. Yuan, G. Chen, and C. Y.-C. Chen. FusionDTA: attention-based feature polymerizer and knowledge distillation for drug-target binding affinity prediction. Briefings in Bioinformatics ,23(1):bbab506, 2022. X. Zheng, Z. Zhang, X. Zhang, N. Jin, and Y. Zhang. Ricci-GraphDTA: A graph neural network integrating discrete Ricci curvature for drug–target affinity prediction. Journal of Molecular Graphics and Modelling , 142:109170, 2026. Z. Zhou, M. Chen, W. Zhou, and Q. Xiao. PCIM-DTA: pairwise conditional interaction modeling for drug–target affinity predic-tion under cold-start scenarios. Bioinformatics , 42(9):btag646, 2026. 
+
+12 Supplementary information for “CurvFlow-DTA: dual-graph discrete Ricci curvature flow for drug–target affinity prediction” 
+
+Jicheng Ma, Yunyan Yang, Juan Zhao, Liang Zhao ∗
+
+Abstract 
+
+This document provides supplementary details for the main article, including dataset statistics and split construction, molecular and protein graph features, evaluation metrics, extended results, the offline weighted Forman curvature-flow algorithm, training convergence, implementation settings, and the complete hyperparameter settings. 
+
+S1. Datasets and split construction Benchmarks. We use the Davis (Davis et al., 2011) and KIBA (Tang et al., 2014) benchmarks, following the la-bel processing convention from DeepDTA (Öztürk et al., 2018). Davis provides dissociation constants in nanomolar units, which are converted to pK d values via 
+
+pK d = − log 10 (Kd/10 9) = 9 − log 10 Kd.
+
+The KIBA dataset provides KIBA scores that integrate 
+
+Kd, Ki, and IC 50 measurements. Both datasets can be organized as drug-target affinity matrices. Only exper-imentally measured entries are used, and each labelled drug-target pair represents one regression target. Table S1 summarizes the basic statistics of the two datasets. The concentration of Davis labels at pK d = 5 (see A in Fig. S1) includes weak-binding or undetected inter-actions encoded at the benchmark limit. These entries should not all be interpreted as precise measurements of 
+
+Kd = 10 000 nM (Öztürk et al., 2018).              
+
+> Table S1: Benchmark statistics. Counts are for the full measured matrix. The warm-split train/test sizes follow the released DeepDTA setting-1 folds used unchanged in this work.
+> Davis KIBA Drugs 68 2 111 Targets 442 229 Measured pairs 30 056 118 254 Warm train pairs (folds 0–4) 25 046 98 545 Warm test pairs 5 010 19 709
+
+Warm split. For warm evaluation, we use the train/test split files released with DeepDTA (Öztürk et al., 2018). The released non-test portion is organized into five folds. In our model-selection protocol, folds 0–3 are used for training and fold 4 is used for validation, including early   
+
+> ∗Corresponding author.
+> Email address: liangzhao@bnu.edu.cn (Liang Zhao)
+
+stopping and hyperparameter selection. After model se-lection, the selected configuration is refit on folds 0–4 and evaluated once on the held-out test set, which is not used at any stage of model selection. 
+
+Cold-start splits. The cold-start splits are entity-disjoint and are constructed without using affinity val-ues (label-blind), so that no measurement influences the partition. Cold-drug isolates drugs by Bemis-Murcko scaffold (Bemis and Murcko, 1996) using RDKit. For cold-target, protein sequences are clustered with MM-seqs2 (Steinegger and Söding, 2017) at a 40% sequence-identity threshold, which groups the 442 Davis targets into 222 clusters and the 229 KIBA targets into 127 clus-ters. Each cluster is assigned in full to one of the train-ing, validation, or test sets, so that no test target shares more than 40% identity with any training target. Du-al-cold applies both constraints and holds out unseen drugs and targets simultaneously. Each split targets an 80:10:10 
+
+train/validation/test ratio with respect to labelled pairs. After construction, we perform disjointness checks corre-sponding to each evaluation setting. We verify scaffold separation for cold-drug, sequence-cluster separation for cold-target, and both forms of separation for dual-cold. The partitions are fixed across all five training seeds. 
+
+S2. Molecular and protein graph features Molecular graph. Drug SMILES are parsed using RD-Kit (RDKit). For multi-fragment inputs, the largest or-ganic connected component is retained. If two compo-nents tie, we apply deterministic tie-breaking. We first select the component with more heavy atoms, followed by the one with a larger total atom count. If ties persist, we choose the component whose canonical SMILES ap-pears earlier in alphabetical order. The molecular graph contains one node per heavy atom and one undirected edge per covalent bond. Atom attributes comprise ele-ment type (one-hot over the observed element set), degree, explicit valence, formal charge, aromaticity, hybridiza-tion state, ring membership, chirality, and total hydro-6.0 7.5 9.0 10.5 
+
+> Binding affinity (pK d)
+> 05000 10000 15000 20000
+> Number of pairs  median 5.0
+
+A   
+
+> Davis
+> 600 1200 1800 2400
+> Protein length (residues)
+> 010 20 30 40
+> Number of targets  median 707
+
+B   
+
+> 300 400 500 600
+> Ligand molecular weight (Da)
+> 01234
+> Number of drugs  median 454
+
+C    
+
+> 04812 16
+> KIBA score
+> 08000 16000 24000 32000
+> Number of pairs  median 12
+
+D   
+
+> KIBA
+> 1000 2000 3000 4000
+> Protein length (residues)
+> 010 20 30 40
+> Number of targets  median 620
+
+E    
+
+> 0800 1600 2400 3200
+> Ligand molecular weight (Da)
+> 0150 300 450 600
+> Number of drugs  median 378
+
+FFigure S1: Distributions of benchmark labels ( A, D), protein sequence lengths ( B, E), and molecular weights ( C, F) for Davis (top row) and KIBA (bottom row). Dashed vertical lines indicate the medians. Molecular weights are computed using RDKit. 
+
+gen count. Together, these attributes assemble into a 
+
+53 -dimensional atom feature vector. Bond attributes com-prise bond type (single/double/triple/aromatic), conjuga-tion, ring membership, and stereochemistry, collectively forming a 12 -dimensional bond feature vector. These at-tributes are used as the molecular node and edge features, respectively. Curvature-flow computation uses the unique undirected edge set. At each flow step, each undirected edge has one metric and one curvature value. For message passing, an undirected edge is represented by two directed copies that share the same flow metric and geometric gate. Self-loops are excluded from curvature-flow computation and handled by the GINE self-term. 
+
+Protein contact graph. For a protein of length N , the residue graph is GP = ( VP , E P ) with VP = {1, . . . , N }. Its edge set contains backbone edges and long-range contact edges. Backbone edges connect consecutive residues, 
+
+Ebb = {i, i + 1 } : i = 1 , . . . , N − 1 ,
+
+which ensures connectivity of the residue graph. Long-range contact candidates are obtained from symmetrized ESM-2 contact predictions. Symmetrization is imple-mented by taking the element-wise average of the raw con-tact matrix and its transpose. Only residue pairs satisfy-ing |i − j| ≥ 6 are considered, excluding pairs dominated by local sequence connectivity. Then we take the global top-K (K = N ) and cap each residue’s long-range degree at 8. Candidate contacts are ranked by their predicted contact scores in descending order (ties broken by residue index). We then traverse the ranked candidates and add an edge only when both of its endpoints still have long-range degree below 8, otherwise we skip it and move on. We stop as soon as K edges have been added. If the de-gree cap prevents us from ever reaching K, we simply keep the fewer edges we could add rather than relaxing the cap. Backbone edges are always kept and are not subject to this limit. The ESM-2 contact probabilities are used only to determine which long-range edges are retained. For a protein of length N , the input representation of residue i is the concatenation of three components. The first component is a frozen ESM-2 residue representation 
+
+ei ∈ R640 extracted from the 30 th representation layer of 
+
+esm2_t30_150M_UR50D (Lin et al., 2023) with the terminal start/end tokens removed. The second component is a trainable amino-acid-type embedding. Let ti ∈ { 1, . . . , 21 }
+
+denote the residue type, with 20 indices corresponding to the standard amino acids and one additional index used for unknown or nonstandard residues. The embedding is 
+
+ai = Waa [ti], Waa ∈ R21 ×da ,
+
+where da = 256 is the amino-acid embedding dimension. The third component is a fixed sinusoidal positional en-coding pi ∈ Rdp , where dp = 256 . For k = 0 , . . . , d p/2 − 1,
+
+pi, 2k = sin 
+
+ i
+
+10000 2k/d p
+
+
+
+,pi, 2k+1 = cos 
+
+ i
+
+10000 2k/d p
+
+
+
+.
+
+The three components are concatenated and projected to the common hidden dimension, 
+
+h(0)  
+
+> i
+
+= LayerNorm ( WP [ ei∥ai∥pi ] + bP ) ,
+
+with WP ∈ R256 ×(640+ da+dp) and bP ∈ R256 . Here Waa ,
+
+WP , and bP are trainable and ESM-2 is frozen. The re-14 sulting h(0)  
+
+> i
+
+is the initial residue node representation sup-plied to the protein Flow-GINE encoder. 
+
+Long-sequence ESM-2 processing. For proteins longer than 1022 residues, ESM-2 inputs are divided into overlapping residue windows of length 1022 with an over-lap of 256 residues. ESM-2 representations are extracted independently for each window. Precisely, windows start at residues 1, 1 + s, 1 + 2 s, . . . with stride s = 1022 − 256 = 766 , and the loop stops once a window reaches residue 
+
+N . The final window is simply truncated at N and may therefore be shorter than 1022 .A residue pair only receives a contact score if the two residues fall inside the same window at least once. A pair that never co-occurs in any window is simply excluded from the candidate set and it can never become an edge. In the implementation their contact scores are held at a sentinel value below every real score and masked out by a co-occurrence mask. When a pair does co-occur in sev-eral overlapping windows, we average its scores over those windows, and likewise average each residue’s embedding over the windows covering it. The full-length matrix is assembled by writing each window’s block back into its own position and dividing by the number of windows that covered each entry. For proteins with length N > 1022 , we first symmetrize the contact-score matrix after the stitching step. We then apply the |i − j| ≥ 6 filter, the global top-K ranking, and the per-residue degree cap during long-range edge selec-tion. The positional encoding uses the global residue index 
+
+i ∈ { 1, . . . , N } of the full sequence. Windowing only af-fects how the frozen ESM-2 embeddings and contact scores are produced and never resets the position index. All of this reduces to the single-window case for proteins short enough to fit in one window. 
+
+Forman response profile. For the curvature-flow tra-jectory, define 
+
+Stats( F ) =  μF , σ F , γ F , κ F , min F, max F, Q10 , Q 25 , Q 50 , Q 75 , Q 90 
+
+,
+
+which collects the mean, standard deviation, skew-ness, excess kurtosis, minimum, maximum, and the 
+
+10 /25 /50 /75 /90 percentiles of the edge-curvature distribu-tion. When the standard deviation σF ≤ 10 −8, both skew-ness and excess kurtosis are set to 0. This occurs only for graphs with constant edge curvature. The response profile is 
+
+sG = [ Stats( F 0), Stats( F T ) − Stats( F 0) ] ∈ R22 .
+
+It contains the initial curvature summary and the net change in these summary statistics between the initial and terminal cached states. The profile is supplied only to the horizon selector and profile standardization statistics are fit on the training set only. 
+
+S3. Evaluation protocol and metrics Reported statistics. Every model trained in our own pipeline (CurvFlow-DTA and Ricci-GraphDTA) is run over five random seeds and reported as mean ± sample standard deviation. Literature values are quoted from their source publications. Label standardization and pro-file scaling are fit on training data only and applied un-changed to validation and test. 
+
+Metric definitions. For n evaluated drug–target pairs with labels yi and predictions ˆyi, let ¯y and ˆy be the corre-sponding sample means. The Pearson correlation r is 
+
+r =
+
+P
+
+> i
+
+(yi − ¯y)(ˆ yi − ˆy)
+
+qP
+
+> i
+
+(yi − ¯y)2 P
+
+> i
+
+(ˆ yi − ˆy)2
+
+.
+
+MSE, CI and R2 
+
+> m
+
+are defined as 
+
+MSE = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+(yi − ˆyi)2,
+
+CI = 1
+
+|Q| 
+
+X
+
+> (i,j )∈Q
+
+
+
+1(ˆ yi > ˆyj ) + 12 1(ˆ yi = ˆ yj )
+
+
+
+,R2 
+
+> m
+
+= r2
+
+
+
+1 −
+
+q
+
+r2 − r20
+
+
+
+,
+
+where Q = {(i, j ) : yi > y j }, and r20 is the coefficient of determination of the regression through the origin, 
+
+k0 =
+
+P 
+
+> i
+
+yi ˆyi
+
+P 
+
+> i
+
+ˆy2
+
+> i
+
+, r20 = 1 −
+
+P
+
+> i
+
+(yi − k0 ˆyi)2
+
+P
+
+> i
+
+(yi − ¯y)2 .
+
+A larger R2 
+
+> m
+
+(with r2 ≥ r20 ) indicates better agreement on held-out data. The main text reports CI, MSE, and R2
+
+> m
+
+. Lower MSE and higher CI and R2 
+
+> m
+
+indicate better performance. In addition, we report the complete set of metrics in Tables S2 and S3, covering results from both benchmarks, evaluated on warm and cold-start splits. Reported metrics include MSE, RMSE, CI, R2
+
+> m
+
+, and Pearson r, which are presented as mean ± sample standard deviation over five random seeds. 
+
+Ricci-GraphDTA reproduction. Ricci-GraphDTA (Zheng et al., 2026) is the most closely related geometry-aware DTA baseline to CurvFlow-DTA and therefore serves as our primary controlled comparator. To ensure that differences in performance are not confounded by differences in data handling or model-selection pro-cedures, we reproduced Ricci-GraphDTA using the same preprocessing, data splits, validation protocol, and evalu-ation code as CurvFlow-DTA. In particular, the released Ricci-GraphDTA implementation evaluates performance on the test set after each training epoch and uses the re-sulting test-set performance to retain the best-performing model checkpoint. This differs from the evaluation princi-ple adopted throughout our study, in which the test set is 15 Table S2: Extended warm-split results for CurvFlow-DTA. Values are mean ± sample standard deviation over five training seeds. 
+
+Dataset MSE ↓ RMSE ↓ CI ↑ R2 
+
+> m
+
+↑ Pearson ↑
+
+Davis 0.185 ± 0.016 0.430 ± 0.019 0.902 ± 0.004 0.711 ± 0.019 0.861 ± 0.004 
+
+KIBA 0.137 ± 0.002 0.370 ± 0.002 0.887 ± 0.002 0.790 ± 0.007 0.893 ± 0.001   
+
+> Table S3: Extended cold-start results for CurvFlow-DTA. Values are mean ±sample standard deviation over five training seeds.
+
+Dataset MSE ↓ RMSE ↓ CI ↑ R2 
+
+> m
+
+↑ Pearson ↑
+
+Davis Cold-drug 0.475 ± 0.018 0.689 ± 0.013 0.782 ± 0.010 0.275 ± 0.009 0.546 ± 0.015 
+
+Cold-target 0.300 ± 0.029 0.547 ± 0.027 0.833 ± 0.010 0.329 ± 0.037 0.638 ± 0.014 
+
+Dual-cold 0.492 ± 0.033 0.701 ± 0.023 0.723 ± 0.047 0.071 ± 0.018 0.305 ± 0.052 
+
+KIBA Cold-drug 0.347 ± 0.032 0.588 ± 0.027 0.748 ± 0.013 0.449 ± 0.032 0.682 ± 0.026 
+
+Cold-target 0.383 ± 0.015 0.619 ± 0.012 0.746 ± 0.006 0.454 ± 0.022 0.706 ± 0.011 
+
+Dual-cold 0.445 ± 0.059 0.666 ± 0.044 0.674 ± 0.022 0.182 ± 0.067 0.431 ± 0.142 
+
+strictly reserved for final evaluation and is never used for hyperparameter tuning, early stopping, checkpoint selec-tion, or any other model-selection decision. We therefore modified only the model-selection procedure so that check-point selection and early stopping were based exclusively on the validation set. The Ricci-GraphDTA architecture and method-specific hyperparameters are kept, and only the shared splits, validation-only selection, five-seed pro-tocol, and common evaluation code are substituted. We reproduced Ricci-GraphDTA for the warm and Davis cold-start settings and additionally evaluated it on the KIBA cold-start splits, which were not reported in the original study. 
+
+S4. Offline weighted Forman curvature flow 
+
+For each drug and protein graph, curvature flow is com-puted on the edge set with initial edge metrics d0 
+
+> e
+
+= 1 .Algorithm S1 gives the offline procedure that produces the cached curvature-flow trajectory. It depends only on the entity graph and never on affinity labels or on the drug– target pairing, so it is computed once per entity and reused across all pairs that involve that entity. The per-step curvature recomputation is O(|E|), so a full trajectory is O(T |E|) and, being cached per unique entity, adds no repeated cost across the many pairs that share a drug or a target. 
+
+S5. Training convergence 
+
+We plot the training and validation loss over epochs for a representative seed (seed 0) on the warm split of each benchmark (Fig. S2). On both datasets the loss drops quickly and then levels off, and the validation loss stays flat rather than rising, indicating stable training up to the early-stopping epoch. 
+
+> Table S4: Main hyperparameters of CurvFlow-DTA.
+
+Component Setting Frozen ESM-2 backbone esm2_t30_150M_UR50D 
+
+Hidden dimension 256 Drug / protein encoder layers 5 / 3 Dropout 0.1 Flow steps T 8Flow step size η 0.1 Maximum horizon T η 0.8 Edge-metric bounds [0 .25 , 4] 
+
+Safeguard ϵ 10 −8
+
+Long-range contact budget Up to N
+
+Maximum long-range degree 8Minimum sequence separation 6 residues ESM-2 window / overlap 1022 / 256 residues Huber loss threshold δ = 1 
+
+Optimizer AdamW Learning rate 10 −4
+
+Weight decay 10 −5
+
+Batch size 64 Maximum training epochs 300 Early-stopping patience 30 epochs Training seeds 5
+
+S6. Hyperparameters and implementation details Hyperparameters. Table S4 lists the hyperparameters used for the reported CurvFlow-DTA runs. Further im-plementation details are documented below. Implementation details are as follows. Each Forman profile is projected by its own Linear(22 → 256) →
+
+LayerNorm → GELU (the drug and protein projections do not share weights). The selector forms the pair feature 
+
+[ cD , c P , c D ⊙ cP , |cD − cP |, Proj( sD ), Proj( sP ) ] ∈ R1536 
+
+(four 256 -dim entity terms plus the two 256 -dim pro-file projections). Two independent horizon heads, each 
+
+Linear(1536 → 256) → GELU → Dropout(0 .1) →
+
+Linear(256 → 1) , produce HD , H P = Hmax σ(·) with 
+
+Hmax = 0 .8. All layers use default PyTorch initialization. 
+
+ϕl concatenates the node and edge features [ hu ∥ euv ]
+
+16 Algorithm S1. Offline weighted Forman curvature flow (per entity) 
+
+Input: An entity graph G = ( V, E ) with unit edge metric d0 
+
+> e
+
+= 1 , steps T , step size η, bounds [ℓ, u ] = [0 .25 , 4] and safeguard ϵ = 10 −8.
+
+Output: cached states {log dt}Tt=0 , curvatures {F t}Tt=0 , and response profile sG.1: Compute F 0 
+
+> e
+
+for all e (weighted Forman curvature) and calculate ¯F 0
+
+2: ξG ← RMS e
+
+ F 0 
+
+> e
+
+− ¯F 0 + ϵ // fixed per-graph scale 
+
+3: for t = 0 , 1, . . . , T − 1 do 
+
+4: ¯F t ←  P  
+
+> e
+
+dteF te
+
+/ P  
+
+> e
+
+dte
+
+ // length-weighted mean 
+
+5: qte ← tanh  (F te − ¯F t)/ξ G
+
+ // signed update direction 
+
+6: edt+1  
+
+> e
+
+← dte exp( −η q te) // multiplicative (log-space) step 
+
+7: dt+1 ← ΠC
+
+  edt+1  // renormalize to unit mean in [ℓ, u ]
+
+8: recompute F t+1  
+
+> e
+
+for all e
+
+9: end for 
+
+10: sG ← [Stats( F 0), Stats( F T ) − Stats( F 0)] 
+
+11: return {log dt}, {F t}, sG0 50 100 150 200 
+
+> Epoch
+> 0.00 0.05 0.10 0.15 0.20 0.25 0.30
+> Huber loss on standardized labels
+> selected epoch 193
+
+A Davis      
+
+> Training Validation
+> 050 100 150 200 250
+> Epoch
+> 0.00 0.05 0.10 0.15 0.20 0.25 0.30
+> Huber loss on standardized labels
+> selected epoch 230
+
+B KIBA 
+
+> Training Validation
+
+Figure S2: Training and validation Huber loss versus epoch during warm-split model selection for CurvFlow-DTA on (A) Davis and (B) 
+
+KIBA (seed 0). The dashed line marks the epoch selected by early stopping. 
+
+and passes them through a two-layer MLP, Linear(256 + dim( euv ) → 256) followed by GELU and Linear(256 →
+
+256) . The GINE self-term coefficient ϵl is a per-layer learn-able scalar initialized to 0. It is unrelated to the curvature-flow safeguard ϵ = 10 −8.
+
+S7. Details of ablation analysis 
+
+Static Forman builds its gate from the initial curvature 
+
+F 0 
+
+> e
+
+rather than from the unit initial metric d0 
+
+> e
+
+= 1 . Each edge is assigned the fixed weight ge = exp( −F 0 
+
+> e
+
+), and nor-malized to unit mean over the undirected edge set of each graph. This gate remains fixed across all layers, and no flow update is performed. Therefore, the model sees a sin-gle non-uniform curvature snapshot instead of an evolving trajectory. In the control of Metric-flow shuffle , a single random permutation π of the edge set is drawn per graph and applied to reassign whole cached metric trajectories among edges. Edge e receives the entire trajectory {dt} originally belonging to edge π(e). Every edge therefore still carries a valid trajectory, but the correspondence between an edge and its own curvature evolution is broken. Trajectories are permuted as whole sequences, not shuffled independently at each step. The inactive branch of Drug-flow only or Protein-flow only uses uniform gating ( ge ≡ 1), which is the same as 
+
+No-curvature control. Only the active branch reads its flow-based gate. The pair-conditioned selector still re-ceives both entities’ coarse features and Forman profiles and predicts the horizon for the active branch as usual. 17 S8. Protein attribution and structural case studies Scope and case selection. The main text presents MET–03X and CDK2–olomoucine as two illustrative cold-target examples. Ligand-bound crystal structures are used retrospectively to define structural reference pockets, not as inputs to CurvFlow-DTA. The available reference structures are PDB 3U6H, a wild-type human c-MET kinase-domain complex with the inhibitor 03X at 2.0 Å (Bellon et al., 2012), and PDB 1W0X, a human CDK2 complex with olomoucine at 2.20 Å (Schulze-Gahmen et al., 2005). Both are wild-type constructs whose sequence matches the model in-put. We deliberately avoid mutant co-crystals (for exam-ple the D1228V structure PDB 6SDD) so that the refer-ence pocket and the model’s input sequence correspond to the same protein. 
+
+Edge perturbation and residue scores. For trained model s and protein edge e, let ˆy(s) 
+
+> dp
+
+be the unperturbed prediction. For one undirected protein edge e, we reset its flow-dependent metric to the initial value ( de = 1 ) for both of its directed copies, leaving every other edge’s flowed metric, all node features, the selected horizons, and the drug branch unchanged. Then we re-run the forward pass to obtain ˆy(s, −e) 
+
+> dp
+
+and get the resulting change in predicted affinity 
+
+∆(s) 
+
+> e
+
+= |ˆy(s) 
+
+> dp
+
+− ˆy(s, −e) 
+
+> dp
+
+|.
+
+A residue’s importance is the sum of ∆e over its incident edges, averaged as a percentile rank across the five seeds. 
+
+Reference pockets and ranking metrics. Let U be the set of structurally evaluable residues. The reference pocket P ⊆ U contains residues with at least one heavy atom within 4 Å of a heavy atom of the selected ligand instance. The pocket prevalence is 
+
+ppocket = |P| |U| .
+
+The residue-degree control ranks residues using their de-gree in the model’s protein graph, evaluated over the same eligible residue set. For the top-k ranked residues Tk, enrichment is 
+
+EF k = |T k ∩ P| /k 
+
+|P| /|U| .
+
+In the pocket-size-based comparison, k = |P| . For uni-form random selection of k residues from U, the expected number of pocket residues is k p pocket . AUPRC is the area under the precision–recall curve of the residue importance ranking against pocket membership. 
+
+Case-level numerical summaries. Table S5 records the case-level values reported in the main text. 
+
+S9. Complete baseline comparisons and result provenance Baseline coverage and selection. The compari-son covers similarity-based methods (KronRLS and Sim-Boost), sequence-based methods (DeepDTA and Fu-sionDTA), molecular-graph and graph–sequence models (GraphDTA, DeepGLSTM, DeepGS, MGraphDTA, MG-PLI, GRA-DTA, and GDilatedDTA), and graph-fusion models (GLFA, GEFA, and DMFF). Ricci-GraphDTA is the primary controlled comparator because it is the closest curvature-aware DTA method. Selection prioritizes relevant architectures, identifi-able Davis/KIBA regression settings, traceable numerical sources, clearly defined evaluation settings, and publicly available implementations. We favor protocols close to our evaluation setting and distinguish method references from the publications supplying the results. Both CurvFlow-DTA and Ricci-GraphDTA are trained within our pipeline, where validation-based selection with a held-out test set is mandatory. For results taken directly from published lit-erature, we document differences in evaluation protocols. We do not assume all external implementations or check-point selection routines have undergone independent veri-fication. This list contains only the selected baselines and is not an exhaustive ranking of all DTA approaches. 
+
+Method references and numerical sources. Table S6 lists the publications providing the reported numerical val-ues. Each method citation denotes its model architecture. The source identifier in each result table marks where the numeric results come from. We adopt values from the orig-inal paper unless noted otherwise below. We keep three decimal places for all reported numbers, rounding from original source data if necessary. Missing results are not filled in. SimBoost (He et al., 2017) and KronRLS (Pahikkala et al., 2015) use the benchmark results reported by Deep-DTA, because our warm evaluation uses DeepDTA’s re-leased split files. Both GIN and GAT–GCN variants of GraphDTA (Nguyen et al., 2021) are shown on both datasets, corresponding to its best variants on Davis and KIBA, respectively. GraphDTA’s original warm tables do not provide R2
+
+> m
+
+, which is left unfilled. Warm results for DeepGLSTM (Mukherjee et al., 2022) follow GDilatedDTA. All warm and cold results for Fu-sionDTA (Yuan et al., 2022) and MGraphDTA (Yang et al., 2022) follow DMFF (He et al., 2025). We make these substitutions because the original public training pipelines of those methods select checkpoints using the test set 1.All cold results for GraphDTA and MGPLI (Wang et al., 2022) are taken from GRA-DTA’s Table 4. All cold results for MGraphDTA (Yang et al., 2022) are taken from DMFF’s Tables 1–2, providing a consistent report-ing source across the three scenarios on both benchmarks. Ricci-GraphDTA (Zheng et al., 2026) is reproduced            
+
+> 1DeepGLSTM: https://github.com/MLlab4CS/DeepGLSTM/ blob/main/training.py. FusionDTA: repository https: //github.com/yuanweining/FusionDTA, commit df0ea5d4 ,
+> training.py and cold-start training scripts. MGraphDTA: repos-itory https://github.com/guaguabujianle/MGraphDTA, commit
+> 54386680 ,regression/train.py .
+
+18 Table S5: Case-level attribution summaries. The table reports the prevalence, degree-control AUPRC, model AUPRC, and pocket-size-based enrichment.             
+
+> Case Pocket prevalence Degree AUPRC Model AUPRC Enrichment MET–03X 0.075 0.179 0.198 3.2×
+> CDK2–olomoucine 0.043 0.122 0.171 3.9×
+
+within our pipeline, including KIBA cold-start evaluation, rather than using the original test-selected results. 
+
+Protocol compatibility. Our warm evaluation uses the released DeepDTA test set and refits the selected config-uration on the five non-test folds. Alternative published evaluations need not use the same test pairs. In partic-ular, DMFF reports a 7:1:2 training/validation/test allo-cation for its warm comparison, whereas our final warm training/test allocation is approximately 5:1 . DMFF de-scribes entity-disjoint cold evaluation. Such entity-based splits are not established to match our scaffold and protein-homology partitions. 
+
+Reporting conventions and availability. The full ta-bles contain every baseline from our collected inventory when we have selected results for the matching dataset and evaluation setting. The results for CurvFlow-DTA and Ricci-GraphDTA in both warm and cold settings are given as mean ± sample standard deviation across five training seeds. Our chosen sources do not provide KIBA cold-start results for GLFA, GEFA, and GDilatedDTA, so these rows are left out of the corresponding tables. The complete warm-split results are listed in Tables S7 and S8. The Davis cold-start results are listed in Tables S9, S10, and S11; the KIBA cold-start results are listed in Tables S12, S13, and S14. For cold-start comparisons, since R2 
+
+> m
+
+is not consistently supplied across the selected sources, we only use MSE and CI. Bold text highlights the best mean values within each full table. 19 Table S6: Numerical-source identifiers used in the complete comparison. The source of a result may differ from the original publication of the method. 
+
+Source Publication and result location D18 DeepDTA, Tables 3–6 (Öztürk et al., 2018) G21 GraphDTA, Tables 2 and 3 (Nguyen et al., 2021) L20 DeepGS, Tables 2 and 3 (Lin et al., 2020) Z24 GDilatedDTA, Tables 3–5 (Zhang et al., 2024) W22 MGPLI, Table 4 (full-model row) (Wang et al., 2022) T24 GRA-DTA, Tables 2 and 4 (Tang et al., 2024) H25 DMFF, Supplementary Tables 1–2 (warm); Tables 1–2 (cold) (He et al., 2025) N22 GEFA, Table 1 (Nguyen et al., 2022) This study Matched Ricci-GraphDTA reproduction and CurvFlow-DTA evaluation. 
+
+> Table S7: Complete warm-split comparison on Davis. Numerical sources are defined in Table S6.
+
+Method Source MSE ↓ CI ↑ R2 
+
+> m
+
+↑
+
+SimBoost D18 0.282 0.872 0.644 
+
+KronRLS D18 0.379 0.871 0.407 
+
+DeepDTA D18 0.261 0.878 0.630 
+
+GraphDTA (GIN) G21 0.229 0.893 —GraphDTA (GAT-GCN) G21 0.245 0.881 —DeepGLSTM Z24 0.294 0.867 0.624 
+
+DeepGS L20 0.252 0.882 0.686 
+
+FusionDTA H25 0.226 0.891 0.686 
+
+MGraphDTA H25 0.228 0.883 0.679 
+
+MGPLI W22 0.218 0.884 0.620 
+
+GRA-DTA T24 0.225 0.897 0.715 
+
+GDilatedDTA Z24 0.237 0.885 0.686 
+
+DMFF H25 0.218 0.894 0.702 
+
+Ricci-GraphDTA This study 0.231 ± 0.019 0.891 ± 0.008 0.699 ± 0.010 
+
+CurvFlow-DTA This study 0.185 ± 0.016 0.902 ± 0.004 0.711 ± 0.019 
+
+> Table S8: Complete warm-split comparison on KIBA. Numerical sources are defined in Table S6.
+
+Method Source MSE ↓ CI ↑ R2 
+
+> m
+
+↑
+
+SimBoost D18 0.222 0.836 0.629 
+
+KronRLS D18 0.411 0.782 0.342 
+
+DeepDTA D18 0.194 0.863 0.673 
+
+GraphDTA (GIN) G21 0.147 0.882 —GraphDTA (GAT-GCN) G21 0.139 0.891 —DeepGLSTM Z24 0.185 0.855 0.705 
+
+DeepGS L20 0.193 0.860 0.684 
+
+FusionDTA H25 0.155 0.882 0.750 
+
+MGraphDTA H25 0.152 0.884 0.766 
+
+MGPLI W22 0.159 0.891 0.753 
+
+GRA-DTA T24 0.142 0.890 0.784 
+
+GDilatedDTA Z24 0.156 0.876 0.775 
+
+DMFF H25 0.144 0.889 0.773 
+
+Ricci-GraphDTA This study 0.169 ± 0.006 0.868 ± 0.002 0.735 ± 0.010 
+
+CurvFlow-DTA This study 0.137 ± 0.002 0.887 ± 0.002 0.790 ± 0.007 
+
+20 Table S9: Complete Davis cold-drug comparison. Sources are defined in Table S6. 
+
+Method Source MSE ↓ CI ↑
+
+GraphDTA T24 0.557 0.735 
+
+MGPLI T24 0.895 0.584 
+
+GRA-DTA T24 0.578 0.725 
+
+GDilatedDTA Z24 0.500 0.761 
+
+GLFA N22 0.861 0.670 
+
+GEFA N22 0.847 0.709 
+
+FusionDTA H25 0.581 0.737 
+
+MGraphDTA H25 0.563 0.729 
+
+DMFF H25 0.548 0.742 
+
+Ricci-GraphDTA This study 0.554 ± 0.074 0.734 ± 0.018 
+
+CurvFlow-DTA This study 0.475 ± 0.018 0.782 ± 0.010 
+
+> Table S10: Complete Davis cold-target comparison. Sources are defined in Table S6.
+
+Method Source MSE ↓ CI ↑
+
+GraphDTA T24 0.439 0.770 
+
+MGPLI T24 0.457 0.792 
+
+GRA-DTA T24 0.376 0.827 
+
+GDilatedDTA Z24 0.382 0.810 
+
+GLFA N22 0.453 0.780 
+
+GEFA N22 0.434 0.795 
+
+FusionDTA H25 0.364 0.826 
+
+MGraphDTA H25 0.359 0.813 
+
+DMFF H25 0.330 0.840 
+
+Ricci-GraphDTA This study 0.413 ± 0.034 0.796 ± 0.033 
+
+CurvFlow-DTA This study 0.300 ± 0.029 0.833 ± 0.010 
+
+> Table S11: Complete Davis dual-cold comparison. Sources are defined in Table S6.
+
+Method Source MSE ↓ CI ↑
+
+GraphDTA T24 0.656 0.607 
+
+MGPLI T24 0.654 0.556 
+
+GRA-DTA T24 0.560 0.690 
+
+GDilatedDTA Z24 0.718 0.633 
+
+GLFA N22 1.144 0.636 
+
+GEFA N22 0.990 0.639 
+
+FusionDTA H25 0.876 0.645 
+
+MGraphDTA H25 0.874 0.636 
+
+DMFF H25 0.759 0.655 
+
+Ricci-GraphDTA This study 0.616 ± 0.091 0.696 ± 0.088 
+
+CurvFlow-DTA This study 0.492 ± 0.033 0.723 ± 0.047 
+
+> Table S12: Complete KIBA cold-drug comparison. Sources are defined in Table S6.
+
+Method Source MSE ↓ CI ↑
+
+GraphDTA T24 0.349 0.761 
+
+MGPLI T24 0.500 0.725 
+
+GRA-DTA T24 0.337 0.765 
+
+FusionDTA H25 0.429 0.748 
+
+MGraphDTA H25 0.425 0.746 
+
+DMFF H25 0.408 0.753 
+
+Ricci-GraphDTA This study 0.406 ± 0.002 0.726 ± 0.001 
+
+CurvFlow-DTA This study 0.347 ± 0.032 0.748 ± 0.013 
+
+21 Table S13: Complete KIBA cold-target comparison. Sources are defined in Table S6. 
+
+Method Source MSE ↓ CI ↑
+
+GraphDTA T24 0.519 0.651 
+
+MGPLI T24 0.531 0.673 
+
+GRA-DTA T24 0.435 0.692 
+
+FusionDTA H25 0.439 0.685 
+
+MGraphDTA H25 0.435 0.674 
+
+DMFF H25 0.410 0.748 
+
+Ricci-GraphDTA This study 0.462 ± 0.101 0.710 ± 0.020 
+
+CurvFlow-DTA This study 0.383 ± 0.015 0.746 ± 0.006 
+
+> Table S14: Complete KIBA dual-cold comparison. Sources are defined in Table S6.
+
+Method Source MSE ↓ CI ↑
+
+GraphDTA T24 0.473 0.647 
+
+MGPLI T24 0.640 0.611 
+
+GRA-DTA T24 0.441 0.657 
+
+FusionDTA H25 0.587 0.641 
+
+MGraphDTA H25 0.590 0.626 
+
+DMFF H25 0.567 0.667 
+
+Ricci-GraphDTA This study 0.534 ± 0.016 0.590 ± 0.009 
+
+CurvFlow-DTA This study 0.445 ± 0.059 0.674 ± 0.022 
+
+22 References 
+
+S. F. Bellon, D. A. Whittington, and A. L. Long. Crystal structure of c-Met in complex with pyrazolone inhibitor 26, 2012. doi: 10. 2210/pdb3U6H/pdb. PDB accession 3U6H. G. W. Bemis and M. A. Murcko. The properties of known drugs. 1. molecular frameworks. Journal of Medicinal Chemistry , 39(15): 2887–2893, 1996. M. I. Davis, J. P. Hunt, S. Herrgard, P. Ciceri, L. M. Wodicka, G. Pal-lares, M. Hocker, D. K. Treiber, and P. P. Zarrinkar. Comprehen-sive analysis of kinase inhibitor selectivity. Nature Biotechnology ,29(11):1046–1051, 2011. H. He, G. Chen, Z. Tang, and C. Y.-C. Chen. Dual modality feature fused neural network integrating binding site information for drug target affinity prediction. npj Digital Medicine , 8(1):67, 2025. T. He, M. Heidemeyer, F. Ban, A. Cherkasov, and M. Ester. Sim-Boost: a read-across approach for predicting drug–target binding affinities using gradient boosting machines. Journal of Chemin-formatics , 9(1):24, 2017. X. Lin, K. Zhao, T. Xiao, Z. Quan, Z.-J. Wang, and P. S. Yu. DeepGS: Deep representation learning of graphs and sequences for drug-target binding affinity prediction. In Proceedings of the 24th European Conference on Artificial Intelligence (ECAI 2020) , vol-ume 325 of Frontiers in Artificial Intelligence and Applications ,pages 1301–1308. IOS Press, 2020. Z. Lin, H. Akin, R. Rao, B. Hie, Z. Zhu, W. Lu, N. Smetanin, R. Verkuil, O. Kabeli, Y. Shmueli, A. dos Santos Costa, M. Fazel-Zarandi, T. Sercu, S. Candido, and A. Rives. Evolutionary-scale prediction of atomic-level protein structure with a language model. 
+
+Science , 379(6637):1123–1130, 2023. S. Mukherjee, M. Ghosh, and P. Basuchowdhuri. DeepGLSTM: Deep graph convolutional network and LSTM based approach for pre-dicting drug-target binding affinity. In Proceedings of the 2022 SIAM International Conference on Data Mining (SDM) , pages 729–737. SIAM, 2022. T. Nguyen, H. Le, T. P. Quinn, T. Nguyen, T. D. Le, and S. Venkatesh. GraphDTA: predicting drug–target binding affin-ity with graph neural networks. Bioinformatics , 37(8):1140–1147, 2021. T. M. Nguyen, T. Nguyen, T. M. Le, and T. Tran. GEFA: Early fusion approach in drug-target affinity prediction. IEEE/ACM Transactions on Computational Biology and Bioinformatics , 19 (2):718–728, 2022. H. Öztürk, A. Özgür, and E. Ozkirimli. DeepDTA: deep drug– target binding affinity prediction. Bioinformatics , 34(17):i821– i829, 2018. T. Pahikkala, A. Airola, S. Pietilä, S. Shakyawar, A. Szwajda, J. Tang, and T. Aittokallio. Toward more realistic drug–target interaction predictions. Briefings in Bioinformatics , 16(2):325– 337, 2015. RDKit. RDKit: Open-source cheminformatics. https://www.rdkit. org, 2026. Version 2026.03.2; accessed 15 September 2026. U. Schulze-Gahmen, L. Meijer, and S.-H. Kim. Crystal structure of human CDK2 in complex with the inhibitor olomoucine, 2005. doi: 10.2210/pdb1W0X/pdb. PDB accession 1W0X. M. Steinegger and J. Söding. MMseqs2 enables sensitive protein sequence searching for the analysis of massive data sets. Nature Biotechnology , 35(11):1026–1028, 2017. J. Tang, A. Szwajda, S. Shakyawar, T. Xu, P. Hintsanen, K. Wen-nerberg, and T. Aittokallio. Making sense of large-scale kinase inhibitor bioactivity data sets: a comparative and integrative anal-ysis. Journal of Chemical Information and Modeling , 54(3):735– 743, 2014. X. Tang, X. Lei, and Y. Zhang. Prediction of drug-target affinity us-ing attention neural network. International Journal of Molecular Sciences , 25(10):5126, 2024. J. Wang, J. Hu, H. Sun, M. Xu, Y. Yu, Y. Liu, and L. Cheng. MG-PLI: exploring multigranular representations for protein–ligand interaction prediction. Bioinformatics , 38(21):4859–4867, 2022. Z. Yang, W. Zhong, L. Zhao, and C. Y.-C. Chen. MGraphDTA: deep multiscale graph neural network for explainable drug–target bind-ing affinity prediction. Chemical Science , 13(3):816–833, 2022. W. Yuan, G. Chen, and C. Y.-C. Chen. FusionDTA: attention-based feature polymerizer and knowledge distillation for drug-target binding affinity prediction. Briefings in Bioinformatics ,23(1):bbab506, 2022. L. Zhang, W. Zeng, J. Chen, J. Chen, and K. Li. GDilatedDTA: Graph dilation convolution strategy for drug target binding affin-ity prediction. Biomedical Signal Processing and Control , 92: 106110, 2024. X. Zheng, Z. Zhang, X. Zhang, N. Jin, and Y. Zhang. Ricci-GraphDTA: A graph neural network integrating discrete Ricci curvature for drug–target affinity prediction. Journal of Molecular Graphics and Modelling , 142:109170, 2026. 
+
+23

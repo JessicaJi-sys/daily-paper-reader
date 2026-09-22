@@ -48,17 +48,17 @@
 <section class="dpr-home-dashboard-card dpr-home-report-card">
   <div class="dpr-home-dashboard-header">
     <div>
-      <span class="dpr-home-dashboard-kicker">2026-09-21</span>
+      <span class="dpr-home-dashboard-kicker">2026-09-22</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">共 9 篇</strong>
+    <strong class="dpr-home-dashboard-count">共 2 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
     <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>0</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>9</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>1</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>1</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-09-21 22:16:30 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-09-22 21:51:56 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,7 +69,7 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>2026-09-21 日报完成 9 篇速读、无精读，重点集中在亲和力泛化度量、多源保形预测与多视图分子表示学习。最值得关注的是 MIRAGE 对插值与冗余的量化，以及多源保形预测借异质性做局部化校准，两者都指向&quot;更细粒度地评估与利用数据差异&quot;。普通读者可先扫这三篇的摘要，判断是否与手头的数据可靠性或分子建模需求相关。</p>
+<p>今日精读1篇、速读1篇：学生LLM的OOD鲁棒性蒸馏研究获8.0分，另速览离散Ricci曲率流药物靶点亲和力预测（6.0分）。最值得看的是精读论文提出的不变性加权蒸馏，用以提升知识迁移的可靠性。普通读者可先关注该蒸馏方法能否在真实分布偏移场景下稳定复现。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -78,12 +78,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">精读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">0 篇</strong>
+    <strong class="dpr-home-dashboard-count">1 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p class="dpr-home-dashboard-empty">今日暂无推荐。</p>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Do Student LLMs Inherit OOD Robustness? Invariance-Weighted Distillation for Reliable Knowledge Transfer">Do Student LLMs Inherit OOD Robustness? Invariance-Weighted Distillation for Reliable Knowledge Transfer</span></li></ul>
   </div>
-
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>1</strong></span></div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-skim-card">
   <div class="dpr-home-dashboard-header">
@@ -91,12 +91,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">速读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">9 篇</strong>
+    <strong class="dpr-home-dashboard-count">1 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="MIRAGE: Measuring Interpolation and Redundancy in Affinity GEneralization">MIRAGE: Measuring Interpolation and Redundancy in Affinity GEneralization</span></li><li><span class="dpr-home-dashboard-paper-title" title="Multi-source conformal prediction: leveraging heterogeneity via localization">Multi-source conformal prediction: leveraging heterogeneity via localization</span></li><li><span class="dpr-home-dashboard-paper-title" title="Multi-View Molecular Representation Learning with Hierarchical Graphs and Contextualized Fingerprints">Multi-View Molecular Representation Learning with Hierarchical Graphs and Contextualized Fingerprints</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="CurvFlow-DTA: dual-graph discrete Ricci curvature flow for drug--target affinity prediction">CurvFlow-DTA: dual-graph discrete Ricci curvature flow for drug--target affinity prediction</span></li></ul>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>9</strong></span></div>
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>1</strong></span></div>
 </section>
 </div>
 

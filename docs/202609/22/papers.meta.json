@@ -1,0 +1,39 @@
+{
+  "label": "2026-09-22",
+  "date": "2026-09-22",
+  "generated_at": "2026-09-22T21:51:57",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202609/22/2609.22566v1-do-student-llms-inherit-ood-robustness-invariance-weighted-distillation-for-reliable-knowledge-transfer",
+      "section": "deep",
+      "title_en": "Do Student LLMs Inherit OOD Robustness? Invariance-Weighted Distillation for Reliable Knowledge Transfer",
+      "authors": "Dileesha Kannangara, Sanghamitra Dutta",
+      "date": "2026-09-18",
+      "pdf": "https://arxiv.org/pdf/2609.22566v1",
+      "score": "8.0",
+      "evidence": "面向分布外鲁棒的不变性加权蒸馏",
+      "tldr": "知识蒸馏常压缩教师LLM，但学生模型在分布外(OOD)场景性能明显下降。论文指出蒸馏数据虚假相关与教师能力差异是两大成因，提出IWD，利用多合成环境下教师预测不变性动态重加权样本。在四个NLP任务、两个模型家族上，IWD在16个OOD基准中15个最优，NLI平均提升4.34个百分点，QA提升14.94个百分点，兼顾ID性能。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Knowledge distillation (KD) aims to compress high-performance teacher LLMs into lightweight students. However, distilled students often exhibit substantial performance degradation in out-of-distribution (OOD) settings, a critical gap that remains underexplored. We identify two compounding mechanisms causing OOD performance degradation: (1) data spuriousness: students can learn spurious correlations in the distillation dataset over genuine causal relationships; and (2) teacher capability: standard KD treats all samples uniformly, ignoring whether the teacher is guided by causal features or misled by spurious shortcuts on a given sample. To address these challenges, we propose Invariance-Weighted Distillation (IWD), a theoretically grounded framework that dynamically reweights training samples using an estimate of the teacher's causal reliance derived from prediction invariance across multiple synthetic environments. IWD perturbs spurious cues while preserving core semantics, assigning higher distillation weights to samples whose teacher predictions remain invariant, indicating greater reliance on causal rather than spurious features. We theoretically show that IWD reduces the student's Spurious-to-Causal (S2C) gradient ratio compared to standard uniformly weighted KD, driving the student toward more invariant representations. Experiments on four NLP benchmarks (MNLI, SQuAD-v2, CoNLL-2003 NER, and SST-2) across two model families (DeBERTa-v3 and Qwen-2.5) demonstrate that IWD consistently outperforms strong KD baselines on OOD evaluations while maintaining competitive in-distribution (ID) performance. Specifically, IWD achieves the highest accuracy in 15 out of 16 OOD benchmarks and improves average OOD performance over standard KD by 4.34 percentage points on NLI and 14.94 percentage points on QA.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/22/2609.22862v1-curvflow-dta-dual-graph-discrete-ricci-curvature-flow-for-drug--target-affinity-prediction",
+      "section": "quick",
+      "title_en": "CurvFlow-DTA: dual-graph discrete Ricci curvature flow for drug--target affinity prediction",
+      "authors": "Jicheng Ma, Yunyan Yang, Juan Zhao, Liang Zhao",
+      "date": "2026-09-19",
+      "pdf": "https://arxiv.org/pdf/2609.22862v1",
+      "score": "6.0",
+      "evidence": "冷启动下未见药物实体的泛化",
+      "tldr": "药物-靶点亲和力预测常用图神经网络，但现有曲率感知方法多只在药物图上使用静态曲率，蛋白侧依赖序列特征，难以自适应建模配对几何并在冷启动下泛化。CurvFlow-DTA在分子图与蛋白残基接触图上引入加权Forman曲率流，预计算与标签无关的曲率演化轨迹，并用配对条件选择器为双分支Flow-GINE选取读取视界。蛋白图表征由冻结ESM-2提供残基嵌入和接触分数，推理仅需SMILES与序列。在Davis与KIBA上，热启动MSE分别降低19.9%和18.9%，六个冷启动设置降低14.3%–27.4%，CI全面提升。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Graph neural networks are widely used for drug--target affinity (DTA) prediction, and discrete Ricci curvature has recently been used to characterize molecular graph geometry. Existing curvature-aware DTA approaches mainly use static curvature on the drug graph while representing proteins primarily with sequence-derived features. This leaves pair-adaptive use of graph geometry underexplored, which may limit adaptation to unseen entities in cold-start settings relevant to practical screening.   We present CurvFlow-DTA, which replaces a single static curvature representation with weighted Forman curvature flow on both molecular and protein residue--residue contact graphs. A label-independent flow trajectory is precomputed for each entity, and a pair-conditioned selector determines the horizons read by a dual-branch Flow-GINE. A frozen ESM-2 supplies residue-level representations and contact scores used to construct the protein graph. Inference requires only SMILES strings and protein sequences, without a bound complex structure.   On Davis and KIBA, CurvFlow-DTA improves on the protocol-matched Ricci-GraphDTA baseline in every warm and cold-start setting. Warm-split mean squared error (MSE) decreases by $19.9\\%$ on Davis and $18.9\\%$ on KIBA. Across the six cold-start comparisons, MSE decreases by $14.3$--$27.4\\%$, with higher concordance index (CI) throughout. Within our compiled set of literature baselines, CurvFlow-DTA achieves the lowest MSE on both warm benchmarks and across four out of six cold-start evaluation settings.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
