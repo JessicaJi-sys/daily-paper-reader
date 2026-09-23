@@ -1,0 +1,177 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-23T22:21:50.157872+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 4,
+    "quick_skim_target": 11,
+    "quick_selected": 4
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.17012v1",
+      "source": "arxiv",
+      "title": "ORDER: Task-Conditioned Routing for Retrieval-Augmented Generation",
+      "abstract": "Retrieval-Augmented Generation (RAG) pipelines typically rely on a fixed indexing and retrieval configuration determined at preprocessing time. This one-size-fits-all design is ill-suited to domain-expert settings, where heterogeneous queries require different chunking granularities, metadata constraints, and source-selection strategies. As a result, configurations that are effective for one family of queries often perform poorly for others. In this paper, we introduce ORDER (Optimal Routing for Dynamic Evidence Retrieval), a query-conditioned RAG framework that jointly adapts indexing and retrieval to the incoming query. Our approach first discovers semantic clusters over a given set of questions associated to a corpus and learns, for each cluster, a chunking strategy together with a suited metadata filtering and reranking configuration. At inference time, queries are routed to the appropriate pre-built index through nearest-centroid assignment. To further improve retrieval, we propose a supervised query router (QRe) that predicts which collections are most likely to contain relevant evidence, coupled with a Uniform Multi-source Sampler (UMS) that allocates the retrieval budget evenly across the selected sources. We evaluate our framework on large-scale, heterogeneous historical archives and show that conditioning both indexing and retrieval on the query consistently outperforms both naive baselines and strong state-of-the-art RAG systems in complex expert-domain environments.",
+      "authors": [
+        "Aurélien Pellet",
+        "Julien Perez",
+        "Marie Puren"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-09-15T11:23:16+00:00",
+      "link": "https://arxiv.org/pdf/2609.17012v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "query-conditioned routing that adapts source selection when heterogeneous configurations contribute unequally",
+      "llm_evidence_cn": "按查询条件动态路由，在异构配置贡献不均时自适应选择来源",
+      "llm_evidence": "按查询条件动态路由，在异构配置贡献不均时自适应选择来源",
+      "canonical_evidence": "按查询条件动态路由，在异构配置贡献不均时自适应选择来源",
+      "llm_tldr_en": "RAG pipelines use a fixed indexing and retrieval configuration, which fails when heterogeneous queries need different chunking, metadata, and source-selection strategies. The authors introduce ORDER, a query-conditioned framework that discovers semantic clusters and learns per-cluster configurations, jointly adapting indexing and retrieval per incoming query.",
+      "llm_tldr_cn": "检索增强生成管线通常依赖预处理阶段固定的索引与检索配置，这种一刀切设计难以应对需要不同分块粒度、元数据约束与来源选择策略的异构查询，导致对某类问题有效的配置在另一类上表现很差。作者提出ORDER框架，先对语料相关问题发现语义聚类，再为每个簇学习相应的分块与检索配置，从而按输入查询联合自适应索引与检索。该工作展示了实例级动态路由在异构知识来源贡献不均时的价值。",
+      "llm_tldr": "检索增强生成管线通常依赖预处理阶段固定的索引与检索配置，这种一刀切设计难以应对需要不同分块粒度、元数据约束与来源选择策略的异构查询，导致对某类问题有效的配置在另一类上表现很差。作者提出ORDER框架，先对语料相关问题发现语义聚类，再为每个簇学习相应的分块与检索配置，从而按输入查询联合自适应索引与检索。该工作展示了实例级动态路由在异构知识来源贡献不均时的价值。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can models dynamically adapt knowledge integration strategies to different drug pairs when heterogeneous knowledge sources contribute unequally across instances?",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.17940v1",
+      "source": "arxiv",
+      "title": "Beyond the Previous Layer: Residual Predictive Structure in Sparse MoE Routing",
+      "abstract": "Sparse mixture-of-experts models route each token through a sequence of expert selections. We ask whether the immediately preceding selection adequately summarizes this trajectory for predicting the next router. Using frozen OLMoE and JetMoE models, we measure the held-out predictive gain from earlier expert selections while retaining the most recent selection as a common baseline. In OLMoE, extending the history from one to eleven layers raises router-logit $R^2$ from 0.59879 to 0.66544. A preregistered JetMoE replication yields four-layer gains of 0.14275 and 0.20528 at two target depths, with paired bootstrap intervals above zero. These gains survive nonlinear decoding: adding history to a small multilayer perceptron improves $R^2$ by 0.17137 and 0.21861, whereas nonlinear decoding of the recent state alone adds 0.00139 and 0.00936 over a linear probe. Parameter-matched controls preserve the advantage, and cross-fitted history residuals predict target residuals with $R^2$ of 0.20549 and 0.23556. These findings identify residual predictive structure in expert-selection trajectories beyond adjacent-layer persistence.",
+      "authors": [
+        "Hao Li",
+        "Yasuyuki Tahara",
+        "Yuichi Sei"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-15T23:57:34+00:00",
+      "link": "https://arxiv.org/pdf/2609.17940v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "analyzes sparse MoE routing trajectories and predictive structure of expert selection",
+      "llm_evidence_cn": "分析稀疏MoE路由轨迹与专家选择的预测结构",
+      "llm_evidence": "分析稀疏MoE路由轨迹与专家选择的预测结构",
+      "canonical_evidence": "分析稀疏MoE路由轨迹与专家选择的预测结构",
+      "llm_tldr_en": "Sparse mixture-of-experts models route tokens through sequences of expert selections, but whether the previous selection suffices to predict the next router is unclear. The authors measure held-out predictive gain from earlier selections in frozen OLMoE and JetMoE. Extending history raises router-logit R2 notably, showing routing depends on longer trajectories.",
+      "llm_tldr_cn": "稀疏混合专家模型逐token通过一系列专家选择进行路由，但前一层选择是否足以预测下一路由器尚不清楚。作者在冻结的OLMoE与JetMoE上，以最近一次选择为基线，度量更早专家选择带来的留出预测增益。OLMoE中历史从1层扩展到11层使路由logit的R²从0.59879升至0.66544，JetMoE复制实验也得到显著且稳健的增益。该结果表明路由决策依赖更长的历史结构，为专家路由建模与动态路由设计提供了经验依据。",
+      "llm_tldr": "稀疏混合专家模型逐token通过一系列专家选择进行路由，但前一层选择是否足以预测下一路由器尚不清楚。作者在冻结的OLMoE与JetMoE上，以最近一次选择为基线，度量更早专家选择带来的留出预测增益。OLMoE中历史从1层扩展到11层使路由logit的R²从0.59879升至0.66544，JetMoE复制实验也得到显著且稳健的增益。该结果表明路由决策依赖更长的历史结构，为专家路由建模与动态路由设计提供了经验依据。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.25146v1",
+      "source": "arxiv",
+      "title": "Brain-Inspired Hierarchical Modularity for General Continual Learning",
+      "abstract": "Continual learning, the ability to learn from sequential experience while retaining and adapting prior knowledge, is central to intelligent systems operating in changing environments. However, conventional continual learning is typically studied with offline task-wise training and clear task boundaries, leaving a substantial gap from general continual learning under online, uncertain, and evolving data streams. In this regime, intelligent systems must separate conflicting experience to reduce interference while integrating compatible experience to promote generalization. Inspired by the organization of the Drosophila learning and memory system, we identify a hierarchical modular principle that coordinates both functions through expert specialization and ensemble integration. We instantiate this principle as lightweight modular adaptation of pretrained foundation models, combining brain-inspired random expansion for expert routing and diversified modular integration across spatial and temporal scales. Across visual recognition, vision-language understanding, ego-exo video understanding, and embodied vision-language-action learning, our method consistently improves learning under online and uncertain data streams, with gains exceeding 50 percentage points over replay-free alternatives in embodied manipulation. These findings support hierarchical modularity as a biologically grounded path for learning from dynamic experience.",
+      "authors": [
+        "Hongwei Yan",
+        "Kanglei Zhou",
+        "Qi Cheng",
+        "Weiyi Dong",
+        "Chunyan Lan",
+        "Guanglong Sun",
+        "Jun Zhou",
+        "Qian Li",
+        "Yi Zhong",
+        "Liyuan Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-21T07:07:06+00:00",
+      "link": "https://arxiv.org/pdf/2609.25146v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "hierarchical modular expert specialization for generalization",
+      "llm_evidence_cn": "面向泛化的层级模块化专家专门化",
+      "llm_evidence": "面向泛化的层级模块化专家专门化",
+      "canonical_evidence": "面向泛化的层级模块化专家专门化",
+      "llm_tldr_en": "General continual learning under evolving streams requires separating conflicting experience while integrating compatible knowledge. Inspired by Drosophila, a hierarchical modular principle uses expert specialization to coordinate both functions.",
+      "llm_tldr_cn": "针对一般持续学习中在线、不确定且演化数据流下需同时分离冲突经验与整合兼容知识的问题，作者受果蝇学习记忆系统启发，提出层级模块化原则，通过专家专门化协调经验分离与知识整合两大功能。该方法旨在减少干扰并促进泛化，与混合专家中专家的自动专门化和动态知识整合策略高度呼应。尽管其场景为持续学习而非DDI，其专家专门化与模块化路由思想对药物对级动态MoE具有方法迁移价值。",
+      "llm_tldr": "针对一般持续学习中在线、不确定且演化数据流下需同时分离冲突经验与整合兼容知识的问题，作者受果蝇学习记忆系统启发，提出层级模块化原则，通过专家专门化协调经验分离与知识整合两大功能。该方法旨在减少干扰并促进泛化，与混合专家中专家的自动专门化和动态知识整合策略高度呼应。尽管其场景为持续学习而非DDI，其专家专门化与模块化路由思想对药物对级动态MoE具有方法迁移价值。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.26352v1",
+      "source": "arxiv",
+      "title": "HYDRA: Proactive Android Malware Drift Adaptation via Hierarchical Graph Contrastive Learning",
+      "abstract": "Concept drift, driven by the rapid evolution of Android malware, severely degrades the performance of machine learning detectors. Current adaptation strategies are often reactive, responding only after performance has dropped and imposing a significant manual annotation burden, or they are proactive but rely on unstable adversarial training and incomplete, single-level graph representations. To overcome these limitations, we propose HYDRA (Hybrid Drift Adaptation), a proactive adaptation framework that learns drift-invariant representations from hierarchically structured data. HYDRA first models applications using a hybrid graph structure, combining fine-grained Control Flow Graphs (CFGs) and coarse-grained Function Call Graphs (FCGs) to capture comprehensive behavioral patterns. It then introduces a novel cross-domain contrastive learning objective that aligns historical (source) and new (target) data distributions. By generating pseudo-labels for unlabeled target samples, our method pulls representations of semantically similar applications together, regardless of their domain, within a single, stable optimization process. This approach unifies feature learning and domain alignment, eliminating the need for complex adversarial objectives. Extensive experiments on large-scale, time-ordered malware datasets demonstrate that HYDRA achieves substantially lower False Negative and False Positive Rates than state-of-the-art baselines while requiring up to 87.5% fewer labeled samples. Our work thus offers a robust and efficient solution to combat concept drift in security applications.",
+      "authors": [
+        "Han Chen",
+        "Hanchen Wang",
+        "Hongmei Chen",
+        "Lu Qin",
+        "Wenjie Zhang",
+        "Ying Zhang"
+      ],
+      "primary_category": "cs.CR",
+      "categories": [
+        "cs.CR",
+        "cs.LG"
+      ],
+      "published": "2026-09-22T12:55:25+00:00",
+      "link": "https://arxiv.org/pdf/2609.26352v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "drift-invariant representation learning from hierarchical graphs under distribution shift",
+      "llm_evidence_cn": "分布漂移下从分层图学习漂移不变表示",
+      "llm_evidence": "分布漂移下从分层图学习漂移不变表示",
+      "canonical_evidence": "分布漂移下从分层图学习漂移不变表示",
+      "llm_tldr_en": "HYDRA learns drift-invariant representations from hybrid CFG and function-call graphs for proactive Android malware adaptation, avoiding unstable adversarial training and reactive re-annotation.",
+      "llm_tldr_cn": "Android恶意软件快速演化带来概念漂移，使检测器性能下降，现有自适应策略要么滞后且依赖人工标注，要么依赖不稳定的对抗训练与单层图表示。作者提出HYDRA，通过融合细粒度控制流图与粗粒度函数调用图的混合图结构，学习对漂移不变的分层表示以实现主动适应。该框架从分层结构化数据中提取漂移不变表示，为分布漂移下的稳定泛化提供了可迁移的思路。",
+      "llm_tldr": "Android恶意软件快速演化带来概念漂移，使检测器性能下降，现有自适应策略要么滞后且依赖人工标注，要么依赖不稳定的对抗训练与单层图表示。作者提出HYDRA，通过融合细粒度控制流图与粗粒度函数调用图的混合图结构，学习对漂移不变的分层表示以实现主动适应。该框架从分层结构化数据中提取漂移不变表示，为分布漂移下的稳定泛化提供了可迁移的思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "invariant representation learning for stable drug generalization",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

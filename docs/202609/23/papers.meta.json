@@ -1,0 +1,69 @@
+{
+  "label": "2026-09-23",
+  "date": "2026-09-23",
+  "generated_at": "2026-09-23T22:23:35",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202609/23/2609.17012v1-order-task-conditioned-routing-for-retrieval-augmented-generation",
+      "section": "quick",
+      "title_en": "ORDER: Task-Conditioned Routing for Retrieval-Augmented Generation",
+      "authors": "Aurélien Pellet, Julien Perez, Marie Puren",
+      "date": "2026-09-15",
+      "pdf": "https://arxiv.org/pdf/2609.17012v1",
+      "score": "6.0",
+      "evidence": "按查询条件动态路由，在异构配置贡献不均时自适应选择来源",
+      "tldr": "传统RAG采用预处理阶段固定的索引与检索配置，难以应对专家场景中异构查询对分块粒度、元数据约束和源选择的不同需求。ORDER提出查询条件化的RAG框架，先对问题语义聚类，为每类学习分块、过滤与重排配置，推理时按最近质心路由；并用监督查询路由器QRe预测相关集合，配合UMS均匀分配检索预算。在大规模异构历史档案上，该方法持续优于朴素基线和强SOTA RAG系统。这表明联合条件化索引与检索能提升复杂专家环境下的证据获取效果。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Retrieval-Augmented Generation (RAG) pipelines typically rely on a fixed indexing and retrieval configuration determined at preprocessing time. This one-size-fits-all design is ill-suited to domain-expert settings, where heterogeneous queries require different chunking granularities, metadata constraints, and source-selection strategies. As a result, configurations that are effective for one family of queries often perform poorly for others. In this paper, we introduce ORDER (Optimal Routing for Dynamic Evidence Retrieval), a query-conditioned RAG framework that jointly adapts indexing and retrieval to the incoming query. Our approach first discovers semantic clusters over a given set of questions associated to a corpus and learns, for each cluster, a chunking strategy together with a suited metadata filtering and reranking configuration. At inference time, queries are routed to the appropriate pre-built index through nearest-centroid assignment. To further improve retrieval, we propose a supervised query router (QRe) that predicts which collections are most likely to contain relevant evidence, coupled with a Uniform Multi-source Sampler (UMS) that allocates the retrieval budget evenly across the selected sources. We evaluate our framework on large-scale, heterogeneous historical archives and show that conditioning both indexing and retrieval on the query consistently outperforms both naive baselines and strong state-of-the-art RAG systems in complex expert-domain environments.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/23/2609.17940v1-beyond-the-previous-layer-residual-predictive-structure-in-sparse-moe-routing",
+      "section": "quick",
+      "title_en": "Beyond the Previous Layer: Residual Predictive Structure in Sparse MoE Routing",
+      "authors": "Hao Li, Yasuyuki Tahara, Yuichi Sei",
+      "date": "2026-09-15",
+      "pdf": "https://arxiv.org/pdf/2609.17940v1",
+      "score": "6.0",
+      "evidence": "分析稀疏MoE路由轨迹与专家选择的预测结构",
+      "tldr": "稀疏MoE逐token选择专家，但仅凭相邻层选择能否预测下一路由尚不明确。本文冻结OLMoE与JetMoE，在保留最近选择基线下，量化更早专家选择带来的留出预测增益。OLMoE中历史从1层扩至11层使路由器logit R²由0.59879升至0.66544；JetMoE复制在两层深度获0.14275与0.20528增益。结果表明专家选择轨迹存在超越相邻层持续性的残差预测结构。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Sparse mixture-of-experts models route each token through a sequence of expert selections. We ask whether the immediately preceding selection adequately summarizes this trajectory for predicting the next router. Using frozen OLMoE and JetMoE models, we measure the held-out predictive gain from earlier expert selections while retaining the most recent selection as a common baseline. In OLMoE, extending the history from one to eleven layers raises router-logit $R^2$ from 0.59879 to 0.66544. A preregistered JetMoE replication yields four-layer gains of 0.14275 and 0.20528 at two target depths, with paired bootstrap intervals above zero. These gains survive nonlinear decoding: adding history to a small multilayer perceptron improves $R^2$ by 0.17137 and 0.21861, whereas nonlinear decoding of the recent state alone adds 0.00139 and 0.00936 over a linear probe. Parameter-matched controls preserve the advantage, and cross-fitted history residuals predict target residuals with $R^2$ of 0.20549 and 0.23556. These findings identify residual predictive structure in expert-selection trajectories beyond adjacent-layer persistence.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/23/2609.25146v1-brain-inspired-hierarchical-modularity-for-general-continual-learning",
+      "section": "quick",
+      "title_en": "Brain-Inspired Hierarchical Modularity for General Continual Learning",
+      "authors": "Hongwei Yan, Kanglei Zhou, Qi Cheng, Weiyi Dong, Chunyan Lan, Guanglong Sun, Jun Zhou, Qian Li, Yi Zhong, Liyuan Wang",
+      "date": "2026-09-21",
+      "pdf": "https://arxiv.org/pdf/2609.25146v1",
+      "score": "6.0",
+      "evidence": "面向泛化的层级模块化专家专门化",
+      "tldr": "传统持续学习依赖离线任务划分与明确边界，难以应对在线、不确定且持续演化的数据流。受果蝇学习记忆系统启发，本文提出分层模块化原则，通过专家特化分离冲突经验、集成兼容经验以兼顾抗干扰与泛化。方法将预训练基础模型进行轻量模块化适配，结合随机扩展专家路由与跨时空多样化集成。在视觉识别、视觉语言理解、视频理解及具身操作中均稳定提升，具身操作较无回放方法提升超50个百分点，表明分层模块化是动态经验学习的生物启发路径。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Continual learning, the ability to learn from sequential experience while retaining and adapting prior knowledge, is central to intelligent systems operating in changing environments. However, conventional continual learning is typically studied with offline task-wise training and clear task boundaries, leaving a substantial gap from general continual learning under online, uncertain, and evolving data streams. In this regime, intelligent systems must separate conflicting experience to reduce interference while integrating compatible experience to promote generalization. Inspired by the organization of the Drosophila learning and memory system, we identify a hierarchical modular principle that coordinates both functions through expert specialization and ensemble integration. We instantiate this principle as lightweight modular adaptation of pretrained foundation models, combining brain-inspired random expansion for expert routing and diversified modular integration across spatial and temporal scales. Across visual recognition, vision-language understanding, ego-exo video understanding, and embodied vision-language-action learning, our method consistently improves learning under online and uncertain data streams, with gains exceeding 50 percentage points over replay-free alternatives in embodied manipulation. These findings support hierarchical modularity as a biologically grounded path for learning from dynamic experience.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/23/2609.26352v1-hydra-proactive-android-malware-drift-adaptation-via-hierarchical-graph-contrastive-learning",
+      "section": "quick",
+      "title_en": "HYDRA: Proactive Android Malware Drift Adaptation via Hierarchical Graph Contrastive Learning",
+      "authors": "Han Chen, Hanchen Wang, Hongmei Chen, Lu Qin, Wenjie Zhang, Ying Zhang",
+      "date": "2026-09-22",
+      "pdf": "https://arxiv.org/pdf/2609.26352v1",
+      "score": "6.0",
+      "evidence": "分布漂移下从分层图学习漂移不变表示",
+      "tldr": "Android恶意软件快速演化导致概念漂移，现有自适应方法多为被动响应、需大量人工标注，或依赖不稳定的对抗训练与单层图表示。HYDRA提出主动式漂移自适应框架，用CFG与FCG构成的混合层次图建模应用，并通过跨域对比学习对齐历史与新数据分布、为无标签目标样本生成伪标签。在时间序列大规模数据集上，其误报率与漏报率显著低于SOTA，标注样本最多减少87.5%。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Concept drift, driven by the rapid evolution of Android malware, severely degrades the performance of machine learning detectors. Current adaptation strategies are often reactive, responding only after performance has dropped and imposing a significant manual annotation burden, or they are proactive but rely on unstable adversarial training and incomplete, single-level graph representations. To overcome these limitations, we propose HYDRA (Hybrid Drift Adaptation), a proactive adaptation framework that learns drift-invariant representations from hierarchically structured data. HYDRA first models applications using a hybrid graph structure, combining fine-grained Control Flow Graphs (CFGs) and coarse-grained Function Call Graphs (FCGs) to capture comprehensive behavioral patterns. It then introduces a novel cross-domain contrastive learning objective that aligns historical (source) and new (target) data distributions. By generating pseudo-labels for unlabeled target samples, our method pulls representations of semantically similar applications together, regardless of their domain, within a single, stable optimization process. This approach unifies feature learning and domain alignment, eliminating the need for complex adversarial objectives. Extensive experiments on large-scale, time-ordered malware datasets demonstrate that HYDRA achieves substantially lower False Negative and False Positive Rates than state-of-the-art baselines while requiring up to 87.5% fewer labeled samples. Our work thus offers a robust and efficient solution to combat concept drift in security applications.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
