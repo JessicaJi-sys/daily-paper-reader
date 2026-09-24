@@ -1,0 +1,62 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-24T22:12:25.108357+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 1,
+    "quick_skim_target": 11,
+    "quick_selected": 1
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.25809v1",
+      "source": "arxiv",
+      "title": "You Only Need 2/3 of the Chosen Experts: An Empirical Study of Dynamic Expert Pruning in Fine-Grained MoE LLMs",
+      "abstract": "Fine-grained mixture-of-experts (MoE) architectures have become a mainstream design for open-weight LLMs, with hundreds of experts and increasingly many selected per token. This shift makes dynamic expert pruning an attractive route to cheaper inference. Yet existing evidence comes largely from coarser architectures and likelihood-scored multiple-choice benchmarks, leaving three central questions open in the fine-grained regime: how redundant per-token expert selection is, how effectively existing pruning methods exploit that redundancy, and what governs a model's sensitivity to pruning. We fill this gap with a systematic empirical study of twelve fine-grained MoE checkpoints spanning nine architecture families, with a core suite of eleven benchmarks covering knowledge QA, mathematics, code generation, and general reasoning. We find that expert selection is far more redundant than the field's operating points assume: uniformly retaining about two thirds of the selected experts preserves 98.8% of unpruned performance on average, requiring only a one-integer change and delivering 1.2-1.7x measured speedup across two serving backends. This simple baseline leaves little room for dynamic allocation at conservative budgets: even the best published rules differ from it by under 1% at matched expert budgets. Their value emerges under aggressive pruning, where the best rules recover up to 3.0% over uniform truncation, with gains concentrated in the generative tasks that suffer the sharpest degradation. Sensitivity to aggressive pruning also depends on the model: larger and thinking models are more resilient, whereas multimodal models are more vulnerable. Together, these findings reveal how much expert computation fine-grained MoEs can dispense with, and establish when dynamic allocation earns its complexity, informing both practical deployment and future pruning methods.",
+      "authors": [
+        "Yuanteng Chen",
+        "Qiwei Lai",
+        "Chen Tianqi",
+        "Peisong Wang",
+        "Yuantian Shao",
+        "Nanxin Zeng",
+        "Zhilei Liu",
+        "Chuangyi Li",
+        "Jing Liu",
+        "Jian Cheng"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-22T07:39:35+00:00",
+      "link": "https://arxiv.org/pdf/2609.25809v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "dynamic expert selection and pruning in fine-grained MoE",
+      "llm_evidence_cn": "细粒度MoE中的动态专家选择与剪枝",
+      "llm_evidence": "细粒度MoE中的动态专家选择与剪枝",
+      "canonical_evidence": "细粒度MoE中的动态专家选择与剪枝",
+      "llm_tldr_en": "Fine-grained MoE LLMs select many experts per token, but redundancy and pruning sensitivity remain unclear. This systematic study of twelve checkpoints finds per-token selection highly redundant and analyzes what governs pruning sensitivity.",
+      "llm_tldr_cn": "细粒度混合专家模型每token选择大量专家，但其冗余程度与剪枝敏感性仍缺乏系统证据。本文对覆盖九类架构的十二个细粒度MoE检查点开展实证研究，量化每token专家选择的冗余度，比较现有动态剪枝方法的利用效率，并分析决定模型对剪枝敏感性的因素。结果显示所选专家中约三分之二即可保留大部分性能。该研究为MoE中动态专家路由与专家专门化的机制理解提供了实证依据。",
+      "llm_tldr": "细粒度混合专家模型每token选择大量专家，但其冗余程度与剪枝敏感性仍缺乏系统证据。本文对覆盖九类架构的十二个细粒度MoE检查点开展实证研究，量化每token专家选择的冗余度，比较现有动态剪枝方法的利用效率，并分析决定模型对剪枝敏感性的因素。结果显示所选专家中约三分之二即可保留大部分性能。该研究为MoE中动态专家路由与专家专门化的机制理解提供了实证依据。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

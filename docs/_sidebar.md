@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-09-24 <!--dpr-date:20260924-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/24/2609.25809v1-you-only-need-23-of-the-chosen-experts-an-empirical-study-of-dynamic-expert-pruning-in-fine-grained-moe-llms" data-sidebar-item="{&quot;title&quot;: &quot;You Only Need 2/3 of the Chosen Experts: An Empirical Study of Dynamic Expert Pruning in Fine-Grained MoE LLMs&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.25809v1-you-only-need-23-of-the-chosen-experts-an-empirical-study-of-dynamic-expert-pruning-in-fine-grained-moe-llms&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;ddi-moe&quot;}], &quot;evidence&quot;: &quot;细粒度MoE中的动态专家选择与剪枝&quot;}">You Only Need 2/3 of the Chosen Experts: An Empirical Study of Dynamic Expert Pruning in Fine-Grained MoE LLMs</a>
   * 2026-09-23 <!--dpr-date:20260923-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/23/2609.17012v1-order-task-conditioned-routing-for-retrieval-augmented-generation" data-sidebar-item="{&quot;title&quot;: &quot;ORDER: Task-Conditioned Routing for Retrieval-Augmented Generation&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.17012v1-order-task-conditioned-routing-for-retrieval-augmented-generation&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;ddi-moe&quot;}], &quot;evidence&quot;: &quot;按查询条件动态路由，在异构配置贡献不均时自适应选择来源&quot;}">ORDER: Task-Conditioned Routing for Retrieval-Augmented Generation</a>

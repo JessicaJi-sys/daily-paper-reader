@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-24",
+  "date": "2026-09-24",
+  "generated_at": "2026-09-24T22:13:39",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/24/2609.25809v1-you-only-need-23-of-the-chosen-experts-an-empirical-study-of-dynamic-expert-pruning-in-fine-grained-moe-llms",
+      "section": "quick",
+      "title_en": "You Only Need 2/3 of the Chosen Experts: An Empirical Study of Dynamic Expert Pruning in Fine-Grained MoE LLMs",
+      "authors": "Yuanteng Chen, Qiwei Lai, Chen Tianqi, Peisong Wang, Yuantian Shao, Nanxin Zeng, Zhilei Liu, Chuangyi Li, Jing Liu, Jian Cheng",
+      "date": "2026-09-22",
+      "pdf": "https://arxiv.org/pdf/2609.25809v1",
+      "score": "6.0",
+      "evidence": "细粒度MoE中的动态专家选择与剪枝",
+      "tldr": "细粒度MoE每token选专家多，动态剪枝潜力大，但现有证据多来自粗粒度架构与似然选择题基准。本文系统评测12个细粒度MoE检查点、9个架构家族与11个基准，覆盖知识、数学、代码和推理。结果显示每token专家选择高度冗余：统一保留约2/3专家即可平均保留98.8%性能，仅需改一个整数，并在两个服务后端取得1.2–1.7倍加速。该简单基线在保守预算下几乎压制动态分配，但在激进剪枝时动态规则可挽回最多3.0%，且敏感性与模型规模、思考模式和多模态特性相关。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Fine-grained mixture-of-experts (MoE) architectures have become a mainstream design for open-weight LLMs, with hundreds of experts and increasingly many selected per token. This shift makes dynamic expert pruning an attractive route to cheaper inference. Yet existing evidence comes largely from coarser architectures and likelihood-scored multiple-choice benchmarks, leaving three central questions open in the fine-grained regime: how redundant per-token expert selection is, how effectively existing pruning methods exploit that redundancy, and what governs a model's sensitivity to pruning. We fill this gap with a systematic empirical study of twelve fine-grained MoE checkpoints spanning nine architecture families, with a core suite of eleven benchmarks covering knowledge QA, mathematics, code generation, and general reasoning. We find that expert selection is far more redundant than the field's operating points assume: uniformly retaining about two thirds of the selected experts preserves 98.8% of unpruned performance on average, requiring only a one-integer change and delivering 1.2-1.7x measured speedup across two serving backends. This simple baseline leaves little room for dynamic allocation at conservative budgets: even the best published rules differ from it by under 1% at matched expert budgets. Their value emerges under aggressive pruning, where the best rules recover up to 3.0% over uniform truncation, with gains concentrated in the generative tasks that suffer the sharpest degradation. Sensitivity to aggressive pruning also depends on the model: larger and thinking models are more resilient, whereas multimodal models are more vulnerable. Together, these findings reveal how much expert computation fine-grained MoEs can dispense with, and establish when dynamic allocation earns its complexity, informing both practical deployment and future pruning methods.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
