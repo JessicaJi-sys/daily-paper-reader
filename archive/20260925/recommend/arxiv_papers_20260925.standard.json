@@ -1,0 +1,90 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-09-25T21:50:50.717193+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.22554v1",
+      "source": "arxiv",
+      "title": "The Ups and Downs of Backprop Weights",
+      "abstract": "Backpropagation (BP) has driven the remarkable success of modern deep learning by enabling large hierarchical networks to learn complex functions end-to-end. Yet it does not by itself determine how parameters should be organized so that functional components can be reused and adapted selectively. For example, object recognition and motion prediction may depend on overlapping parameter sets, making them difficult to isolate or modify independently. We call this condition weight entanglement. Modern architectures dynamically select which parts of a network process each sample: nonlinearities gate units, attention selects interactions, and Mixture-of-Experts architectures route inputs to modules. Yet such selection does not ensure that the same functional component remains linked to an identifiable parameter set across samples. We propose weight operators: parameterized modules that implement reusable functional components and can be composed at inference to form the function required by each sample. Learning proceeds in two stages: the model first infers the required operator composition, then updates only the selected operators' parameter sets. Vector Networks (VNs) provide one implementation. They couple operator selection to local error-driven updates within each layer and show that learned operators can be reused in combinations absent from training while updates remain restricted to the selected parameter sets. This provides a basis for testing functional parameter identifiability: whether an operator remains linked to the same functional component during learning. We argue that functional parameter identifiability may provide an organizing principle for models that systematically reuse and recombine learned functions while adapting only the components that need to change.",
+      "authors": [
+        "Giuseppe Chindemi",
+        "Benjamin F. Grewe"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-18T20:10:34+00:00",
+      "link": "https://arxiv.org/pdf/2609.22554v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Analyzes Mixture-of-Experts routing and weight entanglement for selective module reuse",
+      "llm_evidence_cn": "分析专家混合路由与权重纠缠，关注模块的选择性复用",
+      "llm_evidence": "分析专家混合路由与权重纠缠，关注模块的选择性复用",
+      "canonical_evidence": "分析专家混合路由与权重纠缠，关注模块的选择性复用",
+      "llm_tldr_en": "The paper studies weight entanglement, where functional components share parameters and cannot be isolated. It examines how gating, attention, and Mixture-of-Experts routing select network parts per sample but do not guarantee stable component reuse.",
+      "llm_tldr_cn": "该文指出反向传播虽能端到端训练深层网络，却无法决定参数如何组织，导致不同功能组件共享参数、难以独立复用或修改，即权重纠缠问题。作者进一步分析门控、注意力与专家混合路由等按样本动态选择网络部件的机制，说明这些选择并不能保证同一功能组件始终与同一模块绑定。研究揭示了动态路由与功能专门化之间的差距，为专家专门化和模块化架构设计提供了理论视角，对需要稳定专家路由的建模任务具有借鉴意义。",
+      "llm_tldr": "该文指出反向传播虽能端到端训练深层网络，却无法决定参数如何组织，导致不同功能组件共享参数、难以独立复用或修改，即权重纠缠问题。作者进一步分析门控、注意力与专家混合路由等按样本动态选择网络部件的机制，说明这些选择并不能保证同一功能组件始终与同一模块绑定。研究揭示了动态路由与功能专门化之间的差距，为专家专门化和模块化架构设计提供了理论视角，对需要稳定专家路由的建模任务具有借鉴意义。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "mixture-of-experts architecture for drug pair modeling",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.29974v1",
+      "source": "arxiv",
+      "title": "Diverse Geometries, Frozen Weights: Robust Heterogeneous Treatment-Effect Estimation via Causal Expert Ensembles",
+      "abstract": "Estimating heterogeneous treatment effects from observational data is difficult because the most appropriate inductive bias varies with overlap, treatment imbalance, prognostic structure, and sample size. We introduce the Geometry-Diverse Anchor-Correction Expert Ensemble (GeoACE), a five-expert framework that combines a common anchor-correction estimator with complementary overlap-aware and outcome-guided geometries. Its task-level ensemble weights are learned only from internal validation predictions, frozen before test evaluation, and then applied to experts refitted on the complete development sample. The fifth expert, O-Phi-ACE, constructs an outcome-free, overlap-aware statistical projection from covariates and treatment assignment and replaces the anchor input with this lower-dimensional geometry. We evaluate GeoACE against 11 comparators on eight benchmark protocols. Adding O-Phi-ACE reduced mean sqrt(PEHE) relative to the four-expert ensemble on all seven benchmarks with individual-effect truth, winning 998 of 1,225 paired tasks; the change on JOBS policy risk was negligible. The five-expert ensemble ranked first on IHDP100, IHDPA, and IHDPB and second on NEWS, differing from the NEWS leader by 0.13%. Across the seven sqrt(PEHE) benchmarks it obtained the lowest observed average rank (3.714), although the omnibus Friedman and Iman-Davenport tests were not significant (p=0.328 and p=0.330). Using the same five frozen experts, inverse-DR weighting was consistently better than winner-take-all selection, convex DR fitting, R-stacking, and causal Q-aggregation in benchmark-balanced analyses, but was statistically indistinguishable from equal weighting and DR ridge shrinkage. The evidence therefore supports geometry-diverse expert libraries and leakage-free aggregation as a robustness strategy, not universal superiority of either GeoACE or one weighting rule.",
+      "authors": [
+        "Ali Haghpanah Jahromi",
+        "Mohammad Taheri"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-24T15:26:01+00:00",
+      "link": "https://arxiv.org/pdf/2609.29974v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "expert ensemble with learned weights across distribution regimes",
+      "llm_evidence_cn": "跨分布情形的专家集成与学习式权重",
+      "llm_evidence": "跨分布情形的专家集成与学习式权重",
+      "canonical_evidence": "跨分布情形的专家集成与学习式权重",
+      "llm_tldr_en": "GeoACE is a five-expert ensemble combining anchor-correction with diverse geometries, with ensemble weights learned from validation and frozen before test evaluation.",
+      "llm_tldr_cn": "异质处理效应估计中，最合适的归纳偏置会随重叠度、处理不平衡、预后结构与样本量变化，单一模型难以稳健。本文提出GeoACE五专家框架，将锚定校正估计器与互补的重叠感知、结果引导几何相结合，集成权重仅由内部验证预测学习并在测试前冻结，再应用于在完整样本上重训的专家。第五个专家构造无结果的重叠感知投影。研究表明该集成在多样分布情形下提升了估计稳健性，为无需人工定义专家语义的专家专门化提供思路。",
+      "llm_tldr": "异质处理效应估计中，最合适的归纳偏置会随重叠度、处理不平衡、预后结构与样本量变化，单一模型难以稳健。本文提出GeoACE五专家框架，将锚定校正估计器与互补的重叠感知、结果引导几何相结合，集成权重仅由内部验证预测学习并在测试前冻结，再应用于在完整样本上重训的专家。第五个专家构造无结果的重叠感知投影。研究表明该集成在多样分布情形下提升了估计稳健性，为无需人工定义专家语义的专家专门化提供思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

@@ -1,0 +1,831 @@
+Title: Diverse Geometries, Frozen Weights: Robust Heterogeneous Treatment-Effect Estimation via Causal Expert Ensembles
+
+URL Source: https://arxiv.org/pdf/2609.29974v1
+
+Published Time: Fri, 25 Sep 2026 01:42:59 GMT
+
+Number of Pages: 31
+
+Markdown Content:
+# Diverse Geometries, Frozen Weights: Robust Heterogeneous Treatment-Effect Estimation via Causal Expert Ensembles 
+
+Ali Haghpanah Jahromi ∗1 and Mohammad Taheri 11Department of Electrical and Computer Engineering, University of Shiraz, Shiraz, Iran, 
+
+Email: alihgpj@gmail.com; motaheri@shirazu.ac.ir 
+
+Abstract 
+
+Estimating heterogeneous treatment effects from observational data is difficult because the most appropriate inductive bias varies with overlap, treatment imbalance, prognostic structure, and sample size. We introduce the Geometry-Diverse Anchor–Correction Expert Ensemble (GeoACE), a five-expert framework that combines a common anchor–correction estimator with complementary overlap-aware and outcome-guided geometries. Its task-level ensemble weights are learned only from internal validation predictions, frozen before test evaluation, and then applied to experts refitted on the complete development sample. The fifth expert, OΦ-ACE, constructs an outcome-free, overlap-aware statistical projection from covariates and treatment assignment and replaces the anchor input with this lower-dimensional geometry. We evaluate GeoACE against 11 comparators on eight benchmark protocols. Adding OΦ-ACE reduced mean √PEHE relative to the four-expert ensemble on all seven benchmarks with individual-effect truth, winning 998 of 1,225 paired tasks; the change on JOBS policy risk was negligible. The five-expert ensemble ranked first on IHDP100, IHDPA, and IHDPB and second on NEWS, differing from the NEWS leader by 0.13%. Across the seven √PEHE benchmarks it obtained the lowest observed average rank (3.714), although the omnibus Friedman and Iman–Davenport tests were not significant ( p = 0 .328 and p = 0 .330). Using the same five frozen experts, inverse-DR weighting was consistently better than winner-take-all selection, convex DR fitting, R-stacking, and causal Q-aggregation in benchmark-balanced analyses, but was statistically indistinguishable from equal weighting and DR ridge shrinkage. The evidence therefore supports geometry-diverse expert libraries and leakage-free aggregation as a robustness strategy, not universal superiority of either GeoACE or one weighting rule. 
+
+# 1 Introduction 
+
+1.1 Context and Motivation 
+
+Many scientific and decision-making problems require estimating how an outcome would change under an intervention, rather than merely predicting it from observed characteristics. This distinction is crucial in observational studies, where treatment–outcome associations may reflect both causal effects and systematic differences between treated and untreated units. Although randomized controlled trials reduce such differences, they may be costly, slow, unethical, or infeasible; observational data are more widely available, but treatment assignment is generally non-random [16, 21, 22, 37]. 
+
+> ∗
+
+Corresponding author: alihgpj@gmail.com 
+
+1arXiv:2609.29974v1 [cs.LG] 24 Sep 2026 Population-average effects can also conceal clinically or operationally important variation in response. Heterogeneous treatment-effect (HTE) estimation therefore targets how effects vary with pre-treatment covariates, commonly through the conditional average treatment effect (CATE) [3, 27, 34, 41]. Existing approaches include causal forests, meta-learners, and neural estimators such as TARNet, CFRNet, and DragonNet [38, 39]. These methods demonstrate the value of causal inductive biases, but no single estimator is uniformly well matched to differences in overlap, prognostic structure, treatment imbalance, and sample size across datasets. This work addresses that variability by constructing several complementary causal experts within a shared anchor–correction framework and combining them using weights learned exclusively from internal validation predictions. The resulting design retains a common predictive backbone while allowing individual experts to emphasize different aspects of the observational problem. It further separates weight selection, expert refitting, and final evaluation to prevent test information from influencing the learned ensemble. 
+
+1.2 Problem Definition and Technical Challenges 
+
+Consider observations D = {(Xi, T i, Y i)}ni=1 , where Xi ∈ Rp contains pre-treatment covariates, 
+
+Ti ∈ { 0, 1} is the treatment, and Yi is the observed outcome. Under the potential-outcomes framework, each unit has potential outcomes Yi(1) and Yi(0), but only Yi = TiYi(1) + (1 − Ti)Yi(0) is observed [22, 37]. Because the unit-level contrast is never jointly observed, we target 
+
+τ (x) = E[Y (1) − Y (0) | X = x] . (1) Here, individualized prediction refers to estimating τ (Xi), not observing the latent unit-specific effect. Identification relies on consistency, conditional exchangeability, and overlap [16, 22]. Under these assumptions, the treatment-specific outcome functions μt(x) = E[Y | T = t, X = x] identify the CATE as μ1(x) − μ0(x). The treatment mechanism is summarized by the propensity score 
+
+e(x) = P(T = 1 | X = x) [36]. These quantities underpin the estimators reviewed in Section 2; their formal definitions and assumptions are stated in Section 3. Five recurring challenges motivate the proposed design: (i) Unmeasured confounding. Relevant common causes of treatment and outcome may be unavailable or poorly measured, so standard CATE estimators remain dependent on the adopted identification assumptions [16, 22]. (ii) Treatment–control imbalance. Non-random assignment can produce different covariate distributions across treatment arms; consequently, accurate factual prediction need not imply reliable counterfactual prediction, motivating representation-balancing approaches such as CFRNet [38]. (iii) Limited overlap and positivity violations. When e(x) approaches zero or one, one potential-outcome surface is weakly supported by observations. Greater model flexibility or global representation balance alone cannot resolve severe positivity violations [16, 22]. (iv) Data sparsity in rare subgroups. Rare covariate profiles may contain few observations within each treatment arm, increasing variance and the risk that flexible estimators learn subgroup noise rather than genuine heterogeneity [3, 41]. (v) Interference and spillover effects. The standard formulation assumes that one unit’s outcome is unaffected by other units’ treatments. Network or spillover mechanisms violate this assumption and remain outside the scope of the estimators studied here [16, 22]. 2Two further difficulties affect model development: nuisance-model error can propagate into CATE estimates, motivating targeted and orthogonalized objectives [34, 39]; and the absence of observed unit-level effect labels complicates validation and model selection. Evaluation therefore commonly relies on randomized or semi-synthetic benchmarks and indirect measures of heterogeneity or decision quality [38, 40]. This second difficulty is central to our validation-based ensemble construction. 
+
+1.3 Contributions 
+
+The contributions center on complementary causal experts and their leakage-safe combination: • We construct five experts on a shared anchor–correction backbone so their differences primarily reflect overlap and outcome geometries rather than unrelated architectures. • We introduce OΦ-ACE, an outcome-free treatment-aware projection that replaces the anchor input and supplies a parsimonious source of diversity alongside overlap weighting and outcome-guided geometries. • GeoACE learns one task-level convex weight vector from internal validation predictions and freezes it before expert refitting and test evaluation, avoiding both test leakage and a high-variance individual gate. • We compare factual, doubly robust, ridge-regularized, equal-weight, selection, stacking, and Q-aggregation controls using the same frozen expert predictions. • Across eight benchmark protocols, the results support controlled expert diversity and leakage-safe aggregation while remaining explicitly benchmark-dependent rather than claiming universal dominance. 
+
+# 2 Related Work 
+
+2.1 Methodological Families and Their Trade-offs 
+
+Methods for conditional average treatment-effect (CATE) estimation differ primarily in how they infer the unobserved potential outcome and control the resulting extrapolation. Classical outcome regressions encode heterogeneity through treatment–covariate interactions and are readily inter-pretable, but misspecified functional forms or omitted interactions can distort nonlinear CATE surfaces [19]. Propensity-score matching, subclassification, and weighting instead improve observed-arm comparability [36]; under suitable conditions weighting can be efficient [18], although extreme propensities amplify variance and neither strategy removes dependence on measured confounding and overlap. Meta-learners organize ordinary prediction algorithms into causal estimators [10, 27]. The S-learner shares one response model across arms and can be data-efficient, but may attenuate a weak treatment signal. The T-learner permits distinct response surfaces, at the cost of instability when an arm is small. The X-learner imputes arm-specific effects and combines them, often using propensity information; it can exploit treatment imbalance and a simple effect structure, but inherits first-stage outcome error. Their modularity is useful, yet factual predictive accuracy alone does not guarantee accurate counterfactual contrasts. Pseudo-outcome and orthogonal learners align estimation more directly with the effect. Doubly robust (DR) learners combine outcome and propensity estimates in a corrected pseudo-outcome, 3while the R-learner residualizes both outcome and treatment [26, 34]. Orthogonal objectives and cross-fitting can reduce first-order sensitivity to nuisance error [7], but corrections become noisy under weak overlap and remain dependent on identification assumptions. In particular, a DR pseudo-outcome is an observable validation surrogate, not observed individual-effect truth. 
+
+2.2 Local, Bayesian, and Representation-Based Estimators 
+
+Among flexible approaches to CATE estimation, tree-based methods provide a natural way to capture nonlinear and subgroup-specific treatment-effect heterogeneity. Causal trees partition covariate space by treatment-effect heterogeneity; honest sample splitting reduces adaptive bias, and forests stabilize the local estimates [3, 41]. Generalized Random Forests cast trees as adaptive neighborhood weights for local moment equations [4], whereas Orthogonal Random Forests and CausalForestDML combine localization with residualization or orthogonal scores [7, 35]. These methods capture nonlinear subgroup structure without prespecified interactions, but sparse neighborhoods and limited support can still destabilize local effects. Bayesian approaches add posterior uncertainty to flexible response modeling. BART estimates a regularized sum-of-trees response surface and contrasts its two treatment evaluations [8, 17]; BCF further separates prognosis from treatment response and uses propensity information to mitigate regularization-induced confounding [15]. Multi-task Gaussian processes share information between potential-outcome functions through a joint covariance [1]. Their uncertainty can highlight data-poor regions, but remains conditional on the model and does not protect against violations of exchangeability or positivity. Among flexible CATE estimators, neural methods offer several ways to control which information is shared, balanced, or separated across treatment arms. TARNet uses a common representation with treatment-specific heads; CFRNet adds MMD or Wasserstein balance, and SITE preserves local similarity among informative, comparable observations [38, 42]. Balancing can improve cross-arm comparability, but excessive balance may discard prognostic or effect-modifying variation. DragonNet instead jointly estimates potential outcomes and propensity and uses targeted regularization [39], while disentangled architectures separate treatment- and outcome-related information [9]. These alternatives reflect a genuine trade-off: retaining treatment-predictive structure can impair alignment, whereas removing it can erase outcome-relevant signal. More specialized neural designs target treatment-effect heterogeneity through their training objectives or information-sharing mechanisms. SubgroupTE iteratively links soft response groups with outcome and propensity prediction [30]; HyperITE learns dynamic parameter sharing between arm-specific predictors [6]; and PairNet trains on cross-treatment outcome differences, with perfor-mance also depending on its backbone and pairing rule [33]. These mechanisms can better match heterogeneous response structure than a fixed shared/separate architecture, but add estimation or optimization complexity and may be unstable when the available sample is small. 
+
+2.3 Latent and Prior-Fitted Models 
+
+Generative models infer missing responses or latent causal structure. CEVAE uses proxies and a variational confounder representation [31]; GANITE adversarially completes counterfactual outcomes before effect estimation [43]; and TEDVAE separates instrumental, risk, and confounding factors [45]. Their flexibility is valuable when the assumed latent structure is supported, but the inferred counterfactual remains model-dependent, and validity depends on proxy quality, generative assumptions, and optimization stability. Prior-Fitted Networks amortize inference across simulated tasks [32]. CausalPFN applies this 4principle to CATE estimation through in-context transformer predictions without task-specific optimization [5]. This can make inference rapid, but accuracy depends on correspondence between the pretraining prior and the target data-generating process; it does not relax ignorability or overlap. 
+
+2.4 CATE Model Selection and Aggregation 
+
+The diversity of CATE estimators creates a second problem after estimation: the individual treatment effect is unavailable for ordinary validation, so a candidate cannot be selected by direct test error. Orthogonal and doubly robust pseudo-outcome losses provide observable proxies for this purpose, but their variance can be substantial when overlap is weak or nuisance estimates are inaccurate. The R-learner supplies a related residualized criterion [34], while causal Q-aggregation combines candidate CATE functions under a doubly robust loss and provides oracle model-selection regret guarantees with higher-order nuisance-error terms [29]. These results make explicit that model selection and model averaging are themselves causal estimation problems rather than routine supervised validation. Other ensemble constructions operate at different levels. Multi-task deep ensembles combine jointly trained causal networks to improve stability on complex inputs [23], whereas inverse-variance weighting adapts pseudo-outcome regression to heterogeneous conditional precision [13]. Such methods motivate aggregation, but they do not answer whether a controlled set of experts with different overlap and outcome geometries should be averaged uniformly, selected individually, or combined through an effect-aligned validation loss. GeoACE studies that question under a common backbone and a fixed test firewall. Its primary inverse-DR rule is therefore evaluated against equal weighting, one-expert selection, convex DR fitting, R-stacking, causal Q-aggregation, and DR ridge using the same five frozen prediction columns. 
+
+2.5 Comparative Synthesis 
+
+No family dominates across all regimes. Shared models can borrow strength but suppress hetero-geneity; separate models can respect arm-specific responses but waste information under imbalance. Orthogonal corrections reduce nuisance sensitivity but may be variable near propensity boundaries. Balancing improves comparability but can remove useful signal, whereas latent, subgroup, and prior-fitted models introduce stronger structural or distributional assumptions. These complemen-tary failure modes motivate combining controlled experts rather than selecting one inductive bias a priori. The evaluated methods target different combinations of information sharing, distribution balance, overlap, nuisance robustness, and effect-aligned training. These design targets should not be interpreted as guarantees under unmeasured confounding or structural positivity violations. 
+
+Positioning. GeoACE addresses regime dependence with a controlled library of experts that share one backbone but encode distinct overlap and outcome geometries. Unlike winner-take-all selection or an individual-level gate, it estimates a small task-level simplex from observable validation predictions and freezes that choice before test evaluation. The design targets model-selection uncertainty and finite-sample instability; it does not relax exchangeability or positivity requirements, and its validation criteria remain noisy causal surrogates. 53 Problem Setup 
+
+3.1 Observed Data and Target Estimand 
+
+Let Oi = ( Xi, T i, Y i), i = 1 , . . . , n , denote independent observations from a population of interest. Here, Xi ∈ X ⊆ Rp contains pre-treatment covariates, Ti ∈ { 0, 1} is a binary treatment indicator, and Yi is the factual outcome. Under the potential- outcomes notation, each unit has two potential responses, Yi(0) and Yi(1), but only 
+
+Yi = TiYi(1) + (1 − Ti)Yi(0) (2) is observed. We write 
+
+μt(x) = E{Y (t) | X = x}, t ∈ { 0, 1}, (3) and define the conditional average treatment effect (CATE) as 
+
+τ (x) = E{Y (1) − Y (0) | X = x} = μ1(x) − μ0(x). (4) The corresponding average treatment effect is ATE = E{τ (X)}. The principal target of this work is the function τ (·); ATE, ATT, potential-outcome error, and policy-oriented quantities are treated as complementary evaluation criteria. Our causal interpretation uses the standard identification conditions [22, 36, 37]. Specifically, we assume consistency, no interference between units, conditional exchangeability, 
+
+{Y (0) , Y (1) } ⊥ T | X, (5) and positivity, 0 < e (x) = P(T = 1 | X = x) < 1 (6) on the covariate region for which effects are estimated. Under these conditions, 
+
+τ (x) = E(Y | X = x, T = 1) − E(Y | X = x, T = 0) . (7) These assumptions identify the estimand; they are not consequences of the proposed learning procedure. In particular, neither representation balancing nor ensemble weighting repairs unmeasured confounding or a structural absence of one treatment arm. 
+
+3.2 Data Partitioning and Information Boundaries 
+
+For each benchmark task or replication, the development sample is partitioned into a fitting subset 
+
+Ifit and an internal validation subset Ival . Nuisance estimation, anchor construction, checkpoint selection, and expert weighting are conducted exclusively within the development sample under the fixed partition defined by the benchmark protocol. The held-out test set Ite is excluded from all model-selection and estimation stages. Its factual outcomes are used only for final performance assessment, while simulated counterfactual outcomes, when available, are accessed only after the corresponding predictions have been finalized and recorded. This separation is particularly important in CATE estimation because individual treatment effects are not observed in standard validation data. For a candidate estimator ̂ τ , the ideal CATE risk 
+
+Rτ (̂ τ ) = E
+
+> [̂
+
+τ (X) − τ (X)2]
+
+(8) cannot be evaluated directly in the absence of counterfactual labels. Accordingly, expert selection and ensemble weighting must be based on observable proxy criteria. We use factual prediction 6error and a doubly robust (DR) pseudo-outcome as complementary validation signals. Factual error provides a comparatively stable measure of response-surface accuracy but is not directly targeted at the treatment-effect contrast. In comparison, the DR criterion is more closely aligned with CATE estimation, although it may exhibit greater variability because it depends on propensity correction and estimated nuisance functions. 
+
+3.3 Expert Predictions and Convex Aggregation 
+
+Let K denote the number of causal experts and let j ∈ { 1, . . . , K } index an individual expert. For a covariate profile x ∈ X , expert j estimates the two treatment-specific conditional response functions and their contrast: ̂
+
+μ0j (x),̂ μ1j (x),̂ τj (x) = ̂ μ1j (x) −̂ μ0j (x). (9) In Equation (9), ̂ μtj (x) denotes the potential-outcome prediction of expert j under treatment state 
+
+t ∈ { 0, 1}, and ̂ τj (x) is the corresponding CATE estimate. The present implementation uses K = 5 experts. Within each expert, predictions are first averaged over the same prespecified set of model seeds. The subsequent aggregation therefore operates across expert-level predictions rather than across individual random initializations. To combine the experts, let w = ( w1, . . . , w K )⊤ denote a vector of aggregation weights constrained to the probability simplex ∆K =
+
+> 
+
+w ∈ RK : wj ≥ 0 for all j, 
+
+> K∑
+> j=1
+
+wj = 1  
+
+> 
+
+. (10) Here, wj represents the contribution assigned to expert j. The nonnegativity and unit-sum constraints in Equation (10) ensure that the final estimator is a convex combination of the expert predictions. Given w ∈ ∆K , the ensemble estimates the treatment-specific response functions as ̂
+
+μens  
+
+> t
+
+(x; w) = 
+
+> K∑
+> j=1
+
+wĵ μtj (x), t ∈ { 0, 1}, (11) where ̂ μens  
+
+> t
+
+(x; w) denotes the aggregated potential outcome under treatment state t. The ensemble CATE estimate is then obtained by contrasting the two aggregated response surfaces: ̂
+
+τ ens (x; w) = ̂ μens 1 (x; w) −̂ μens 0 (x; w)=
+
+> K∑
+> j=1
+
+wĵ τj (x). (12) Thus, Equations (11) and (12) preserve internal coherence between the ensemble potential-outcome predictions and their treatment-effect contrast: aggregating the two response surfaces and then taking their difference is algebraically equivalent to aggregating the expert-specific CATE estimates directly. A single weight vector w is learned for each benchmark task or replication and is subsequently held fixed across all individuals within that task. This restriction provides task-level adaptation while avoiding the additional estimation variance associated with learning a covariate-dependent gating function from validation data for which individual causal effects are not observed. 74 Proposed Method 
+
+4.1 Overview 
+
+The proposed Geometry-Diverse Anchor–Correction Expert Ensemble (GeoACE) separates the estimation problem into two levels. At the first level, five experts share the same anchor–correction architecture but introduce different inductive biases concerning outcome structure, overlap, and treatment–control imbalance. At the second level, a low-dimensional selector learns how much to rely on each expert using only internal validation observations. The weights are subsequently frozen, the experts are refitted on all development data, and the locked convex combination is evaluated once on the test set. GeoACE learns a combination rule at a meta level over already specified causal experts, but it is not episodic, few-shot, or gradient-based meta-learning. The term validation weighting is therefore used for the aggregation mechanism: observable internal-validation predictions determine one task-level simplex weight vector, which is frozen before test evaluation. This construction is intentionally intermediate between choosing a single estimator and training a fully adaptive mixture of experts. A single globally selected model discards potentially useful complementary predictions. A covariate-dependent gate is more expressive, but it also requires learning a new function from noisy surrogate treatment-effect labels. GeoACE instead learns only 
+
+K − 1 free task-level parameters and therefore allocates most of the available sample to estimating the causal response functions themselves. 
+
+4.2 Common Anchor–Correction Backbone 
+
+For each treatment state t ∈ { 0, 1}, a structured low-dimensional anchor estimator provides an initial response estimate at(x). It also produces a prior vector r(x) containing the two anchor predictions, their contrast, and the retained low-dimensional coordinates. This construction gives every expert the same statistically structured starting point, while allowing its neural component to learn departures supported by the observed data. More precisely, let u(j)(x) ∈ R1×pj denote the row vector supplied to the anchor of expert j,where pj is its input dimension. For ACE and OW-ACE, u(j)(x) = xstd ; for the three geometry experts, u(j)(x) = Φ G(xstd ), u(j)(x) = Φ A(xstd ), and u(j)(x) = Φ O(xstd ), respectively. Arm-specific ridge outcome fits define an orthonormal basis B(j) ∈ Rpj ×dj , where dj ∈ { 1, 2} and 
+
+B(j)⊤B(j) = Idj , spanning the available average-prognostic and treatment-contrast directions. Define ¯u(j) = |I fit |−1 ∑ 
+
+> i∈I fit
+
+u(j)(Xi) and P (j) = B(j)B(j)⊤ ∈ Rpj ×pj . Under this row-vector convention, the structured anchor and its retained coordinates are 
+
+> ˜
+
+u(j)(x) = ¯ u(j) + {u(j)(x) − ¯u(j)}P (j),a(j) 
+
+> t
+
+(x) = f (j)
+
+> t,α
+> (˜
+
+u(j)(x)
+
+> )
+
+, t ∈ { 0, 1},
+
+> (
+
+z(j)1 (x), z (j)2 (x)) = Std fit 
+
+> [
+
+{u(j)(x) − ¯u(j)}B(j)]
+
+,r(j)(x) = 
+
+> [
+
+a(j)0 (x), a (j)1 (x), a (j)1 (x) − a(j)0 (x), z (j)1 (x), z (j)2 (x)
+
+> ]
+
+.
+
+(13) Here, f (j) 
+
+> t,α
+
+is the arm-specific nonlinear ridge predictor, and its penalty α is selected using only an inner split of the fitting data. The operator Std fit standardizes each retained coordinate using its fitting-subset mean and standard deviation; a coordinate with zero fitted variance is set to zero. If 
+
+dj = 1, the unavailable second coordinate z(j)2 is zero-padded. For the remainder of this subsection we fix expert j and suppress its superscript to avoid clutter. 8Let hθ : X → Rdh denote the representation network shared by the two treatment heads within this expert, where θ collects its trainable parameters and dh is the representation dimension. Parameters are not shared across separately trained experts. The representation is concatenated with r(x) and passed to two treatment-specific correction functions: 
+
+qt(x) = gt,θ ([ hθ(x), r (x)]) , t ∈ { 0, 1}. (14) In Equation (14), gt,θ is the correction head for treatment state t, [ ·, ·] denotes vector concatenation, and qt(x) is the learned anchor-relative correction. For a continuous outcome, the treatment-specific response surface is ̂
+
+μt(x) = at(x) + qt(x). (15) Thus, Equation (15) adds the learned correction to the initial anchor on the outcome scale. For a binary outcome, the analogous update is made on the log-odds scale: ̂
+
+μt(x) = expit {logit {at(x)} + qt(x)} . (16) Here, logit( p) = log {p/ (1 − p)} and expit( z) = {1 + exp( −z)}−1. Before applying the logit, a binary anchor probability is clipped to [10 −5, 1 − 10 −5]. The final layer of each correction head is initialized at zero. Consequently, Equations (15) and (16) reproduce the anchor exactly at initialization rather than beginning from unrelated response surfaces. For an observation ( Xi, T i, Y i), define the factual prediction as ̂ μTi (Xi) = Tî μ1(Xi)+(1 −Ti)̂ μ0(Xi). The reference and geometry-based experts use arm-frequency weights 
+
+ωarm  
+
+> i
+
+= Ti
+
+2̂ πc
+
++ 1 − Ti
+
+2(1 −̂ πc) ,̂ π = 1
+
+|I fit |
+
+> ∑
+> i∈I fit
+
+Ti,̂ πc = min {0.97 , max(0 .03 ,̂ π)}. (17) In Equation (17), ̂ π is the treated fraction in the fitting subset Ifit and ̂ πc is its numerically clipped value; the factor 1 /2 places the two observed treatment arms on a comparable scale. For continuous outcomes, the minibatch objective is 
+
+LACE (θ) = 1
+
+|B| 
+
+> ∑
+> i∈B
+
+ωi{Yi −̂ μTi (Xi)}2
+
++ λa
+
+1
+
+|B| 
+
+> ∑
+> i∈B
+
+{q0(Xi)2 + q1(Xi)2} + λoΩout (θ). (18) Here, B denotes a minibatch, ωi is the expert-specific observation weight, λa ≥ 0 controls shrinkage toward the anchor, Ω out (θ) is the squared ℓ2 norm of the output-layer weights, and λo ≥ 0 is its regularization coefficient. For binary outcomes, the first term in Equation (18) is replaced by weighted factual cross-entropy; the remaining terms are unchanged. The anchor-deviation penalty regularizes both potential-outcome surfaces, including the unobserved surface for each individual, and therefore limits unsupported extrapolation away from the structured initializer. Except for the overlap-weighted expert described below, ωi in Equation (18) equals ωarm  
+
+> i
+
+from Equation (17). For each prespecified random seed, training duration is selected by the internal validation objective. The selected duration is recorded and subsequently reused when that seed is refitted on the complete development sample. The shared backbone serves two methodological purposes. First, it controls architectural variation, so differences among experts can be attributed primarily to their intended causal inductive biases. Second, it provides a common fallback estimator: a large correction is admitted only when its gain in factual fit offsets the explicit penalty for departing from the anchor. 94.3 Complementary Causal Experts 
+
+GeoACE combines five experts whose distinguishing mechanisms are compared compactly in Table 1. The Reference Anchor–Correction Expert (ACE) retains the unmodified backbone. The Overlap-Weighted Anchor–Correction Expert (OW-ACE) changes the training emphasis. The three remaining experts alter the geometry presented to the anchor through a learned map Φ: the Global Outcome-Guided Geometry Expert (GΦ-ACE) uses pooled outcome information, whereas the Arm-Specific Outcome-Guided Geometry Expert (AΦ-ACE) preserves treatment-specific outcome directions. The Overlap-Geometry Expert (OΦ-ACE) constructs an outcome-free, overlap-aware projection that replaces the anchor input. These mechanisms are complementary rather than nested claims that one expert must dominate in every task. The five experts are deliberately different in where they impose caution, not in the causal estimand they seek to recover. ACE supplies the common reference and asks whether the factual evidence warrants a correction. OW-ACE leaves both the architecture and anchor geometry unchanged but changes which observations exert the greatest influence on that correction. The three Φ experts instead leave the correction network on the original standardized covariates and intervene only in the coordinate system used by the anchor. GΦ-ACE expresses the hypothesis that a shared prognostic structure is adequate, whereas AΦ-ACE allows outcome associations to differ across treatment arms. OΦ-ACE instead excludes the outcome from geometry estimation and replaces the raw anchor input by a compact overlap-supported projection. Thus, the ensemble juxtaposes five distinct responses to finite-sample uncertainty: a stable reference, overlap-centered evidence, globally outcome-guided geometry, arm-specific outcome-guided geometry, and outcome-free overlap geometry. None changes the declared CATE target, manufactures common support, or removes bias from unmeasured confounding; their value lies in producing auditable diversity in inductive bias for the validation selector to assess. 
+
+4.3.1 Reference Anchor–Correction Expert (ACE) 
+
+ACE is defined by Equations (14) to (16) and (18). It constructs the anchor from the original standardized covariates, applies no learned geometry map, and uses the arm-frequency weights in Equation (17). ACE is not introduced as a deliberately weak baseline. It is the reference estimator against which each additional source of specialization is isolated. 
+
+4.3.2 Overlap-Weighted Anchor–Correction Expert (OW-ACE) 
+
+OW-ACE retains the architecture and regularization of ACE but replaces the arm-frequency contribution to the factual loss. Let ̂ ei =̂ e(Xi) be the estimated propensity score. Within a minibatch, OW-ACE uses 
+
+ωov  
+
+> i
+
+=̂ ei(1 −̂ ei)
+
+|B| −1 ∑ 
+
+> ℓ∈B ̂
+
+eℓ(1 −̂ eℓ) . (19) The denominator in Equation (19) normalizes the mean minibatch weight to one, preserving the scale of the optimization objective. The numerator is largest at ̂ ei = 1 /2 and approaches zero as treatment assignment becomes nearly deterministic. Accordingly, this expert directs the finite-sample correction toward covariate regions supported by both treatment arms. It neither creates overlap where none exists nor changes the declared conditional average treatment effect (CATE) estimand; instead, it modifies the regions exerting the greatest influence during training, consistent with the broader motivation of overlap-aware estimation [18, 36]. 10 4.3.3 Outcome-Guided and Outcome-Free Overlap Geometry 
+
+The three geometry experts modify only the coordinate system used by the structured anchor. Their aim is to retain covariate directions that are useful for factual-outcome prediction and supported by both treatment arms, while discouraging directions dominated by treatment-group separation. The neural correction network still receives the original standardized covariates, so Φ changes the structured starting estimate without enlarging the correction network. Every quantity used to estimate Φ is computed only from Ifit .Let Sov , S Y , S B ∈ Rp×p be symmetric positive semidefinite matrices summarizing overlap-weighted covariate variation, factual-outcome utility, and treatment-group imbalance, respectively. Conceptually, the three matrices ask different questions about a candidate covariate direction. 
+
+Sov describes how much variation remains after giving greater weight to observations whose estimated treatment probability is nearer one half, where comparisons between treatment arms are more plausible. SY captures whether that direction is associated with the observed outcome, using either pooled or arm-specific associations; the outcome-free expert sets this term to zero. SB captures measured ways in which the treatment groups separate: a covariance-scaled difference in means for GΦ-ACE, or differences in means and covariances together with a propensity-predictive direction for AΦ-ACE and OΦ-ACE. The geometry therefore favors directions with overlap-supported variation and, when used, outcome signal relative to measured treatment-group separation. This ranking does not create overlap or account for unmeasured confounding. After putting their nonzero components on a common trace scale, the retained directions solve (Sov + SY + ηI p) v = λ (SB + ρI p) v, (20) where v ∈ Rp, Ip is the p × p identity matrix, and η, ρ > 0 provide numerical stabilization. Consequently, SB + ρI p is positive definite. Equivalently, the generalized eigenvectors rank directions by 
+
+Q(v) = v⊤(Sov + SY + ηI p)vv⊤(SB + ρI p)v . (21) Thus, a direction receives a high score when it preserves overlap-supported variation or outcome signal relative to its measured treatment imbalance. For the k = ⌈p/ 2⌉ largest generalized eigenvalues, let Vk = [ v1, . . . , v k]. The projected coordinates are standardized using fitting-subset moments and concatenated with the original standardized covariates: Φ( X) = 
+
+> [
+
+Xstd , Std fit 
+
+> {
+
+Xstd Vk
+
+> }]
+
+. (22) For GΦ-ACE and AΦ-ACE, the concatenation prevents the geometry step from discarding the original covariate information. The experts differ in how SY and SB are formed. GΦ-ACE uses a pooled overlap-weighted covariate–outcome association for SY and penalizes the treated–control mean difference after scaling it by pooled within-arm covariance. It then applies ZCA whitening to reduce linear redundancy among the retained coordinates. AΦ-ACE instead constructs outcome utility separately within each treatment arm and combines penalties for mean difference, covariance difference, and the propensity-predictive direction; it does not whiten the projection. Consequently, the global expert favors a compact shared prognostic geometry, whereas the arm-specific expert can retain a direction that is strongly outcome-relevant in only one arm. OΦ-ACE deliberately removes the outcome-utility term, so SY = 0, and constructs SB from treated–control mean and covariance differences and the propensity-predictive direction. Its utility 11 Table 1: Compact comparison of the five causal experts. All experts use the same anchor–correction architecture, with separately fitted parameters. Each correction head also receives its expert-specific anchor prior r(j)(x).                       
+
+> Expert Anchor input Representation network input Factual-loss weighting Distinctive mechanism
+> ACE Xstd Xstd Arm-frequency Unmodified structured anchor used as the reference expert OW-ACE Xstd Xstd Overlap Emphasizes observations for which both treatments are empirically plausible GΦ-ACE ΦG(Xstd )Xstd Arm-frequency Pooled outcome utility, covariance-scaled mean-separation penalty, and ZCA whitening AΦ-ACE ΦA(Xstd )Xstd Arm-frequency Arm-specific outcome utility with mean, covariance, and propensity-direction penalties OΦ-ACE ΦO(Xstd )Xstd Arm-frequency Outcome-free overlap utility with mean, covariance, and propensity-direction penalties; projected coordinates replace the anchor input
+
+is therefore overlap-weighted covariate variation alone. In contrast to Equation (22), it uses the replacement map ΦO(X) = Std fit 
+
+{
+
+Xstd V Ok
+
+}
+
+, (23) and supplies this lower-dimensional representation only to the structured anchor; the neural correction continues to receive Xstd . This outcome-free path is intended to reduce reliance on unstable raw anchor directions while remaining distinct from both loss reweighting and the two outcome-guided constructions. The overlap weights, trace normalization, empirical matrices, and whitening operations are specified in Section C. None of the constructions uses validation outcomes, test outcomes, or simulated treatment-effect truth. The compact distinctions among the experts are summarized in Table 1, while the complete expert-to-ensemble prediction pathway is shown in Figure 1. The structured anchor is the fitting-only, low-dimensional arm-specific nonlinear ridge model defined in Equation (13); it supplies 
+
+a(j)0 (x), a(j)1 (x), z(j)1 (x), and z(j)2 (x). ACE and OW-ACE calculate these quantities from the original standardized covariates, whereas GΦ-ACE, AΦ-ACE, and OΦ-ACE first construct Φ G(x), Φ A(x), and ΦO(x) using Equations (20), (22) and (23). GΦ-ACE uses pooled outcome utility, covariance-scaled mean imbalance, and ZCA whitening; AΦ-ACE instead uses arm-specific outcome utility and separate mean, covariance, and propensity-direction penalties. OΦ-ACE uses the same three imbalance penalties without outcome utility or concatenation. Their empirical matrices are specified in the supplementary material. For every expert, the prior vector r(j)(x) = [ a(j)0 , a (j)1 , a (j)1 − a(j)0 , z (j)1 , z (j)2 ]is concatenated with the shared representation as in Equation (14); the resulting corrections yield ̂
+
+μ0j (x) and ̂ μ1j (x) through Equations (15) and (16), and hence ̂ τj (x) = ̂ μ1j (x) −̂ μ0j (x). OW-ACE differs from ACE only through Equation (19). Finally, the validation-only simplex weights are frozen and the five effects are aggregated according to Equation (12), without using held-out test outcomes. 
+
+4.4 Validation-Based Ensemble Weighting 
+
+After the experts have been fitted, their seed-averaged predictions are evaluated on the internal validation subset. Let nv = |I val | and define the column vector ̂ μval  
+
+> tj
+
+= ( ̂μtj (Xi)) i∈I val ∈ Rnv . Then 
+
+Mt =
+
+[̂ 
+
+μval  
+
+> t1
+
+, . . . , ̂ μval 
+
+> tK
+
+]
+
+∈ Rnv ×K , H = M1 − M0. (24) 12 Figure 1: Prediction pathways of the five GeoACE experts and their validation-weighted aggregation. The structured-anchor quantities and expert-specific differences are defined in the accompanying text. In Equation (24), column j of Mt contains expert j’s validation predictions under treatment state t,
+
+K = 5 is the number of experts, and column j of H is the corresponding CATE prediction. Three prespecified weighting rules map these observable validation quantities to the probability simplex ∆K defined in Equation (10). None uses test information. 
+
+4.4.1 Inverse Doubly Robust Risk Weighting 
+
+The second rule uses a doubly robust (DR) pseudo-outcome. Let ˜μ0(x), ˜μ1(x), and ˜e(x) denote prespecified nuisance predictions supplied by ACE. ACE is used as the common nuisance provider because it is the unmodified reference expert: its nuisance estimates are not altered by overlap reweighting or outcome-guided geometry. Using one common provider also prevents an expert from being scored against a pseudo-outcome constructed from its own expert-specific nuisance estimates. To stabilize inverse propensity factors, define ˜ec(x) = min {1 − c, max( c, ˜e(x)) } for a fixed c ∈ (0 , 1/2). We use c = 0 .025 for construction of the selector pseudo-outcome. The validation pseudo-outcome is 
+
+ψDR  
+
+> i
+
+= ˜μ1(Xi) − ˜μ0(Xi) + Ti{Yi − ˜μ1(Xi)}
+
+> ˜
+
+ec(Xi)
+
+− (1 − Ti){Yi − ˜μ0(Xi)}
+
+1 − ˜ec(Xi) . (25) 13 Algorithm 1 GeoACE for one benchmark task (primary inverse-DR selector). 
+
+Input: Development data Dfit ∪ D val , untouched test covariates, fixed experts E (K = 5), and prespecified seeds b.
+
+1. On Dfit fit preprocessing and, for each ( j, b ), the expert’s anchor, geometry when applicable, and correction network; select its training duration mjb using Dval .
+
+2. Average each expert’s validation potential-outcome predictions over seeds; construct M0, M 1 and 
+
+H = M1 − M0 as in Equation (24). 
+
+3. Form the validation DR pseudo-outcome from the fixed ACE nuisance provider (Equation (25)); compute each expert’s validation DR risk and the simplex weights ̂w DR (Equations (26) and (27)). 
+
+4. Freeze {mjb } and ̂w DR ; refit each expert, including its preprocessing, anchor and geometry, on the complete development data for exactly mjb steps. 
+
+5. Average each refitted expert’s test predictions over seeds; apply the frozen weights to both potential outcomes and take their difference (Equations (11) and (12)). 
+
+Output: Locked test potential-outcome and CATE predictions; evaluate once after prediction. 
+
+In Equation (25), the first term is the nuisance outcome contrast and the remaining two terms correct its treated and control residuals. Each expert is scored by 
+
+RDR  
+
+> j
+
+=
+
+ 1
+
+nv
+
+∑
+
+> i∈I val
+
+{ψDR  
+
+> i
+
+−̂ τj (Xi)}2
+
+
+
+> 1/2
+
+. (26) The inverse-DR weights are then 
+
+wDR  
+
+> j
+
+= (RDR  
+
+> j
+
++ ϵ)−a
+
+∑Kℓ=1 (RDR  
+
+> ℓ
+
++ ϵ)−a . (27) Thus RDR  
+
+> j
+
+is the DR root mean squared error, matching the canonical implementation with a = 1 and ϵ = 10 −8. Because Equation (26) assesses the treatment-effect contrast rather than factual outcomes alone, the rule in Equation (27) is the prespecified primary selector. Propensity clipping limits the influence of near-deterministic assignments, although it also makes the finite-sample pseudo-outcome a stabilized approximation to the unclipped DR construction. The primary rule uses the inverse-DR weights in Equation (27). We also report the prespecified inverse factual RMSE and simplex-constrained DR ridge rules; their definitions and fixed settings appear in Section A. These alternatives are evaluated without changing expert training or choosing a rule after viewing test performance. 
+
+4.5 Selection, Refit, and Evaluation 
+
+Algorithm 1 summarizes the leakage-safe workflow for one benchmark task. The fitting subset estimates expert-specific components, the validation subset selects training duration and task-level ensemble weights, and the test set is used only after all choices have been fixed. The validation subset therefore has two roles: selecting each expert–seed training duration and estimating the ensemble weights. Refitting then uses all development observations while keeping both decisions fixed. Test outcomes and simulated counterfactual truth cannot alter the expert definitions, training durations, or ensemble composition. This separation preserves the benefit of refitting without reusing held-out information for selection. The convex combination satisfies a Jensen bound relative to the weighted average of expert CATE risks, but need not outperform its best constituent. The DR validation criterion has a population-level CATE-risk interpretation under the stated nuisance conditions; finite-sample clipping, nuisance 14 estimation and reuse of validation observations limit this interpretation. The bound, derivation and identification limits are given in Section B. 
+
+# 5 Experimental Setup 
+
+5.1 Datasets 
+
+We evaluate all estimators on the eight fixed benchmark protocols summarized in Table 2. The collection varies sample size, dimensionality, outcome type, treatment prevalence, overlap, and response complexity, and includes both semi-synthetic settings with individual-effect truth and an experimental benchmark for which individual counterfactuals are unavailable. This breadth is intended to test whether conclusions persist across data-generating regimes rather than within a single favorable simulation design. The three IHDP protocols combine covariates from the Infant Health and Development Program with simulated potential outcomes [17, 38]. IHDPA and IHDPB are the two 100-replication constructions distributed with TEDVAE [44, 45]; IHDP100 is the widely used 100-replication archive distributed by Johansson [24, 25]. They share the same nominal dimensions but differ in outcome simulation and supplied partitions, and are therefore analyzed as distinct protocols. NEWS uses real document covariates and simulated treatment responses [25]. The analysis uses the sparse 3,477-variable representation. TWINS uses the low-birth-weight cohort derived from twin-birth records and binary mortality potential outcomes [2, 31]. JOBS combines experimental and observational job-training records derived from the National Supported Work study [28]. Because JOBS lacks individual counterfactual labels, it is assessed using treatment-on-the-treated and policy criteria rather than PEHE [38]. The ACIC benchmarks place simulated response surfaces over fixed real-world covariates. For ACIC2016, we use the complete 58-variable representation for all 77 official conditions and the same five fixed replications ( R01, R02, R05, R08, and R10) in every condition, giving 385 tasks [12]. For ACIC2017, we retain the iid , group_corr , and nonadditive families, with eight designs and 20 fixed replications per design, giving 480 tasks. The heteroskedastic family is excluded because the challenge documentation reports that its treatment-effect truth was computed using the wrong data-generating formula [14]; this exclusion was made independently of estimator performance. Within every task, all methods receive the same fitting, validation, and test indices and the same feature view. Within each retained task, partitioning uses row identifiers and treatment assignments, without outcomes or treatment-effect truth. Parameters for any required imputation, scaling, or dimensionality reduction are estimated from the fitting subset only and then applied unchanged to validation and test data. Full provenance, replication-selection rules, split construction, and preprocessing boundaries are documented in the supplementary material. 
+
+5.2 Baselines 
+
+The comparison set contains ten established estimator families representing distinct approaches to heterogeneous treatment-effect estimation. We include the S-, T-, and X-learners to cover canonical meta-learning strategies with different degrees of information sharing between treatment arms [27]; BART as a flexible Bayesian response-surface model [8, 17]; and CausalForestDML as an orthogonal forest estimator that combines nuisance residualization with forest-based heterogeneity modeling [4, 7, 35]. The neural baselines comprise TARNet, CFRNet with maximum mean discrepancy (MMD) and Wasserstein balancing penalties [38], TEDVAE [45], SubgroupTE [30], and PairNet [33]. CFRNet-MMD and CFRNet-WASS are reported separately in the numerical results because their 15 Table 2: Summary of the eight main benchmark protocols. Split sizes are reported as fit-ting/validation/test counts. Sources identify the exact data archives used in this study; further construction details appear in the supplementary material.                                                     
+
+> Benchmark npTasks Fit/val/test Data source Evaluation information
+> IHDPA 747 25 100 449/224/74 TEDVAE archive [44] Continuous; semi-synthetic ITE truth IHDPB 747 25 100 449/224/74 TEDVAE archive [44] Continuous; semi-synthetic ITE truth IHDP100 747 25 100 470/202/75 Johansson archive [24] Continuous; semi-synthetic ITE truth NEWS 5,000 3,477 50 3,000/1,500/500 Johansson archive [24] Continuous; semi-synthetic ITE truth TWINS 11,984 50 10 7,190/3,595/1,199 Twin-birth bench-mark [31] Binary; paired potential outcomes JOBS 3,212 17 10 1,799/771/642 Johansson archive [24] Binary; ATT and policy evaluation ACIC2017 4,302 58 480 2,581/1,291/430 ACIC2017 challenge [14] Continuous; conditional-effect truth ACIC2016 4,802 58 385 2,881/1,441/480 ACIC2016 challenge [12] Continuous; conditional-effect truth
+
+discrepancy penalties define different fitted estimators, yielding eleven reported comparator variants in total. Implementation provenance and frozen tuning rules are documented in the supplementary material. This set is deliberately heterogeneous: it tests the proposed ensemble against outcome-modeling, meta-learning, orthogonalization, representation balancing, latent-variable, subgroup, and pairwise objectives. The purpose is not to tune each comparator against test truth, but to compare prespecified estimators under a common information boundary. Within a benchmark task, all methods use the same fitting, validation, and held-out test partition. Validation data may support model selection permitted by a method, whereas test outcomes and simulated counterfactual truth remain unavailable until predictions have been fixed. The main tables report held-out performance; training-sample quantities are retained only as diagnostics and are not used to establish comparative superiority. 
+
+5.3 Evaluation Metrics 
+
+For benchmarks with individual treatment-effect truth, the primary metric is the square root of the precision in estimation of heterogeneous effect ( √PEHE) [17, 38]: 
+
+√PEHE = 
+
+ 1
+
+nte 
+
+∑
+
+> i∈I te
+
+{̂ τ (Xi) − τi}2
+
+
+
+> 1/2
+
+. (28) In Equation (28), nte is the test-set size, ̂ τ (Xi) is the estimated effect, and τi denotes the available individual effect truth (or the benchmark’s corresponding conditional-mean contrast). Lower values indicate more accurate recovery of effect heterogeneity. Reporting the square root keeps the error on the same scale as the outcome and prevents the larger numerical scale of PEHE from obscuring interpretation. We additionally report absolute error in the average treatment effect: 
+
+ϵATE =
+
+∣∣∣[ATE te − ATE te 
+
+∣∣∣ , [ATE te = 1
+
+nte 
+
+∑
+
+> i∈I te
+
+̂
+
+τ (Xi), ATE te = 1
+
+nte 
+
+∑
+
+> i∈I te
+
+τi. (29) 16 Thus, both quantities refer to the same finite test population. The ATE criterion in Equation (29) measures calibration of the average effect but does not assess whether heterogeneity is recovered; it is therefore interpreted jointly with √PEHE, not as a substitute for it. Potential-outcome RMSEs and factual-outcome RMSE are retained as secondary diagnostics. For the binary TWINS outcome, factual Brier score and thresholded classification error provide additional calibration information. These outcome-prediction measures are not primary CATE criteria because a model can predict observed outcomes accurately while estimating the unobserved treatment contrast poorly. For JOBS, unit-level counterfactual truth is unavailable; we therefore evaluate absolute ATT error against the experimental treatment contrast and policy risk on the randomized test subset. The exact estimators, including their treatment-policy cell convention, appear in the supplementary material (Section JOBS evaluation definitions ). JOBS is excluded from PEHE-based ranks and tests. Metrics are first calculated separately for every fixed replication or ACIC task and then sum-marized across tasks by their mean and standard deviation. All main comparisons use held-out predictions. Because task difficulty can vary markedly, especially across ACIC settings, the empirical analysis also examines paired task-level differences rather than drawing conclusions solely from pooled averages. 
+
+5.4 Implementation Details 
+
+The experimental protocol follows the information boundary defined in Section 3.2. For every task, preprocessing statistics and any model-specific nuisance quantities are estimated without using the held-out test outcomes. Hyperparameters, random seeds, stopping rules, and the set of candidate ensemble selectors are fixed by configuration before final evaluation. Stochastic predictions are aggregated according to the prespecified seed protocol, after which GeoACE learns one task-level simplex weight vector from validation predictions. The weights and selected training durations are then frozen; the experts are refitted on the complete development sample and evaluated once on the held-out test set as described in Section 4.5. To support auditability, each run records its configuration identifiers, expert order, selected durations, ensemble weights, nuisance settings, and train, validation, and test predictions. Predictions are persisted before test truth is accessed. The same benchmark-specific evaluator is subsequently applied to every comparator and to each proposed expert and ensemble selector. This arrangement makes numerical differences traceable to fitted estimators rather than to changes in splits or metric definitions. Comparator provenance, frozen hyperparameters, and geometry settings are recorded in the supplementary material; geometry-matrix construction is given in Section C. 
+
+# 6 Results 
+
+6.1 Performance of the Individual Experts and Their Ensemble 
+
+Table 3 reports the prespecified test metric for every individual expert and for the validation-weighted five-expert ensemble. The five experts are not ordered consistently across benchmarks. OΦ-ACE is the strongest individual expert on ACIC2016, NEWS, TWINS, and JOBS, OW-ACE is strongest on IHDP100 and IHDPA, and ACE is strongest on IHDPB. This variation is the empirical premise of the ensemble: no individual construction provides the best fit to all regimes. The ensemble improves on every individual expert on six of the seven √PEHE benchmarks. TWINS is the only exception, where OΦ-ACE alone is marginally better (0.3183 versus 0.3186). On JOBS, where individual-effect truth is unavailable, OΦ-ACE and the ensemble have nearly 17 Table 3: Test performance of the five individual experts and GeoACE. Lower is better. The metric is √PEHE except for JOBS, where policy risk is reported. Bold denotes the best value in each row.                                                        
+
+> Benchmark ACE OW-ACE GΦ-ACE AΦ-ACE OΦ-ACE GeoACE
+> ACIC2016 2.0232 1.9706 1.9904 1.9742 1.9203 1.7518
+> ACIC2017 0.8951 0.8901 0.8721 0.8692 0.9527 0.7990
+> IHDP100 0.7332 0.7042 0.7106 0.7104 0.8139 0.6742
+> IHDPA 0.5569 0.5469 0.5558 0.5671 0.5858 0.5195
+> IHDPB 2.1948 2.2271 2.2215 2.2209 2.1968 2.0963
+> NEWS 1.7690 1.8055 1.7614 1.7428 1.6766 1.6707
+> TWINS 0.3195 0.3196 0.3231 0.3232 0.3183 0.3186 JOBS †0.24127 0.25926 0.24077 0.24838 0.23762 0.23758
+> †JOBS uses policy risk and is not included in √PEHE rank analyses. Values are task-level means from the locked test predictions.
+
+Table 4: GeoACE relative to the strongest comparator on each √PEHE benchmark. Lower values and ranks are better.                                 
+
+> Benchmark GeoACE Best comparator Method Rank
+> ACIC2016 1.7518 1.1418 BART 8ACIC2017 0.7990 0.4265 CF-DML 6IHDP100 0.6742 0.9883 CFRNet-MMD 1
+> IHDPA 0.5195 0.6502 TEDVAE 1
+> IHDPB 2.0963 2.2298 TEDVAE 1
+> NEWS 1.6707 1.6685 PairNet 2TWINS 0.3186 0.3113 CF-DML 7
+
+identical policy risk. The result is therefore not driven by a single dominant expert; it reflects benchmark-dependent combinations of predictions. 
+
+6.2 Comparison with Established Estimators 
+
+Table 4 condenses the complete 12-method comparison by showing GeoACE, the strongest comparator on each benchmark, and the rank of GeoACE among all evaluated methods. The complete method-by-benchmark matrix is reported in Appendix D. GeoACE ranks first on all three IHDP protocols. On NEWS it ranks second, only 0.00220 behind PairNet (0.13% relative). Paired benchmark-level analyses place GeoACE in the same statistical group as the NEWS leader. The method is less competitive on the two ACIC protocols and on TWINS, demonstrating that the favorable overall ranking does not imply uniform dominance. Across these seven benchmarks, GeoACE obtains the lowest observed average rank (3.714) among the 12 methods. The benchmark-level Friedman test does not reject equivalent performance (p = 0 .328, Kendall’s W = 0 .162), and the Iman–Davenport correction leads to the same conclusion (p = 0 .330). Accordingly, the average-rank result is descriptive; it does not establish statistically significant overall superiority. This distinction is important because the number of independent benchmarks is small relative to the number of compared methods and the ordering varies substantially across datasets. The testing hierarchy follows standard recommendations for comparing multiple learning algorithms across datasets [11, 20]. 18 Table 5: Paired ablation of the fifth expert. ∆ is five-expert minus four-expert performance, so negative values favor the five-expert system.                                              
+
+> Benchmark Four experts Five experts ∆Relative change Five-expert wins
+> ACIC2016 1.8188 1.7518 -0.0670 -3.69% 326/385 ACIC2017 0.8196 0.7990 -0.0206 -2.51% 380/480 IHDP100 0.6854 0.6742 -0.0112 -1.63% 83/100 IHDPA 0.5351 0.5195 -0.0156 -2.92% 71/100 IHDPB 2.1371 2.0963 -0.0409 -1.91% 81/100 NEWS 1.7285 1.6707 -0.0579 -3.35% 49/50 TWINS 0.3204 0.3186 -0.0018 -0.57% 8/10 JOBS †0.237553 0.237584 +0.000031 +0.01% 5/10
+
+6.3 Policy Learning on JOBS 
+
+JOBS is analyzed separately because its experimentally supported target is policy value rather than unit-level PEHE. GeoACE attains mean policy risk 0.23758 (policy value 0.76242) and absolute ATT error 0.08112. The four-expert ensemble has policy risk 0.23755, so adding OΦ-ACE is practically neutral. Across the valid comparator outputs, the benchmark-level Friedman test is also non-significant ( p = 0 .556, Kendall’s W = 0 .087). We therefore interpret JOBS as evidence of comparable policy performance rather than an improvement claim. 
+
+# 7 Additional Analysis 
+
+7.1 Contribution of O Φ-ACE 
+
+Table 5 compares the original four-expert ensemble with the otherwise identical five-expert system. The fifth expert reduces mean √PEHE on all seven compatible benchmarks and wins 998 of 1,225 paired tasks. Gains are largest on ACIC2016 and NEWS and remain positive on both ACIC2017 and all three IHDP protocols. This pattern is notable because OΦ-ACE is not itself the strongest expert on every dataset: its main value is to supply a prediction geometry that the validation selector can use when helpful. The secondary metrics qualify this improvement. On TWINS and ACIC2017, the fifth expert improves PEHE but can worsen mean-effect calibration, illustrating that better recovery of hetero-geneity need not imply better ATE calibration. The primary ablation in Table 5 therefore concerns PEHE (policy risk on JOBS); it does not establish gains on every secondary metric. 
+
+7.2 Leave-One-Expert-Out Sensitivity 
+
+We next remove each expert in turn and re-estimate the convex weights from the same internal-validation predictions, without retraining any expert. The ACE nuisance predictions used to construct the DR validation target are held fixed in every contrast, including the ACE-removal condition. Consequently, this analysis measures the conditional contribution of an expert’s prediction column while preserving the selector’s definition and test firewall. The resulting pattern is deliberately not summarized as five uniformly positive main effects. Removing OΦ-ACE increases mean √PEHE on all seven truth-available benchmarks: the relative increase ranges from 0.57% on TWINS to 3.83% on ACIC2016 when expressed as the ratio of the paired mean change to the full-ensemble mean. Its effect on JOBS policy risk is essentially zero. OW-ACE is beneficial on ACIC2016, ACIC2017, IHDP100, IHDPA, and IHDPB, but its removal 19 improves NEWS. The remaining experts have smaller, sign-changing effects across protocols; in several settings, removing one slightly improves the mean result after the other four weights are re-optimized. This heterogeneity supports the proposed regime-dependent interpretation: GeoACE is a validation-frozen diversification device, rather than a claim that every constituent must improve every dataset. The benchmark-specific pattern is visualized in Figure 2; the complete numerical table and paired tests are reported in the supplementary material. 
+
+7.3 Aggregation-Rule Controls 
+
+To distinguish the value of the expert library from the choice of aggregator, we recombined the same five frozen prediction columns using equal weights, winner-take-all DR selection, convex DR fitting, R-stacking, causal Q-aggregation, and DR ridge shrinkage. No expert was retrained, and every weight vector was fitted on internal validation observations and frozen before test truth was opened. Relative to GeoACE, the benchmark-balanced excess loss was 6.97% for Best-DR, 3.69% for Convex-DR, 3.30% for R-stacking, and 4.90% for causal Q-aggregation; all four bootstrap intervals excluded zero. Equal-5 and Ridge-DR differed from GeoACE by only −0.12% and −0.09%, respectively, with intervals spanning zero. Hence the controlled evidence favors smooth, strongly regularized aggregation over hard selection or aggressively fitted validation weights, but it does not show that inverse-DR weighting improves on uniform averaging. Benchmark-level values, paired tests, bootstrap intervals, and the corresponding figure appear in Appendix D.2. 
+
+7.4 Sensitivity of the Cross-Benchmark Ranking 
+
+The primary rank analysis includes TWINS because it provides valid individual-effect truth. To check whether its discrete effect structure drives the conclusion, we repeat the descriptive analysis on the six regression-style benchmarks after excluding TWINS and JOBS. GeoACE again has the lowest observed average rank (3.167), but the Friedman and Iman–Davenport tests remain non-significant ( p = 0 .255 and p = 0 .250). Thus, removing TWINS improves the numerical rank but does not change the inferential conclusion. 
+
+# 8 Discussion 
+
+The clearest finding is about the expert library. Its members exchange rank across datasets, the five-expert combination beats every constituent on six of seven PEHE benchmarks, and removing OΦ-ACE degrades all seven benchmark means despite that expert not being the best standalone model everywhere. This is the behavior expected from useful, imperfectly correlated inductive biases. It is also regime-specific: GeoACE leads the IHDP protocols and nearly matches the NEWS leader, whereas established estimators remain stronger on the two ACIC protocols and TWINS. The aggregation controls sharpen that interpretation. Inverse-DR weighting is substantially more reliable than selecting one expert or fitting several less regularized validation objectives, but it is effectively tied with Equal-5 and Ridge-DR after balancing benchmarks. Thus, validation weighting supplies a leakage-safe and interpretable combination rule; the present data do not show that its small departures from uniform weights are intrinsically superior. The non-significant omnibus comparison with established estimators leads to the same restraint: the favorable average rank describes broad empirical coverage, not statistical dominance over every alternative. Several limitations remain. All observational conclusions depend on consistency, conditional exchangeability, and positivity; expert diversity cannot recover information absent because of unmeasured confounding or structural non-overlap. Validation criteria are observable surrogates 20 rather than direct CATE risk. The task-level weights also cannot adapt to subregions within one dataset, although this restriction reduces the variance and leakage risk of a flexible gate. Finally, improved PEHE can coexist with worse ATE or ATT calibration, as observed in selected TWINS and ACIC2017 analyses. The principal computational cost arises from fitting five experts and refitting them after weights and training durations are frozen. The selector itself is inexpensive because it estimates only four free simplex parameters. Geometry construction requires weighted covariance operators and a generalized eigendecomposition; dense sample-by-sample dependence matrices should be avoided when covariance-based equivalents are available. Expert fits are parallelizable, but runtime, memory, and prediction storage remain higher than for a single estimator. These costs should be weighed against the observed stability gains rather than treated as an intrinsic advantage. Future work could replace the fixed task-level simplex with a strongly regularized regional gate, incorporate uncertainty in the learned weights, and study transport to multi-valued or continuous treatments. External validation on observational applications with randomized reference evidence would also be valuable, especially for determining when overlap geometry is preferable to outcome-guided geometry. 
+
+# 9 Conclusion 
+
+GeoACE offers a controlled way to preserve several causal inductive biases without learning a high-variance individual-level gate. The outcome-free OΦ-ACE path adds measurable diversity, and the frozen validation protocol makes every selection decision auditable before test truth is opened. Results across eight protocols support the five-expert library as a robust empirical design, especially on IHDP and NEWS. They do not establish universal superiority, nor do they distinguish inverse-DR weighting from uniform or ridge-shrunk averaging. This narrower conclusion is also the practically useful one: when the appropriate geometry is unknown, controlled diversity and a strict information firewall can be more dependable than committing to one expert or tuning a flexible aggregator on a noisy causal surrogate. 
+
+# References 
+
+[1] Ahmed M. Alaa and Mihaela van der Schaar. Bayesian inference of individualized treatment effects using multi-task gaussian processes. In Advances in Neural Information Processing Systems , volume 30, 2017. [2] Douglas Almond, Kenneth Y. Chay, and David S. Lee. The costs of low birth weight. The Quarterly Journal of Economics , 120(3):1031–1083, 2005. doi: 10.1093/qje/120.3.1031. [3] Susan Athey and Guido Imbens. Recursive partitioning for heterogeneous causal effects. 
+
+Proceedings of the National Academy of Sciences , 113(27):7353–7360, 2016. doi: 10.1073/pnas .1510489113. [4] Susan Athey, Julie Tibshirani, and Stefan Wager. Generalized random forests. The Annals of Statistics , 47(2):1148–1178, 2019. doi: 10.1214/18-AOS1709. [5] Vahid Balazadeh Meresht, Hamidreza Kamkari, Valentin Thomas, Junwei Ma, Bingru Li, Jesse C. Cresswell, and Rahul G. Krishnan. CausalPFN: Amortized causal effect estimation via in-context learning. In Advances in Neural Information Processing Systems , volume 38, 2025. doi: 10.52202/085713-5184. 21 [6] Vinod Kumar Chauhan, Jiandong Zhou, Ghadeer Ghosheh, Soheila Molaei, and David A. Clifton. Dynamic inter-treatment information sharing for individualized treatment effects estimation. In Proceedings of the 27th International Conference on Artificial Intelligence and Statistics , volume 238 of Proceedings of Machine Learning Research , pages 3529–3537. PMLR, 2024. [7] Victor Chernozhukov, Denis Chetverikov, Mert Demirer, Esther Duflo, Christian Hansen, Whitney Newey, and James Robins. Double/debiased machine learning for treatment and structural parameters. The Econometrics Journal , 21(1):C1–C68, 2018. doi: 10.1111/ectj.12097. [8] Hugh A. Chipman, Edward I. George, and Robert E. McCulloch. BART: Bayesian additive regression trees. The Annals of Applied Statistics , 4(1):266–298, 2010. doi: 10.1214/09-AOAS2 85. [9] Jiebin Chu, Zhoujian Sun, Wei Dong, Jinlong Shi, and Zhengxing Huang. On learning disentangled representations for individual treatment effect estimation. Journal of Biomedical Informatics , 124:103940, 2021. doi: 10.1016/j.jbi.2021.103940. [10] Alicia Curth and Mihaela van der Schaar. Nonparametric estimation of heterogeneous treatment effects: From theory to learning algorithms. In Proceedings of the 24th International Conference on Artificial Intelligence and Statistics , volume 130 of Proceedings of Machine Learning Research ,pages 1810–1818. PMLR, 2021. [11] Janez Demšar. Statistical comparisons of classifiers over multiple data sets. Journal of Machine Learning Research , 7:1–30, 2006. URL https://www.jmlr.org/papers/v7/demsar06a.html .[12] Vincent Dorie, Jennifer Hill, Uri Shalit, Marc Scott, and Dan Cervone. Automated versus do-it-yourself methods for causal inference: Lessons learned from a data analysis competition. 
+
+Statistical Science , 34(1):43–68, 2019. doi: 10.1214/18-STS667. [13] Aaron Fisher. Inverse-variance weighting for estimation of heterogeneous treatment effects. In Proceedings of the 41st International Conference on Machine Learning , volume 235 of 
+
+Proceedings of Machine Learning Research , pages 13706–13733. PMLR, 2024. URL https: //proceedings.mlr.press/v235/fisher24a.html .[14] P. Richard Hahn, Vincent Dorie, and Jared S. Murray. Atlantic causal inference conference (acic) data analysis challenge 2017. arXiv preprint arXiv:1905.09515 , 2019. URL https: //arxiv.org/abs/1905.09515 .[15] P. Richard Hahn, Jared S. Murray, and Carlos M. Carvalho. Bayesian regression tree models for causal inference: Regularization, confounding, and heterogeneous effects. Bayesian Analysis ,15(3):965–1056, 2020. doi: 10.1214/19-BA1195. [16] Miguel A. Hernán and James M. Robins. Causal Inference: What If . Chapman & Hall/CRC, 2020. [17] Jennifer L. Hill. Bayesian nonparametric modeling for causal inference. Journal of Computational and Graphical Statistics , 20(1):217–240, 2011. doi: 10.1198/jcgs.2010.08162. [18] Keisuke Hirano, Guido W. Imbens, and Geert Ridder. Efficient estimation of average treatment effects using the estimated propensity score. Econometrica , 71(4):1161–1189, 2003. doi: 10.1111/1468-0262.00442. 22 [19] Anning Hu. Heterogeneous treatment effects analysis for social scientists: A review. Social Science Research , 109:102810, 2023. doi: 10.1016/j.ssresearch.2022.102810. [20] Ronald L. Iman and James M. Davenport. Approximations of the critical region of the Friedman statistic. Communications in Statistics—Theory and Methods , 9(6):571–595, 1980. doi: 10.1080/03610928008827904. [21] Guido W. Imbens. Causal inference in the social sciences. Annual Review of Statistics and Its Application , 11:123–152, 2024. doi: 10.1146/annurev-statistics-033121-114601. [22] Guido W. Imbens and Donald B. Rubin. Causal Inference for Statistics, Social, and Biomedical Sciences: An Introduction . Cambridge University Press, 2015. ISBN 9780521885881. doi: 10.1017/CBO9781139025751. [23] Ziyang Jiang, Zhuoran Hou, Yiling Liu, Yiman Ren, Keyu Li, and David Carlson. Estimating causal effects using a multi-task deep ensemble. In Proceedings of the 40th International Conference on Machine Learning , volume 202 of Proceedings of Machine Learning Research ,pages 15023–15040. PMLR, 2023. URL https://proceedings.mlr.press/v202/jiang23c. html .[24] Fredrik D. Johansson. Counterfactual inference benchmark data. Online data archive, n.d. URL https://www.fredjo.com/ . IHDP-100, JOBS, and NEWS archives. [25] Fredrik D. Johansson, Uri Shalit, and David Sontag. Learning representations for counterfactual inference. In Proceedings of the 33rd International Conference on Machine Learning , volume 48 of Proceedings of Machine Learning Research , pages 3020–3029. PMLR, 2016. [26] Edward H. Kennedy. Towards optimal doubly robust estimation of heterogeneous causal effects. 
+
+Electronic Journal of Statistics , 17(2):3008–3049, 2023. doi: 10.1214/23-EJS2157. [27] Sören R. Künzel, Jasjeet S. Sekhon, Peter J. Bickel, and Bin Yu. Metalearners for estimating heterogeneous treatment effects using machine learning. Proceedings of the National Academy of Sciences , 116(10):4156–4165, 2019. doi: 10.1073/pnas.1804597116. [28] Robert J. LaLonde. Evaluating the econometric evaluations of training programs with experi-mental data. American Economic Review , 76(4):604–620, 1986. [29] Hui Lan and Vasilis Syrgkanis. Causal Q-aggregation for CATE model selection. In Proceedings of the 27th International Conference on Artificial Intelligence and Statistics , volume 238 of 
+
+Proceedings of Machine Learning Research , pages 4366–4374. PMLR, 2024. URL https: //proceedings.mlr.press/v238/lan24a.html .[30] Seungyeon Lee, Ruoqi Liu, Wenyu Song, Lang Li, and Ping Zhang. SubgroupTE: Advancing treatment effect estimation with subgroup identification. ACM Transactions on Intelligent Systems and Technology , 16(3), 2025. doi: 10.1145/3718097. URL https://doi.org/10.114 5/3718097 .[31] Christos Louizos, Uri Shalit, Joris M. Mooij, David Sontag, Richard Zemel, and Max Welling. Causal effect inference with deep latent-variable models. In Advances in Neural Information Processing Systems , volume 30. Curran Associates, Inc., 2017. 23 [32] Samuel Müller, Noah Hollmann, Sebastian Pineda Arango, Josif Grabocka, and Frank Hutter. Transformers can do bayesian inference. In International Conference on Learning Representa-tions , 2022. [33] Lokesh Nagalapatti, Pranava Singhal, Avishek Ghosh, and Sunita Sarawagi. PairNet: Training with observed pairs to estimate individual treatment effect. In Proceedings of the 41st Inter-national Conference on Machine Learning , volume 235 of Proceedings of Machine Learning Research , pages 37237–37259. PMLR, 2024. [34] Xinkun Nie and Stefan Wager. Quasi-oracle estimation of heterogeneous treatment effects. 
+
+Biometrika , 108(2):299–319, 2021. doi: 10.1093/biomet/asaa076. [35] Miruna Oprescu, Vasilis Syrgkanis, and Zhiwei Steven Wu. Orthogonal random forest for causal inference. In Proceedings of the 36th International Conference on Machine Learning , volume 97 of Proceedings of Machine Learning Research , pages 4932–4941. PMLR, 2019. [36] Paul R. Rosenbaum and Donald B. Rubin. The central role of the propensity score in observational studies for causal effects. Biometrika , 70(1):41–55, 1983. doi: 10.1093/biomet/70. 1.41. [37] Donald B. Rubin. Estimating causal effects of treatments in randomized and nonrandomized studies. Journal of Educational Psychology , 66(5):688–701, 1974. doi: 10.1037/h0037350. [38] Uri Shalit, Fredrik D. Johansson, and David Sontag. Estimating individual treatment effect: Generalization bounds and algorithms. In Proceedings of the 34th International Conference on Machine Learning , volume 70 of Proceedings of Machine Learning Research , pages 3076–3085. PMLR, 2017. [39] Claudia Shi, David M. Blei, and Victor Veitch. Adapting neural networks for the estimation of treatment effects. In Advances in Neural Information Processing Systems , volume 32, 2019. [40] K. Verstraete, I. Gyselinck, H. Huts, N. Das, M. Topalovic, M. De Vos, and W. Janssens. Estimating individual treatment effects on copd exacerbations by causal machine learning on randomised controlled trials. Thorax , 78(10):983–989, 2023. [41] Stefan Wager and Susan Athey. Estimation and inference of heterogeneous treatment effects using random forests. Journal of the American Statistical Association , 113(523):1228–1242, 2018. doi: 10.1080/01621459.2017.1319839. [42] Liuyi Yao, Sheng Li, Yaliang Li, Mengdi Huai, Jing Gao, and Aidong Zhang. Representation learning for treatment effect estimation from observational data. In Advances in Neural Information Processing Systems , volume 31, 2018. [43] Jinsung Yoon, James Jordon, and Mihaela van der Schaar. GANITE: Estimation of individ-ualized treatment effects using generative adversarial nets. In International Conference on Learning Representations , 2018. [44] Weijia Zhang. TEDVAE: Code and benchmark data. GitHub repository, 2021. URL https: //github.com/WeijiaZhang24/TEDVAE . IHDP and IHDP_b archives. [45] Weijia Zhang, Lin Liu, and Jiuyong Li. Treatment effect estimation with disentangled latent factors. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 35, pages 10923–10930, 2021. doi: 10.1609/aaai.v35i12.17304. 24 Appendix A Validation Selectors Beyond the Primary Rule 
+
+These two prespecified selectors use the same validation predictions as the primary inverse-DR rule in Equation (27); neither uses test outcomes or simulated treatment-effect truth. The final ensemble still uses the inverse-DR weights unless an analysis explicitly names an alternative. 
+
+A.1 Inverse Factual-RMSE Weighting 
+
+For validation observation i and expert j, define the factual prediction ̂
+
+yFij = Tî μ1j (Xi) + (1 − Ti)̂ μ0j (Xi). (30) The factual root mean squared error (RMSE) associated with Equation (30) is 
+
+RFj =
+
+> 
+
+1
+
+nv
+
+> ∑
+> i∈I val
+
+(Yi −̂ yFij )2
+
+> 
+> 1/2
+
+. (31) The inverse-RMSE rule converts the score in Equation (31) to 
+
+wFj = (RFj + ϵ)−a
+
+> ∑Kℓ=1
+
+(RFℓ + ϵ)−a , j = 1 , . . . , K. (32) Here, a > 0 is the inverse-power parameter and ϵ > 0 prevents numerical singularities. In the experiments, these quantities are fixed at a = 1 and ϵ = 10 −8. The smooth normalization in Equation (32) avoids winner-take-all selection, which is particularly useful when the validation sample is modest. Its limitation is also clear: factual response accuracy need not imply accurate estimation of the contrast between the two response surfaces. 
+
+A.2 Simplex-Constrained Nonnegative DR Ridge 
+
+The third rule estimates the expert weights jointly. Let ψDR = ( ψDR 1 , . . . , ψ DR  
+
+> nv
+
+)⊤ collect the validation pseudo-outcomes and let u = K−11K be the equal-weight vector. The estimator solves ̂
+
+wR = arg min w∈∆K 
+
+> {
+
+1
+
+nv
+
+∥ψDR − Hw ∥22 + λ2∥w∥22 + λu∥w − u∥22
+
+> }
+
+. (33) In Equation (33), H is defined in Equation (24), λ2 ≥ 0 is the ridge coefficient, and λu ≥ 0 controls shrinkage toward equal weighting. The evaluated specification fixes λ2 = 0 .01 and λu = 0 .01. The simplex constraint prevents sign cancellation and preserves the scale of the expert predictions. Ridge regularization improves stability when expert columns are strongly correlated, whereas shrinkage toward u provides a conservative fallback when validation data do not distinguish their risks reliably. The resulting convex problem is solved to fixed convergence limits; no test criterion is used to tune its solution. 
+
+# B Mathematical Properties and Limits 
+
+GeoACE combines three forms of regularization. First, the anchor–correction parameterization asks each neural expert to learn departures from a structured reference rather than two unrestricted 25 response surfaces. This can reduce finite-sample variance when the anchor captures useful outcome structure, although correlated anchor error remains a shared limitation. Second, the Φ experts alter the anchor geometry by ranking directions according to outcome- and overlap-supported variation relative to measured imbalance (Equation (21)). They do not remove all treatment information or manufacture common support. Third, validation distributes weight among these controlled biases instead of assuming one is uniformly preferable. 
+
+B.1 Convex Aggregation 
+
+Convex weighting preserves the potential-outcome interpretation and the CATE identity in Equa-tions (11) and (12). It also gives the following pointwise bound. 
+
+Proposition 1 (Convex CATE error bound) . For any w ∈ ∆K and any x,
+
+{̂ τ ens (x; w) − τ (x)}2 ≤
+
+> K∑
+> j=1
+
+wj {̂τj (x) − τ (x)}2 . (34) 
+
+Consequently, ensemble CATE risk is no larger than the corresponding weighted average of expert risks. Proof. With ej (x) = ̂ τj (x)−τ (x), Jensen’s inequality gives {∑ 
+
+> j
+
+wj ej (x)}2 ≤ ∑ 
+
+> j
+
+wj ej (x)2 because the weights are nonnegative and sum to one. Taking expectation over X proves the risk statement. The result does not guarantee improvement over the best expert. Such an improvement requires useful experts with imperfectly correlated errors; nearly identical experts provide little diversification. Nonnegative simplex weights also keep the ensemble within the experts’ pointwise convex hull and prevent a small validation sample from creating extreme effects through cancellation of large positive and negative coefficients. 
+
+B.2 Validation Surrogates and Fixed Refit 
+
+Factual RMSE is a stable but indirect selector: it detects poor calibration of observed outcomes, yet a model can predict their common prognostic component well while estimating their contrast poorly. The DR pseudo-outcome is more closely aligned with CATE. At the population level and ignoring clipping, for candidate nuisance functions mt(x) and p(x), 
+
+E{ψDR | X = x} = τ (x) (35) when either p(x) = e(x) or both mt(x) = μt(x) for t ∈ { 0, 1}, under the identification assumptions. Under this conditional-mean property, 
+
+E
+
+> [
+
+{ψDR − f (X)}2 | X
+
+> ]
+
+= Var( ψDR | X) + {τ (X) − f (X)}2. (36) The first term is independent of the candidate f , so population DR risk targets CATE risk up to an additive noise term [7, 26]. This motivates the two DR-based selectors, while factual weighting remains a lower-variance comparison. These arguments remain finite-sample qualifications rather than oracle guarantees. Estimated nuisances, propensity clipping, weak overlap, and limited validation size can make the pseudo-outcome noisy. In addition, the population identity above does not by itself guarantee unbiased empirical validation risk when estimated nuisances or checkpoint decisions reuse the same validation 26 observations; cross-fitting would impose a stronger independence condition. GeoACE therefore uses only one task-level simplex vector—four free parameters for five experts—and regularizes the joint DR solution toward equal weighting. Freezing the weights and selected durations before refitting prevents the selector from adapting to test outcomes, although refit drift can make the pre-refit weights suboptimal. For this reason, the empirical analysis retains individual experts and equal weighting as explicit comparators. 
+
+B.3 Scope 
+
+The preceding properties justify the design but do not establish universal superiority. GeoACE can address task-level uncertainty over several controlled inductive biases and can reduce risk when their errors are complementary. It cannot identify effects under unmeasured confounding, recover unsupported counterfactuals, guarantee improvement over the best expert, or vary expert weights across covariate regions. These claims are therefore evaluated across repeated benchmark tasks rather than assumed from the construction. 
+
+# C Computational Construction of the Geometry Matrices 
+
+This section shows how overlap, outcome association, and measured treatment imbalance become the matrices in Equation (20). All quantities are estimated using only Ifit . We first standardize the covariates with fitting-subset means and standard deviations. A ridge-logistic model then estimates the treatment propensity ̂ ei for each observation. To limit extreme values, define ̂ eic =min {0.97 , max(0 .03 ,̂ ei)}. Observations with a propensity nearer one half receive greater overlap weight: 
+
+si =̂ eic (1 −̂ eic )
+
+n−1 
+
+> f
+> ∑
+> ℓ∈I fit ̂
+
+eℓc (1 −̂ eℓc ) , nf = |I fit |. (37) The denominator makes the average weight on the fitting subset equal to one. Below, xi ∈ Rp is the standardized covariate column vector, and sums without an explicit index range run over Ifit . The overlap-weighted mean is ¯ xs = ( ∑ 
+
+> i
+
+sixi)/(∑ 
+
+> i
+
+si), and the corresponding covariance is ̂
+
+Cov s(X) =  
+
+> ∑
+> i
+
+si(xi − ¯xs)( xi − ¯xs)⊤ 
+
+> ∑
+> i
+
+si
+
+. (38) We measure the association with the observed scalar outcome Yi by ̂ Cov s(X, Y ) = ( ∑ 
+
+> i
+
+si)−1 ∑ 
+
+> i
+
+si(xi−
+
+¯xs)( Yi − ¯Ys), where ¯Ys = ( ∑ 
+
+> i
+
+siYi)/(∑ 
+
+> i
+
+si). The notation ̂ Cov s(X, Y | T = t) applies the same calculation within treatment arm t, including arm-specific weighted means. These covariances divide by the sum of weights, as in the implementation. To make matrix components comparable in scale, we symmetrize each component A and apply 
+
+N (A) = 
+
+> {
+
+pA/ tr( A), tr( A) ≥ 10 −8,
+
+0, tr( A) < 10 −8. (39) Thus, the overlap matrix is the trace-normalized weighted covariance, Sov = N { ̂ Cov s(X)}.The imbalance matrices also require the mean and covariance of each treatment arm. Let 
+
+nt = ∑ 
+
+> i
+
+1(Ti = t) and ¯Xt = n−1 
+
+> t
+> ∑
+> i:Ti=t
+
+xi, and define Σt = 1max( nt − 1, 1) 
+
+> ∑
+> i:Ti=t
+
+(xi − ¯Xt)( xi − ¯Xt)⊤, t ∈ { 0, 1}. (40) 27 Unlike the outcome-association covariances above, these arm-specific moments use unit weights. GΦ-ACE measures outcome association across the fitting subset. With c =̂ Cov s(X, Y ), its outcome-utility matrix is SGY = γY N (cc ⊤). Its imbalance matrix instead measures the difference between arm means relative to within-arm variation: 
+
+SGB = N (dwd⊤ 
+
+> w
+
+), dw = ( ¯Σ + δB Ip)−1/2( ¯X1 − ¯X0), ¯Σ = (Σ 1 + Σ 0)/2. (41) Here γY scales outcome utility, while δB > 0 stabilizes the covariance scaling. AΦ-ACE allows outcome associations to differ by treatment arm. Let ct =̂ Cov s(X, Y | T = t). Its matrices are 
+
+SAY = γY N 
+
+> (1∑
+> t=0
+
+ptctc⊤
+
+> t
+> )
+
+,SAB = αμN (dd ⊤) + αΣN (DΣD⊤ 
+
+> Σ
+
+) + αeN (βeβ⊤ 
+
+> e
+
+), (42) where pt = nt/n f , d = ¯X1 − ¯X0, and DΣ = Σ 1 − Σ0. The vector βe ∈ Rp contains the non-intercept coefficients of the fitted ridge-logistic propensity model. The coefficients αμ, α Σ, α e weight the mean, covariance, and propensity-direction components of measured imbalance. For each geometry expert, we form 
+
+GU = Sov + SY + ηI p, GB = SB + ρI p, (43) and solve the symmetric generalized eigenproblem GU v = λG B v. For a returned eigenvector, 
+
+λ = Q(v) = v⊤GU v/ (v⊤GB v). Ranking eigenvalues from largest to smallest therefore favors directions with overlap-supported variation and, when included, outcome association relative to measured treatment-group separation. The first k = ⌈p/ 2⌉ eigenvectors form Vk.AΦ-ACE standardizes the projected scores using fitting-subset moments and concatenates them with the original standardized covariates, as in Equation (22). GΦ-ACE additionally whitens its projected scores before this concatenation. Let Z be its nf × k matrix of fitting-standardized projected scores, ¯Z its column means, and CZ = ( nf − 1) −1(Z − ¯Z)⊤(Z − ¯Z) its covariance. The ZCA step is 
+
+ZZCA = ( Z − ¯Z)( CZ + δW Ik)−1/2, δW = 10 −4. (44) The whitened columns are standardized once more using fitting-subset moments. AΦ-ACE does not use this whitening step. All fitted standardization, projection, and whitening operations are then applied unchanged to validation and test observations. Finally, OΦ-ACE omits outcome association, setting SOY = 0, and uses 
+
+SOB = αμN (dd ⊤) + αΣN (DΣD⊤ 
+
+> Σ
+
+) + αeN (βeβ⊤ 
+
+> e
+
+), αμ = αΣ = αe = 1 . (45) It therefore uses the same types of measured imbalance as AΦ-ACE but does not use outcomes to construct its geometry. Its retained half-dimensional projection replaces the original covariates on the anchor path rather than being concatenated with them; no ZCA whitening is applied. Only fitting-subset ( X, T ) enter this map. 
+
+# D Additional Results 
+
+D.1 Leave-One-Expert-Out Results 
+
+All contrasts use validation-only weight refitting and predictions locked before test truth is opened. Across the 1,235 tasks, the full and reduced systems therefore differ only in the available expert 28 ACIC2016 ACIC2017 IHDP100 IHDPA IHDPB NEWS TWINS JOBS                                    
+
+> Benchmark
+> ACE OW-ACE G -ACE A -ACE O -ACE
+> Removed expert -0.49 0.37 -0.81 -0.52 -0.12 -0.46 0.00 3.05 0.86 1.03 1.33 1.16 0.65 -0.87 0.02 -0.16 -0.13 0.21 0.45 -0.28 -0.39 -0.45 -0.19 0.65 0.17 0.04 0.23 -0.70 -0.34 -0.19 -0.21 0.23 3.83 2.58 1.66 3.01 1.95 3.46 0.57 -0.01 Leave-one-expert-out sensitivity of GeoACE
+> 3
+> 2
+> 1
+> 0123
+> Relative loss increase after removal (%)
+
+Figure 2: Benchmark-specific leave-one-expert-out sensitivity under the primary inverse-DR-risk selector. Each cell is the paired mean increase in the primary loss after removing one expert, divided by the full-ensemble mean loss. Positive values therefore favor retaining the expert. JOBS uses policy risk; the remaining benchmarks use √PEHE. Table 6: Benchmark-balanced relative loss of each control minus GeoACE. Positive values favor GeoACE. Intervals are descriptive 95% bootstrap intervals over the eight benchmark protocols. 
+
+Rule Relative loss (%) 95% interval 
+
+Equal-5 -0.12 [-0.36, 0.01] Best-DR 6.97 [ 4.08, 9.63] Convex-DR 3.69 [ 1.34, 5.94] R-stacking 3.30 [ 0.80, 6.16] Causal-Q 4.90 [ 2.27, 7.32] Ridge-DR -0.09 [-0.31, 0.10] 
+
+column and the resulting validation-frozen simplex weights. Paired Wilcoxon tests with within-benchmark Holm adjustment support a positive OΦ-ACE contribution on six of the seven PEHE benchmarks; ACIC2016, ACIC2017, IHDPA, IHDPB, NEWS, and TWINS remain below the 0.05 threshold. IHDP100 also has a positive paired-location test, although its bootstrap confidence interval for the mean absolute change crosses zero; we therefore treat that case as supportive but distribution-sensitive. No expert-removal contrast is significant on JOBS after adjustment. 
+
+D.2 Controls for the Aggregation Rule 
+
+This analysis holds the five expert prediction columns fixed and changes only the rule used to combine them. All rules use internal validation observations; their weights or selected expert are frozen before test truth is opened. The comparison therefore isolates aggregation behavior from expert training, architecture, and random initialization. Equal-5 assigns weight 1 /5 to each expert; Best-DR selects the smallest validation DR error; Convex-DR fits a simplex-constrained DR regression; R-stacking uses the residualized R-loss; Causal-Q uses the Q-aggregation objective; and Ridge-DR shrinks a DR regression toward uniform weights. Task-level Wilcoxon tests with Holm adjustment agree with the aggregate pattern but also expose regime dependence. GeoACE significantly improves on Best-DR in seven benchmarks, 29 ACIC2016 ACIC2017 IHDP100 IHDPA IHDPB NEWS TWINS JOBS 2
+
+> 0246810 12 14 Relative primary loss vs Equal-5 (%)
+> GeoACE aggregation controls on the same five frozen experts
+> GeoACE-inverse-DR Best-DR Convex-DR R-stacking Causal-Q Ridge-DR
+
+Figure 3: Aggregation-rule controls using the same five frozen experts. Values are benchmark-specific primary losses relative to Equal-5; negative values favor the indicated rule. GeoACE, Equal-5, and Ridge-DR form a tight cluster, whereas hard selection and several more flexible validation fits are less stable across protocols. Table 7: Complete out-of-sample √PEHE comparison. Lower is better; bold denotes the best result in each benchmark. 
+
+Method ACIC16 ACIC17 IHDP100 IHDPA IHDPB NEWS TWINS 
+
+BART 1.1418 0.5174 2.2985 0.8929 2.7530 2.2304 0.3117 CFRNet-MMD 1.5669 0.9673 0.9883 0.9183 2.7432 1.7400 0.3184 CFRNet-WASS 3.9804 2.1141 1.7064 0.8430 2.7050 3.0557 0.3246 CF-DML 1.6658 0.4265 3.8323 1.3728 3.4368 2.4439 0.3113 
+
+PairNet 3.1202 1.5311 2.0492 0.8136 2.4197 1.6685 0.3292 S-learner 1.5341 0.6062 3.3104 1.1044 3.2180 1.9041 0.3124 SubgroupTE 2.1409 1.0566 1.5852 0.8558 3.2099 1.7926 0.3251 TEDVAE 2.3805 1.2346 1.6359 0.6502 2.2298 1.6729 0.3138 TARNet 1.6005 0.8299 1.2820 1.0266 2.8909 1.7547 0.3160 T-learner 1.5031 0.6666 2.6787 1.0034 3.0653 1.8613 0.3198 X-learner 1.5338 0.6788 2.6464 1.0224 3.0528 1.8658 0.3207 GeoACE 1.7518 0.7990 0.6742 0.5195 2.0963 1.6707 0.3186 
+
+on Convex-DR in six, on R-stacking in five, and on causal Q-aggregation in six. NEWS favors Convex-DR and R-stacking, while the small differences among GeoACE, Equal-5, and Ridge-DR change sign across benchmarks. These paired tests are interpreted within benchmark; the benchmark bootstrap in Table 6 addresses the broader cross-protocol summary. Table 7 reports the complete test-set √PEHE matrix underlying the rank analysis. The table retains all methods rather than showing only per-benchmark leaders, making the strong interaction between method and benchmark explicit. 30 Table 8: Average ranks across the seven benchmarks in Table 7 and out-of-sample JOBS policy risk. Methods are ordered independently within each pair of columns; lower is better for both measures. 
+
+Seven-benchmark average rank JOBS policy risk Method Rank Method Risk 
+
+GeoACE 3.714 SubgroupTE 0.22475 
+
+BART 5.000 TARNet 0.22910 TEDVAE 5.143 X-learner 0.22926 CFRNet-MMD 5.286 T-learner 0.23113 TARNet 6.143 S-learner 0.23738 T-learner 6.857 GeoACE 0.23758 PairNet 6.857 PairNet 0.24215 X-learner 7.286 CF-DML 0.24250 S-learner 7.429 TEDVAE 0.24759 SubgroupTE 7.714 CFRNet-MMD 0.25214 CF-DML 8.000 CFRNet-WASS 0.25491 CFRNet-WASS 8.571 BART 0.26416 
+
+31
