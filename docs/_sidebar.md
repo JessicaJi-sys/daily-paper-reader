@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-09-26 <!--dpr-date:20260926-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/26/2609.28053v1-exact-quantile-balancing-and-load-error-injection-for-mixture-of-experts" data-sidebar-item="{&quot;title&quot;: &quot;Exact Quantile Balancing and Load-Error Injection for Mixture-of-Experts&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.28053v1-exact-quantile-balancing-and-load-error-injection-for-mixture-of-experts&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;ddi-moe&quot;}], &quot;evidence&quot;: &quot;混合专家路由、负载均衡与路由分数梯度&quot;}">Exact Quantile Balancing and Load-Error Injection for Mixture-of-Experts</a>
   * 2026-09-25 <!--dpr-date:20260925-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/25/2609.22554v1-the-ups-and-downs-of-backprop-weights" data-sidebar-item="{&quot;title&quot;: &quot;The Ups and Downs of Backprop Weights&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.22554v1-the-ups-and-downs-of-backprop-weights&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;ddi-moe&quot;}], &quot;evidence&quot;: &quot;分析专家混合路由与权重纠缠，关注模块的选择性复用&quot;}">The Ups and Downs of Backprop Weights</a>

@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-26",
+  "date": "2026-09-26",
+  "generated_at": "2026-09-26T22:27:16",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/26/2609.28053v1-exact-quantile-balancing-and-load-error-injection-for-mixture-of-experts",
+      "section": "quick",
+      "title_en": "Exact Quantile Balancing and Load-Error Injection for Mixture-of-Experts",
+      "authors": "Pit Neitemeier, Jiaze Li, Alessio Serra, Philipp Scholl, Sohir Maskey",
+      "date": "2026-09-23",
+      "pdf": "https://arxiv.org/pdf/2609.28053v1",
+      "score": "6.0",
+      "evidence": "混合专家路由、负载均衡与路由分数梯度",
+      "tldr": "MoE训练需兼顾全局与微批次局部负载均衡，但现有分布式分位数均衡仅用分片或近似全局分位数，token无关专家偏置也难以保障微批次均衡。本文提出精确分位数均衡EQB，以极低通信计算全局批次BF16精确分位数；并提出负载误差注入LEI，把局部负载误差直接注入路由器分数梯度。在7.5B参数MoE、最多500B token训练中，EQB改善全局均衡与下游性能，LEI改善局部均衡并优于GShard损失。该工作为MoE均衡提供了精确全局分位数与梯度级局部误差注入方案。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Mixture-of-Experts (MoE) training requires global load balance to prevent expert under-utilization and local balance for efficient expert-parallel execution. Existing distributed Quantile Balancing (QB) uses shard-dependent or approximate global quantiles, while token-independent expert biases cannot ensure microbatch-level balance. We introduce Exact Quantile Balancing (EQB), which computes exact global-batch BF16 quantiles with negligible communication, and Load-Error Injection (LEI), which injects local load errors directly into router-score gradients. On 7.5B-parameter MoEs trained for up to 500B tokens, EQB improves global balance and downstream performance over naive QB, while LEI improves local balance and outperforms the GShard loss at comparable quality.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
