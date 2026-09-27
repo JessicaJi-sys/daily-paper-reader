@@ -48,7 +48,7 @@
 <section class="dpr-home-dashboard-card dpr-home-report-card">
   <div class="dpr-home-dashboard-header">
     <div>
-      <span class="dpr-home-dashboard-kicker">2026-09-26</span>
+      <span class="dpr-home-dashboard-kicker">2026-09-27</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
     <strong class="dpr-home-dashboard-count">共 1 篇</strong>
@@ -58,7 +58,7 @@
     <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>0</dd></div>
     <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>1</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-09-26 22:27:15 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-09-27 22:28:16 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,7 +69,9 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>今日速读1篇，聚焦混合专家模型的量化负载均衡新方法。该论文提出精确分位数均衡与负载误差注入，或可缓解MoE训练中的专家负载不均问题，值得关注。普通读者可先看摘要中的方法示意图，判断是否与自身场景相关。</p>
+<p>今日扫读 1 篇论文，主题是说话人验证中的 MECT 模型（混合专家 + CNN-Transformer 网络），评分 6.0/10。</p>
+<p>值得留意的是它把 CNN 的局部特征与 Transformer 的全局建模通过“混合专家”结构结合，用于说话人验证，属于声纹识别方向的架构融合思路。</p>
+<p>普通读者若关注声纹/说话人识别，可先浏览该文的模型结构与实验对比部分，再决定是否深入精读。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -94,7 +96,7 @@
     <strong class="dpr-home-dashboard-count">1 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Exact Quantile Balancing and Load-Error Injection for Mixture-of-Experts">Exact Quantile Balancing and Load-Error Injection for Mixture-of-Experts</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="MECT: Mixture of Experts with CNN-Transformer Network for Speaker verification">MECT: Mixture of Experts with CNN-Transformer Network for Speaker verification</span></li></ul>
   </div>
   <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>1</strong></span></div>
 </section>

@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-09-27 <!--dpr-date:20260927-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/27/2609.24061v1-mect-mixture-of-experts-with-cnn-transformer-network-for-speaker-verification" data-sidebar-item="{&quot;title&quot;: &quot;MECT: Mixture of Experts with CNN-Transformer Network for Speaker verification&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.24061v1-mect-mixture-of-experts-with-cnn-transformer-network-for-speaker-verification&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;ddi-moe&quot;}], &quot;evidence&quot;: &quot;具备话语级与帧级粒度及稠密稀疏路由的MoE&quot;}">MECT: Mixture of Experts with CNN-Transformer Network for Speaker verification</a>
   * 2026-09-26 <!--dpr-date:20260926-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/26/2609.28053v1-exact-quantile-balancing-and-load-error-injection-for-mixture-of-experts" data-sidebar-item="{&quot;title&quot;: &quot;Exact Quantile Balancing and Load-Error Injection for Mixture-of-Experts&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.28053v1-exact-quantile-balancing-and-load-error-injection-for-mixture-of-experts&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;ddi-moe&quot;}], &quot;evidence&quot;: &quot;混合专家路由、负载均衡与路由分数梯度&quot;}">Exact Quantile Balancing and Load-Error Injection for Mixture-of-Experts</a>
