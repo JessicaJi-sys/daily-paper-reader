@@ -51,14 +51,14 @@
       <span class="dpr-home-dashboard-kicker">2026-09-29</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">共 1 篇</strong>
+    <strong class="dpr-home-dashboard-count">共 9 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
-    <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>0</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>1</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>2 次</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>1</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>8</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-09-29 00:07:09 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-09-29 23:02:22 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,9 +69,9 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>今日只速读1篇、无精读，主角是免训练LoRA组合的System-One路由方案《JevSoup》。</p>
-<p>唯一可看点是它把LoRA组合的“选哪几个、怎么拼”交给路由决策、免去额外训练，但6.0分属中等，结论尚待验证。</p>
-<p>普通读者先记个方向即可，不必急着复现，等更高分或后续工作再深入。</p>
+<p>今日完成9篇论文日报：精读1篇、速读8篇，最高分为《Function Over Form: Distributional Orthogonalization in Mixture-of-Experts with Replica Expert Mechanism》（8.0/10）。</p>
+<p>最值得关注MoE专家机制与参数高效微调方向，速读中《Distribution-Conditioned Task Routing for Class-Incremental Learning》和《Guided Uncertainty-Aware Robust Domain Transfer》均获7.0/10。</p>
+<p>普通读者建议先读8.0分精读文，再按兴趣速览任务路由与鲁棒域迁移两篇，MoE微调文可作延伸。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -80,12 +80,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">精读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">0 篇</strong>
+    <strong class="dpr-home-dashboard-count">1 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p class="dpr-home-dashboard-empty">今日暂无推荐。</p>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Function Over Form: Distributional Orthogonalization in Mixture-of-Experts with Replica Expert Mechanism">Function Over Form: Distributional Orthogonalization in Mixture-of-Experts with Replica Expert Mechanism</span></li></ul>
   </div>
-
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>1</strong></span></div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-skim-card">
   <div class="dpr-home-dashboard-header">
@@ -93,12 +93,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">速读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">1 篇</strong>
+    <strong class="dpr-home-dashboard-count">8 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="JevSoup: System-One Routing for Training-Free LoRA Composition">JevSoup: System-One Routing for Training-Free LoRA Composition</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Distribution-Conditioned Task Routing for Class-Incremental Learning">Distribution-Conditioned Task Routing for Class-Incremental Learning</span></li><li><span class="dpr-home-dashboard-paper-title" title="Guided Uncertainty-Aware Robust Domain Transfer">Guided Uncertainty-Aware Robust Domain Transfer</span></li><li><span class="dpr-home-dashboard-paper-title" title="From Experts to Sub-experts: Fine-grained Parameter-Efficient Fine-Tuning for MoE LLMs">From Experts to Sub-experts: Fine-grained Parameter-Efficient Fine-Tuning for MoE LLMs</span></li></ul>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>1</strong></span></div>
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>8</strong></span></div>
 </section>
 </div>
 

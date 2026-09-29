@@ -1,56 +1,331 @@
 {
   "mode": "standard",
-  "generated_at": "2026-09-29T00:06:40.769424+00:00",
+  "generated_at": "2026-09-29T22:56:40.664935+00:00",
   "stats": {
     "mode": "standard",
     "tag_count": 1,
-    "deep_divecandidates": 0,
+    "deep_divecandidates": 1,
     "deep_cap": 6,
-    "deep_selected": 0,
-    "quick_candidates": 1,
+    "deep_selected": 1,
+    "quick_candidates": 7,
     "quick_skim_target": 11,
-    "quick_selected": 1
+    "quick_selected": 7
   },
-  "deep_dive": [],
-  "quick_skim": [
+  "deep_dive": [
     {
-      "id": "2609.30922v1",
+      "id": "2609.32398v1",
       "source": "arxiv",
-      "title": "JevSoup: System-One Routing for Training-Free LoRA Composition",
-      "abstract": "Building adaptable AI systems requires effective coordination of specialized capabilities across diverse tasks. Low-rank adaptation (LoRA) enables modular expertise, but existing routing approaches may require auxiliary data, additional training, or autoregressive decoding. We propose JevSoup, a training-free framework separating System One expert routing from System Two execution. Using only the input and expert descriptions, Jev selects two experts through structured probabilities. JevSoup retains the leading expert's update, projects the second onto the orthogonal complement of the first update's row space, and combines them with equal weights. Across 14 PorTAL tasks and three Qwen3 scales, JepSoup achieves absolute gains of up to 1.19\\% in task-macro and 1.21\\% in sample-micro accuracy over the strongest evaluated external baselines. Our code is available at https://github.com/Leowang980/JevSoup.",
+      "title": "Function Over Form: Distributional Orthogonalization in Mixture-of-Experts with Replica Expert Mechanism",
+      "abstract": "The scaling of LLMs increasingly relies on MoE architectures to decouple active computation from total parameter count. However, the efficacy of MoE is often constrained by expert collapse and representation redundancy, both leading to underutilization of model capacity. To address these challenges, this paper proposes Distributional Orthogonalization Loss (DO-loss), an auxiliary regularization that shifts the focus from static weight diversity to dynamic routing behavior. By representing each expert's token assignment history as a high-dimensional binary load signature, DO-loss penalizes signature overlap to prevent expert collapse while encouraging functional specialization. To align this algorithmic design with system efficiency, we further introduce the Replica Expert Mechanism (REM), which improves load balancing through a two-tiered strategy: adjusting replica expert placement at the global-batch level and performing real-time token dispatching at the micro-batch level. Empirical evaluations demonstrate that our method outperforms the evaluated routing algorithms on downstream tasks for both 4.8BA0.5B and 30BA3B MoE models, while maintaining comparable training efficiency.",
       "authors": [
-        "Xiuying Wang",
-        "Jiahua Cheng",
-        "Shuotian Li",
-        "Yufan Cheng",
-        "Bowen Deng",
-        "Zhexuan Bai",
-        "Yichen Li"
+        "Jinfan He",
+        "Yunzhuo Liu",
+        "Kai Zhang",
+        "Weidong Han",
+        "Key",
+        "Rayying"
       ],
       "primary_category": "cs.AI",
       "categories": [
         "cs.AI"
       ],
-      "published": "2026-09-25T07:37:28+00:00",
-      "link": "https://arxiv.org/pdf/2609.30922v1",
+      "published": "2026-09-26T09:19:16+00:00",
+      "link": "https://arxiv.org/pdf/2609.32398v1",
       "tags": [
         "keyword:DDI-MOE",
         "query:DDI-MOE"
       ],
-      "llm_score": 6.0,
-      "llm_evidence_en": "Training-free dynamic expert routing and composition of LoRA experts",
-      "llm_evidence_cn": "免训练的动态专家路由与LoRA专家组合",
-      "llm_evidence": "免训练的动态专家路由与LoRA专家组合",
-      "canonical_evidence": "免训练的动态专家路由与LoRA专家组合",
-      "llm_tldr_en": "JevSoup proposes a training-free expert routing framework selecting LoRA experts via structured probabilities and combining them with orthogonal projection for modular multi-task composition.",
-      "llm_tldr_cn": "现有LoRA专家组合的路由方法常需辅助数据、额外训练或自回归解码，限制了模块化能力的灵活协调。本文提出JevSoup免训练框架，将系统一的专家路由与系统二执行解耦，仅依据输入与专家描述用结构化概率选取两个专家，并将次优专家的更新投影到首个专家行空间的正交补后等权合并。在14个PorTAL任务与三个Qwen3规模上取得最高1.19%的任务宏平均提升，为无需训练的模块化专家组合提供了新思路。",
-      "llm_tldr": "现有LoRA专家组合的路由方法常需辅助数据、额外训练或自回归解码，限制了模块化能力的灵活协调。本文提出JevSoup免训练框架，将系统一的专家路由与系统二执行解耦，仅依据输入与专家描述用结构化概率选取两个专家，并将次优专家的更新投影到首个专家行空间的正交补后等权合并。在14个PorTAL任务与三个Qwen3规模上取得最高1.19%的任务宏平均提升，为无需训练的模块化专家组合提供了新思路。",
+      "llm_score": 8.0,
+      "llm_evidence_en": "MoE distributional orthogonalization loss for dynamic routing and expert specialization",
+      "llm_evidence_cn": "面向动态路由与专家专门化的MoE分布正交化损失",
+      "llm_evidence": "面向动态路由与专家专门化的MoE分布正交化损失",
+      "canonical_evidence": "面向动态路由与专家专门化的MoE分布正交化损失",
+      "llm_tldr_en": "This paper proposes Distributional Orthogonalization Loss (DO-loss) for MoE, representing each expert's token assignment history as a binary load signature and penalizing overlap to prevent expert collapse and encourage functional specialization via dynamic routing.",
+      "llm_tldr_cn": "MoE虽能解耦激活计算与参数规模，却常受专家坍塌与表示冗余困扰，导致容量利用不足。该文提出分布正交化损失DO-loss，将各专家的token分配历史编码为高维二值负载签名，惩罚签名重叠以抑制坍塌并促进功能专门化，并配合副本专家机制对齐系统实现。该方法无需人工定义专家语义即可让专家按分布自动分工，与动态路由和专家专门化需求高度契合。",
+      "llm_tldr": "MoE虽能解耦激活计算与参数规模，却常受专家坍塌与表示冗余困扰，导致容量利用不足。该文提出分布正交化损失DO-loss，将各专家的token分配历史编码为高维二值负载签名，惩罚签名重叠以抑制坍塌并促进功能专门化，并配合副本专家机制对齐系统实现。该方法无需人工定义专家语义即可让专家按分布自动分工，与动态路由和专家专门化需求高度契合。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.34503v1",
+      "source": "arxiv",
+      "title": "Distribution-Conditioned Task Routing for Class-Incremental Learning",
+      "abstract": "Parameter-efficient adaptation enables continual learners to acquire task-specific knowledge through compact model updates while maintaining strong within-task performance. However, class-incremental inference requires each input to be classified among all classes seen so far without access to its task identity. For learners equipped with task-specific parameter-efficient modules, this introduces a critical task-routing challenge beyond catastrophic forgetting. We study post-hoc task routing without retraining the learner or introducing a separately trained router. Such training-free inference-time calibration remains comparatively underexplored in parameter-efficient class-incremental learning. We identify three sources of routing error (feature-level, task-level, and class-level misalignment) and propose Feature Distribution Calibration (FDC). Its three components address these misalignments: Task Subspace Filtering (TSF) suppresses feature components outside each task's principal subspace, Residual Likelihood Calibration (RLC) evaluates the typicality of its subspace residual, and Prototype Affinity Calibration (PAC) measures compatibility with the task's class prototypes. Experiments demonstrate plug-and-play applicability to eight parameter-efficient class-incremental methods using a shared encoder. With one component configuration selected per method across all five benchmarks, FDC improves final accuracy in all 40 method-dataset pairs by 4.39 percentage points on average. Enabling all components improves 35 of the 40 pairs, with an average gain of 4.45 points. When applied to a simple baseline, FDC achieves strong overall performance.",
+      "authors": [
+        "Longhuan Xu",
+        "Zhipeng Zhou",
+        "Wei Ji",
+        "Chunyan Miao",
+        "Peilin Zhao",
+        "Lijun Zhang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-28T07:48:15+00:00",
+      "link": "https://arxiv.org/pdf/2609.34503v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "distribution-conditioned task routing and inference-time router calibration",
+      "llm_evidence_cn": "分布条件化任务路由与推理时路由器校准",
+      "llm_evidence": "分布条件化任务路由与推理时路由器校准",
+      "canonical_evidence": "分布条件化任务路由与推理时路由器校准",
+      "llm_tldr_en": "Parameter-efficient class-incremental learners must route inputs to task-specific modules without task identity; the paper studies training-free post-hoc routing, identifies three routing-error sources, and proposes distribution-conditioned inference-time calibration.",
+      "llm_tldr_cn": "参数高效持续学习虽能通过紧凑更新获取任务知识，但类增量推理时输入需在未知任务身份下归类到所有已见类别，带来任务路由难题。本文研究无需重训练学习器、也不额外训练路由器的后验任务路由，并识别出特征级等三类路由误差来源。所提出的分布条件化推理时校准方法提升了参数高效类增量学习的路由准确性与稳定性，为动态专家路由提供借鉴。",
+      "llm_tldr": "参数高效持续学习虽能通过紧凑更新获取任务知识，但类增量推理时输入需在未知任务身份下归类到所有已见类别，带来任务路由难题。本文研究无需重训练学习器、也不额外训练路由器的后验任务路由，并识别出特征级等三类路由误差来源。所提出的分布条件化推理时校准方法提升了参数高效类增量学习的路由准确性与稳定性，为动态专家路由提供借鉴。",
       "llm_tags": [
         "query:ddi-moe"
       ],
       "matched_query_tag": "query:ddi-moe",
       "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
       "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.25655v1",
+      "source": "arxiv",
+      "title": "From Experts to Sub-experts: Fine-grained Parameter-Efficient Fine-Tuning for MoE LLMs",
+      "abstract": "As large language models (LLMs) scale rapidly, dense full-parameter adaptation becomes increasingly expensive, motivating sparse and modular architectures such as Mixture-of-Experts (MoE) models. This shift raises a key question for parameter-efficient fine-tuning (PEFT): at what granularity should parameters be selected and updated? Existing PEFT methods such as LoRA operate on predefined weight matrices, while expert-level sparse tuning methods update entire selected experts. However, we observe that activated experts are internally sparse, with only a small fraction of intermediate channels strongly responding to downstream tasks, indicating that expert-level adaptation is still too coarse. We propose NSFT (Neural Sub-expert Fine-Tuning), a fine-grained PEFT framework that refines MoE adaptation from experts to sub-experts. NSFT decomposes each expert along the intermediate dimension into structured channel groups and selects task-relevant sub-experts by combining routing importance with intra-expert activation saliency. To optimize sparse partial updates, NSFT further introduces learning-rate scaling and dynamic gradient scaling to compensate for the reduced effective update magnitude. Experiments on OLMoE and Ling-mini-2.0 across challenging domain-specific tasks and general benchmarks show that NSFT consistently outperforms representative PEFT and expert-level sparse tuning baselines, while using substantially fewer trainable parameters and preserving competitive general capability. These results suggest that sub-expert-level adaptation is a more precise and efficient PEFT paradigm for MoE LLMs.",
+      "authors": [
+        "Zhentao Tan",
+        "Chang Liu",
+        "Yao Liu",
+        "Yue Wu",
+        "Jieping Ye"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-22T04:04:53+00:00",
+      "link": "https://arxiv.org/pdf/2609.25655v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "fine-grained expert specialization and parameter selection granularity in MoE models",
+      "llm_evidence_cn": "MoE模型中细粒度专家专门化与参数选择粒度",
+      "llm_evidence": "MoE模型中细粒度专家专门化与参数选择粒度",
+      "canonical_evidence": "MoE模型中细粒度专家专门化与参数选择粒度",
+      "llm_tldr_en": "MoE fine-tuning at expert granularity is too coarse; NSFT observes activated experts are internally sparse and selects sub-expert channels, enabling finer specialization for downstream tasks.",
+      "llm_tldr_cn": "随着大模型规模增长，稠密全参数微调代价高昂，MoE等稀疏模块化架构受到关注，但现有方法在选择与更新的参数粒度上仍显粗糙。作者观察到被激活的专家内部同样稀疏，仅少量中间通道对下游任务强响应，据此提出NSFT子专家级微调方法，在专家内部进行更细粒度的参数选择与更新。该工作表明专家级适配过粗，细粒度专门化能提升参数高效微调效果。其关于专家专门化与路由粒度的洞察可迁移至药物对建模中的动态专家机制设计。",
+      "llm_tldr": "随着大模型规模增长，稠密全参数微调代价高昂，MoE等稀疏模块化架构受到关注，但现有方法在选择与更新的参数粒度上仍显粗糙。作者观察到被激活的专家内部同样稀疏，仅少量中间通道对下游任务强响应，据此提出NSFT子专家级微调方法，在专家内部进行更细粒度的参数选择与更新。该工作表明专家级适配过粗，细粒度专门化能提升参数高效微调效果。其关于专家专门化与路由粒度的洞察可迁移至药物对建模中的动态专家机制设计。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.35654v1",
+      "source": "arxiv",
+      "title": "Guided Uncertainty-Aware Robust Domain Transfer",
+      "abstract": "Artificial intelligence models deployed as clinical decision support tools often suffer substantial performance degradation over time and across institutions due to covariate shift, concept drift, and cross-system heterogeneity. Fully retraining complex models is frequently infeasible, particularly in EHR settings where labeled outcome data are scarce and regulatory constraints limit model modification. We propose GUARD (Guided and Uncertainty-Aware Robustness to Domain shift), a unified statistical framework for updating an existing deployed model using limited labeled target data and multiple heterogeneous source populations while guarding against future distributional shifts. GUARD formulates robust multi-source transfer learning as a semi-supervised, adversarial optimization problem anchored at the current model, and employs double machine learning with cross-fitting to obtain debiased, efficient estimates that leverage abundant unlabeled target covariates. It then constructs an uncertainty-aware, guided group DRO estimator that combines source and target information while accounting for sampling variability in the source models. Our framework jointly provides principled robustness to domain shift, efficient semi-supervised estimation, and valid statistical inference for multi-source transfer of clinical prediction models. We demonstrate the utility of GUARD via extensive simulation experiments and a real world application to predicting future disease activity in rheumatoid arthritis from EHR data spanning more than a decade. GUARD recalibrates a pretrained model with only a small number of labeled records per year and remains accurate over multi-year horizons where target-only and standard transfer estimators degrade sharply.",
+      "authors": [
+        "Xin Xiong",
+        "Zijian Guo",
+        "Tianxi Cai"
+      ],
+      "primary_category": "stat.ME",
+      "categories": [
+        "stat.ME",
+        "stat.ML"
+      ],
+      "published": "2026-09-28T17:20:38+00:00",
+      "link": "https://arxiv.org/pdf/2609.35654v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "robust multi-source transfer under distribution shift",
+      "llm_evidence_cn": "分布偏移下的鲁棒多源迁移",
+      "llm_evidence": "分布偏移下的鲁棒多源迁移",
+      "canonical_evidence": "分布偏移下的鲁棒多源迁移",
+      "llm_tldr_en": "Deployed clinical models degrade under covariate shift and concept drift; GUARD updates a deployed model using limited target labels and heterogeneous source populations while guarding against future distributional shifts.",
+      "llm_tldr_cn": "部署于临床决策支持的模型常因协变量偏移、概念漂移与跨系统异质性而性能大幅下降，而完整重训练往往不可行。本文提出GUARD框架，利用有限的带标签目标数据与多个异构源人群更新已有模型，并将鲁棒多源迁移学习表述为半监督对抗优化问题，以抵御未来分布偏移。该方法在标注稀缺、监管受限的电子健康记录场景下提升了模型的稳健性。其为药物级OOD泛化与分布感知的稳健迁移提供了可迁移的方法学基础。",
+      "llm_tldr": "部署于临床决策支持的模型常因协变量偏移、概念漂移与跨系统异质性而性能大幅下降，而完整重训练往往不可行。本文提出GUARD框架，利用有限的带标签目标数据与多个异构源人群更新已有模型，并将鲁棒多源迁移学习表述为半监督对抗优化问题，以抵御未来分布偏移。该方法在标注稀缺、监管受限的电子健康记录场景下提升了模型的稳健性。其为药物级OOD泛化与分布感知的稳健迁移提供了可迁移的方法学基础。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "drug-level out-of-distribution generalization under distribution shift",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.30751v1",
+      "source": "arxiv",
+      "title": "Backbone-Adaptive Evidence Routing for Robust Pairwise LLM Judging",
+      "abstract": "Pairwise language-model judges can gather evidence through direct comparison, reasoning, or reference-based verification, but no single protocol is best across benchmarks and judge backbones. We introduce Backbone-Adaptive Evidence Routing (BAER), which adapts the evidence mechanism while preserving candidate symmetry: swapping the two responses may reverse the preference but cannot change its strength. BAER separates each expert's signed preference from candidate-invariant reliability and builds three symmetric heads: evidence stacking, reliability-based expert routing, and candidate-blind reference verification. Development data select one head for each benchmark--backbone condition, and that choice is frozen before testing. Across four benchmarks and two 8B judge backbones, BAER achieves the highest test accuracy among the compared methods in all eight conditions, with full prediction coverage and gains of 0.87--7.32 points over the strongest external baseline. The results show that adapting how evidence is gathered is more reliable than fixing one judging protocol everywhere.",
+      "authors": [
+        "Zeyan Li",
+        "Jing Peng",
+        "Jianfeng Xu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-09-25T03:26:52+00:00",
+      "link": "https://arxiv.org/pdf/2609.30751v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "reliability-based expert routing adaptively selecting the evidence mechanism",
+      "llm_evidence_cn": "基于可靠性的专家路由自适应选择证据机制",
+      "llm_evidence": "基于可靠性的专家路由自适应选择证据机制",
+      "canonical_evidence": "基于可靠性的专家路由自适应选择证据机制",
+      "llm_tldr_en": "BAER addresses that no single evidence protocol is best across benchmarks and judge backbones, adapting the evidence mechanism while preserving candidate symmetry via evidence stacking, reliability-based expert routing, and candidate-blind reference verification.",
+      "llm_tldr_cn": "针对成对语言模型评判中直接比较、推理与参考验证等证据机制在不同基准与评判主干上表现各异的问题，论文提出主干自适应证据路由BAER。方法将各专家的带符号偏好与候选不变的可靠性分离，构建证据堆叠、基于可靠性的专家路由与候选盲参考验证三个对称头，并由开发数据为每个基准与主干条件选定一个头并在测试前冻结。该工作为样本级动态专家路由提供了可迁移机制。",
+      "llm_tldr": "针对成对语言模型评判中直接比较、推理与参考验证等证据机制在不同基准与评判主干上表现各异的问题，论文提出主干自适应证据路由BAER。方法将各专家的带符号偏好与候选不变的可靠性分离，构建证据堆叠、基于可靠性的专家路由与候选盲参考验证三个对称头，并由开发数据为每个基准与主干条件选定一个头并在测试前冻结。该工作为样本级动态专家路由提供了可迁移机制。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.32467v1",
+      "source": "arxiv",
+      "title": "Bison: Cross-Dataset Learning for Unseen-Compound Perturbation Prediction",
+      "abstract": "Predicting transcriptional responses to unseen compounds is limited by fragmented chemical coverage and heterogeneous experimental platforms and gene panels. To assess molecular generalization across these settings, we build on Chem-PerturBridge to benchmark eight datasets with 16,771 compounds, withholding test compounds from every training dataset. This comparison reveals that high overall response agreement can coexist with weak prediction of drug-specific differences, despite reproducible signals across repeated measurements. To exploit complementary chemical supervision while targeting these differences, we introduce Bison: a shared gene representation connects native panels, while two discrete diffusion models compose context-dependent responses with molecular deviations learned through matched drug-contrast supervision. A single Bison model jointly trained across all eight datasets achieves the highest mean overall-response and drug-contrast Pearson correlations on the full benchmark in comparison with 11 methods trained independently per dataset. Compared with dataset-specific training of the same architecture, joint training increases mean drug-contrast correlation by 27.4\\%, with gains across all eight datasets and improvements in overall response prediction. These results demonstrate how matched drug contrasts turn complementary screens into shared molecular supervision for unseen-drug response prediction while preserving native gene measurements.",
+      "authors": [
+        "Yunfan Liu",
+        "Kasra Ghorbani",
+        "Yufei Huang",
+        "Zicheng Liu",
+        "Jiangbin Zheng",
+        "Jingbo Zhou",
+        "Shaorong Chen",
+        "Chang Yu",
+        "Stan Z. Li"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-26T10:58:44+00:00",
+      "link": "https://arxiv.org/pdf/2609.32467v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "unseen-compound generalization across datasets under distribution shift",
+      "llm_evidence_cn": "分布偏移下未见化合物跨数据集泛化",
+      "llm_evidence": "分布偏移下未见化合物跨数据集泛化",
+      "canonical_evidence": "分布偏移下未见化合物跨数据集泛化",
+      "llm_tldr_en": "Bison benchmarks cross-dataset transcriptional response prediction for unseen compounds, showing high overall agreement but weak drug-specific difference prediction, and proposes a shared gene representation with diffusion composition.",
+      "llm_tldr_cn": "针对未见化合物转录响应预测受化学覆盖碎片化与实验平台异质性制约的问题，作者基于Chem-PerturBridge构建含16771个化合物的八数据集基准，并把测试化合物从所有训练集中剔除以评估分子泛化。提出的Bison用共享基因表示连接原生panel，并以两个离散扩散模型组合上下文相关响应。结果显示总体响应一致性高，但对药物特异性差异的预测仍偏弱。该工作为分布偏移下的未见化合物泛化提供了基准与建模思路。",
+      "llm_tldr": "针对未见化合物转录响应预测受化学覆盖碎片化与实验平台异质性制约的问题，作者基于Chem-PerturBridge构建含16771个化合物的八数据集基准，并把测试化合物从所有训练集中剔除以评估分子泛化。提出的Bison用共享基因表示连接原生panel，并以两个离散扩散模型组合上下文相关响应。结果显示总体响应一致性高，但对药物特异性差异的预测仍偏弱。该工作为分布偏移下的未见化合物泛化提供了基准与建模思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "drug-level out-of-distribution generalization under distribution shift",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.33838v1",
+      "source": "arxiv",
+      "title": "ChemOPD: Multi-Teacher On-Policy Distillation for Multi-Task Chemical Reasoning",
+      "abstract": "Large language models are increasingly expected to support diverse chemical reasoning capabilities within a unified model. One approach is to develop specialized capabilities separately and consolidate them through multi-teacher on-policy distillation, but this raises two questions: how should specialization be organized, and how should specialist guidance be integrated? We introduce ChemOPD, which addresses both. We estimate task affinities from supervised fine-tuning gradients and solve a constrained mixed-integer program(MIP) to construct partially overlapping specialist groups. During distillation, we retain a generalist teacher trained on all tasks so that specialist guidance supplements rather than replaces its supervision. Our anchor-residual objective gradually increases the routed specialist's contribution on student-generated responses. On ChemCoTBench, affinity-guided specialization produces task-dependent gains over the generalist teacher and improves several capabilities beyond semantic task grouping. Yet stronger teacher-side performance does not automatically yield stronger students: with the same specialists and routes, anchor-residual OPD improves most reported metrics over specialist-only distillation and realizes a larger share of the available teacher gains. These results highlight specialization and capability integration as connected but distinct design problems in chemical reasoning.",
+      "authors": [
+        "Yaoyao Xu",
+        "Xinjian Zhao",
+        "Xiaozhuang Song",
+        "Xuemin Chen",
+        "Tianshu Yu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CL"
+      ],
+      "published": "2026-09-27T18:43:38+00:00",
+      "link": "https://arxiv.org/pdf/2609.33838v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "organizing specialization and integrating specialist guidance without manually defined semantics",
+      "llm_evidence_cn": "自动组织专家分工并整合专家指导，无需人工定义语义",
+      "llm_evidence": "自动组织专家分工并整合专家指导，无需人工定义语义",
+      "canonical_evidence": "自动组织专家分工并整合专家指导，无需人工定义语义",
+      "llm_tldr_en": "ChemOPD studies how to organize specialization and integrate specialist guidance for multi-task chemical reasoning, estimating task affinities from fine-tuning gradients and solving a constrained MIP to form overlapping specialist groups while retaining a generalist teacher.",
+      "llm_tldr_cn": "面向统一模型需支持多种化学推理能力的问题，论文研究如何组织能力专精并整合专家指导。方法从监督微调梯度估计任务相似度，求解带约束的混合整数规划以构造部分重叠的专家分组，并在蒸馏时保留通才教师，使专家指导作为补充而非替代。该框架无需人工定义专家语义即可自动形成专精结构，为多源知识的动态整合提供了可借鉴思路。",
+      "llm_tldr": "面向统一模型需支持多种化学推理能力的问题，论文研究如何组织能力专精并整合专家指导。方法从监督微调梯度估计任务相似度，求解带约束的混合整数规划以构造部分重叠的专家分组，并在蒸馏时保留通才教师，使专家指导作为补充而非替代。该框架无需人工定义专家语义即可自动形成专精结构，为多源知识的动态整合提供了可借鉴思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.35502v1",
+      "source": "arxiv",
+      "title": "Structured Latent Modeling for Supervised Multimodal Information Decomposition",
+      "abstract": "Multimodal prediction relies on diverse forms of evidence: information repeated across modalities, cues specific to a single source, and complex cross-modal dependencies that emerge only when inputs are considered together. While recent methods promote richer interactions, they lack a principled way to isolate these target-relative contributions within learned continuous representations. We introduce a framework that applies contrastive or masked objectives at intermediate layers, coupled with source-wise invertible normalizing flows and a supervised, low-rank latent variable model. This architecture explicitly factorizes the joint distribution into shared task-relevant variation, modality-specific predictive variation, and task-irrelevant dependence. Drawing connections to prior multimodal learning assumptions, our approach evaluates how modalities independently and jointly contribute to the target. Ultimately, this framework unites intermediate representation learning with structured likelihood-based guidance, offering a practical latent-variable lens for characterizing continuous multimodal interactions. Empirically, we demonstrate the effectiveness of our approach across diverse multimodal benchmarks, showing robust improvements in predictive performance.",
+      "authors": [
+        "Wanting Huang",
+        "Sanvesh Srivastava",
+        "Weiran Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-28T16:04:24+00:00",
+      "link": "https://arxiv.org/pdf/2609.35502v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "factorizing shared, source-specific and task-irrelevant variation for stable representation",
+      "llm_evidence_cn": "分解共享、来源特异与任务无关变化以获得稳定表征",
+      "llm_evidence": "分解共享、来源特异与任务无关变化以获得稳定表征",
+      "canonical_evidence": "分解共享、来源特异与任务无关变化以获得稳定表征",
+      "llm_tldr_en": "The paper addresses the lack of principled separation among shared, source-specific, and cross-modal contributions in multimodal prediction, proposing intermediate-layer contrastive or masked objectives with source-wise invertible normalizing flows and a supervised low-rank latent model.",
+      "llm_tldr_cn": "针对多模态预测中难以原则性地区分共享信息、单源特有线索与跨模态依赖的问题，论文提出结构化潜变量框架。方法在中间层施加对比或掩码目标，结合逐源可逆归一化流与监督式低秩潜变量模型，将联合分布显式分解为共享任务相关变化、模态特异预测变化与任务无关依赖。该分解为异质知识源贡献不均时的表征学习与不变泛化提供了可迁移工具。",
+      "llm_tldr": "针对多模态预测中难以原则性地区分共享信息、单源特有线索与跨模态依赖的问题，论文提出结构化潜变量框架。方法在中间层施加对比或掩码目标，结合逐源可逆归一化流与监督式低秩潜变量模型，将联合分布显式分解为共享任务相关变化、模态特异预测变化与任务无关依赖。该分解为异质知识源贡献不均时的表征学习与不变泛化提供了可迁移工具。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "invariant representation learning for stable drug generalization",
+      "matched_requirement_id": "req-5",
       "selection_source": "fresh_fetch",
       "quick_tier": "6"
     }

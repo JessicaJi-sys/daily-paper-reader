@@ -1,0 +1,347 @@
+Title: Backbone-Adaptive Evidence Routing for Robust Pairwise LLM Judging
+
+URL Source: https://arxiv.org/pdf/2609.30751v1
+
+Published Time: Mon, 28 Sep 2026 00:30:00 GMT
+
+Number of Pages: 5
+
+Markdown Content:
+## BACKBONE-ADAPTIVE EVIDENCE ROUTING FOR ROBUST PAIRWISE LLM JUDGING 
+
+## Zeyan Li 1, Jing Peng 1, Jianfeng Xu 1∗
+
+1 Shanghai Jiao Tong University 
+
+ABSTRACT 
+
+Pairwise language-model judges can gather evidence through direct comparison, reasoning, or reference-based verification, but no single protocol is best across benchmarks and judge backbones. We intro-duce Backbone-Adaptive Evidence Routing (BAER), which adapts the evidence mechanism while preserving candidate symmetry: swap-ping the two responses may reverse the preference but cannot change its strength. BAER separates each expert’s signed preference from candidate-invariant reliability and builds three symmetric heads: evi-dence stacking, reliability-based expert routing, and candidate-blind reference verification. Development data select one head for each benchmark–backbone condition, and that choice is frozen before test-ing. Across four benchmarks and two 8B judge backbones, BAER achieves the highest test accuracy among the compared methods in all eight conditions, with full prediction coverage and gains of 0.87–7.32 points over the strongest external baseline. The results show that adapting how evidence is gathered is more reliable than fixing one judging protocol everywhere. 
+
+Index Terms — LLM-as-a-judge, pairwise evaluation, evidence routing, preference evaluation 
+
+1. INTRODUCTION 
+
+Pairwise language-model judges make it practical to compare model outputs at a scale that would otherwise require human raters, and they are now used for model evaluation, translation, and open-ended chat [1, 2]. Given an instruction and two candidate responses, the judge states which response is better. Platforms and meta-benchmarks increasingly rely on this two-response interface [3, 4, 5]. Choosing how to use the interface is more involved, because a protocol that works well for one task or judge backbone, that is, the language model that performs the judging, may not be the strongest choice for another. We call the combination of a benchmark and a judge backbone a condition .Studies that evaluate the judges themselves have found recurring weaknesses. Judges can be fooled by adversarially constructed re-sponses [6], often prefer whichever response appears in a favored position [7, 8], and are swayed by surface features such as response length or the tokens used to read out the decision [9, 10, 11]. Pairwise judgments can also disagree with an independently constructed basis for evaluation [12]. A correction designed for one condition may therefore discard useful evidence in another. The problem concerns both how to judge and which evidence to trust in each condition. Figure 1 illustrates two reasons why the useful evidence mech-anism can change. Experts may disagree, or they may agree on an incorrect answer. In the first case, selecting a reliable expert can resolve the disagreement. In the second, combining the same judg-ments may be insufficient, and a reference constructed without seeing either candidate provides another basis for verification. 
+
+> ∗
+
+Corresponding author. Instruction:  Compute the derivative of x³ − 3x.                   
+
+> Response A: 3x² − 3. Response B: The derivative is 3x − 3.
+> (a) Fixed evidence (b) BAER
+> JudgeBench · Llama 3.1-8B
+> JudgeBench · Qwen 3-8B
+> Conflicting
+> experts
+> AB
+> Direct: Ais better.
+> Reasoning: Bis better.
+> Which expert
+> to trust?
+> Invariant expert routing
+> Reliability selects
+> the direct expert.
+> A
+> Agreement can
+> still be wrong
+> BB!
+> Direct: Bis better.
+> Reasoning: Bis better. BCandidate-blind reference
+> Solve first: d(x³ − 3x)/dx = 3x² − 3.
+> Verify A and B separately.
+> A
+> Swap the responses → same answer preferred.
+
+Fig. 1 . Motivation for condition-adaptive evidence. Conflicting experts and shared errors call for different mechanisms, illustrated by BAER’s invariant expert routing and candidate-blind reference verification. Head assignments match the deployed JudgeBench conditions; examples are schematic. Adapting the evidence must not make its selection depend on how the candidates are ordered. A judge whose answer changes when the two responses are swapped is measuring display order rather than quality, so any adaptive mechanism must remain blind to that order. We call each raw judging procedure, such as direct comparison or chain-of-thought, a protocol , and its output an expert signal . We separate that signal into a signed preference, which records which response the expert favors and how strongly, and a candidate-invariant reliability, which records how trustworthy the expert is on the current pair regardless of order. Swapping the responses reverses the first and leaves the second unchanged. This separation underlies BAER and its three alternative evidence paths, which we call heads . A stack combines the expert signals, a router selects one expert for each pair, and reference verification checks the candidates against a separately constructed solution. Development data determine which head to deploy for each condition. The deployed head remains fixed at test time, while expert selection within the routing head varies from pair to pair. Existing methods mainly improve a fixed judging protocol. One line changes how a comparison is elicited through explicit reasoning, rubric-style evaluation, or repeated sampling [13, 14, 15]. A second keeps the protocol fixed and calibrates a predetermined decision rule against known biases [10, 11]. A third aggregates a fixed panel of judges [16]. Selective methods decide when to trust a judgment and when to abstain [17], with related work providing statistical tools for risk-controlled selection [18]. None of these addresses the case in which the useful evidence mechanism itself changes across conditions. Aggregation cannot repair an error shared by all pairwise experts, while abstention gives up coverage exactly on uncertain pairs. BAER instead asks which symmetric evidence head should be deployed in each condition while still producing a prediction for every pair. Two adaptation scales are deliberately separated. Head selection arXiv:2609.30751v1 [cs.AI] 25 Sep 2026 is condition-level : development data choose stacking, routing, or reference verification for a benchmark–backbone pair, and the choice is frozen before test labels are observed. Only the routing head adapts 
+
+within a condition, selecting an expert for each pair from candidate-invariant reliability features. This distinction prevents test-time head shopping and prevents the router from exploiting display order. It also makes failures interpretable: a weak condition can require a different evidence source even when individual experts remain useful on particular pairs. We make three contributions. First, we formulate evidence adap-tation in a way that preserves candidate symmetry. Second, we imple-ment three evidence heads that select heads at the condition level and experts at the sample level. Third, we empirically study when each head helps. Across eight benchmark–backbone conditions, BAER achieves the highest test accuracy among the compared methods, with margins over the strongest external baseline ranging from +0.87 to +7.32 points. The development experiments further show when stacking, routing, and reference verification provide useful evidence. 
+
+2. BAER 
+
+BAER adapts how preference evidence is gathered while treating the two candidates symmetrically. As shown in Figure 2, all heads share one output format, a signed score whose sign picks the winner and whose magnitude measures confidence, and swapping the candi-dates flips that sign. We first define the score interface and evidence representation, then describe the three heads and the deployment rule. For instruction q and candidates a, b , let x = ( q, a, b ) and encode the benchmark preference as y ∈ {− 1, +1 }, where +1 means that a
+
+is preferred. All BAER heads return a signed score through the same interface, 
+
+ph(A | x) = σ(sh(x)) , byh = 2 ⊮[sh(x) ≥ 0] − 1, (1) where ⊮[·] is the indicator function. Candidate exchange is T x =(q, b, a ). We require 
+
+sh(T x ) = −sh(x), ph(A | T x ) = 1 − ph(A | x). (2) Swapping the responses may flip the judgment, but it does not change its strength. 
+
+2.1. Symmetric evidence representation 
+
+The expert bank contains nine judging protocols. These are direct bidirectional judging, self-consistency [15], chain-of-thought [13], rubric-based judging, score-then-choose judging, PRePair [12], PriDe [10], CalibraEval [11], and an internal deliberate A versus B expert with constrained extraction. Each expert may be run under both display orders, with every probability mapped back to the canoni-cal candidate a, so a probability always refers to the same response regardless of display position. Let ukm (x) be the m-th such proba-bility for expert k, and let Mk be the number of runs. Its directional confidence and order instability are 
+
+pk = 1
+
+MkMkX
+
+> m=1
+
+ukm , δk = max  
+
+> m
+
+ukm − min  
+
+> m
+
+ukm . (3) Here pk is the expert’s average preference for a, and δk is large for an expert whose answer moves across repeated or swapped runs. We form raw and reliability-shrunk log odds, 
+
+zk = logit( pk ), ezk = zk
+
+1 + 4 δk
+
+. (4) The shrinkage downweights experts that order instability identifies as unreliable. Missing evidence is assigned pk = .5, hence zero signed evidence. Under exchange, pk 7 → 1 − pk and δk is unchanged, so both zk and ezk negate. With ¯z = K−1 P 
+
+> k
+
+zk , the stack feature map is 
+
+ϕ(x) = {zk , ezk }Kk=1 , {⊮[g(x) = c]¯ z}c∈G 
+
+,ϕ(T x ) = −ϕ(x). (5) Here G is the set of subset and task-type categories, such as chat, safety, reasoning, and math. The second block interacts the mean evidence with indicators for these categories, letting the stack weight experts differently across task types. These categories are candidate-invariant and are fitted without test labels. 
+
+2.2. Backbone-adaptive evidence heads Evidence stacking. The stack is a logistic model over these features. Each dimension is divided by its training RMS rℓ, computed over the training split, so that experts with naturally larger scores do not dominate. With the sign-augmented set D±, obtained by adding 
+
+(−ϕi, −yi) for every (ϕi, y i), BAER fits 
+
+wλ = arg min 
+
+> w
+
+1
+
+|D ±|
+
+X
+
+> (v,t )∈D ±
+
+ℓ
+
+
+
+tw ⊤(v/r )
+
+
+
++ λ
+
+2 ∥w∥22,sstk (x) = w⊤ 
+
+> λ
+
+(ϕ(x)/r ), ℓ(u) = log(1 + e−u).
+
+(6) This augmentation forces the learned model to be odd in ϕ, and the stack has no intercept, so antisymmetry holds by construction. We select λ ∈ { 10 , 1, 0.1, 0.01 , 0.001 } on calibration data and refit on all non-test rows. The stack feature dimension is 44 for RewardBench, 36 for JudgeBench, 20 for HH-RLHF, and 28 for UltraFeedback, with selected λ values 0.001 /0.01 , 10 /0.01 , 0.01 /0.01 , and 0.001 /0.01 
+
+for Qwen and Llama respectively. 
+
+Candidate-invariant expert routing. Averaging can erase a strong specialist with votes from experts that know nothing about the pair. Routing replaces the average with a learned selector. For pair 
+
+i and expert k, let byik be the binary prediction of expert k, and let 
+
+tik = ⊮[byik = yi] state whether that expert is correct. An auxiliary model Rθ estimates each expert’s reliability on the current pair: 
+
+Rθ (ρik ) ≈ P (tik = 1 | ρik ),k∗(x) = arg max  
+
+> k
+
+Rθ (ρk (x)) ,srte (x) = zk∗(x)(x).
+
+(7) The vector ρik contains expert identity, absolute confidence, cross-expert agreement, δk , confidence-distribution statistics, symmetric response-length and structure features, and subset identity. All entries are candidate-invariant, so ρk (T x ) = ρk (x). Exchange preserves the selected expert k∗ and negates only the selected score zk∗ . Logistic regression and tree ensembles are compared by deterministic five-fold cross-validation; both deployed routers select a depth-5 random forest [19] with minimum leaf size 8 and refit it on all non-test rows. JudgeBench/Llama also uses an isolated pointwise expert with score 
+
+spnt = logit P (Y | q, a ) − logit P (Y | q, b ), (8) where each probability is normalized over constrained one-token 
+
+Y /N outputs. Neither verifier sees the other candidate, and this pointwise expert is available only as an additional candidate for the routing head. 
+
+Candidate-blind reference verification. When all experts make the same error, no combination or selection of their judgments can Pairwise input  Symmetric evidence  Three alternative heads  Frozen deployment  
+
+> Benchmark
+> d
+> Backbone
+> j
+> Instruction q
+> Candidate a Candidate b
+> Candidate exchange T
+> (q, a, b) ↔ (q, b, a)
+> Inputs to reference head: q, a, b
+> The solver sees q only
+
+Judging evidence    
+
+> Direct Reasoning Calibrated
+> ab
+
+Pairwise expert judgments       
+
+> Original
+> (q, a, b)
+> Swapped
+> (q, b, a)
+> u₁,1 u₁,2 Expert 1
+> u₂,1 u₂,2 Expert 2
+> u₃,1 u₃,2 Expert 3
+> u₄,1 u₄,2 Expert 4
+> ⋮⋮
+> Canonical alignment
+> pₖ = meanₘ uₖₘ
+> δₖ = maxₘ uₖₘ − minₘ uₖₘ
+> Preference
+> zₖ
+> Reliability
+> ρₖ
+> zₖ = logit(pₖ) ρₖ(Tx) = ρₖ(x)
+
+Evidence stacking 
+
+> Signed features
+> z =
+> ⎡ z₁ ⎤
+> ⎢ z₂ ⎥
+> ⎢ ⋮ ⎥
+> ⎣ zₖ ⎦
+> Reliability
+> shrinkage
+> z / (1 + 4δ)
+> Weight vector
+> w =
+> ⎡ w₁ ⎤
+> ⎢ w₂ ⎥
+> ⎣ wₖ ⎦
+
+Σ  
+
+> φ(Tx) = −φ(x)
+> sstk = w (φ/r) ᵀ
+> No intercept
+
+Invariant expert routing     
+
+> Reliability scores
+> ρₖ arg max
+> k* = arg maxₖ Rθ(ρₖ)
+> k* Selected expert
+> zₖ*
+> Preference z ₖ
+> srte = zₖ*
+> Reliability is invariant to candidate exchange
+
+Reference verification   
+
+> q only Solver Reference r
+> Candidate a
+> Candidate b
+> Verifier
+> Verifier
+> logit v(a)
+> logit v(b)
+
+−  
+
+> +
+> −
+> sref = logit v(a)
+> − logit v(b)
+> Development data
+> D
+> Choose one head
+> c = (d, j)
+> Freeze per
+> condition
+
+h(c)     
+
+> (frozen)
+> sstk
+> srte
+> sref
+> sBAER (x; c)
+> Candidate decision
+
+a b
+
+> Candidate symmetry
+> s(Tx) = −s(x)
+> p(A | Tx) = 1 − p(A | x)
+
+Fig. 2 . Overview of BAER. Development data freeze one evidence head per benchmark–backbone condition. Stacking combines signed protocol features, routing selects one expert per pair using candidate-invariant reliability, and reference verification solves the instruction without seeing either candidate, then checks each independently. All heads return a candidate-symmetric signed score. recover. Reference verification adds evidence of a different kind by comparing each candidate with an independently constructed solution. JudgeBench/Qwen 3-8B uses three calls. The judge first sees only q
+
+and produces a reference solution r, then evaluates each candidate independently under the same instruction and reference, with one-token Y/N constrained decoding. Let πl(t) = P (l | q, r, t ) for 
+
+l ∈ { Y, N }. Then 
+
+v(t) = πY (t)
+
+πY (t) + πN (t) ,sref (x) = logit v(a) − logit v(b).
+
+(9) The solver never sees either candidate, and each verifier sees exactly one, so swapping candidates negates the score. The prompt, 4096-token solution budget, constrained decoding, and aggregation are frozen before test. 
+
+2.3. Condition-level selection and deployment 
+
+Recall that a condition c = ( d, j ) combines a benchmark d and a judge backbone j. All pairs in a condition use the same head, so deployment never uses test information per example. Stacking is the initial choice, and development evaluations assess alternatives where it performs poorly. Cross-validation selects the expert router, while a head that relies on reference verification must pass its selection and calibration margins. The resulting condition sets Cstk , Crte , and Cref 
+
+are disjoint and fixed for final scoring: 
+
+sBAER (x; c) = 
+
+
+
+sstk (x), c ∈ C stk ,srte (x), c ∈ C rte ,sref (x), c ∈ C ref .
+
+(10) Because the condition does not depend on candidate order, c(T x ) = 
+
+c(x). Since every branch is odd, sBAER (T x ; c) = −sBAER (x; c).Within a routing condition, k∗(x) in Eq. 7 can vary across pairs, but candidate exchange preserves both the head and the expert. 
+
+3. EXPERIMENTS 3.1. Setup 
+
+We use four preference benchmarks, RewardBench filtered [4] (chat, safety, reasoning), JudgeBench [5] (knowledge, reasoning, math, cod-ing), HH-RLHF [20] (helpfulness and harmlessness), and UltraFeed-back [21] (highest- versus lowest-rated non-tied completions). Their selection/calibration/test sizes are 588/1,234/1,163, 136/238/246, 1,717/3,335/3,500, and 12,598/25,406/25,599, respectively, with orig-inal labels. The judge backbones are Qwen 3-8B [22] and Llama 3.1-8B Instruct [23], run locally with greedy decoding except for five-trial self-consistency. Every pair is judged in both response orders and mapped back to the canonical frame, so accuracy reflects content rather than display position. We compare the eight external proto-cols of Section 2 on matched test IDs under their native inference procedures. This measures attainable accuracy without controlling for inference cost, and BAER’s expert portfolio uses more calls than a single-pass judge. The metric is full-partition pairwise accuracy, 
+
+Acc = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+⊮[byi = yi]. (11) Missing or unparsed outputs count as errors. We report prediction coverage, defined as the fraction of test pairs for which a method produces a prediction, and use the exact two-sided McNemar test [24] against each column’s strongest external baseline. Development used only development data, first for stacking, then for routing, and finally for reference verification when JudgeBench/Qwen remained weak. Each new head was tuned on the selection and calibration partitions and run once on test inputs with labels withheld. 
+
+3.2. Overall effectiveness 
+
+BAER achieves the highest accuracy in every Table 1 column, with margins from +0.87 to +7.32 points (mean +4.90). The strongest exter-nal method changes across columns. CalibraEval leads six columns, while chain-of-thought and PriDe lead the two JudgeBench columns. This is direct evidence that no fixed protocol dominates, which is the Table 1 . Full-test pairwise accuracy (%) on the benchmark–backbone columns. Bold marks the best result, underline marks the strongest external baseline, and † marks a significant exact two-sided McNemar comparison against the strongest baseline in that column ( p < . 05 ). Method RewardBench JudgeBench HH-RLHF UltraFeedback Qwen 3-8B Llama 3.1-8B Qwen 3-8B Llama 3.1-8B Qwen 3-8B Llama 3.1-8B Qwen 3-8B Llama 3.1-8B Direct bidirectional 81.9 75.2 58.5 49.6 60.1 56.8 91.2 62.3 Self-consistency 81.9 75.5 58.5 50.0 60.1 57.1 91.2 62.3 Chain-of-thought 82.3 62.9 66.7 37.4 59.6 53.3 89.2 56.5 Rubric-based 40.7 66.7 31.3 24.8 51.9 50.5 45.0 49.4 Score-then-choose 42.3 68.9 36.6 34.1 49.1 52.8 45.0 52.0 PRePair 69.3 62.2 53.3 44.7 54.8 54.1 70.8 63.1 PriDe 78.8 73.3 57.7 50.4 57.1 57.7 89.3 63.7 CalibraEval 88.7 93.4 56.9 48.4 87.3 92.5 97.6 87.7 
+
+BAER (ours) 91.6 † 99.3 † 70.7 57.7 91.1 † 99.7 † 98.5 † 94.9 †
+
+variation BAER exploits through condition-specific heads. Six of the eight gains are significant at the 5% level under an exact two-sided McNemar test [24]. The two non-significant comparisons are the two JudgeBench columns. BAER also produces a prediction for every test pair. In contrast, chain-of-thought has coverage between 74.8% and 100% across columns. 
+
+3.3. Contributions of the evidence heads 
+
+Stacking provides the broad foundation. Routing and reference ver-ification improve the three conditions where it is weaker. Column counts track the progression. The constrained A/B expert alone leads 1/8 of the columns, the stack-based system 5/8, the routing-augmented version 7/8, and full BAER 8/8. Selecting the routing head raises JudgeBench/Llama from 47.6% to 57.7% and UltraFeedback/Qwen from 97.0% to 98.5%. Replacing the previous router with reference verification raises JudgeBench/Qwen from 60.2% to 70.7%. The transfer behavior explains this division of roles. Six stacks remain within 1.5 points from calibration to test, while the two JudgeBench stacks drop 9.5 and 9.1 points. The harder JudgeBench pairs therefore need evidence of a different kind. Routing is itself condition-sensitive. The former JudgeBench/Qwen router gained 4.8 out-of-fold points but reached only 60.2% on test, and simple confi-dence switching and subset lookup also fail. An any-expert oracle, which uses the correct label to select the best expert per pair and so measures the available headroom, reaches 95.4%/96.2%. The correct judgments are present inside the expert bank. Identifying them from reliability features, however, remains difficult. 
+
+3.4. From selection to calibration 
+
+A development head advances only if its gains survive two gates, a small selection split and a larger calibration split. The JudgeBench development experiments in Figure 3 show why both are needed. The 128-example screening runs do not pass the selection gate. Claim-graph verification improves by +2.2 points for Llama on selection, then reverses to -14.3 on calibration. Independent pointwise like-lihood improves by +5.9 points on selection, then reverses to -5.0 on calibration. Candidate-blind reference verification is the Qwen head that clears both gates, with gains of +3.7/+6.3 points. Advance-ment is decided by accuracy margin, not by significance. The cor-responding McNemar p-values at these partition sizes are .551/.096. The deployed solution budget remains 4096 tokens; 82/116 selec-tion/calibration solutions reach this limit. Two further 128-example screening studies test broader replacements. CalibraEval’s full fourth CF/Orbit Anchor/ Audit Claim graph Pointwise Reference    
+
+> −15
+> −10
+> −50510
+> Accuracy gap (percentage points)
+> -7.8 -3.9 -14.7 -3.7 +3.7 -0.8 -6.3 +2.2 +5.9
+> Not evaluated
+> (a) Selection results
+> Qwen 3-8B Llama 3.1-8B Claim-graph verification Independent pointwise likelihood Candidate-blind reference verification
+> +2.2 +5.9 +3.7 -14.3 -5.0 +6.3
+> (b) Selection vs. calibration
+> Selection Calibration
+
+Fig. 3 . JudgeBench semantic-head development. Accuracy gaps are relative to the strongest external baseline on matched IDs; zero denotes parity. (a) Selection results for the best variant per family (n = 128 ; other heads use n = 136 and are named in (b)). CF = counterfactual reconciliation, Orbit = complete orbit, Anchor = blind anchor, Audit = independent pointwise audit. (b) Selection and calibration ( n = 238 ) for the three advancing heads. Only candidate-blind reference verification retains a positive gap; the Llama reference head was not evaluated. orbit, a variant that expands the calibration space, wins only for Qwen on JudgeBench (+1.6), losing 0.8–38.3 points elsewhere. 
+
+4. CONCLUSION 
+
+We present BAER, a judging framework that adapts the evidence mechanism to each benchmark and judge backbone while preserving candidate symmetry. It separates each expert’s signed preference from candidate-invariant reliability and builds three heads on that separation: stacking, routing, and candidate-blind reference verifica-tion. Across four benchmarks and two 8B judge backbones, BAER achieves the highest accuracy in all conditions, with margins of +0.87 to +7.32 points over the strongest external baseline and a prediction for every test pair. The experiments show why adaptation matters: stacks transfer well on most conditions, routing helps when specialist judgments can be identified from invariant reliability, and reference verification supplies new evidence when the pairwise expert bank shares an error. The gains come with additional inference cost, and condition-level deployment assumes that the benchmark family and judge backbone are known in advance. Future work should extend head selection to unseen conditions and reduce cost through distilla-tion, expert pruning, cached references, or conditional early exits. 5. REFERENCES 
+
+[1] Cheng-Han Chiang and Hung-yi Lee, “Can large language models be an alternative to human evaluations?,” in Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , 2023, pp. 15607–15631. [2] Lianmin Zheng et al., “Judging LLM-as-a-judge with MT-Bench and chatbot arena,” in Advances in Neural Information Processing Systems , 2023, vol. 36, pp. 46595–46623. [3] Wei-Lin Chiang et al., “Chatbot arena: An open platform for evaluating LLMs by human preference,” in Proceedings of the 41st International Conference on Machine Learning , 2024, vol. 235 of Proceedings of Machine Learning Research , pp. 8359–8388. [4] Nathan Lambert et al., “RewardBench: Evaluating reward models for language modeling,” in Findings of the Association for Computational Linguistics: NAACL 2025 , 2025, pp. 1755– 1797. [5] Sijun Tan et al., “JudgeBench: A benchmark for evaluating LLM-based judges,” in International Conference on Learning Representations , 2025. [6] Zhiyuan Zeng, Jiatong Yu, Tianyu Gao, Yu Meng, Tanya Goyal, and Danqi Chen, “Evaluating large language models at eval-uating instruction following,” in International Conference on Learning Representations , 2024. [7] Peiyi Wang et al., “Large language models are not fair eval-uators,” in Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , 2024, pp. 9440–9450. [8] Lin Shi, Chiyu Ma, Wenhua Liang, Xingjian Diao, Weicheng Ma, and Soroush Vosoughi, “Judging the judges: A systematic study of position bias in LLM-as-a-judge,” in Proceedings of the 14th International Joint Conference on Natural Language Processing and the 4th Conference of the Asia-Pacific Chapter of the Association for Computational Linguistics , 2025, pp. 292–314. [9] Yann Dubois, Percy Liang, and Tatsunori B. Hashimoto, “Length-controlled AlpacaEval: A simple way to debias auto-matic evaluators,” in First Conference on Language Modeling ,2024. [10] Chujie Zheng, Hao Zhou, Fandong Meng, Jie Zhou, and Min-lie Huang, “Large language models are not robust multiple choice selectors,” in International Conference on Learning Representations , 2024. [11] Haitao Li et al., “CalibraEval: Calibrating prediction distri-bution to mitigate selection bias in LLMs-as-judges,” in Pro-ceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , 2025, pp. 16537–16552. [12] Hawon Jeong, ChaeHun Park, Jimin Hong, Hojoon Lee, and Jaegul Choo, “The comparative trap: Pairwise comparisons am-plifies biased preferences of LLM evaluators,” in Proceedings of the 8th BlackboxNLP Workshop: Analyzing and Interpreting Neural Networks for NLP , 2025, pp. 79–108. [13] Jason Wei et al., “Chain-of-thought prompting elicits reasoning in large language models,” in Advances in Neural Information Processing Systems , 2022, vol. 35, pp. 24824–24837. [14] Yang Liu, Dan Iter, Yichong Xu, Shuohang Wang, Ruochen Xu, and Chenguang Zhu, “G-Eval: NLG evaluation using GPT-4 with better human alignment,” in Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , 2023, pp. 2511–2522. [15] Xuezhi Wang et al., “Self-consistency improves chain of thought reasoning in language models,” in International Con-ference on Learning Representations , 2023. [16] Pat Verga et al., “Replacing judges with juries: Evaluating LLM generations with a panel of diverse models,” arXiv preprint arXiv:2404.18796 , 2024. [17] Sher Badshah, Ali Emami, and Hassan Sajjad, “SCOPE: Se-lective conformal optimized pairwise LLM judging,” arXiv preprint arXiv:2602.13110 , 2026. [18] Anastasios N. Angelopoulos, Stephen Bates, Emmanuel J. Cand` es, Michael I. Jordan, and Lihua Lei, “Learn then test: Calibrating predictive algorithms to achieve risk control,” The Annals of Applied Statistics , vol. 19, no. 2, pp. 1641–1662, 2025. [19] Leo Breiman, “Random forests,” Machine Learning , vol. 45, no. 1, pp. 5–32, 2001. [20] Yuntao Bai, Andy Jones, Kamal Ndousse, et al., “Training a helpful and harmless assistant with reinforcement learning from human feedback,” arXiv preprint arXiv:2204.05862 , 2022. [21] Ganqu Cui et al., “UltraFeedback: Boosting language models with scaled AI feedback,” in Proceedings of the 41st Inter-national Conference on Machine Learning , 2024, vol. 235 of 
+
+Proceedings of Machine Learning Research , pp. 9722–9744. [22] An Yang, Anfeng Li, Baosong Yang, et al., “Qwen3 technical report,” arXiv preprint arXiv:2505.09388 , 2025. [23] Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, et al., “The Llama 3 herd of models,” arXiv preprint arXiv:2407.21783 ,2024. [24] Quinn McNemar, “Note on the sampling error of the difference between correlated proportions or percentages,” Psychometrika ,vol. 12, no. 2, pp. 153–157, 1947.

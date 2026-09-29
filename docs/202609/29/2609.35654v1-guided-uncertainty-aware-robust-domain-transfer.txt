@@ -1,0 +1,1905 @@
+Title: Guided Uncertainty-Aware Robust Domain Transfer
+
+URL Source: https://arxiv.org/pdf/2609.35654v1
+
+Published Time: Tue, 29 Sep 2026 04:29:35 GMT
+
+Number of Pages: 33
+
+Markdown Content:
+# Guided Uncertainty-Aware Robust Domain Transfer 
+
+Xin Xiong 1, Zijian Guo 2, Tianxi Cai 1,31Harvard T.H. Chan School of Public Health, Boston, MA, USA 
+
+> 2
+
+Center for Data Science, Zhejiang University, Zhejiang, China 
+
+> 3
+
+Harvard Medical School, Boston, MA, USA 
+
+Abstract 
+
+Artificial intelligence models deployed as clinical decision support tools often suffer substantial performance degradation over time and across institutions due to covariate shift, concept drift, and cross-system heterogeneity. Fully retraining complex models is frequently infeasible, particularly in EHR settings where labeled outcome data are scarce and regulatory constraints limit model modification. We propose GUARD (Guided and Uncertainty-Aware Robustness to Domain shift), a unified statistical framework for updating an existing deployed model using limited labeled target data and multiple heterogeneous source populations while guarding against future distributional shifts. GUARD formulates robust multi-source transfer learning as a semi-supervised, adversarial optimization problem anchored at the current model, and employs double machine learning with cross-fitting to obtain debiased, efficient estimates that leverage abundant unlabeled target covariates. It then constructs an uncertainty-aware, guided group DRO estimator that combines source and target information while accounting for sampling variability in the source models. Our framework jointly provides principled robustness to domain shift, efficient semi-supervised estimation, and valid statistical inference for multi-source transfer of clinical prediction models. We demonstrate the utility of GUARD via extensive simulation experiments and a real world application to predicting future disease activity in rheumatoid arthritis from EHR data spanning more than a decade. GUARD recalibrates a pretrained model with only a small number of labeled records per year and remains accurate over multi-year horizons where target-only and standard transfer estimators degrade sharply. 
+
+1arXiv:2609.35654v1 [stat.ME] 28 Sep 2026 1 Introduction 
+
+The integration of artificial intelligence (AI) into clinical care has reached a pivotal juncture: AI-driven decision support tools are increasingly approved by the U.S. Food and Drug Administration (FDA) as Software as a Medical Device (Muehlematter et al. 2023). Commonly trained on electronic health record (EHR) data, these systems support tasks including risk stratification, early diagnosis, and personalized treatment. Yet ensuring their sustained effectiveness after deployment remains challenging (Abulibdeh et al. 2025). Most clinical AI models experience substantial effectiveness reductions within years of initial deployment (Vela et al. 2022), an “aging” phenomenon that can jeopardize patient safety and erode clinical trust. Naive solutions such as frequent retraining are often infeasible due to computational costs. In addition, AI algorithms approved as medical devices operate under regulatory frameworks that constrain how and when models may be retrained or modified, making it unclear how to properly maintain, update, and consistently evaluate and report their post-marketing performance (Muralidharan et al. 2024). Performance degradation in EHR-based algorithms primarily stems from two often intertwined forms of drift: covariate shift, when feature distributions change due to evolving populations or varying health systems, and concept drift, when feature-outcome relationship shifts due to shifts such as updated clinical guidelines. Changes in coding systems, clinical practice, or disruptions such as the COVID pandemic can simultaneously cause both types of shift, compounding the challenge of long-term model reliability (Vela et al. 2022). Beyond such temporal instability, cross-institutional heterogeneity driven by differing coding standards, practices, and patient demographics, introduces a further dimension of distributional shift that limits model transportability across environments. These challenges are especially acute in EHR-based clinical settings, where labeled outcome data are costly to curate (Muralidharan et al. 2024). The scarcity of labeled data makes full retraining even less feasible, especially for complex models with a large number of parameters. A potentially more effective approach to updating AI models is through stable post-processing, where an existing model is refined using a limited amount of newly acquired labeled target-domain data alongside data from multiple related but heterogeneous source populations, representing, for example, historical time epochs from the same institution or patient cohorts from other health systems. During the updating process, it is also critical to adopt a drift-aware principle to ensure that the updated model is more robust to future distribution shifts. Transfer learning provides a natural paradigm for leveraging heterogeneous source populations to improve prediction on a data-scarce target domain (Laparra et al. 2021). Recent statistical contributions in transfer learning (Li et al. 2022, Tian & Feng 2023, Li et al. 2023, e.g.) have rigorously formulated this idea. The existing literature typically requires identifying transferable sources, those with model parameters sufficiently similar to the target, while excluding others to prevent negative transfer. In practice, however, this notion of proximity may be overly restrictive. Individual sources may be highly heterogeneous and each differs substantially from the target, yet collectively there may exist a mixture of the sources that approximates the target well. Such a source-mixture proximity perspective allows the target to borrow information from multiple sources without requiring each individual source to be close to the target. In addition, the standard transfer learning methods do not offer robustness against future shifts in the target distribution, leaving the 2re-trained model vulnerable to continued drift beyond the current target snapshot. Group distributional robust optimization (DRO) offers an alternative framework motivated by this same robustness concern (Meinshausen & B¨ uhlmann 2015, Sagawa et al. 2019, Guo 2023). For classification, Guo, Wang, Hu & Bach (2025) formulate the corresponding problem under cross-entropy loss and develop optimization, statistical convergence, and inference theory. Kim et al. (2026) extend conditional-mixture DRO to allow both adversarial source mixtures and Wasserstein perturbations of scarce target covariates, although their theory centers on a surrogate formulation rather than statistical guarantees or inference. Unlike transfer learning, which conditions on a fixed and observed target population, group DRO was designed for settings where no labeled data from the future deployement environment is available, and robustness is sought preemptively over the class of plausible future target populations formed from mixtures of the observed sources. Rather than restricting attention to transferable sources, DRO minimizes the worst-case expected loss over a pre-specified uncertainty set, often defined through convex combinations of source conditional distributions. While these methods provide valuable worst-case guarantees, they can be overly conservative and sacrifice accuracy on a specific future target. To resolve the tension between target-specific accuracy and distributional robustness, Xiong et al. (2023) introduced Guided Adversarial Robust Transfer (GART), which uses a small amount of labeled target data to construct a smaller transferable uncertainty class for robust prediction on the observed target and nearby populations. Related approaches have further explored domain adaptation optimized for robustness in mixture populations (Zhan et al. 2024, Mo et al. 2024). Mansour et al. (2021) construct predictors under different mixtures of the source distributions and use limited target labels to select the one that performs best on the observed target. Wegel et al. (2026) frame multi-source transfer through weak monotonicity, using source risks to restrict target adaptation to selecting or hedging among predictors on the source Pareto frontier. These approaches use target information to guide selection or restrict the robust class, but they do not address semi-supervised target-guided transfer, where abundant unlabeled target covariates are available. They also typically treat source risks or source predictors as fixed, rather than accounting for heterogeneous source-estimation uncertainty. Recent work has begun to study semi-supervised variants of related robust or multi-objective problems. Awasthi et al. (2024) study semi-supervised group DRO for sparse-group settings, using unlabeled data and pseudo-labeling from informative dense groups to improve min–max performance across observed groups. Their framework relies on a pairwise similarity condition: for each sparse group, some dense group must have an optimal or near-optimal predictor that performs well on that sparse group. Relatedly, Wegel et al. (2025) study semi-supervised multi-objective learning, showing that for Bregman losses, unlabeled data can reduce labeled sample complexity through pseudo-labeling. However, their objective is to learn Pareto-optimal trade-offs across observed tasks, rather than to guide transfer to a current or future target population. Thus, existing semi-supervised multi-source robust learning methods do not address the setting where both PX and PY |X may differ across sources and the target, the working model may be misspecified, and and transferability may arise only through mixtures of heterogeneous sources. In this paper, we introduce GUARD (Guided and Uncertainty-Aware Robustness to Domain 3shift), a unified statistical framework for robust multi-source transfer learning with valid inference. GUARD is formulated as a semi-supervised, multi-source adversarial robust optimization problem that takes the current deployed model f0pXq as its initialization with local update as β0f0pXq` βT 
+
+> 1
+
+X.It leverages both a small labeled sample and a large pool of unlabeled covariates from target domain as well as partially labeled data from L source populations. For estimation, GUARD uses double machine learning (DML) with cross-fitting to obtain debiased and efficient estimators of target-projected source coefficients, allowing flexible nuisance function estimators and leveraging unlabeled target data. It then constructs an uncertainty-aware robust combination of source and target models via a guided group DRO criterion, which explicitly incorporates source-specific estimation uncertainty. For inference, we introduce a resampling procedure to account for variations in both the estimated source–target coefficients library and the learned robust weights. Together, these contributions make GUARD, to our knowledge, the first framework to provide simultaneously: 1) robust transfer from multiple heterogeneous sources anchored to the current deployed model; 2) efficient semi-supervised estimation leveraging unlabeled target covariates; 3) uncertainty-aware source aggregation that accounts for heterogeneous source precision; and 4) valid statistical inference for robust transfer learning estimators. The rest of the paper is organized as follows. Section 2 introduces the multi-source semi-supervised transfer setting and defines the target-projected source parameters. Section 3 presents the GUARD estimation procedure and resampling-based inference procedure for GUARD. Section 4 establishes transferability, estimation, and inference guarantees. Section 5 evaluates GUARD in simulations under future generalization and current-target transfer settings. Section 6 applies GUARD to temporally robust disease-activity prediction in rheumatoid arthritis using longitudinal EHR data. We conclude with discussion in Section 7. 
+
+## 2 GUARD Population Framework 
+
+We first define the target-projected source parameters and the population GUARD objective. 
+
+2.1 Notations and data setting 
+
+Let rLs “ t 1, . . . , L u and rLs` “ t 0u Y r Ls, where ℓ “ 0 denotes the target population and ℓ P r Ls
+
+denotes the sources. For each ℓ P r Ls`, let Ppℓq 
+
+> X
+
+denote the covariate distribution, Ppℓq  
+
+> Y|X
+
+the conditional distribution of Y | X, and Ppℓq the joint law for source ℓ. We write 
+
+Y pℓq “ mℓpXpℓqq ` ϵpℓq, where Epϵpℓq | Xpℓqq “ 0, and mℓpxq :“ EPpℓq pY | X “ xq, (1) with some smooth unspecified mℓp¨q . Let Eℓ “ EPpℓq for notational ease. Let f0pXq denote the prediction rule currently available for deployment. Rather than retraining a new rule from scratch, we consider a local update based on an augmented feature map A “
+
+ApXq P Rp. The vector ApXq may include f0pXq, selected components of X, and engineered or learned transformations of X, including low-dimensional representations from flexible models such 4as transformers. The update is linear in this constructed feature space, with target coefficient 
+
+β0 “ arg min 
+
+> bPRp
+
+EPp0q
+
+␣pY ´ ATbq2( “ Σ´10 EPp0q pAY q, where Σ 0 :“ EPp0q pAA Tq. (2) Although m0pXq is optimal under squared loss, we use a lower-dimensional linear update to avoid unstable flexible retraining with limited target labels while still recalibrating f0pXq and correct systematic drift. For each source ℓ, we project its distribution on the same target update space: 
+
+βℓ “ arg min 
+
+> bPRp
+
+EX„Pp0q   
+
+> X, Y |X„Ppℓq
+> Y|X
+
+␣pY ´ ATbq2( “ Σ´10 EX„Pp0q
+
+> X
+
+tAm ℓpXqu . (3) Thus, βl places the ℓth source outcome mechanism on the same target update scale as β0, even when both PX and PY |X differ across populations. We collect these target-projected coefficients in 
+
+B “ p β0, β 1, . . . , β Lq P Rpˆp L`1q.
+
+2.2 Target-anchored source-mixture robustness 
+
+GUARD represents a candidate future target population through a convex mixture of the observed target and source conditional outcome distributions, while keeping the current target covariate distribution fixed. Let ∆ L`1 “ t γ P RL`1 : γℓ ě 0, řLℓ“0 γℓ “ 1u denote the probability simplex. For γ P ∆L`1, define 
+
+Pnew pγq “ 
+
+˜
+
+Pp0q 
+
+> X
+
+,
+
+> L
+
+ÿ
+
+> ℓ“0
+
+γℓPpℓq 
+
+> Y|X
+
+¸
+
+. (4) Under squared loss, the optimal linear update under Pnew pγq is 
+
+βnew pγq “ arg min 
+
+> bPRp
+
+EPnew pγq
+
+␣pY ´ ATbq2( “ Bγ. (5) For post-deployment updating, the natural benchmark is the current target only update β0.Define the target-guided excess-loss contrast 
+
+hβ pX, Y q :“ p Y ´ ATβq2 ´ p Y ´ ATβ0q2.
+
+A direct target-guided group DRO criterion minimizes the worst-case expected excess loss β‹
+
+> TG
+
+-DRO P
+
+arg min βPRp sup γP∆L`1 EPnew pγqthβ pX, Y qu . However, this objective is self-anchoring with β‹
+
+> TG
+
+-DRO ”
+
+β0, since the target distribution belongs to tPnew pγq, γ P ∆L`1u. A second limitation is that standard group DRO treats the target and all source directions as equally reliable. In practice, the projected coefficients βl are estimated with different precision because sources can differ in labeled sample sizes, outcome noise, covariate overlap with the target, and nuisance-estimation difficulty. GUARD incorporates this heterogeneity in estimation uncertainty directly into the population target. Let 
+
+pB “ p pβ0, pβ1, . . . , pβLq, where pβℓ is a consistent regular estimator of βℓ. We define the uncertainty matrix of the coefficient library as 
+
+V “ Etp pB ´ BqTΣ0p pB ´ Bqu , and γTV γ “ Et} pBγ ´ Bγ }2Σ0 u.
+
+5Unlike the coefficient library B, V reflects finite-sample estimation uncertainty and therefore depends on the source-specific sample sizes and noise levels. GUARD uses γTV γ , which measures the target-scale estimation uncertainty of the mixture coefficient Bγ , to favor mixtures that are both close to the current target update β0 and reliably estimated. 
+
+2.3 GUARD as uncertainty-calibrated perturbed-control DRO 
+
+To account for source-estimation uncertainty, GUARD introduces local perturbations of each condi-tional outcome law along the working update directions. For each ℓ P r Ls` and each perturbation vector εℓ P Rp, let Qpℓq  
+
+> εℓ,Y |X
+
+denote the perturbed law satisfying 
+
+EQpℓq
+
+> εℓ
+
+rY | Xs “ mℓpXq ` ATεℓ. (6) This perturbation shifts the target projected coefficient by εℓ:
+
+βQℓ :“ arg min  
+
+> bPRp
+
+EX„Pp0q   
+
+> X, Y |X„Qpℓq
+> εℓ,Y |X
+
+“pY ´ ATbq2‰ “ βℓ ` εℓ.
+
+Define the corresponding perturbed future population 
+
+Pγ,E “
+
+´
+
+Pp0q 
+
+> X
+
+, řLℓ“0 γℓQpℓq 
+
+> εℓ,Y |X
+
+¯
+
+, for E “ p ε0, . . . , ε Lq P Rpˆp L`1q and γ P ∆L`1.The induced future coefficient is pB ` Eqγ. For fixed pβ, γ q, GUARD restricts E through 
+
+Eβ,γ pV q “ 
+
+#
+
+E P Rpˆp L`1q : ETΣ0E ĺ κ20γTV γ d2
+
+> β
+
+V
+
++
+
+, where dβ “ 2}β ´ β0}Σ0 . (7) The factor γT V γ calibrates the perturbation size to the uncertainty of the selected mixture direction, while dβ places the perturbation on the same scale as the excess-risk contrast. Let 
+
+Ppert  
+
+> β,γ
+
+pV q “ 
+
+!
+
+Pγ,E : E P Eβ,γ pV q, Qpℓq  
+
+> εℓ,Y |X
+
+satisfies (6) for all ℓ P r L ` 1s
+
+)
+
+(8) denote the class of perturbed future populations generated by convex mixtures of locally perturbed target and source conditional laws. We define the population GUARD update as: 
+
+Definition 1 (Population GUARD) . For κ0 ą 0 and V “ DT V0D P SL`1 
+
+> `
+
+, the GUARD coefficient is any solution to 
+
+β‹ 
+
+> GUARD
+
+P arg min 
+
+> βPRp
+
+sup 
+
+> γP∆L`1
+
+inf   
+
+> PPPpert
+> β,γ pVq
+
+EP
+
+␣hβ pX, Y q(. (GUARD DRO )The outer supremum ranges over possible future mixtures of the observed conditional mechanisms, while the inner infimum applies an uncertainty-calibrated adjustment to each mixture. Thus, mixtures driven by poorly estimated source directions are discounted relative to similarly target-compatible but more reliably estimated mixtures. 6Proposition 1. For fixed β P Rp and γ P ∆L`1, the lower-envelope value induced by (7) –(8) satisfies 
+
+inf   
+
+> PPPpert
+> β,γ pVq
+
+EP
+
+␣hβ pX, Y q( “ EPnew pγq
+
+␣hβ pX, Y q( ´ κ0γTV γ. (9) 
+
+Consequently, the GUARD target in (GUARD DRO ) equivalently solves 
+
+β‹ 
+
+> GUARD
+
+P arg min 
+
+> βPRp
+
+sup 
+
+> γP∆L`1
+
+“EPnew pγq
+
+␣pY ´ ATβq2 ´ p Y ´ ATβ0q2( ´ κ0γTV γ ‰ . (10) This form makes the role of V explicit. GUARD adjusts the target-guided excess-loss by the uncertainty of each mixture direction, encouraging source borrowing only when the mixture is both target-compatible and precisely estimated. 
+
+2.4 Transfer Learning Interpretation 
+
+The GUARD objective also has equivalent source-mixture interpretations. Let B:pκ0q denote a randomly perturbed coefficient library centered at B, satisfying 
+
+ErB:pκ0qs “ B, E ␣rB:pκ0q ´ BsTΣ0rB:pκ0q ´ Bs( “ κ0V. 
+
+Theorem 1. Assume that Σ0 and V are positive definite. The GUARD coefficient of Defini-tion GUARD DRO can be written as β‹ 
+
+> GUARD
+
+“ Bγ ‹, where 
+
+γ‹ “ arg min 
+
+> γP∆L`1
+
+␣γJV γ ` λ }Bγ ´ β0}2Σ0
+
+(. (GUARD Pen )
+
+The same γ‹ also admits two equivalent characterizations: 
+
+γ‹ “ arg min 
+
+> γPGτ
+
+γT V γ with Gτ “ ␣γ P ∆L`1 : }Bγ ´ β0}2Σ0 ď τ ( ; (GUARD Cons )
+
+γ‹ “ arg min 
+
+> γP∆L`1
+
+EB:pκ0q
+
+”››B:pκ0qγ ´ β0
+
+››2Σ0
+
+ı
+
+. (GUARD Exp )
+
+When the constraint in (GUARD Cons ) is active, the correspoding multiplier in (GUARD Pen ) satisfies 
+
+λpτ q “ fV pγ˚pτ qq 
+
+τ where fV pγq :“ p e0 ´ γqTV γ. (11) Representation (GUARD Exp ) gives a Bayesian decision view. It treats the coefficient library B as uncertain and selects the mixture weight γ by minimizing the averaged distance between the induced update B:pκ0qγ and the target benchmark β0. Thus, the action is the source-mixture weight, and the loss is averaged over uncertainty in the target and source coefficient library. Representation (GUARD Cons ) gives the transfer-learning view, as also illustrated in Figure 1. The set Gτ contains mixtures whose induced coefficient Bγ remains close to the target update β0. Within this set, GUARD chooses the mixture with the smallest uncertainty γTV γ . This defines transferability at the mixture level rather than at the individual-source level, allowing heterogeneous sources to contribute jointly even when no single source is close to the target. Representation (GUARD Pen )7gives the computational view. The parameter λpτ q controls the tradeoff between proximity to β0
+
+and uncertainty of the selected mixture, making this form convenient for estimation and tuning. x  
+
+> 𝛽 − 𝛽 !"!
+> #≤ 𝜏 𝛾 $𝑉𝛾
+
+Figure 1: Illustration of (GUARD Cons )
+
+## 3 GUARD Estimation and Inference 
+
+We now describe estimation and inference for the GUARD update. We first present the estimation procedure, which has three components: estimating the target-projected coefficient library B “pβ0, β 1, . . . , β Lq, estimating its uncertainty matrix V , and solving the sample GUARD optimization problem to obtain pβGUARD . We then turn to inference. Because the estimated GUARD weight is the solution to a constrained quadratic program and can be nonsmooth in the estimated inputs, we use a screened Bayesian bootstrap to resample the estimation-and-optimization procedure and form a union confidence interval (CI) over stable resamples. For each population ℓ P r Ls`, the observed data available for estimation are Dpℓq “ Lpℓq Y Upℓq,where Lpℓq “ tp Xpℓq 
+
+> i
+
+, Y pℓq 
+
+> i
+
+qu nℓ 
+
+> i“1
+
+contains the labeled observations and Upℓq “ t Xpℓq 
+
+> i
+
+unℓ`Nℓ 
+
+> i“nℓ`1
+
+contains the additional unlabeled covariates. Let pPpℓq 
+
+> L
+
+and pPpℓq 
+
+> U
+
+denote the empirical measures over Lpℓq and 
+
+Upℓq, respectively. To implement cross-fitted DML estimators, we split each observed dataset Dpℓq
+
+into two folds, I1 and I2. The labeled and unlabeled empirical measures corresponding to data in fold k P t 1, 2uth are denoted by pPpℓq 
+
+> L,k
+
+and pPpℓq
+
+> U,k
+
+. We assume that labels are missing completely at random within each population, and that Nℓ — N0 for ℓ P r Ls with N0 " max ℓPr Ls` nℓ.
+
+3.1 Estimation 
+
+3.1.1 Estimating the target-projected coefficient library B
+
+The estimation of B combines semi-supervised learning and DML. The semi-supervised component uses the large pool of unlabeled target covariates to estimate the target geometry Σ 0 “ E0pAA Tq
+
+as pΣ0 “ pPp0q 
+
+> U
+
+pAA Tq and to evaluate source mechanisms under the target covariate distribution. For 8each source ℓ, we flexibly estimate mℓpxq and the density ratio wℓpxq “ dPp0q 
+
+> X
+
+pxq{ dPpℓq 
+
+> X
+
+pxq, and use a cross-fitted orthogonal moment to reduce first-order nuisance estimation bias, where dPpℓq 
+
+> X
+
+denotes the density function of Xpℓq.We first use ordinary least square (OLS) with the labeled target data to estimate β0 as 
+
+pβ0 “ r pPp0q 
+
+> L
+
+pAA Tqs ´1pPp0q 
+
+> L
+
+pAY q. (12) For source ℓ P r Ls, recall that βℓ “ Σ´10 μℓ, where μℓ “ E0tAm ℓpXqu . A direct plug-in estimator would fit mℓ in the source and average A pmℓpXq over the target covariates. Following DML strategies, to reduce sensitivity to errors in pmℓ, we use the orthogonal identity 
+
+μℓ ” E0tAm ℓpXqu “ E0tAm ℓpXqu ` EℓtwℓpXqApY ´ mℓpXqqu .
+
+The first term places the source outcome mechanism on the target covariate scale. The second term has mean zero at the truth, but corrects first-order errors in estimating mℓ, with wℓ adjusting for covariate shift between the source and target. Using two-fold cross-fitting for notation, let p pmℓ,k , pwℓ,k q be trained on fold Ik and evaluated on fold Ik1 for k ‰ k1. Define 
+
+pμk,k 1 
+
+> ℓ
+
+“ pPp0q  
+
+> U,k
+
+tA pmℓ,k 1 pXqu ` pPpℓq 
+
+> L,k
+
+r pwℓ,k 1 pXqAtY ´ pmℓ,k 1 pXqus .
+
+We set 
+
+pμℓ “ 12 ppμ1,2 
+
+> ℓ
+
+` pμ2,1 
+
+> ℓ
+
+q, pβℓ “ pΣ´10 pμℓ, ℓ P r Ls. (13) The estimated coefficient library is 
+
+pB “ p pβ0, pβ1, . . . , pβLq.
+
+Proposition 2. For ℓ P r Ls, pβl has the convergence rate 
+
+} pβℓ ´ βℓ}2 “ OP
+
+„c pnℓ
+
+` ∆plq
+
+> mw
+
+ȷ
+
+.
+
+where ∆plq 
+
+> mw
+
+:“ } pmℓ ´ mℓ}L2pPpℓq  
+
+> Xq
+
+} pwℓ ´ wℓ}L2pPpℓq 
+
+> Xq
+
+.
+
+The leading term is the oracle sampling error, while nuisance estimation enters only through the product ∆ pℓq
+
+> mw
+
+. Thus, flexible methods can be used for both the source outcome regression mℓ and the density ratio wℓ without introducing first-order bias in the target-projected source coefficient. 
+
+3.1.2 Estimation of V
+
+Given pB, we next move to estimate V :“ Erp pB ´BqTΣ0p pB ´Bqs with Vℓk :“ Erp pβℓ ´βℓqTΣ0p pβk ´βkqs .
+
+The uncertainty of pBγ is γTV γ “ E
+
+”
+
+} pBγ ´ Bγ }2Σ0
+
+ı
+
+. The error in pβℓ has two sources. One comes from the target unlabeled covariates, which are used to estimate the target projection and are also shared across all columns of pB, creating correlation between pβℓ and pβk. The other comes from the 9labeled data used to learn each population-specific outcome distribution, which mainly contributes to the diagnal entries of V .We now define the components that separate these two sources of variation. For ℓ, ℓ 1 P r Ls`, let ∆ℓpXq “ t Am ℓpXq ´ μℓu ´ p AA T ´ Σ0qβℓ,θℓℓ 1 :“ E0t∆ℓpXqTΣ´10 ∆ℓ1 pXqu , θ 0ℓ :“ 0 ℓ, ℓ 1 P r Ls
+
+θℓ :“ EℓtwℓpXq2pY ´ mℓpXqq 2ATΣ´10 Au, ℓ P r Ls,θ0 :“ E0tp Y ´ ATβ0q2ATΣ´10 Au
+
+(14) Here ∆ ℓpXq is the target-side influence contribution for the projection of the ℓth outcome mechanism. The quantity θℓℓ 1 captures the shared target-side covariance between columns ℓ and ℓ1,induced by the common unlabeled target sample. The term θℓ is the labeled source contribution to the variance of pβℓ, after reweighting source covariates to the target distribution. Finally, θ0 is the labeled target contribution to the variance of pβ0. Under cross-population independence of the labeled samples and second-order DML remainders, we show in Appendix that 
+
+Corollary 1. Assume } pmℓ ´ mℓ}L2pPpℓqq } pwℓ ´ wℓ}L2pPpℓqq “ o`N ´1{20 ` n´1{2
+
+> ℓ
+
+˘. Then 
+
+Vℓℓ 1 “ 1tℓ, ℓ 1 P r Lsu 1
+
+N0
+
+θℓℓ 1 ` 1tℓ “ ℓ1u 1
+
+nℓ
+
+θℓ ` o` p
+
+?nℓnℓ1
+
+˘ ℓ, ℓ 1 P r Ls`, (15) 
+
+Consequently, 
+
+V “ D ` R ` oop 
+
+ˆ pn0
+
+˙
+
+, where D :“ diag 
+
+ˆ θ0
+
+n0
+
+, θ1
+
+n1
+
+, . . . , θL
+
+nL
+
+˙
+
+, R :“
+
+„ θℓℓ 1
+
+N0
+
+ȷ
+
+> ℓ,ℓ 1Pr Ls`
+
+, (16) 
+
+where the matrix remainder is measured in operator norm. 
+
+The first term in (15) explains why V is generally non-diagonal: all the source columns of pB use the same unlabeled target sample. The remaining terms come from mutually independent labeled samples and therefore enter only the diagonal. We estimate the components in (15) by cross-fitting, using the nuisance estimates from Section 3.1.1. We construct the Ik Ñ Ik1 (k ‰ k1) cross-fitted estimators for θℓℓ 1 and θℓ as 
+
+pθk,k 1 
+
+> ℓℓ 1
+
+“ pPp0q 
+
+> U,k
+
+p p∆T 
+
+> ℓ,k 1
+
+pΣ´10,k 1 p∆ℓ1,k 1 q,
+
+pθk,k 1 
+
+> ℓ
+
+“ pPpℓq
+
+> L,k
+
+”pw2 
+
+> ℓ,k 1
+
+pXqt Y ´ pmℓ,k 1 pXqu 2AT pΣ´10,k 1 A
+
+ı
+
+, ℓ P r Ls, pθk,k 1 
+
+> 0
+
+“ pPp0q
+
+> L,k
+
+!
+
+pY ´ pβT 
+
+> 0,k 1
+
+Aq2AT pΣ´10 A
+
+)
+
+,
+
+where pμℓ,k 1 , pΣ0,k 1 , and pβℓ,k 1 are the corresponding estimators derived using data in Ik1 and 
+
+p∆ℓ,k 1 pXq “ t A pmℓ,k 1 pXq ´ pμℓ,k 1 u ´ p AA T ´ pΣ0,k 1 q pβℓ,k 1 .
+
+Averaging the two fold directions gives pθℓℓ 1 “ 12 ppθ1,2 
+
+> ℓℓ 1
+
+` pθ2,1 
+
+> ℓℓ 1
+
+q and pθℓ “ 12 ppθ1,2 
+
+> ℓ
+
+` pθ2,1 
+
+> ℓ
+
+q, ℓ, ℓ 1 P r Ls`
+
+Finally, we assemble pV entrywise as 
+
+pVℓℓ 1 “ 1tℓ, ℓ 1 P r Lsu N ´10 pθℓℓ 1 ` 1tℓ “ ℓ1 “ 0un´10 pθ0 ` 1tℓ “ ℓ1 P r Lsu n´1 
+
+> ℓ
+
+pθℓ, ℓ, ℓ 1 P r Ls`. (17) 10 In computation, we use the symmetrized matrix p pV ` pV Tq{ 2, with negative eigenvalues truncated at zero if needed. When nuisance-estimation bias in the variance components is not negligible at the scale required for inference, an additional bias correction is needed. The Supplementary Materials provide a bias-corrected estimator for V and the conditions under which this correction can be omitted. 
+
+3.1.3 Estimation of GUARD 
+
+We estimate GUARD using the penalized formulation in (GUARD Pen ), which is computationally convenient and directly controls the tradeoff between target compatibility and uncertainty-aware source borrowing. Given pB, pV , we define the GUARD estimator pβGUARD :“ pBpγ with the sample GUARD weight 
+
+pγ “ arg min 
+
+> γP∆L`1
+
+γT pV γ ` λp pBγ ´ pβ0qT pΣ0p pBγ ´ pβ0q,
+
+“ arg min 
+
+> γP∆L`1
+
+γT pV γ ` λpγ ´ e0qT pΓpγ ´ e0q (18) where e0 “ p 1, 0, . . . , 0qT and pΓ “ pBJ pΣ0 pB. The complete GUARD estimation procedure is summa-rized in Algorithm 1. 
+
+Algorithm 1 GUARD estimation with cross-fitted DML source learning 
+
+Require: Target data Dp0q “ Lp0q Y Up0q, with Lp0q “ tp Xp0q 
+
+> i
+
+, Y p0q 
+
+> i
+
+qu n0 
+
+> i“1
+
+and Up0q “ t Xp0q 
+
+> i
+
+un0`N0
+
+> i“n0`1
+
+;source data Dpℓq “ Lpℓq Y Upℓq for ℓ P r Ls; penalty level λ ě 0. 
+
+Ensure: GUARD estimator pβGUARD , weight pγ, coefficient library pB, and ppΣ0, pΓ, pV q. 
+
+> 1:
+
+Compute pΣ0 “ pPp0q 
+
+> U
+
+pAA Tq and pβ0 “ r pPp0q 
+
+> L
+
+pAA Tqs ´1pPp0q 
+
+> L
+
+pAY q as in (12).  
+
+> 2:
+
+Split each Dpℓq, ℓ P r Ls`, into two folds I1 and I2. For k P t 1, 2u, let pPpℓq 
+
+> L,k
+
+and pPpℓq 
+
+> U,k
+
+denote the fold-k labeled and unlabeled empirical measures and let pΣ0,k “ pPp0q 
+
+> U,k
+
+pAA Tq. 
+
+> 3:
+
+for ℓ “ 1, . . . , L do  
+
+> 4:
+
+for k “ 1, 2 do  
+
+> 5:
+
+Fit the outcome regression pmℓ,k on the labeled source observations Lpℓq X Ik, and the density ratio pwℓ,k on the source and target covariates in pDpℓq Y Up0qq X Ik. 
+
+> 6:
+
+end for  
+
+> 7:
+
+For pk, k 1q P tp 1, 2q, p2, 1qu , evaluate the nuisance functions trained on Ik1 on the opposite fold Ik:
+
+pμk,k 1 
+
+> ℓ
+
+“ pPp0q  
+
+> U,k
+
+tA pmℓ,k 1 pXqu ` pPpℓq
+
+> L,k
+
+“ pwℓ,k 1 pXqAtY ´ pmℓ,k 1 pXqu ‰. 
+
+> 8:
+
+Set pμℓ “ 12 ppμ1,2 
+
+> ℓ
+
+` pμ2,1 
+
+> ℓ
+
+q and pβℓ “ pΣ´10 pμℓ as in (13).  
+
+> 9:
+
+end for  
+
+> 10:
+
+Form pB “ p pβ0, pβ1, . . . , pβLq, pΓ “ pBT pΣ0 pB, and assemble pV “ r pVℓℓ 1 sℓ,ℓ 1Pr Ls` by (17).  
+
+> 11:
+
+Solve the quadratic program (18), 
+
+pγ “ arg min 
+
+> γP∆L`1
+
+γT pV γ ` λpγ ´ e0qT pΓpγ ´ e0q, e0 “ p 1, 0, . . . , 0qT. 
+
+> 12:
+
+return pβGUARD “ pB pγ, together with pγ, pB, and ppΣ0, pΓ, pV q.11 3.2 Perturbation inference for GUARD 
+
+We next describe inference for a fixed linear contrast of the population GUARD coefficient 
+
+ηGUARD paq :“ aTβ˚, β˚ 
+
+> GUARD
+
+:“ Bγ ˚,
+
+where a P Rp is pre-specified and γ˚ is the population solution of the GUARD optimization problem. The main difficulty for inference is that pγ is the solution to a constrained quadratic program and can be a non-smooth function of the estimated inputs p pB, pV , pΓq due to the boundary constraint. We therefore use a screened Bayesian-bootstrap procedure. The bootstrap resamples the empirical estimating equations, resolves the GUARD optimization problem, removes resamples with unusually large first-order objective perturbations, and forms a union CI over the remaining stable resamples. 
+
+3.2.1 Perturbation weights 
+
+For each resample m “ 1, . . . , M , independently generate random weights within each independent data pool, tDpℓq “ Lpℓq Y Upℓq, ℓ P r Ls`u. For ℓ P r Ls`, draw tωpℓqr ms 
+
+> i
+
+, i “ 1, ..., n ℓ, n ℓ ` 1, ..., n ℓ ` Nℓu
+
+independently from Dirichlet p1, . . . , 1q. Let pPpℓqr ms 
+
+> L
+
+and pPpℓqr ms 
+
+> U
+
+denote the corresponding weighted empirical operators. Fold specific weighted operators are denoted by pPpℓqr ms 
+
+> L,k
+
+and pPpℓqr ms 
+
+> U,k
+
+, with weights normalized within each fixed fold. 
+
+Remark 1. Throughout the resampling procedure, all nuisance estimators obtained in the original estimation step are kept fixed. In particular, pmℓ,k , pwℓ,k for l P r Ls and k “ 1, 2 are not re-fit in any bootstrap replicate. The sample-splitting indices are also fixed. The perturbation only reweights the empirical averages appearing in the cross-fitted estimating equations; it does not re-estimate nuisance functions or redraw sample splits. 
+
+Using the weighted empirical measures, define the resampled target covariance and β0 as 
+
+pΣrms 
+
+> 0
+
+“ pPp0qr ms 
+
+> U
+
+pAA Tq, pβrms 
+
+> 0
+
+“ pβ0 ` p pΣ0q´1pPp0qr ms 
+
+> L
+
+tApY ´ AT pβ0qu .
+
+For each source ℓ P r Ls, the perturbed version of the two-fold DML estimator is obtained by replacing the empirical measures in the original estimator with their weighted counterparts: 
+
+pβrms 
+
+> ℓ
+
+“ 12
+
+´ pβ1,2rms 
+
+> ℓ
+
+` pβ2,1rms
+
+> ℓ
+
+¯
+
+, pβk,k 1rms 
+
+> ℓ
+
+“ p pΣrms 
+
+> 0
+
+q´1 pμk,k 1rms
+
+> ℓ
+
+with 
+
+pμk,k 1rms 
+
+> ℓ
+
+“ pPp0qr ms  
+
+> U,k
+
+tA pmℓ,k 1 pXqu ` pPpℓqr ms 
+
+> L,k
+
+r pwℓ,k 1 pXqAtY ´ pmℓ,k 1 pXqus .
+
+Collect the resampled columns as pBrms :“
+
+” pβrms 
+
+> 0
+
+, pβrms 
+
+> 1
+
+, . . . , pβrms
+
+> L
+
+ı
+
+. Accordingly, the resampled penalty matrix is pΓrms :“ p pBrmsqT pΣrms 
+
+> 0
+
+pBrms.The resampled variance matrix pV rms is constructed by applying the same weights to the debiased variance estimator. Specifically, we define 
+
+pV rms 
+
+> ℓℓ 1
+
+“ N ´10 pθrms 
+
+> ℓℓ 1
+
+` 1tℓ “ ℓ1 “ 0un´10 pθrms 
+
+> 0
+
+` 1tℓ “ ℓ1 P r Lsu n´1 
+
+> ℓ
+
+pθrms 
+
+> ℓ
+
+, ℓ, ℓ 1 P r Ls`.
+
+12 where pθrms 
+
+> ℓℓ 1
+
+and pθrms 
+
+> ℓ
+
+are obtained from the exact same debiased estimating equations as pθℓℓ 1 and pθℓ,except that each empirical operator is replaced by its weighted version. With pΣrms 
+
+> 0
+
+, pV rms “ r pV rms 
+
+> ℓℓ 1
+
+s, and pBrms, we compute the resampled GUARD weight 
+
+pγrms P arg min 
+
+> γP∆
+
+!
+
+γT pV rmsγ ` λpγ ´ e0qT pΓrmspγ ´ e0q
+
+)
+
+, where pΓrms “ p pBrmsqT pΣrms 
+
+> 0
+
+p pBrmsq.
+
+3.2.2 Screening resamples and union confidence interval 
+
+The key difficulty for inference is that GUARD weight γ˚ is defined as the optimizer of a constrained quadratic program. Small perturbations of pV, Γq can change the estimated weights discontinuously and thus standard asymptotic normality based inference fails to characterize the distribution of 
+
+pηGUARD paq “ aT pBpγ and hence provide valid CI for ηGUARD paq. We thus separate the two sources of unceratin in pηGUARD paq, pB and pγ. We first generate a collection of candidate weights pγrms that are plausible sampling perturbations of γ˚. Then, for each retrained candidate weight γm “ pγrms, we treat the weight as fixed and construct the usual asymptotic CI for aTBγ m based on the distribution of aT pBγ m. The final confidence set is the union of these fixed-weight intervals. The screening step removes resamples whose perturbation of the GUARD objective is too large to be regarded as ordinary sampling variation. To see which quantity should be screened, note that pγrms and γ˚ solve the same quadratic program with different inputs, p pV rms, pΓrmsq versus pV, Γq.To first order, the gap between the two solutions is driven by the perturbation of the objective’s gradient at γ˚,
+
+Grms 
+
+> tot
+
+:“ p pV rms ´ V qγ˚ ` λppΓrms ´ Γqδ˚, δ˚ :“ γ˚ ´ e0,
+
+in the sense that }pγrms ´ γ˚}2 is bounded by a multiple of }Grms 
+
+> tot
+
+}2. Because pV rms and pΓrms are Bayesian-bootstrap perturbations of pV and pΓ, this perturbation splits into two parts, 
+
+Grms 
+
+> tot
+
+“ G ` U rms 
+
+> ˚
+
+, G :“ p pV ´ V qγ˚ ` λppΓ ´ Γqδ˚, U rms 
+
+> ˚
+
+:“ p pV rms ´ pV qγ˚ ` λppΓrms ´ pΓqδ˚.
+
+The first part G is the estimation error of the original sample relative to the population, whereas 
+
+U rms 
+
+> ˚
+
+is the additional perturbation introduced by the mth set of weights, and is the only part that varies with m. Conditional on the observed data, G is fixed, so the distance from pγrms to γ˚ can be controlled only through U rms 
+
+> ˚
+
+. An ideal screening rule therefore retains the replicates for which U rms 
+
+> ˚
+
+,normalized by its conditional standard deviation, is not unusually large. Since U rms 
+
+> ˚
+
+depends on the unknown γ˚, we use the plug-in analogue 
+
+pU rms “ p pV rms ´ pV qpγ ` λppΓrms ´ pΓqp pγ ´ e0q.
+
+We derive the covariance of U rms 
+
+> ˚
+
+and its estimator, pΩGUARD , from the conditional randomness of the Bayesian-bootstrap weights in the Supplementary Materials. Let ps2 
+
+> j
+
+:“ p pΩGUARD qjj and 
+
+cα :“ z1´α{t 2pL`1qu . We define the screened set of resamples by 
+
+Mα1 :“
+
+#
+
+1 ď m ď M : max 
+
+> 0ďjďL
+
+ˇˇˇˇˇpU rms
+
+> j
+
+psj
+
+ˇˇˇˇˇ ď cα1
+
++
+
+, (19) 13 where α1 is the allocated type 1 error for selecting plaucible set for γ. We allocate the overall error level as α0 “ alpha 1 ` α2, where α2 is used for the fixed-weight confidence intervals. Equivalently, the retained candidate weights are tpγrms : m P Mα1 u.For each retained m P M, we now treat pγrms as a fixed candidate weight and conduct inference for aTBpγrms. The plug-in estimate is 
+
+pηrmspaq :“ aT pB pγrms.
+
+Let pV paq be the estimated the covariance matrix of paT pβ0, . . . , a T pβLqT. Then for any given pγrms, the estimated variance for pηrmspaq is ppγrmsqT pV paqpγrms. The resulting p1 ´ α2q-level CI for aTBpγrms is 
+
+CI rms 
+
+> α2
+
+pa | pγrmsq :“
+
+„pηrmspaq ´ z1´α2{2
+
+b
+
+ppγrmsqT pV paqpγrms , pηrmspaq ` z1´α2{2
+
+b
+
+pzγqrmsT pV paqpγrms
+
+ȷ
+
+.
+
+The final p1 ´ α0q-level screened union CI for ηpaq is 
+
+CI α0 paq :“ ď
+
+> mPMα1
+
+CI α2 pa | pγrmsq, α0 “ α1 ` α2.
+
+## 4 Theoretical Properties 
+
+4.1 Model Assumptions 
+
+We allow the working-feature dimension p to increase while keeping the number of populations 
+
+L` “ L ` 1 fixed. Without loss of generality, we assume that the target population has the smallest number of labels, n0 “ min jPr L`s nj , and let n‹ “ max jPr L`s nj . We organize the theoretical results into three parts: population transferability, estimation error, and inference validity. We state the main assumptions needed for these results below, with additional technical conditions and derivations deferred to the Supplementary Materials. 
+
+Assumption 1 (Sampling, moments, and overlap) . The labeled and unlabeled pools are independent, with independent identically distributed observations within each pool. The sample sizes satisfy 
+
+Nj — N0 pj ě 1q, N0{n‹ Ñ 8 , p2{n0 Ñ 0. (20) 
+
+For fixed positive constants, 
+
+Σ0 ľ cΣIp, E0Y 2 ď CY , cw ď wj pXq ď Cw pj ě 1q, (21) sup 
+
+> }u}2“1
+
+}uJA}ψ2,0 ` max  
+
+> jě1
+
+}mj }ψ2,0 ` max  
+
+> jě1
+
+}Y ´ mj pXq} ψ2,j ` } Y ´ AJβ0}ψ2,0 ď C. (22) 
+
+The conditional second moments of Y ´ AJβ0 in the target and Y ´ mj pXq in each source belong to 
+
+rcϵ, C ϵs almost surely. For j ě 1, Ej rt Y ´ mj pXqu 4 | Xs ď C4 almost surely. 
+
+Assumption 2 (Cross-fitted nuisance accuracy) . Denote }f }2,0 “ p E0f 2q1{2, qA “ AJΣ´10 A,
+
+hj “ qAtmj pXq ´ AJβj u, and vj “ Ej tqApY ´ mj pXqq 2 | Xu. On training events with probability 
+
+14 tending to one, uniformly over sources and folds, for ν P t m, w u and f “ pνj ´ νj ,
+
+››››ˆ
+
+1 ` qA
+
+p
+
+˙
+
+f
+
+››››2,0
+
+` max 
+
+> 1ďkďL
+
+››››
+
+hk
+
+p f
+
+››››2,0
+
+` sup 
+
+> }u}2“1
+
+}p uJAqf }2,0 ď ∆ν,j . (23) 
+
+For the separately trained auxiliary fits, 
+
+›››››ˆ
+
+1 ` qA
+
+p
+
+˙ phj ´ hj
+
+p
+
+›››››2,0
+
+ď ∆h,j ,
+
+››››ˆ
+
+1 ` qA
+
+p
+
+˙ pvj ´ vj
+
+p
+
+››››2,0
+
+ď ∆v,j . (24) 
+
+Here ∆m,j “ ∆mpnj q and ∆w,j “ ∆wpN0 ^ Nj q. The fitted density ratios are bounded, and 
+
+pmj , phj {p, pvj {p have uniformly bounded ψ2, ψ 2{3, ψ 1 norms under the target covariate law. Further-more, 
+
+max 
+
+> j
+
+ÿ
+
+> νPt m,w,h,v u
+
+∆ν,j Ñ 0, max 
+
+> jě1
+
+␣?pp∆m,j ` ∆w,j q ` ?nj ∆m,j ∆w,j 
+
+( Ñ 0. (25) 
+
+Assumption 3 (Remainder control in V ). Assume the difference between V and its first-order approximation D ` R satisfies, 
+
+max 
+
+> 0ďjďL
+
+# ?nj
+
+p
+
+> L
+
+ÿ
+
+> k“0
+
+nk|p V ´ D ´ Rqjk | ` |tp V ´ D ´ Rqγ‹uj |
+
+sj
+
++
+
+Ñ 0. (26) 
+
+Assumption 4 (Gradient regularity) . Let RVj,n pγq and RΓ
+
+> j,n
+
+pγq be the gradient remainder terms with definitions given in Supplements. Set s2 
+
+> j
+
+“ p ΩGUARD qjj and Λ “ diag ps0, . . . , s Lq where ΩGUARD is the population first-order covariance of U rms‹ evaluated at γ‹. For a fixed cC ą 0,
+
+λmin pΛ´1ΩGUARD Λ´1q ě cC , RG,n :“ max 
+
+> j
+
+RVj,n pγ‹q ` RΓ
+
+> j,n
+
+pγ‹q
+
+sj
+
+Ñ 0. (27) 
+
+4.2 Population transferability under source mixing 
+
+The constrained characterization in (GUARD Cons ) provides a mixture-level notion of transferability. For a radius τ ą 0, the set 
+
+Gτ :“ ␣γ P ∆L`1 : }Bγ ´ β0}2Σ0 ď τ ( (28) collects the target-compatible mixtures: each γ P Gτ induces a coefficient Bγ that remains close to the target benchmark β0. This perspective allows transferability to be defined at source-mixture level rather than source by source. 
+
+Definition 2 (Mixture-level transferability) . For a threshold w P r 0, 1s, define the transferable source set S0 and its target-augmented version C by 
+
+S0 :“
+
+!
+
+j P t 1, . . . , L u : sup 
+
+> γPGτ
+
+γj ě w
+
+)
+
+, C :“ t 0u Y S0. (29) 15 The non-transferable source set is 
+
+S1 :“ t 1, . . . , L uz S0 “
+
+!
+
+j P t 1, . . . , L u : sup 
+
+> γPGτ
+
+γj ă w
+
+)
+
+. (30) A source belongs to S0 if it can receive at least weight w in some target-compatible mixture, whereas a source belongs to S1 only if its weight remains uniformly below w over all such mixtures. When w “ 1, this reduces to the conventional source-wise condition }βj ´ β0}2Σ0 ď τ . When w ă 1, a source need not be individually close to the target, as long as it can contribute meaningfully to a target-compatible mixture. We next introduce a mixture-level separation condition that rules out spurious cancellation by non-transferable sources. For any γC P ∆C , let Eτ pγC ; S1q be the set of target-compatible mixtures obtained by preserving the relative allocation within C while adding mass supported only on S1:
+
+Eτ pγC ; S1q :“
+
+!
+
+γ “ rγC ` δS1 P Gτ : supp prγC q Ď C, supp pδS1 q Ď S1, rγC
+
+1TrγC
+
+“ γC
+
+)
+
+. (31) Here, rγC is the component supported on the target and transferable sources, while δS1 is a perturbation supported on the non-transferable sources. The normalization keeps the relative allocation within C unchanged. 
+
+Assumption 5. There exists a constant csep such that, for every γC P ∆C satisfying Eτ pγC ; S1q ‰ ∅
+
+and }BC γC ´ β0}Σ0 ą 0,
+
+inf   
+
+> γPEτpγC;S1q
+
+}Bγ ´ β0}Σ0
+
+}BC γC ´ β0}Σ0
+
+ě csep ą 0. (Sep) 
+
+When BC γC “ β0, the transferable profile already exactly recovers the target benchmark, and no additional non-improvement requirement is needed. 
+
+Condition (Sep) rules out a cancellation shortcut: starting from any profile supported on C,adding sources from S1 cannot reduce the distance to β0 below a fixed fraction of the original clean-block distance. Thus, sources in S1 are non-transferable not only because their feasible weights are small, but also because their inclusion cannot substantially improve target compatibility. This perturbation view suggests that the full GUARD solution should be close to a clean-only oracle that ignores the non-transferable block. To formalize this, let η˚ :“ rp η˚ 
+
+> C
+
+qJ, 0J 
+
+> S1
+
+sJ P ∆L`1
+
+where η˚ 
+
+> C
+
+is the clean-set-only analog of γ˚ on C:
+
+η˚ 
+
+> C
+
+P arg min  
+
+> γCP∆C
+
+γT 
+
+> C
+
+VC γC subject to }BC γC ´ β0}2Σ0 ď τ, 
+
+Thus, η˚ is the oracle variance-minimizing target-compatible mixture that uses only the target and transferable sources. 
+
+Corollary 2 (Clean-oracle approximation) . Define λ∆ :“ inf δ‰0: 1Tδ“0 δTV δ 
+
+> }δ}22
+
+, then under Assumption 5, we have 
+
+}γ˚ ´ η˚}22 À 1
+
+λ∆
+
+τ ` L2w2
+
+n0
+
+.
+
+16 Corollary 2 shows that GUARD can approximate the clean-only oracle without explicitly identifying S0. The approximation error is controlled by the target-compatible radius τ , the low-participation threshold w, and the covariance geometry encoded in V .
+
+4.3 Estimation error bound 
+
+We next study the estimation error of the sample GUARD estimator. The first result gives a estimation error bound for pβGUARD pλq with a fixed penalty level λ ě 0, showing how errors in the estimated inputs p pV , pΓq propagate to the final estimator. 
+
+Theorem 2. Let r∆ :“ rank tΣ1{20 pβ1 ´ β0, . . . , β L ´ β0qu ď L`. Under Assumptions 1–2, for a fixed λ ě 0,
+
+} pβGUARD pλq ´ β‹
+
+> GUARD
+
+pλq} 2
+
+“ OP
+
+»–#
+
+p
+
+> L
+
+ÿ
+
+> j“0
+
+pγ‹ 
+
+> λ,j
+
+q2
+
+nj
+
++1{2
+
+` min 
+
+" λn ‹
+
+p p1 ´ γ‹
+
+> λ, 0
+
+q, 1
+
+* c r∆
+
+n0
+
+` min tλ, 1u
+
+c pn0
+
+` rn,λ 
+
+fi fl , (32) 
+
+where rn,λ collects higher-order nuisance error and the exact-uncertainty discrepancy, defined in the supplements. 
+
+Theorem 2 establishes estimation validity for a fixed λ. To connect this result to transferabilty, we use the constrained characterization in (GUARD Cons ), where τ controls the target-compatible set 
+
+Gτ in (28). When the contraint is active, τ and λ are linked through the KKT multiplier λpτ q. We next show that under the clean source-mixing and separation, an appropriate calibration of τ can exploit transferable sources and improve over target-only estimation. To make the optimal rate explicit under this special case, we first define source-only clean mixture approximation error 
+
+α :“ min 
+
+> ηP∆S0
+
+}BS0 η ´ β0}2Σ0
+
+Among source mixtures that attain this optimal approximation level, let 
+
+ηbase P arg min 
+
+> ηP∆S0
+
+ηTDS0S0 η subject to }BS0 η ´ β0}2Σ0 ď α. 
+
+Thus, ηbase attains the best clean-source approximation to β0, and among such mixtures, minimizes the leading labeled-sample variance component. The corresponding effective sample size is 
+
+nmix :“ n0 ` nS0 , where nS0 :“ p ηT
+
+> base
+
+DS0S0 ηbase q´1 .
+
+Here nS0 represents the effective sample size of the optimal transferable source mixture, and nmix 
+
+is the oracle benchmark sample size obtained by combining target information with the optimally weighted clean-source mixture. 17 Corollary 3. Under Assumptions 1–2, there exists a λ˚ “ p n0{nmix q1{3 such that 
+
+} pβGUARD pλ˚q ´ β0}2 “ OP
+
+$&%
+
+?α `
+
+d pn2{3mix n1{30
+
+`
+
+c r∆
+
+n0
+
+` rVn
+
+,.- . (33) 
+
+If additionally nmix Á n0pp{r∆q3{2, the choice λ˚ “ ar∆{p gives the bound 
+
+} pβGUARD pλ˚q ´ β0}2 “ OP taα ` p{nmix ` ar∆{n0 ` rVn u.
+
+4.4 Inference validity for screened union CI 
+
+We now justify the screened Bayesian-bootstrap inference procedure for aTβ˚
+
+> GUARD
+
+. The key technical issue is the nonsmooth dependence of the GUARD optimizer on pV, Γq. The screening step ensures that the retained bootstrap perturbations are compatible with ordinary sampling variation, while the union over retained fixed-weight intervals protects coverage when the optimizer changes nonsmoothly. Let Rα1 :“ cα1
+
+apL ` 1qCΩ. For R ă 8 , define 
+
+CBB pRq :“ Vol tBL`1p0, 1qu 
+
+2p2πqpL`1q{ 2CpL`1q{ 2Ω
+
+exp 
+
+"
+
+´ pR ` 1q2
+
+2cΩ
+
+*
+
+,
+
+where Vol tBL`1p0, 1qu is the volume of the unit Euclidean ball in RL`1. Define the resampling accuracy err an pMnq :“
+
+" log an
+
+CBB pRα1 qMn
+
+*1{p L`1q
+
+.
+
+Theorem 3 (Existence of a good screened GUARD resample) . Suppose Assumption 1–4 hold, and the number of bootstrap draws Mn satisfies log Mn 
+
+> N0
+
+Ñ 0, max 0ďlďL log Mn 
+
+> nl
+
+Ñ 0. Also suppose that 
+
+}pγ ´ γ˚}2 “ Oppa´1{2 
+
+> n
+
+q. Then 
+
+lim inf  
+
+> nÑ8
+
+P
+
+"
+
+min 
+
+> mPMα1
+
+}pγrms ´ γ‹}2 ď 4 err an pMnq
+
+c0
+
+?an
+
+*
+
+ě 1 ´ α1.
+
+Theorem 3 is the key link between the screening step and the coverage argument. It shows that, with probability at least 1 ´ α1 asymptotically, the screened set M contains at least one resample m˚ whose optimizer is close to the population GUARD optimizer. This result is sufficient for coverage because the final confidence set is a union over all screened resamples. Therefore, if the interval corresponding to this good resample covers the target, then the whole union interval also covers the target. The coverage theorem below formalizes this argument. 
+
+Theorem 4 (Coverage) . Suppose the conditions of Theorem 3 hold. Then the screened union CI 
+
+CI α0 paq satisfies 
+
+lim inf  
+
+> nÑ8
+
+lim inf   
+
+> MÑ8
+
+P taTβ˚ 
+
+> GUARD
+
+P CI α0 paqu ě 1 ´ α0.
+
+Theorem 5 (Length) . Suppose the assumptions of Theorem 3 hold. Denote CU :“ 4cα1
+
+?pL`1qCΩ 
+
+> c0
+
+.
+
+18 Then there exists some positive constant C ą 0 such that, 
+
+lim  
+
+> nÑ8
+
+lim   
+
+> MÑ8
+
+P
+
+»–length tCI α0 paqu ď C
+
+$&%
+
+CU }a}2
+
+?an
+
+`
+
+gffe Lÿ
+
+> ℓ“0
+
+pγ‹ 
+
+> ℓ
+
+q2
+
+nℓ
+
+,.-fi fl “ 1 (34) 
+
+## 5 Simulation studies 
+
+5.1 Simulation settings, benchmarks and evaluation metrics 
+
+We evaluate GUARD under three source–target configurations. Design I studies future generalizabil-ity under temporal drift, while Designs II and III study current-target transfer under heterogeneous and partially corrupted source libraries. Across all designs, we assess point estimation and un-certainty quantification. Across all designs, Xp0q „ N p0, Σ0q with p “ 25, pΣ0qjk “ 0.3|j´k|, and the working design A “ apXq uses the first pA “ 20 coordinates. Outcomes are generated as 
+
+Y “ mℓpXq ` ε, where ε „ N p0, 0.52q. The target contains n0 “ 200 labeled and N0 “ 10 5
+
+unlabeled observations, whereas each source contains nℓ “ 2,000 labeled and Nℓ “ N0 unlabeled observations, except in Design III where the clean sources have imbalanced labeled sample sizes. In Designs I and II, the sources share the target covariance but have a shifted mean, Xpℓq „ N pμS , Σ0q,with μS equals 0 .6 in the first 10 coordinates and zero elsewhere; in Design III, all populations share the target covariate distribution. The designs differ in how the source conditional outcome laws relate to the target. Full data-generating details are provided in the Supplementary Materials. 
+
+Design I: temporal domains and future generalization. We generate L “ 5 ordered historical source domains and one current target domain to mimic temporal drift within a population. Historical sources gradually depart from a common signal, while the current target is generated from a mixture of recent sources plus a target-specific deviation controlled by α, with larger α indicating weaker source-mixture transferability. We then generate post-target future populations under random, perturbed-hull, and adversarial-hull drift to evaluate robustness beyond the observed target. 
+
+Design II: heterogeneous sources and current-target transfer. We generate L “ 5 source sites with distinct nonlinear outcome mechanisms and one current target. No single source is directly transferable, but source mixing can approximate the target, with α controlling the degree of target-specific deviation. This design evaluates transfer from heterogeneous sources. 
+
+Design III: clean and corrupted source libraries. We generate L “ 10 sources, including nine transferable sources and one corrupted source whose distance from the target is controlled by 
+
+κ. In III(i), each clean source matches the target but differs in estimation precision. In III(ii), no clean source matches the target individually, but a mixture of the clean sources recovers the target. Thus, Design III evaluates both uncertainty-aware borrowing across sources of different precision and robustness to negative transfer from an increasingly corrupted source. 
+
+Benchmarks. We consider a range of benchmark methods. Target only fits OLS using only the n0 labeled target observations; while pooled fits OLS after combining all source and target observations. TransGLM (Tian & Feng 2023) is a traditional transfer-learning algorithm that borrows information from sites with similar β. Maximin is the standard group DRO estimate of 19 Meinshausen & B¨ uhlmann (2015), with CIs constructed using the resampling method of Guo (2023). 
+
+RIFL (Guo, Li, Han & Cai 2025) is a robust integrative method that assumes a majority of the sites share a common β. It first compares sites pairwise based on their estimated coefficients, uses these pairwise similarities to identify a mutually similar set of sites, and then constructs CIs for the shared 
+
+β by applying a resampling-based procedure to the selected sites. We also include source–target mixing , which constructs an aggregate estimator under the source-mixing assumption by choosing simplex weights over a target-source coefficient library. Specifically, it splits the target labels, using the first half to estimate a target column ˆβp1q 
+
+> 0
+
+and the second half to choose simplex weights over ˜B “ p ˆβp1q 
+
+> 0
+
+, pBsource q by least squares. Its inference procedure follows the same resampling idea used for Maximin. GUARD is throughout the version whose λ is chosen by Mallows’ Cp; ˆmℓ
+
+is fit by gradient boosting and ˆ wℓ by cross-fitted logistic regression, and inference uses M “ 50 Bayesian-bootstrap resamples with screening levels α1 “ 0.01, α2 “ 0.04 at nominal 95%. 
+
+Evaluation Metrics. For evaluating future generalization under Design I, we consider regret on a future population, Reg p ˆβ; βfut q “ ∥ ˆβ ´ βfut ∥2Σ0 ´ ∥β0 ´ βfut ∥2Σ0 . (35) At each parameter value indexing a future family (i.e., δ for random drift, εv for perturbed hull, and r at a fixed εv for two adversarial families), we generate 300 future βfut , denoted by Bfut , and report the worst-case regret Rworst “ sup βfut PBfut Reg p ˆβ; βfut q. For current-target transfer learning under Design II and III, we report estimation error for β0: ∥ ˆβ ´ β0∥2Σ0 . For inference, we separate three questions. First, we assess validity of the screened GUARD confidence interval for a fixed λ,reporting coverage and length; these diagnostics are reported in the Appendix. Second, for future generalization under Design I, coverage and length cannot be read separately because a sufficiently wide interval can cover any future βfut . We therefore score the two jointly through the Winkler interval score (IS) (Winkler 1972, Gneiting & Raftery 2007). Third, for current-target transfer under Designs II and III, we report coefficient-level coverage of β0 and mean interval length, with 
+
+λ perturbed as part of the resampling procedure. Coverage is defined as the fraction of the pA
+
+coordinates whose intervals contain the true coefficient. For level 1 ´ α0, an estimated interval 
+
+rpθℓ, pθus and a target θ, the Winkler IS is defined as IS ppθℓ, pθu; θq “ p pθu ´ pθℓq ` 2
+
+α0
+
+ppθℓ ´ θq 1tθ ă pθℓu ` 2
+
+α0
+
+pθ ´ pθuq 1tθ ą pθuu. (36) Lower IS favors intervals that are both short and well calibrated. 20 5.2 Results 
+
+5.2.1 Estimation and Prediction Performance .02 .03 .05 .07 .1 .2 .3 .5 .7 11.5 target 0.05 0.10 0.15 0.20 0.25 0.30                           
+
+> δ
+> (a) Random drift
+> .02 .03 .05 .07 .1 .2 .3 .5 .7 11.5 target 123456
+> εv
+> (b) Perturbed hull
+> .003 .005 .007 .01 .02 .03 .05 .07 .1 .2 .3 .5 .7 11.5 target 0.10 0.20 0.35 0.50 0.65 0.80 1.00 r
+> (c) Adversarial centered at centroid
+> .003 .005 .007 .01 .02 .03 .05 .07 .1 .2 .3 .5 .7 11.5 target 0.10 0.20 0.35 0.50 0.65 0.80 1.00 r
+> (d) Adversarial centered at target
+> GUARD Target only transGLM Maximin Source−target mixing Pooled RIFL
+
+Figure 2: Future generalization under temporal-domain Design I. Empirical worst-case regret Rworst on future populations. Panels correspond to random drift (a); perturbed hull (b); adversarial hull drift with c “ p L ` 1q´11 (c) and with c “ e0 (d). The leftmost points on each panel correspond to βfut “ β0, so regret equals current-target estimation error. We first evaluate future generalization under Design I. Figure 2 compares worst-case regret under four future-population generators. When the future population concides with the current target, corresponding to the leftmost points, regret reduces to MSE. GUARD attained an MSE of 0 .017, compared with 0 .036 for source–target mixing, 0 .038 for maximin, 0 .11 for transGLM, and 0 .16 for target only. As the future population moved away from the current target, GUARD retained the most stable. Under random drift (Figure 2a), GUARD’s regret increased from 0 .017 to 0 .062 as δ increased from 0 to 0.3, more slowly than all other methods. Under the perturbed-hull drift (Figure 2b), GUARD’s regret increased only from 0 .022 at εv “ 1 to 0 .046 at εv “ 6, and remained the lowest over the reported range. These results indicate that GUARD retained its future-generalization advantage as the future population moved either in an unanticipated direction or within a perturbed version of the coefficient library. The adversarial-hull results (Figure 2c,2d) show a different pattern. Because the adversary selects future populations from the perturbed target-source library, methods that borrow information from the sources can sometimes become better aligned with the selected future direction as r increases. Thus, GUARD, source–target mixing, and transGLM can show decreasing regret, but their absolute regret levels remained very different. As r increased, GUARD’s regret decreased from 0 .009 to 0.004 for the centroid-centered adversary and from 0 .018 to 0 .010 for the target-centered adversary. In contrast, maximin’s regret increased from 0 .040 to 0 .068 and from 0 .042 to 0 .059, respectively. Source–target mixing followed the same direction as GUARD under the centroid-centered adversary, decreasing from 0 .030 to 0 .025, but remained less accurate; its regret was 3 .2 times that of GUARD at r “ 0.2 and 6 .0 times that of GUARD at r “ 1. Pooled and RIFL had substantially larger regrets, approximately 1 .0 ´ 1.5. Overall, Design I shows that GUARD preserves accuracy under several forms of post-target temporal drift, not only improving estimation at the current target. 21 .01 .03 .10 .30 1.00 .05 .1 .2 .3 .5                      
+
+> α
+> Design I: temporal
+> .01 .03 .10 .30 1.00 .02 .07 .1 .2 .3 .5
+> α
+> Design II: multisite
+> .001 .003 .01 .03 0.1 .25 .5 12
+> κ
+> Design III(i): clean = target
+> .01 .03 .1 0.1 .25 .5 12
+> κ
+> Design III(ii): mixture = target
+> GUARD Target only Pooled transGLM Maximin Source−target mixing RIFL
+
+Figure 3: Estimation error (∥ ˆβ ´ β0∥2Σ0 ) under Design I temporal domains and Design II multisite transfer, as the target departs from the source convex hull ( α), and under Design III sub-designs (i) and (ii), as the corrupted source moves farther from the target ( κ). We next evaluate current-target transfer learning under Design I-III. Although Design I is used above to assess future generalization, it also provides a temporal-domain setting for evaluating current target estimation as source-mixing becomes less accurate. Figure 3 evaluates current-target estimation as α increases in Designs I and II, moving the target farther from exact source mixing, or as one source becomes increasingly corrupted in Design III. Under exact source mixing ( α “ 0), GUARD attained an MSE of 0 .0084 in Design I, compared with 0 .15 for target only, and 0 .0099 in Design II, compared with 0 .028 for source–target mixing and 0 .068 for target only. As α increased, GUARD’s MSE rose gradually toward the target-only benchmark, but remained more accurate than other benchmarks under Design I and the best transfer method across Design II. In Design II, source–target mixing ceased to improve over target only near α “ 0.3, whereas GUARD approached target-only performance only near α “ 0.5. The remaining methods did not exploit the mixture relationship to the same extent. Pooling was among the least accurate methods in both Designs I and II, because it ignored heterogeneity in both the covariate and outcome spaces. RIFL also performed poorly in Design I, consistent with its source-screening strategy not tailored to settings where transferability holds primarily through a mixture of heterogeneous sources. TransGLM was less sensitive to changes in α, but its MSE remained above that of GUARD throughout Design I, and when α ď 0.2 in Design II. Maximin did not adapt well to the target-specific deviation, especially in Design II, where MSE increased from 0 .18 to 0 .35. Thus, GUARD performed best when source mixing was exact or moderately violated and remained comparable to the best-performing methods even at larger α. Design III assesses performance when sources except one corrupted (i) individually match the target; or (ii) can recover the target through a mixture. GUARD’s MSE changed only from 0 .0007 to 0 .0013 as κ increased from 0 to 2 in (i), and from 0 .0054 to 0 .0065 in (ii). Thus, GUARD remained stable and comparable to the best-performing methods even at larger κ. Pooling performed poorly in (i) because it failed to exclude the corrupted source. RIFL remained competitive in (i), but poorly in (ii). These results show that (i) favors source screening, whereas (ii) require mixture-based transfer; GUARD was best or close to the best in both settings. 22 5.2.2 Inference Validity and Interval Quality 0.3 0.5 1.0 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 0.0 0.1 0.2 0.3                  
+
+> δ
+> interval score coverage for  βfuture
+> (a) Random drift
+> 0.2 0.3 0.5 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 0246
+> εvinterval score coverage for  βfuture
+> (b) Perturbed hull
+> 0.3 0.5 1.0 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 0.2 0.4 0.6 0.8 1.0 rinterval score coverage for  βfuture
+> (c) Adversarial centered at centroid
+> 0.2 0.3 0.5 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 0.2 0.4 0.6 0.8 1.0 rinterval score coverage for  βfuture
+> (d) Adversarial centered at target
+> GUARD Target only Maximin Source−target mixing transGLM Interval score Coverage
+
+Figure 4: Interval quality under future drift. IS on each coordinate of βfut (solid, left axis) and coverage of βfut (dashed, right axis), under four different future distribution generators. Dashed line at the 0 .95 indicates nominal coverage level. Pooled and RIFL are omitted due to large IS (3 .1–4 .3). We next evaluate the performance of the re-sampling based uncertainty quantification. We first examine the performance of GUARD confidence intervals for βGUARD pλq at fixed values of the penalty parameter λ. Across the considered values of λ, GUARD maintained near-nominal coverage while producing substantially shorter intervals than target only. Detailed results are given in Appendix. We then assess interval quality for future generalization under Design I using the interval score, followed by current-target inference under Designs I–III. Figure 4 evaluates interval quality for future generalization under Design I. Moving from left to right, the future target moves farther away from the current target. GUARD achieved the lowest interval score in most settings, indicating the best balance between interval length and coverage. At the current target, GUARD had the shortest average interval, with width 0.226, while maintaining empirical coverage 0.993. Its advantage was most pronounced under small-to-moderate random, perturbed-hull, and adversarial-hull drift. When the future target moved very far from the current target, GUARD’s shorter intervals became less conservative, and wider methods such as maximin or source–target mixing became competitive in some settings. Overall, GUARD provided the most favorable interval quality over the practically relevant range of future drift. 23 0.7 0.8 0.9 1.0 .05 .1 .2 .3 .5                                                
+
+> α
+> Design I: coverage
+> 0.7 0.8 0.9 1.0 .02 .07 .1 .2 .3 .5
+> α
+> Design II: coverage
+> 0.7 0.8 0.9 1.0 0.1 .25 .5 12510
+> κ
+> Design III(i): coverage
+> 0.7 0.8 0.9 1.0 0.1 .25 .5 12510
+> κ
+> Design III(ii): coverage
+> .1 .2 .3 .4 .5 .05 .1 .2 .3 .5
+> α
+> Design I: mean CI length
+> .1 .2 .3 .4 .5 .02 .07 .1 .2 .3 .5
+> α
+> Design II: mean CI length
+> 0.1 .2 .3 0.1 .25 .5 12510
+> κ
+> Design III(i): mean CI length
+> 0.1 .2 .3 0.1 .25 .5 12510
+> κ
+> Design III(ii): mean CI length
+> GUARD Target only Maximin Source−target mixing RIFL transGLM
+
+Figure 5: Current target inference for β0. Coverage of β0 (top) and mean interval length (bottom), under different source-target generation mechanisms. Figure 5 evaluates the current target inference for β0 under Designs I–III. In Designs I-II, the empirical coverage of GUARD remained close to the nominal level 95% as α increased, while producing shortest intervals among methods that do produce valid coverage. For example, in Design I when α “ 0, GUARD mean interval length was 0 .21, compared with 0 .33 for source–target mixing, 0.26 for maximin, and 0 .40 for target only. On the other hand, RIFL and transGLM failed to attain valid coverage in Design I, while in Design II both attained the nomial coverage with the price of two largest intervals (transGLM 0.285; RIFL 0.347–0.363, against GUARD’s 0.150–0.246). In Design III(i), where each clean source coincided with the target, GUARD, RIFL, and source–target mixing all maintained coverage. GUARD produced interval lengths of 0 .021–0 .045, substantially shorter than target only (0.261), transGLM (0.293–0.295), source–target mixing (0.236–0.249), and RIFL (0.066–0.069). Overall, GUARD provided the most favorable coverage–length trade-off across the considered source–target structures. 
+
+## 6 Robust Disease Activity Prediction in Rheumatoid Arthritis 
+
+Rheumatoid arthritis (RA) is a chronic inflammatory disease in which disease activity reflects the burden of joint and systemic inflammation. Because active inflammation can fluctuate over time and contribute to symptoms, functional limitation, and joint damage, RA care centers on longitudinal monitoring of disease activity. Modern treat-to-target management also uses repeated disease-activity assessment to guide treatment adjustment (Smolen 2016, Fraenkel et al. 2021). We study prediction of future CRP-based 28-joint Disease Activity Score (DAS), a composite measure of RA disease activity, using longitudinal EHRs. Accurate prediction of future DAS can help identify patients at risk of uncontrolled disease and support earlier clinical monitoring or treatment 24 adjustment. Deriving a temporally robust DAS prediction model using EHR data spanning multiple decades is challenging because patient population and clinical practice have shifted drastically over the years. Coding systems, laboratory ordering, medication availability, and treatment strategies all evolved over time. Diagnosis-code-derived features may shift around the ICD-9 to ICD-10 transition occurred around 2016, while treatment indicators may partly reflect the adoption of biologic and targeted synthetic disease-modifying antirheumatic drugs rather than only patient-level disease status. A model that pools historical years without accounting for these changes may therefore learn calendar-era patterns rather than stable predictors of future disease activity. 
+
+6.1 Study Cohort, pre-trained feature representation, and evaluation design 
+
+Patient histories were aggregated into six-month windows using counts of EHR-derived features. For patient i and window t, the prediction target was future DAS, Yi,t “ DAS i,t `1, modeled on the log scale; windows with observed future DAS were labeled and the rest unlabeled. Before applying GUARD, we pretrained a knowledge-graph-guided transformer on RA EHR data through 2009, comprising 33 ,329 patients, 310 ,005 patient-windows, and 3 ,816 labeled windows. The model maps longitudinal EHR histories to patient-window embeddings, which were reduced by PCA to 22 dimensions while retaining about 95% of the variation; the same transformation was applied to post-2009 windows. This representation captures relationships among related medications, laboratory tests, and other EHR concepts whose recording patterns may shift over time, providing a pretrained representation that GUARD can recalibrate using limited target labels and historical source years. The downstream analysis included 671 ,003 post-2009 windows from 62 ,719 patients. The working design A had pA “ 33 columns, including demographics, CRP, ESR, the 22-dimensional embeddings, and the pretrained prediction f0pXq; we also evaluated DML recalibration of f0pXq alone. The nuisance design X additionally included four LLM-derived disease-severity indicators (Yang et al. 2026), used only in the outcome and density-ratio models. We used calendar years to define target and source populations. For target year t, that year’s windows formed the target and each preceding year formed a separate source. We evaluated t “ 2012 , . . . , 2017, with evaluation through 2020. Across 2009–2020, there were 5 ,093 labeled and 107 ,702 unlabeled windows, reflecting a label-scarce setting. For each target year, n0 “ 100 labeled observations were used for training and the remainder for evaluation. To reduce labeled–unlabeled covariate shift, each labeled window was matched without replacement to 20 unlabeled windows using nearest-neighbor propensity-score matching, and only matched unlabeled windows were retained. To evaluate prediction performance, we considered held-out samples from the current target year ph ” v ´ t “ 0q and labeled windows from future years ph ą 0q, with the latter assessing robustness to temporal drift. For method m, target year t, and evaluation year v ě t, we used the residual-variance-adjusted excess risk 
+
+EtÑvm “ nv´1 ÿ
+
+> iPIv
+
+`Yi ´ AJ 
+
+> i
+
+pβptq
+
+> m
+
+˘2 ´ p nv ´ pAq´1 ÿ
+
+> iPIv
+
+`Yi ´ AJ 
+
+> i
+
+rβpvq˘2,
+
+where pβptq 
+
+> m
+
+is trained using target-year t data and rβpvq is the least-squares fit in the evaluation 25 year. Thus, EtÑvm measures excess prediction error relative to an evaluation-year-specific fit. We also report Pearson correlation between predicted and observed DAS and AUC for classifying low disease activity, defined as DAS ă 3.2 (Fransen & van Riel 2009). Metrics are averaged over all target-year/evaluation-year pairs with the same horizon h.For uncertainty quantification, we evaluated coefficient-level CIs, mean-response intervals, and prediction intervals. Mean-response intervals target AJ 
+
+> i
+
+β0 and were summarized across deciles of covariate extremity, while prediction intervals target future patient-level outcomes and were evaluated by empirical coverage and average length among records with observed outcomes. For GUARD, maximin, and source–target mixing, prediction intervals were constructed by adding an estimated residual variance to the resampling-based mean-response intervals before taking the union across stable resamples. Details on covariate-extremity stratification, residual variance estimation, and interval construction are provided in the Supplement. 
+
+6.2 Results 
+
+6.2.1 Prediction performance 
+
+Figure 7 summarizes performance with training target year 2012 across both current and future target years while Figure 6 summarizes average prediction performance across different horizons. As shown in Figure 7(a), with source data up to 2011 and training target year 2012, the model updated by GUARD attained the most robust performance. It exhibited little deterioration over this period: its excess risk was 0 .0134 on the held-out 2012 records and 0 .0146 eight years later. In contrast, the excess risk of target only estimator increased from 0 .0699 to 0 .5232, a 7 .5-fold increase; the corresponding increases were from 0 .0216 to 0 .1914 for pooling and from 0 .0357 to 0 .1678 for transGLM. Source-target mixing achieved a slightly lower excess risk than GUARD in the target year itself (0 .0114 versus 0 .0134), but this advantage had disappeared by 2014, and its excess risk reached 0 .0341 in 2020. The recalibrated original f0pXq generally performed worse than GUARD or source mixing, suggesting that updating is necessary to improve performance. The horizon-level results in Figure 6 show that GUARD’s advantage persisted across training target years and horizons. Averaged over target-year and evaluation-year pairs with horizon h,GUARD’s excess risk increased only from 0 .014 at h “ 0 to 0 .016 at h “ 6, a 16% change. By comparison, excess risk increased by 130% for source–target mixing, 210% for pooling, 310% for transGLM, and 630% for target only. Although Maximin and the recalibrated model f0pXq were relatively stable across horizons, their absolute excess risk remained higher than GUARD’s; at h “ 6their excess risks were 0 .026 and 0 .040, compared to 0 .016. GUARD also retained substantially higher R2 and AUC across horizons, except for h “ 6 where the original GraphPath head achieved the best AUC. Overall, GUARD achieved both low excess risk and strong resistance to temporal drift, more effectively translating the pretrained representation into accurate DAS prediction over time. 26 .02 .05 .10 .20 .40 0 2 4 6years ahead                 
+
+> (a) Excess risk by horizon
+> 0.2 0.3 0.4 0.5 0246years ahead
+> (b)cor (Y,A′β ^)by horizon
+> 0.60 0.65 0.70 0246years ahead
+> (c) AUC by horizon
+> GUARD Target only Pooled transGLM Maximin Source−target mixing GraphPath head
+
+Figure 6: Accuracy as a function of horizon, pooled over the six target years. Horizon 0 is the held-out target year. (a) Excess risk on a log scale. (b) Pearson’s correlation between DAS and predicted scores (c) AUC for DAS below 3 .2. 
+
+6.2.2 Uncertainty Quantification 
+
+GUARD also produced sharper coefficient-level inference as shown in Figure 7b. For target year 2012, the average confidence-interval length across the 33 coordinates was 0 .101 for GUARD, compared with 0 .234 for maximin, 1 .304 for source–target mixing, and 2 .306 for target only. Thus, intervals from source–target mixing and target only were 12 .9 and 22 .8 times longer, respectively, than those from GUARD. This precision allowed to GUARD to detect 11 coordinates, including 8 embeddings, with coefficients significantly different from 0, compared with 2 for maximin and 1 each for source–target mixing and target only, both only identifying current-window median CRP. Figure 7(c) summarizes the EHR feature blocks underlying the eight embedding directions selected by GUARD, using SHAP values normalized by the standard deviation of each component (Lundberg & Lee 2017). These selected directions were driven mainly by longitudinal EHR code patterns, which accounted for 80 .4% of the total attribution, including 44 .6% from historical counts and 35 .8% from the current window. Demographic and clinical variables contributed 13 .0%. Figure 7(d) summarizes key contributors to the fitted 2012 GUARD score as measured by their normalized SHAP vales. Two key laboratory measurements for RA activity, CRP and ESR, accounted for 45 .7% of the displayed attribution. Narrative concepts accounted for 48 .7%, while codified EHR variables accounted for the remaining 5 .6%. The most highly ranked concepts, including nonsteroidal anti-inflammatory agents, edema, joint effusion, swelling, prednisone, and rheumatism, are clinically consistent with active RA and its treatment. Thus, GUARD effectively leverages the semantic structure learned by the pretrained representation while emphasizing stable, recognizable RA signals such as inflammatory markers, symptoms, and treatments. Mean-response intervals also clearly showed GUARD’s uncertainty gain (Figure 7e). From covariate-extremity decile 1 to decile 10, GUARD’s interval length increased from 0 .076 to 0 .191, compared with 0 .740 to 2 .216 for target only. GUARD’s intervals were therefore 9 .8 and 11 .6 times 27 shorter at the most typical and most extreme profiles, respectively. They also widened less with covariate extremity, increasing by a factor of 2 .53, compared with 2 .99 for both maximin and target only and 3 .33 for source–target mixing. Prediction intervals show a different pattern from the mean-response intervals because they include both estimation uncertainty and residual outcome variation. As shown in Figure 7(f), all methods achieved approximately nominal coverage across covariate-extremity deciles, but their interval lengths diverged for more extreme patient profiles. GUARD’s prediction intervals remained nearly flat across deciles, increasing only from about 1.50 for typical profiles to 1.52 for the most extreme profiles. In contrast, target only widened substantially, reaching 2.61 at decile 10, and source–target mixing also became noticeably wider. Thus, even when residual variation dominates prediction uncertainty, GUARD maintains valid coverage while avoiding the large interval inflation seen for less stable target-only or transfer estimators. 
+
+## 7 Discussion 
+
+We have introduced GUARD, a semi-supervised framework for post-deployment model updating that anchors a robust update to the current target population while calibrating source borrowing to estimation uncertainty. Anchoring in this way keeps the target labels informative without giving up protection against future drift, and the uncertainty matrix V directs borrowing toward sources that can be estimated well. The simulations and the RA EHR application show that this translates into accuracy that holds up as the deployment environment moves away from the training target, with more reliable intervals than competing methods. We assume throughout that labels are missing completely at random within each population. In EHR, this is reasonable by design when labels are curated via random sampling of patients for chart review. The GUARD framework can accommodate labeling that is missing at random given 
+
+X by introducing a selection propensity πℓpxq “ Pr pR “ 1 | X “ x, population ℓq and weighting the labeled contributions in (13) by πℓpxq´1, at the cost of one additional nuisance function per population and a correspondingly modified θℓ in (14). In the application we mitigate labeled– unlabeled covariate imbalance by propensity matching each labeled window to twenty unlabeled windows, but a formal treatment of outcome-dependent labeling warrants future research. The population quantities, the coefficient library B, the uncertainty matrix V , and the trans-ferable set in Definition 2, depends on the feature map A “ ApXq. Thus, transferability depends on the representation as much as on the populations. This makes the choice of A an important design decision. It must be rich enough for a linear update to correct the drift, but small enough to fit from a few hundred target labels. In our EHR application, we use a pretrained representation via a transformer architecture followed by dimension reduction via principal components, plus the deployed score f0pXq and a few clinical covariates. A pretrained representation with a projection head is a reasonable starting point when a deployed model already exists, but building a theoretically justified representation step into GUARD itself warrants future research. We work throughout in the regime N0 " max 0ďℓďL nℓ, under which the shared target-side term 
+
+R in (16) is of smaller order than the diagonal labeled-data term D, so that V is approximately 28 .01 .02 .05 .1 .2 .5 2012 2014 2016 2018 2020 evaluation year 
+
+(a) Excess risk by evaluation year 
+
+nd_step4 PC22 PC17 PC15 PC14 PC6 PC4 PC3 PC1 crp_median_cur crp_median −1 −.2 −.05 0 .05 .2 1
+
+(b) Coefficient intervals 
+
+0 1 2 3mean |SHAP| per PC sd 
+
+(c) PC composition 
+
+GUARD Target only Pooled transGLM Maximin Source−target mixing GraphPath head clinical / demo codes (this window) codes (history) MONTH_6 
+
+(d) EHR features driving the fitted 2012 GUARD score 
+
+> NLP: Disorders codified: PheCode NLP: Chemicals & Drugs codified: Medication NLP: Procedures codified: Lab (LOINC/CCS) Lab value (CRP / ESR) NLP: other
+
+0.1 0.3 1.0 1 2 3 4 5 6 7 8 9 10 decile of (A − A)′Σ^−1
+
+(A − A) in 2012 (1 = most typical) 
+
+(e) Interval for A ′β01.5 1.8 2.1 2.4 0.80 0.85 0.90 0.95 1.00 1 2 3 4 5 6 7 8 9 10 decile of (A − A)′Σ^−1
+
+(A − A) in 2012 (1 = most typical) coverage of Y (dashed) 
+
+(f) Interval for a new Y: length and coverage Figure 7: Target-year 2012 analysis. Results are averaged over 20 random splits. (a) Excess risk across evaluation years. (b) Coefficient confidence intervals. (c) Embedding direction feature-block composition. (d) Wordcloud of raw EHR features contributing to GUARD’s 2012 DAS predictions, with font size proportional to the SHAP value. (e) Mean-response interval length and (f) prediction-interval length and coverage across covariate-extremity deciles. 29 diagonal. When this regime is unavailable, one may instead partition the target sample into L
+
+disjoint subsets and use the ℓth subset for all target-side quantities entering pβℓ. If each source also uses its own independent data, the columns of pB are then built from mutually independent blocks and V is diagonal by construction. The cost is that each block carries roughly n0{L target observations, so Σ 0 and the target column are estimated less precisely; the regularity conditions of Section 4 must be restated in terms of the per-block sample size. Although our theoretical analysis targets the robust prediction model β‹
+
+> GUARD
+
+pλq “ Bγ ‹
+
+> λ
+
+, the current algorithm can also support inference for the target coefficient β0 under additional conditions. For a prespecified contrast a, the same screened union confidence interval remains asymptotically valid for aJβ0 if |aJtβ‹
+
+> GUARD
+
+pλq ´ β0u| “ otσ‹
+
+> a
+
+pλqu , where σ‹
+
+> a
+
+pλq denotes the standard deviation of the leading fixed-weight estimation error aJp pB ´ Bqγ‹
+
+> λ
+
+, and the conditions ensuring coverage of the GUARD target hold. When inference concerns β0, λ therefore serves as a tuning parameter for controlling transfer bias relative to the inferential scale, where a sufficient large λ may ensure 
+
+|aJtβ‹
+
+> GUARD
+
+pλq ´ β0u| “ otσ‹
+
+> a
+
+pλqu .The GUARD construction rests on the identity βnew pγq “ Bγ . Under squared loss, a convex mixture of conditional outcome laws induces the same convex mixture of target-projected coefficients, which is what reduces (GUARD DRO ) to a quadratic program on the simplex and makes V the natural object to penalize. This fails under cross-entropy loss, where the optimal linear predictor under a mixture is not the mixture of the population-specific optimal predictors. Thus extending to non-linear link would need a local quadratic expansion around β0 or a direct treatment of the conditional group DRO problem in the spirit of Guo, Wang, Hu & Bach (2025). In this paper, we consider mixture distributions Pnew pγq for the conditional laws while holding Pp0q 
+
+> X
+
+fixed, so GUARD is robust to concept drift but not to future covariate shift. This keeps the estimand on a single interpretable scale, since β0 is an L2 projection under Pp0q 
+
+> X
+
+and would itself move otherwise. It may be of interest to further incorporate bounded perturbations of Pp0q 
+
+> X
+
+, similar to Kim et al. (2026), which could further widens the uncertainty set at the cost of a moving target of inference. The framework extends to a high-dimensional working feature map under sparsity and regularity conditions, with two modifications. First, when the target-projected coefficients β0, . . . , β L are sparse, the unregularized projection estimator in (13) is replaced by 
+
+pβℓ P arg min 
+
+> bPRp
+
+!
+
+bT pΣ0b ´ 2bT pμℓ ` ρℓ}b}1
+
+)
+
+, ℓ “ 1, . . . , L, (37) where ρℓ ą 0 is a regularization parameter distinct from the GUARD penalty λ, and pβ0 is estimated by the Lasso on the labeled target data. This requires a restricted eigenvalue condition on Σ 0
+
+and continues to treat L as fixed. Second, the inferential target is no longer the full vector but a subvector β0,S with S Ă t 1, . . . , p u, or a low-dimensional transformation of it; the corresponding uncertainty matrix has entries Vℓℓ 1 “ Erp pβℓ,S ´ βℓ,S qTΣ0,SS p pβℓ1,S ´ βℓ1,S qs , computed from standard debiased Lasso results. GUARD fits the regulatory setting that motivated this work: it holds the approved rule f0
+
+fixed, updates only a low-dimensional head in a prespecified feature space from a few newly labeled observations, and reports intervals for the updated quantity. Because the update depends only 30 on prespecified inputs— A, the source definitions, and λ—it can be written into a predetermined change control plan. One gap remains. A health system would update recursively, with this year’s model becoming next year’s f0 and this year’s target becoming next year’s source, which breaks the cross-population independence in Assumption 1. Characterizing error accumulation across repeated cycles is an open problem, and an important one for keeping clinical algorithms reliable over decades. 
+
+## References 
+
+Abulibdeh, A. et al. (2025), ‘Challenges in ensuring effectiveness and reliability of clinical AI after deployment’, arXiv preprint . arXiv:2025. Awasthi, P., Kale, S. & Pensia, A. (2024), Semi-supervised group dro: Combating sparsity with unlabeled data, in ‘Proceedings of the 35th International Conference on Algorithmic Learning Theory’, Vol. 237 of Proceedings of Machine Learning Research , pp. 1–36. Fraenkel, L., Bathon, J. M., England, B. R., St. Clair, E. W., Arayssi, T., Carandang, K., Deane, K. D., Genovese, M., Huston, K. K., Kerr, G., Kremer, J., Nakamura, M. C., Russell, L. A., Singh, J. A., Smith, B. J., Sparks, J. A., Venkatachalam, S., Weinblatt, M. E., Al-Gibbawi, M., Akl, E. A. et al. (2021), ‘2021 american college of rheumatology guideline for the treatment of rheumatoid arthritis’, Arthritis Care & Research 73 (7), 924–939. Fransen, J. & van Riel, P. L. C. M. (2009), ‘The disease activity score and the eular response criteria’, Rheumatic Disease Clinics of North America 35 (4), 745–757. Gneiting, T. & Raftery, A. E. (2007), ‘Strictly proper scoring rules, prediction, and estimation’, 
+
+Journal of the American Statistical Association 102 (477), 359–378. Guo, Z. (2023), ‘Statistical inference for maximin effects: Identifying stable associations across multiple studies’, Journal of the American Statistical Association pp. 1–32. Guo, Z., Li, X., Han, L. & Cai, T. (2025), ‘Robust inference for federated meta-learning’, Journal of the American Statistical Association 120 (551), 1695–1710. Guo, Z., Wang, Z., Hu, Y. & Bach, F. (2025), ‘Statistical analysis of conditional group distributionally robust optimization with cross-entropy loss’, arXiv preprint arXiv:2507.09905 .
+
+URL: https://arxiv.org/abs/2507.09905 
+
+Kim, S., Jo, S. H., Ha, W. & Chae, M. (2026), Distributionally robust classification for multi-source unsupervised domain adaptation, in ‘International Conference on Learning Representations’. 
+
+URL: https://arxiv.org/abs/2601.21315 
+
+Laparra, E., Mascio, A., Velupillai, S. & Miller, T. (2021), ‘A review of recent work in transfer learning and domain adaptation for natural language processing of electronic health records’, 
+
+Yearbook of Medical Informatics 30 (01), 239–244. 31 Li, S., Cai, T. T. & Li, H. (2022), ‘Transfer learning for high-dimensional linear regression: Prediction, estimation and minimax optimality’, Journal of the Royal Statistical Society Series B: Statistical Methodology 84 (1), 149–173. Li, S., Cai, T. T. & Li, H. (2023), ‘Transfer learning in large-scale Gaussian graphical models with false discovery rate control’, Journal of the American Statistical Association 118 (543), 2171–2183. Lundberg, S. M. & Lee, S.-I. (2017), A unified approach to interpreting model predictions, in 
+
+‘Advances in Neural Information Processing Systems’, Vol. 30. Mansour, Y., Mohri, M., Ro, J., Theertha Suresh, A. & Wu, K. (2021), A theory of multiple-source adaptation with limited target labeled data, in ‘Proceedings of the 24th International Conference on Artificial Intelligence and Statistics’, Vol. 130 of Proceedings of Machine Learning Research ,PMLR, pp. 2332–2340. 
+
+URL: https://proceedings.mlr.press/v130/mansour21a.html 
+
+Meinshausen, N. & B¨ uhlmann, P. (2015), ‘Maximin effects in inhomogeneous large-scale data’, The Annals of Statistics 43 (4), 1801–1830. Mo, W., Tang, W., Xue, S., Liu, Y. & Zhu, J. (2024), ‘Minimax regret learning for data with heterogeneous subgroups’, arXiv preprint arXiv:2405.01709 .Muehlematter, U. J., Bluethgen, C. & Vokinger, K. N. (2023), ‘FDA-cleared artificial intelligence and machine learning-based medical devices and their 510(k) predicate networks’, The Lancet Digital Health 5(9), e618–e626. Muralidharan, V., Adewale, B. A., Huang, C.-J., Nta, M. T., Ademiju, P. O., Pathmarajah, P., Hang, M. K., Adesanya, O., Abdullateef, R. O., Babatunde, A. O. et al. (2024), ‘A scoping review of reporting gaps in FDA-approved AI medical devices’, NPJ Digital Medicine 7(1), 273. Sagawa, S., Koh, P. W., Hashimoto, T. B. & Liang, P. (2019), ‘Distributionally robust neural networks for group shifts: On the importance of regularization for worst-case generalization’, 
+
+arXiv preprint arXiv:1911.08731 .Smolen, J. S. (2016), ‘Treat-to-target as an approach in inflammatory arthritis’, Current opinion in rheumatology 28 (3), 297–302. Tian, Y. & Feng, Y. (2023), ‘Transfer learning under high-dimensional generalized linear models’, 
+
+Journal of the American Statistical Association 118 (544), 2684–2697. Vela, D., Sharp, A., Zhang, R., Nguyen, T., Hoang, A. & Pianykh, O. S. (2022), ‘Temporal quality degradation in AI models’, Scientific Reports 12 (1), 11654. Wegel, T., Di Gennaro, F., So, G. & Yang, F. (2026), ‘Hedging on the frontier: Learning new tasks with few samples’, arXiv preprint arXiv:2605.30997 .
+
+URL: https://arxiv.org/abs/2605.30997 
+
+32 Wegel, T., So, G., Park, J. & Yang, F. (2025), ‘On the sample complexity of semi-supervised multi-objective learning’, arXiv preprint arXiv:2508.17152 .Winkler, R. L. (1972), ‘A decision-theoretic approach to interval estimation’, Journal of the American Statistical Association 67 (337), 187–191. Xiong, X., Guo, Z. & Cai, T. (2023), ‘Distributionally robust transfer learning’, arXiv preprint arXiv:2309.06534 .Yang, Z., Zhang, Y., Love, Z., Animashaun, A., Zhong, K., McDermott, G., Cai, T. & Liao, K. P. (2026), ‘A framework for human-artificial intelligence co-learning for disease activity labeling using electronic health records’, medRxiv .Zhan, K., Xiong, X., Guo, Z., Cai, T. & Liu, M. (2024), ‘Domain adaptation optimized for robustness in mixture populations’, arXiv preprint arXiv:2407.20073 .33
