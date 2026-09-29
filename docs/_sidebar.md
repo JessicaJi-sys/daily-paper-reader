@@ -1,6 +1,9 @@
 * <a class="dpr-sidebar-root-link" href="#/">首页</a>
 * <a class="dpr-sidebar-root-link dpr-sidebar-noactive-link" href="javascript:void(0)" data-dpr-hash="#/tutorial/README">使用教程</a>
 * Daily Papers
+  * 2026-09-29 <!--dpr-date:20260929-->
+    * 速读区
+      * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/29/2609.30922v1-jevsoup-system-one-routing-for-training-free-lora-composition" data-sidebar-item="{&quot;title&quot;: &quot;JevSoup: System-One Routing for Training-Free LoRA Composition&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.30922v1-jevsoup-system-one-routing-for-training-free-lora-composition&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;ddi-moe&quot;}], &quot;evidence&quot;: &quot;免训练的动态专家路由与LoRA专家组合&quot;}">JevSoup: System-One Routing for Training-Free LoRA Composition</a>
   * 2026-09-27 <!--dpr-date:20260927-->
     * 速读区
       * <a class="dpr-sidebar-item-link dpr-sidebar-item-structured" href="#/202609/27/2609.24061v1-mect-mixture-of-experts-with-cnn-transformer-network-for-speaker-verification" data-sidebar-item="{&quot;title&quot;: &quot;MECT: Mixture of Experts with CNN-Transformer Network for Speaker verification&quot;, &quot;link&quot;: &quot;https://arxiv.org/abs/2609.24061v1-mect-mixture-of-experts-with-cnn-transformer-network-for-speaker-verification&quot;, &quot;score&quot;: &quot;6.0&quot;, &quot;tags&quot;: [{&quot;kind&quot;: &quot;query&quot;, &quot;label&quot;: &quot;ddi-moe&quot;}], &quot;evidence&quot;: &quot;具备话语级与帧级粒度及稠密稀疏路由的MoE&quot;}">MECT: Mixture of Experts with CNN-Transformer Network for Speaker verification</a>

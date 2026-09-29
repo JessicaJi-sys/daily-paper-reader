@@ -1,0 +1,24 @@
+{
+  "label": "2026-09-29",
+  "date": "2026-09-29",
+  "generated_at": "2026-09-29T00:07:12",
+  "count": 1,
+  "papers": [
+    {
+      "paper_id": "202609/29/2609.30922v1-jevsoup-system-one-routing-for-training-free-lora-composition",
+      "section": "quick",
+      "title_en": "JevSoup: System-One Routing for Training-Free LoRA Composition",
+      "authors": "Xiuying Wang, Jiahua Cheng, Shuotian Li, Yufan Cheng, Bowen Deng, Zhexuan Bai, Yichen Li",
+      "date": "2026-09-25",
+      "pdf": "https://arxiv.org/pdf/2609.30922v1",
+      "score": "6.0",
+      "evidence": "免训练的动态专家路由与LoRA专家组合",
+      "tldr": "面向多任务适配，LoRA 虽能提供模块化专家能力，但现有路由常依赖辅助数据、额外训练或自回归解码，部署成本高。JevSoup 提出免训练框架，将 System One 专家路由与 System Two 执行分离，仅凭输入和专家描述，通过结构化概率选出两个专家。它保留首位专家更新，并把第二位专家投影到首位更新行空间的正交补后等权合并。在 14 个 PorTAL 任务和三种 Qwen3 规模上，该方法相对最强外部基线最高提升 1.19% 任务宏平均与 1.21% 样本微平均准确率。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Building adaptable AI systems requires effective coordination of specialized capabilities across diverse tasks. Low-rank adaptation (LoRA) enables modular expertise, but existing routing approaches may require auxiliary data, additional training, or autoregressive decoding. We propose JevSoup, a training-free framework separating System One expert routing from System Two execution. Using only the input and expert descriptions, Jev selects two experts through structured probabilities. JevSoup retains the leading expert's update, projects the second onto the orthogonal complement of the first update's row space, and combines them with equal weights. Across 14 PorTAL tasks and three Qwen3 scales, JepSoup achieves absolute gains of up to 1.19\\% in task-macro and 1.21\\% in sample-micro accuracy over the strongest evaluated external baselines. Our code is available at https://github.com/Leowang980/JevSoup.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
