@@ -48,17 +48,17 @@
 <section class="dpr-home-dashboard-card dpr-home-report-card">
   <div class="dpr-home-dashboard-header">
     <div>
-      <span class="dpr-home-dashboard-kicker">2026-09-29</span>
+      <span class="dpr-home-dashboard-kicker">2026-09-30</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">共 9 篇</strong>
+    <strong class="dpr-home-dashboard-count">共 4 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
-    <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>2 次</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>1</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>8</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>0</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>4</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-09-29 23:02:22 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-09-30 22:41:22 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,9 +69,9 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>今日完成9篇论文日报：精读1篇、速读8篇，最高分为《Function Over Form: Distributional Orthogonalization in Mixture-of-Experts with Replica Expert Mechanism》（8.0/10）。</p>
-<p>最值得关注MoE专家机制与参数高效微调方向，速读中《Distribution-Conditioned Task Routing for Class-Incremental Learning》和《Guided Uncertainty-Aware Robust Domain Transfer》均获7.0/10。</p>
-<p>普通读者建议先读8.0分精读文，再按兴趣速览任务路由与鲁棒域迁移两篇，MoE微调文可作延伸。</p>
+<p>今天没有精读，4 篇速读全部以 6.0 分入账，主题集中在分布偏移下的预测与 MoE 稀疏架构。</p>
+<p>最值得关注两个方向：一是《Summary-powered prediction under distribution shift》用摘要驱动预测来应对分布变化；二是 HERO-MoE 的历史专家路由+保尺度融合与 OmniMoE-VL 的视觉-深度耦合路由，代表了 MoE 在路由与融合上的新设计。</p>
+<p>普通读者可先花几分钟看摘要驱动那篇理解思路，两篇 MoE 当作架构灵感速览即可，不必深挖细节。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -80,12 +80,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">精读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">1 篇</strong>
+    <strong class="dpr-home-dashboard-count">0 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Function Over Form: Distributional Orthogonalization in Mixture-of-Experts with Replica Expert Mechanism">Function Over Form: Distributional Orthogonalization in Mixture-of-Experts with Replica Expert Mechanism</span></li></ul>
+<p class="dpr-home-dashboard-empty">今日暂无推荐。</p>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>1</strong></span></div>
+
 </section>
 <section class="dpr-home-dashboard-card dpr-home-skim-card">
   <div class="dpr-home-dashboard-header">
@@ -93,12 +93,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">速读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">8 篇</strong>
+    <strong class="dpr-home-dashboard-count">4 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Distribution-Conditioned Task Routing for Class-Incremental Learning">Distribution-Conditioned Task Routing for Class-Incremental Learning</span></li><li><span class="dpr-home-dashboard-paper-title" title="Guided Uncertainty-Aware Robust Domain Transfer">Guided Uncertainty-Aware Robust Domain Transfer</span></li><li><span class="dpr-home-dashboard-paper-title" title="From Experts to Sub-experts: Fine-grained Parameter-Efficient Fine-Tuning for MoE LLMs">From Experts to Sub-experts: Fine-grained Parameter-Efficient Fine-Tuning for MoE LLMs</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Summary-powered prediction under distribution shift">Summary-powered prediction under distribution shift</span></li><li><span class="dpr-home-dashboard-paper-title" title="HERO-MoE: Historical Expert Routing with Scale-Preserving Fusion">HERO-MoE: Historical Expert Routing with Scale-Preserving Fusion</span></li><li><span class="dpr-home-dashboard-paper-title" title="OmniMoE-VL: A Sparse Vision-Language Model with Coupled Visual-Depth Routing">OmniMoE-VL: A Sparse Vision-Language Model with Coupled Visual-Depth Routing</span></li></ul>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>8</strong></span></div>
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>4</strong></span></div>
 </section>
 </div>
 

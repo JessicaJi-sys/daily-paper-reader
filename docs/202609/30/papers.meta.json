@@ -1,0 +1,69 @@
+{
+  "label": "2026-09-30",
+  "date": "2026-09-30",
+  "generated_at": "2026-09-30T22:41:25",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202609/30/2609.30908v1-summary-powered-prediction-under-distribution-shift",
+      "section": "quick",
+      "title_en": "Summary-powered prediction under distribution shift",
+      "authors": "Ivy Zhang, Dominik Rothenhaeusler",
+      "date": "2026-09-25",
+      "pdf": "https://arxiv.org/pdf/2609.30908v1",
+      "score": "6.0",
+      "evidence": "分布偏移下利用有限目标数据的预测",
+      "tldr": "当部署人群与训练人群存在分布偏移时，仅有个体源数据而目标人群只有子群汇总信息，预测性能会下降。为此提出SAGE，一种利用目标汇总梯度更新源训练预测器的一步估计器，并按采样与分布不确定性选择步长。理论表明SAGE降低目标超额风险，且最优步长下渐近MSE不劣于EB。真实数据上，SAGE通常优于源模型和忽略偏移的一步更新，并比EB更稳定。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Prediction models can perform poorly when the deployment population differs from the training population. Data from the target population would help, but individual-level target data may be inaccessible because of access restrictions or reporting conventions. We consider a multi-resolution setting in which individual-level data are available from a source population, while the target population is observed only through subgroup summaries. We propose SAGE, a one-step estimator that updates a source-trained predictor using a gradient estimated from these summaries. Motivated by diagnostics consistent with the random distribution shift model, we choose SAGE's step-size to account for both sampling and distributional uncertainty. Under this model, SAGE reduces mean asymptotic target excess risk relative to the source-trained predictor. We also show that, under the model, entropy-balancing weighted empirical risk minimization (EB), which reweights source observations to match the target summaries, is asymptotically equivalent to a full-step SAGE update. SAGE with the optimal step-size has asymptotic mean squared error no larger than that of EB. Across real-world datasets, SAGE generally improves on the source-trained predictor and one-step updates that ignore distribution shift, including when the random shift model only partially captures the observed shifts. Compared to EB, SAGE improves prediction more consistently across the sample size and shift settings studied.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/30/2609.32581v1-hero-moe-historical-expert-routing-with-scale-preserving-fusion",
+      "section": "quick",
+      "title_en": "HERO-MoE: Historical Expert Routing with Scale-Preserving Fusion",
+      "authors": "Junxiang Qiu, Zhengsu Chen, Xinting Hu, Shuo Wang, Hengheng Zhang, Shaofeng Zhang, Changcheng Li, Boyu Shi, Qi Tian",
+      "date": "2026-09-26",
+      "pdf": "https://arxiv.org/pdf/2609.32581v1",
+      "score": "6.0",
+      "evidence": "注入历史路由先验的动态专家路由框架",
+      "tldr": "MoE 通过稀疏激活扩展容量，但路由质量仍关键，标准路由器未显式利用前层路由分布。HERO-MoE 将前序 MoE 层已算出的稠密路由分布去梯度后作为历史先验，以残差形式注入当前路由，并通过尺度保持融合匹配隐藏表示量级、计入可见历史层数。在约 8B 参数、0.5B 激活、100B token 从零训练的 MoE 上，最终损失从 1.6393 降至 1.6184，峰值显存和 FLOPs 仅增 0.44% 与 0.64%。该框架无需辅助路由损失或融合超参，兼容 top-k 与分组路由，可低成本嵌入现有 MoE 骨干。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Mixture-of-Experts (MoE) architectures have become a standard way to scale model capacity while keeping computation sparse, yet routing remains a key determinant of MoE quality and training behavior. Prior empirical studies suggest that MoE routing reflects input semantics and upstream computation across depth, but standard routers do not explicitly use the routing distributions produced by preceding layers. We propose HERO-MoE, Historical Expert ROuting with Scale-Preserving Fusion, a routing framework that injects historical routing priors into MoE routers by reusing detached, dense routing distributions collected from preceding MoE layers. The key idea is simple: HERO-MoE preserves the original token-conditioned routing branch and adds a residual historical routing contribution before the standard softmax and top-$k$ dispatch. To stabilize this historical signal, HERO-MoE introduces a scale-preserving fusion mechanism that matches the magnitude of historical routing memory to the current hidden representation and accounts for the number of visible historical layers, without introducing an auxiliary routing loss or a fusion-specific tuning parameter. By reusing routing distributions already computed by preceding MoE layers, HERO-MoE improves training-loss reduction with modest end-to-end overhead. The resulting router remains compatible with standard sparse dispatch, including top-$k$ and group-limited routing, and can be inserted into existing MoE backbones with minimal architectural changes. Experiments on an approximately 8B-parameter MoE model with 0.5B active parameters, trained from scratch on 100B tokens, show that HERO-MoE reduces the final loss from 1.6393 to 1.6184, while peak memory and FLOPs increase by only 0.44\\% and 0.64\\%, respectively.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/30/2609.32780v1-omnimoe-vl-a-sparse-vision-language-model-with-coupled-visual-depth-routing",
+      "section": "quick",
+      "title_en": "OmniMoE-VL: A Sparse Vision-Language Model with Coupled Visual-Depth Routing",
+      "authors": "Long Qian, Bingke Zhu, Jiaqi Wei, Yingying Chen, Jinqiao Wang",
+      "date": "2026-09-26",
+      "pdf": "https://arxiv.org/pdf/2609.32780v1",
+      "score": "6.0",
+      "evidence": "输入依赖的稀疏MoE路由",
+      "tldr": "现有视觉语言模型虽用稀疏MoE扩展语言侧计算，但视觉信息通常经固定跨模态接口后才被路由，无法按问题选择中间视觉表征。OmniMoE-VL提出耦合视觉深度的路由投影器，对每对图像-提示稀疏选择中间视觉深度，并用全局偏好同时指导局部patch融合与动态视觉注入。在八个图像基准上，以28B总参数、9B激活参数取得平均85.9分。受控实验表明，路由视觉接口是主要架构增益，耦合与问题条件化视觉访问均有效。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Vision-language models (VLMs) increasingly use sparse mixture-of-experts (MoE) to scale language-side computation, yet visual information is typically routed only after passing through a fixed cross-modal interface. This leaves an important decision unresolved: which intermediate visual representations should be exposed to language computation for a given question? We introduce OmniMoE-VL, a sparse VLM with a coupled visual-depth routed projector. For each image-prompt pair, the projector selects a sparse set of intermediate visual depths and reuses the resulting global preference to guide both local patch fusion and dynamic visual injection into the language model. This design enables question-dependent visual access while preserving the native visual-token sequence, and complements token-level expert routing in the vision and language stacks. Across eight image-based benchmarks, OmniMoE-VL achieves an average score of 85.9 with 28B total and 9B activated parameters. Controlled comparisons show that the routed visual interface provides the dominant architectural gain, while matched route and component controls, same-image route analysis, and route interventions further support the value of coupling and question-conditioned visual access.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202609/30/2609.33614v1-eat-expert-account-tracker-for-efficient-moe-inference",
+      "section": "quick",
+      "title_en": "EAT: Expert Account Tracker for Efficient MoE Inference",
+      "authors": "Yuexian Li, Yifei Yang, Zouying Cao, Hai Zhao",
+      "date": "2026-09-27",
+      "pdf": "https://arxiv.org/pdf/2609.33614v1",
+      "score": "6.0",
+      "evidence": "MoE中历史感知的动态专家选择",
+      "tldr": "MoE 可扩展 Transformer，但传统架构常不必要地激活大量专家，现有减专家方法多忽略专家历史表现。本文提出 EAT，利用历史感知指标与自适应阈值动态选择最关键专家，在减少激活专家数的同时保持性能。实验显示，EAT 在多个模型和数据集上优于 Top-P 基线，相比原始方法平均减少超 25% 激活专家，并提升 token 生成速度；仅用 9K 数据经 OPD 即可恢复剪枝模型。消融还发现过度减专家会损害性能，且高层专家通常更关键。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Mixture-of-Experts (MoE) models have emerged as a revolutionary method to scale Transformer models. However, traditional MoE architecture still suffers from inefficiency since a large number of experts are unnecessarily activated. Existing approaches for reducing the number of activated experts often overlook the historical performance of each expert. In this paper, we propose EAT, a novel method called Expert Account Tracker (EAT), which utilizes history-awareness metrics and adaptive thresholding to dynamically select the most important experts, thereby reducing the activated expert number while effectively maintaining the model performance. Experiments show that EAT outperforms the existing baseline Top-P method across multiple models and datasets, achieving over 25% an average reduction compared to the vanilla method in the number of activated experts and performing better token generation speed compared to the baseline. Furthermore, the performance of pruned models can be efficiently recovered via OPD using only 9K data. Additionally, through ablation studies, we find that excessively reducing the number of activated experts can significantly harm model performance, and the importance of experts varies across layers, with higher-level experts being generally more critical.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

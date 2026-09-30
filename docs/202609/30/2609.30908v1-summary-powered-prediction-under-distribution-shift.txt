@@ -1,0 +1,6457 @@
+Title: Summary-powered prediction under distribution shift
+
+URL Source: https://arxiv.org/pdf/2609.30908v1
+
+Published Time: Mon, 28 Sep 2026 00:53:04 GMT
+
+Number of Pages: 64
+
+Markdown Content:
+# Summary-powered prediction under distribution shift 
+
+## Ivy Zhang and Dominik Rothenh¨ ausler September 28, 2026 
+
+Abstract 
+
+Prediction models can perform poorly when the deployment population differs from the training pop-ulation. Data from the target population would help, but individual-level target data may be inaccessible because of access restrictions or reporting conventions. We consider a multi-resolution setting in which individual-level data are available from a source population, while the target population is observed only through subgroup summaries. We propose SAGE, a one-step estimator that updates a source-trained predictor using a gradient estimated from these summaries. Motivated by diagnostics consistent with the random distribution shift model, we choose SAGE’s step-size to account for both sampling and dis-tributional uncertainty. Under this model, SAGE reduces mean asymptotic target excess risk relative to the source-trained predictor. We also show that, under the model, entropy-balancing weighted empirical risk minimization (EB), which reweights source observations to match the target summaries, is asymp-totically equivalent to a full-step SAGE update. SAGE with the optimal step-size has asymptotic mean squared error no larger than that of EB. Across real-world datasets, SAGE generally improves on the source-trained predictor and one-step updates that ignore distribution shift, including when the random shift model only partially captures the observed shifts. Compared to EB, SAGE improves prediction more consistently across the sample size and shift settings studied. 
+
+# 1 Introduction 
+
+Prediction models may generalize poorly when deployed in populations that differ from those represented in the training data. Under such distribution shift, the source risk minimizer can differ from the target risk minimizer θt, limiting predictive performance in the target population (Gardner, Popovic, & Schmidt, 2023; Koh et al., 2021; Liu, Wang, Cui, & Namkoong, 2023). Incorporating information from the target population can help correct this mismatch and improve predictive accuracy. Building prediction models typically requires individual-level observations, but in many applications the target population Pt is observed only in aggregate form because of access restrictions, resource constraints, or reporting conventions. We study this multi-resolution setting, in which individual-level data are available from the source population Ps, but 1arXiv:2609.30908v1 [stat.ME] 25 Sep 2026 only subgroup summaries are observed from Pt, where predictions are needed. This setting raises three questions. First, how should summary information be used to improve a source-trained predictor without individual target observations? Second, how much more can be gained by accounting for distribution shift, compared with an update that assumes i.i.d. data? Finally, how should we quantify uncertainty about the target risk minimizer θt?To illustrate the problem, suppose an analyst at a retail chain wants to predict daily item demand across its locations. They have detailed records from a company-operated location, ‘Store 01’, including item name, number of units sold, and calendar features such as date and seasonality. However, detailed sales records from independently operated franchises are unavailable for model training. The analyst has access only to aggregate reports, such as the proportion of sales made on weekends or average demand across years for each item. A predictor trained only on Store 01 is easy to obtain, but it may not transfer well to the franchise locations because locations differ in customer demand, seasonal patterns, and item-specific sales relationships. The analyst therefore wants to use these summaries to adapt demand forecasts to the franchise locations. Before deciding how best to use the target summary information to adapt the source-trained predictor, we examine the structure of the observed source-target shifts. Consider the Store Item Demand data from Kaggle, which records daily sales for 50 items across 10 stores from January 2013 through December 2017 (Kaggle, 2018), with one store as the source and another as the target. For each source-target store pair, with ns source and nt target records on L covariates and an outcome, we compute for each retained whitened coordinate q = 1 , . . . , L + 1 the standardized mean difference 
+
+ 1
+
+ns
+
++ 1
+
+nt
+
+−1/2 1
+
+nsnsX
+
+> i=1
+
+U (s) 
+
+> i,q
+
+− 1
+
+ntntX
+
+> i=1
+
+U (t)
+
+> i,q
+
+!
+
+, (1) where, for k ∈ { s, t }, denotes the whitened version of the data matrix with rows (( X(k) 
+
+> i
+
+)⊺, y (k) 
+
+> i
+
+), using a common whitening transformation estimated from source records so that the empirical covariance matrix of the transformed source variables is the identity. Each whitened coordinate is generally a linear combination of the original covariates and outcome. Coordinates redundant with an intercept are removed before whitening. If the source and target observations were sampled from the same distribution, the vector obtained by stacking the statistics in Equation (1) over q would be asymptotically standard Gaussian, so its entries would fall near the reference line of a standard Gaussian QQ plot. Instead, Figure 1 shows that the entries deviate from this i.i.d. reference line while remaining approximately linear with an inflated slope. This suggests that the source-target differences are still approximately Gaussian, but with larger variance than sampling noise alone would produce. As we will see in Section 2, this diagnostic pattern is consistent with the random shift model intro-2Figure 1: Normal QQ plots for the Store Item Demand dataset for Stores 02-05. Each point corresponds to the standardized mean differ-ence statistic in Eqn. (1) for one whitened coordinate q. The red line is the standard Gaussian reference line, corresponding to i.i.d. sampling from the same distribution. The green line represents a Gaussian pat-tern with inflated variance. The store pair diagnostics do not follow the i.i.d. reference line, but are approximately linear with inflated variance, consistent with the random shift structure discussed in detail in Sec-tion 2. QQ plots for Stores 06-10 can be found in Appendix C.2. duced by Jeong and Rothenh¨ ausler (2025). Similar patterns have been observed in GTEx data (Jeong & Rothenh¨ ausler, 2026) and in social science replication studies (Jin, Egami, & Rothenh¨ ausler, 2025). Many distribution shift frameworks assume a specific structure linking the source and target distributions: co-variate shift keeps P (Y | X) invariant (Shimodaira, 2000), and domain adaptation learns representations that are invariant across domains (Ganin & Lempitsky, 2015). The random shift model takes a different approach by treating the density ratio between source and target as random, which allows both P (X) and 
+
+P (Y | X) to change. Under the random shift model, there are two sources of variation: sampling variation and variation due to the random distribution shift. When updating a source-trained predictor with target subgroup summaries, the size of this additional variation indicates how strongly to update. We therefore use these summaries both to construct the update and to adapt its step-size to the estimated strength of the shift. We propose SAGE (Summary Adapted Gradient Estimator), a one-step estimator which updates an initial source-trained predictor with a gradient estimated using target subgroup summaries. SAGE also incorporates a data-adaptive step-size estimate that accounts for sample size and distribution shift strength present in the data. The choice of step-size is non-trivial as it represents a trade-off between correcting for distribution shift and introducing excessive variance from potentially noisy summaries. Furthermore, without individual-level target data, the step-size cannot be tuned by target validation, and under distribution shift, 3source validation is not informative. We preview SAGE’s predictive performance in Figure 2, highlighting two sources of improvement over source-only training. First, incorporating target summary data through a conservative one-step update (“One-step shift-ignoring”), with a step-size chosen under an i.i.d. assumption, already improves prediction. Second, choosing the step-size adaptively to account for distribution shift (SAGE) yields a greater MSE reduction. Both methods require no individual-level target data for training. For comparison, we also include an oracle that chooses the step-size using the target test set. SAGE, which does not use the test set, performs close to this oracle. We return to this example in more detail in Section 5.2, including a comparison with entropy-balancing weighted empirical risk minimization (EB). 
+
+Figure 2: Store item demand prediction across stores. Average test MSE as a percentage of source-only predictor test MSE averaged over 300 trials. SAGE (green) outperforms a baseline that ignores distribution shift (blue) and is close to an oracle method (purple). Full experimental details are given in Section 5.2. 
+
+Contribution. We summarize our contributions to prediction and uncertainty quantification using individual-level source data and target subgroup summaries, without requiring individual target observations. 1. Improving prediction using target subgroup summaries. We propose SAGE, a one-step es-timator that incorporates target subgroup summaries to improve a source-trained predictor. Among estimators that adjust the source-trained predictor by a linear function of the source-target summary differences, SAGE with the optimal step-size has the smallest asymptotic mean squared-error. 2. Accounting for distribution shift. Under the random shift model, we derive the asymptotically optimal step-size γ∗ and show that SAGE reduces mean asymptotic target excess risk relative to the source-trained predictor for any fixed γ ∈ (0 , 2γ∗). We also propose an estimator ˆ γ that adapts the 4update to the estimated shift strength and summary sample size. Its accuracy depends on the summary dimension r.3. Connection to entropy balancing. We show that, under the random shift model, EB is asymptot-ically equivalent to a full-step SAGE update ( γ = 1). SAGE with the optimal step-size therefore has asymptotic mean squared-error no larger than that of EB. 4. Uncertainty quantification. We construct plug-in confidence intervals for θt that account for both sampling variability and residual distributional uncertainty under the random shift model. Their asymptotic validity requires a growing summary dimension r.5. Empirical evaluation. Across simulations and real data examples, we demonstrate gains over a source-trained predictor by incorporating target subgroup summaries, with further improvements from accounting for distribution shift. These gains appear both when diagnostics support the random shift model and when the observed shifts are only partially explained by it. We also compare SAGE with EB empirically. 6. Extensions. We extend the SAGE framework to settings where target subgroup variances are available and adapt the method to neural networks through SAGE-NN. 
+
+Paper outline. Section 2 formalizes the problem setting and provides background on the random shift model. Section 3 reviews related work. Section 4 introduces SAGE and establishes its theoretical properties. Section 5.1 examines the theoretical results through simulations. Sections 5.2 and 5.3 present real-world applications, comparing SAGE with a source-trained predictor, other one-step estimator baselines, and EB. Section 5.4 discusses a neural network adaption of SAGE and presents an empirical application. Section 6 concludes with a discussion. 
+
+# 2 Setting 
+
+We consider a source distribution Ps and a target distribution Pt. From the source distribution, we observe individual-level data D(s) 
+
+> i
+
+= ( X(s) 
+
+> i
+
+, y (s) 
+
+> i
+
+, A (s) 
+
+> i
+
+), i = 1 , . . . , n s, where X(s) 
+
+> i
+
+= ( X(s)1,i , . . . , X (s)
+
+> L,i
+
+) denotes covari-ates, y(s) 
+
+> i
+
+denotes the outcome, and A(s) 
+
+> i
+
+= ( A(s) 
+
+> i1
+
+, . . . , A (s) 
+
+> iK
+
+) ∈ { 0, 1}K records subgroup membership. Here, 
+
+A may encode demographic groups, study arms, or other reporting categories. A unit i may have Aig = 1 for more than one g, allowing overlapping subgroups, and the reported subgroups need not form a complete partition of either population. From the target distribution, we observe only subgroup counts and means; individual-level target records are unavailable. We do not require target summaries for every covariate, subgroup, or outcome present in 5the source dataset. We assume that all available target subgroup summaries are computed from a common underlying i.i.d. sample {D(t) 
+
+> i
+
+}nt 
+
+> i=1
+
+from Pt. Consequently, summaries for different potentially overlapping subgroups may be statistically dependent. Our goal is to improve prediction under Pt using individual-level source data together with these target subgroup summaries. If individual-level target observations were available, we could directly estimate the target risk minimizer θt = arg min θ∈Θ Et[ℓ(θ; X, y )] for a loss function ℓ and parameter space Θ ⊂ Rp.Without them, θt cannot be estimated by direct target empirical risk minimization. We therefore begin with an initial source-trained predictor, ˆθinit , and ask how target subgroup summaries can be used to adapt it toward the target population and reduce target risk by accounting for distribution shift. 
+
+## 2.1 Random distribution shift model 
+
+The diagnostic in Figure 1 suggests a model of distribution shift under which source-target differences are approximately Gaussian with inflated variance, and which allows both P (X) and P (Y | X) to change. The random shift model of Jeong and Rothenh¨ ausler (2025) has this property. The random shift model treats the source distribution Ps as a random reweighting of the fixed target distribution Pt over the joint distribution of X and Y , thereby capturing simultaneous shifts in P (X) and 
+
+P (Y | X). Under this model, different parts of the data space are randomly assigned higher or lower probability mass compared to Pt. Formally, let the data space be partitioned into regions ( Ij )j=1 ,...,m of equal probability under Pt, each assigned a random weight W (s) 
+
+> j
+
+that determines how much probability mass that region receives under Ps, that is, with Radon–Nikodym derivative 
+
+dP s
+
+dP t
+
+(D) = W (s)
+
+> j
+> 1
+> m
+
+Pmj′=1 W (s)
+
+> j′
+
+for D ∈ Ij .
+
+The random weights W (s) 
+
+> j
+
+, j = 1 , . . . , m , are i.i.d. across j, positive and satisfy E[W (s) 
+
+> j
+
+] = 1 and Var( W (s)) <
+
+∞. The target sample is independent of the source weights and, conditional on the weights, independent of the source sample. Technical construction details, including regularity assumptions, are provided in Appendix A.2. Adapting Lemma 1 of I. Zhang and Rothenh¨ ausler (2025) to a single-source, fixed-target regime for vector-valued test functions f , we present a distributional CLT that underlies our subsequent theoretical analysis. 
+
+Lemma 1 (Distributional CLT) . Let ft : D → Rpt , f s : D → Rps be any Borel measurable functions with finite second moments under Pt. Consider the setting where distributional and sampling uncertainty are of the same order, i.e., m/n k → ck > 0 for each k ∈ { s, t }. Let D denote a draw from the underlying population 
+
+6distribution Pt on the data space D. Then 
+
+√m
+
+ 1
+
+> nt
+
+Pnt 
+
+> i=1
+
+ft(D(t) 
+
+> i
+
+) − Et[ft(D)] 
+
+> 1
+> ns
+
+Pns 
+
+> i=1
+
+fs(D(s) 
+
+> i
+
+) − Et[fs(D)] 
+
+ d
+
+→ N  0, Ω,
+
+where Ω is the asymptotic covariance matrix, 
+
+Ω := 
+
+ct Var t(ft(D)) 0pt×ps
+
+0ps×pt
+
+ cs + Var( W (s)) Var t(fs(D)) .
+
+
+
+Lemma 1 separates two sources of variation. The constants ck = lim m/n k are inversely proportional to the sample sizes nk and capture sampling variation, while Var( W (s)) captures distributional variation, that is, the strength of the shift. In finite samples, a source sample mean therefore has variance approximately (1 /n s+
+
+δ2dist ) Var t(fs(D)), where δ2dist := Var( W (s))/m , while a target sample mean has variance approximately Var t(ft(D)) /n t. The number of regions m thus sets the scale of the distributional variation relative to the sampling variation. Returning to the diagnostic plot of Figure 1, we can view Store 01 as a perturbed distribution from the target store. Then under a random distribution shift (Lemma 1), we would expect the points from Figure 1, represented by the statistic in Equation (1), to follow an approximately Gaussian distribution with variance inflated by the factor ( cs + ct + Var( W (s))) /(cs + ct). 
+
+# 3 Related Work 
+
+Distribution shift and domain adaptation A large literature studies prediction under covariate shift. This motivates importance weighting methods for shift correction as in Shimodaira (2000); Sugiyama, Kraule-dat, and M¨ uller (2007). Other methods such as distributionally robust optimization (DRO) take a worst-case shift approach (Ben-Tal, den Hertog, De Waegenaere, Melenberg, & Rennen, 2013; Namkoong & Duchi, 2016; Sutter, Krause, & Kuhn, 2021; Wiesemann, Kuhn, & Sim, 2014). These methods do not exploit the dis-tributional shift patterns observed in Figure 1. In addition, importance weighting methods that estimate density ratios from individual target covariates also require access to those covariates. In domain adaptation, CORAL aligns source and target covariance matrices using target moments (Sun, Feng, & Saenko, 2016); unlike SAGE, this targets unsupervised domain adaptation. Others that leverage target moments computed from unlabeled target data include Y. Li, Wang, Shi, Liu, and Hou (2017), Schneider et al. (2020), which replace source activation moments with target ones; Huang, Smola, Gretton, Borgwardt, and Sch¨ olkopf (2006), which reweights source observations to match the weighted source kernel mean embedding to its target counterpart; and Taskesen, Yue, Blanchet, Kuhn, and Nguyen (2021), which 7takes a DRO approach using target mean and covariance (but requires individual target data). Our work uses the random shift model introduced by Jeong and Rothenh¨ ausler (2025), and empirically investigated by Jin et al. (2025), to develop a framework for prediction with individual source and summary target data. Jeong and Rothenh¨ ausler (2026) choose weights for combining risks from multiple source distributions. SAGE instead updates a single source-trained predictor using target subgroup summaries. 
+
+Combining summary data with individual data Calibration and double-sampling methods provide classical approaches to improving estimation efficiency with auxiliary information (Y.-H. Chen & Chen, 2000; Deville & S¨ arndal, 1992). Related work combines individual data with external summaries for disease-risk modeling (Haneuse & Wakefield, 2008; Jackson, Best, & Richardson, 2008); regression estimation using summary statistics, including fitted-model summaries (Chatterjee, Chen, Maas, & Carroll, 2016; Deng, Fu, Qin, & Yu, 2024; H. Zhang, Deng, Schiffman, Qin, & Yu, 2020); and high-resolution estimation using unbiased aggregate summaries (Guan, Sahoo, Salomon, Wager, & Reitsma, 2025). For time-to-event outcomes, Zheng, Zheng, and Hsu (2022) combine source individual data with target survival and risk-factor summaries under invariant relative risks. Beyond these applications, Hu, Wang, Li, and Miao (2026) derive semiparametric efficiency bounds and efficient estimators for combining individual data with noisy external summaries under transportability, and develop adaptive fusion when transportability fails. Estes, Mukherjee, and Taylor (2018) use data-adaptive empirical Bayes shrinkage to balance efficiency gains from external model summaries against bias from violations of transportability. Another approach incorporates target summaries through balancing weights. Entropy balancing (Hain-mueller, 2012) minimizes KL divergence from baseline weights subject to moment constraints. R. Chen, Chen, and Yu (2023); Josey, Berkowitz, Ghosh, and Raghavan (2021) apply this approach to transport treatment effects using target covariate summaries, while Sheng, Sun, and Huang (2026) study entropy bal-ancing for target outcome means under covariate shift. SAGE incorporates summaries through a one-step correction and develops prediction and uncertainty quantification under a random shift model that allows both covariate and conditional outcome distributions to change. 
+
+Prediction-powered inference Prediction-powered inference (PPI) combines a small labeled sample with predictions on a larger unlabeled sample to improve estimation and inference (Angelopoulos, Bates, Fannjiang, Jordan, & Zrnic, 2023). PPI++ adaptively weights a prediction-based correction to reduce asymptotic variance (Angelopoulos, Duchi, & Zrnic, 2023), a principle related to SAGE’s adaptive weighting of its summary-based gradient correction. Standard PPI and PPI++ use individual labeled and unlabeled observations, whereas SAGE uses individual source data and target subgroup summaries. Versions of PPI accommodate covariate, domain, and label shift (Angelopoulos, Bates, et al., 2023; W. Li, Jiang, & Zhang, 82026; Zou, Witten, & Williamson, 2026). SAGE instead models source-target discrepancies through random distributional perturbations. 
+
+Fine-tuning and one-step corrections Fine-tuning adapts a previously trained model by optimizing on data from a new but related task or population; see the section Fine-Tuning in A. Zhang, Lipton, Li, and Smola (2023), Ch. 19 of Murphy (2022), and surveys such as Jiang, Shu, Wang, and Long (2022); Zhuang et al. (2021). Our work shares the goal of adapting a source-trained predictor to a target population, but differs in the information available. We consider the setting where there is no target sample on which to directly fine-tune the model. SAGE instead uses an update estimated from target subgroup summaries, and provides risk reduction guarantees and asymptotic confidence intervals under the random shift model. The correction step in SAGE is also related to classical one-step estimators, which improve an initial estimator by taking a single Newton step (Lehmann & Casella, 1998; van der Vaart, 1998). One-step and targeted learning estimators are widely used in semiparametric inference to obtain asymptotic linearity, efficiency, and confidence intervals under i.i.d. or covariate shift settings (Bickel, Klaassen, Ritov, & Wellner, 1993; Qiu, Dobriban, & Tchetgen Tchetgen, 2023; van der Laan & Rose, 2011; van der Laan & Rubin, 2006). Unlike these classical settings, SAGE does not require individual-level target data to construct its correction step. 
+
+# 4 Gradient updates with subgroup summaries 
+
+We now describe SAGE, which uses target subgroup summaries to improve a predictor trained on source data. We start from the source-trained empirical risk minimizer ˆθinit := arg min θ 1
+
+> ns
+
+Pns 
+
+> i=1
+
+ℓ(θ; X(s) 
+
+> i
+
+, y (s) 
+
+> i
+
+). The goal of SAGE is to update ˆθinit in the direction of the target risk minimizer, θt := arg min θ Et[ℓ(θ; X, y )]. Astandard one-step Newton update has the form ˆθ(γ) = ˆθinit − γH −1 
+
+> t
+
+(ˆθinit )Ψ t(ˆθinit ),
+
+for some step size γ. Here, Ψ t(θ) := Et[∇θ ℓ(θ; X, y )] and Ht(θ) := Et[∇2 
+
+> θ
+
+ℓ(θ; X, y )] denote the gradient and Hessian of the target risk at θ, respectively. If individual-level target data were available, a natural estimate of the target gradient would be 
+
+bΨind  
+
+> t
+
+(ˆθinit ) := 1
+
+ntntX
+
+> i=1
+
+∇θ ℓ(ˆθinit ; X(t) 
+
+> i
+
+, y (t) 
+
+> i
+
+).
+
+Without individual target observations, bΨind  
+
+> t
+
+cannot be computed. Instead, SAGE approximates it in two steps. First, since ˆθinit minimizes the source empirical risk, the average source gradient at ˆθinit is zero, so 9the target gradient equals the change in the average gradient from source to target. Second, a least-squares regression of the source gradients on subgroup features approximates the gradient as a linear function of Ag ,
+
+Ag X, and Ag y. The change in the average gradient is then approximately the regression coefficients times the change in the average subgroup features, which can be computed from subgroup summaries. Concretely, we form the summary differences ∆0(g) := ˆ πt,g − ˆπs,g ,
+
+∆X (g) := ˆ πt,g ˆEt[X | Ag = 1] − ˆπs,g ˆEs[X | Ag = 1] ,
+
+∆y (g) := ˆ πt,g ˆEt[y | Ag = 1] − ˆπs,g ˆEs[y | Ag = 1] ,
+
+where Ag ∈ { 0, 1} denotes membership in reported subgroup g, ˆ πs,g := 1
+
+> ns
+
+Pns 
+
+> i=1
+
+A(s) 
+
+> ig
+
+, and ˆ πt,g := nt(g) 
+
+> nt
+
+,where nt(g) is the reported number of target observations in subgroup g. Throughout, when a source or target subgroup is empty, its proportion-weighted moments are defined as zero. We then form the contribution of subgroup g and aggregate these contributions across subgroups: 
+
+bΨt(g) := ˆβ(s)
+
+> g, 0
+
+∆0(g) + 
+
+ ˆβ(s)
+
+> g,X
+
+⊺
+
+∆X (g) + ˆβ(s) 
+
+> g,y
+
+∆y (g), bΨt := 
+
+> K
+
+X
+
+> g=1
+
+bΨt(g).
+
+The estimated coefficients are obtained from the joint least-squares projection of the source gradients onto all reported subgroup features. (ˆ α(s), { ˆβ(s)
+
+> g, 0
+
+, ˆβ(s) 
+
+> g,X
+
+, ˆβ(s) 
+
+> g,y
+
+}Kg=1 ) ∈ arg min  
+
+> α, {βg}Kg=1
+> ns
+
+X
+
+> i=1
+
+∇θ ℓ(ˆθinit ; X(s) 
+
+> i
+
+, y (s) 
+
+> i
+
+) − α −
+
+> K
+
+X
+
+> g=1
+
+A(s)
+
+> ig
+
+
+
+βg, 0 + β⊺ 
+
+> g,X
+
+X(s) 
+
+> i
+
++ βg,y y(s)
+
+> i
+
+ 22
+
+.
+
+We estimate the Hessian from individual-level source data 
+
+bHs := 1
+
+nsnsX
+
+> i=1
+
+∇2 
+
+> θ
+
+ℓ(ˆθinit ; X(s) 
+
+> i
+
+, y (s) 
+
+> i
+
+).
+
+Combining the summary-adapted gradient estimate with the source Hessian gives the SAGE one-step update ˆθSAGE = ˆθinit − γ bH−1 
+
+> s
+
+bΨt,
+
+where γ ≥ 0 is a step-size controlling how aggressively the source-trained estimator is adapted toward the target distribution. In the following subsections, we derive an asymptotically optimal choice γ∗ under the random shift model and show how it can be estimated using only subgroup summaries. We summarize the SAGE method in Algorithm 1. 10 Remark 1 (Incorporating subgroup variances) . When subgroup variances are reported, SAGE can augment the subgroup features with X21 , . . . , X 2
+
+> L
+
+, y 2 (Algorithm 3) to capture quadratic terms and variance shifts beyond subgroup means. Redundant coordinates are then removed using the same fixed selection for source and target. For example, Ag X2 
+
+> j
+
+is omitted when Xj ∈ { 0, 1}, since Ag X2 
+
+> j
+
+= Ag Xj ; likewise for Ag y2 when y is binary. The subsequent theory extends to the retained augmented features, with the corresponding adjustment class and influence functions, provided the respective assumptions of each result hold for these features. 
+
+Algorithm 1 SAGE: Summary Adapted Gradient Estimator 
+
+Require: Source data {(X(s) 
+
+> i
+
+, y (s) 
+
+> i
+
+, A (s) 
+
+> i1
+
+, . . . , A (s) 
+
+> iK
+
+)}ns
+
+> i=1
+
+, where A(s) 
+
+> ig
+
+∈ { 0, 1} indicates membership in sub-group g
+
+Require: Target summaries { ˆEt[X | Ag = 1] , ˆEt[y | Ag = 1] }g:nt(g)>0
+
+Require: Target subgroup counts {nt(g)}Kg=1 and total target summary sample size nt
+
+Require: Loss ℓ(θ; X, y ), initial source estimator ˆθinit , fixed step-size γ
+
+Ensure: Updated estimator ˆθSAGE (γ) 
+
+> 1:
+
+Compute source Hessian: bHs ← 1
+
+> ns
+
+Pns 
+
+> i=1
+
+∇2 
+
+> θ
+
+ℓ(ˆθinit ; X(s) 
+
+> i
+
+, y (s) 
+
+> i
+
+) 
+
+> 2:
+
+Compute source gradients: ui ← ∇ θ ℓ(ˆθinit ; X(s) 
+
+> i
+
+, y (s) 
+
+> i
+
+), for i = 1 , . . . , n s 
+
+> 3:
+
+Compute subgroup proportions: ˆ πs,g ← 1
+
+> ns
+
+Pns 
+
+> i=1
+
+A(s) 
+
+> ig
+
+, ˆπt,g ← nt(g) 
+
+> nt
+> 4:
+
+Compute source subgroup moments for nonempty subgroups: ˆEs[X | Ag = 1] ←   
+
+> Pns i=1 A(s)
+> ig X(s)
+> i
+> Pns i=1 A(s)
+> ig
+
+, ˆEs[y |
+
+Ag = 1] ←    
+
+> Pns i=1 A(s)
+> ig y(s)
+> i
+> Pns i=1 A(s)
+> ig
+> 5:
+
+Form source-target summary differences: ∆0(g) ← ˆπt,g − ˆπs,g 
+
+∆X (g) ← ˆπt,g ˆEt[X | Ag = 1] − ˆπs,g ˆEs[X | Ag = 1] ∆y (g) ← ˆπt,g ˆEt[y | Ag = 1] − ˆπs,g ˆEs[y | Ag = 1] 
+
+In the regression below, apply the coordinate reduction of Assumption (3b) , fixing coefficients of omitted features at zero.  
+
+> 6:
+
+Fit on source using all reported subgroups: (ˆ α(s), { ˆβ(s)
+
+> g, 0
+
+, ˆβ(s) 
+
+> g,X
+
+, ˆβ(s) 
+
+> g,y
+
+}Kg=1 ) ∈ arg min α, {βg }Kg=1 
+
+Pns 
+
+> i=1
+
+ui − α − PKg=1 A(s)
+
+> ig
+
+
+
+βg, 0 + β⊺ 
+
+> g,X
+
+X(s) 
+
+> i
+
++ βg,y y(s)
+
+> i
+
+ 22 
+
+> 7:
+
+for g = 1 , . . . , K do  
+
+> 8:
+
+Estimate subgroup contribution using target summaries: 
+
+bΨt(g) ← ˆβ(s)
+
+> g, 0
+
+∆0(g) + 
+
+
+
+ˆβ(s)
+
+> g,X
+
+⊺
+
+∆X (g) + ˆβ(s) 
+
+> g,y
+
+∆y (g) 
+
+> 9:
+
+end for  
+
+> 10:
+
+Aggregate gradient estimates: bΨt ← PKg=1 bΨt(g) 
+
+> 11:
+
+One-step update: ˆθSAGE (γ) ← ˆθinit − γ bH−1 
+
+> s
+
+bΨt 
+
+> 12:
+
+return ˆθSAGE (γ)
+
+## 4.1 SAGE reduces target risk for a range of step-sizes 
+
+Theorem 1 (SAGE reduces the average asymptotic excess risk compared to ˆθinit ). Consider the setting of the random shift model and the regularity conditions as listed in Appendix A.3. Then for a fixed γ ≥ 0, the 
+
+11 scaled excess risk satisfies 
+
+m
+
+
+
+Et[ℓ(ˆθSAGE (γ); X, y )] − Et[ℓ(θt; X, y )] 
+
+ d
+
+→ J(γ),
+
+for a random variable J(γ) with finite mean. The mean of the limiting scaled excess risk variable, E[J(γ)] ,is minimized at 
+
+γ∗ = cs + Var( W (s))
+
+cs + Var( W (s)) + ct
+
+∈ (0 , 1) 
+
+and SAGE reduces risk compared to not incorporating target summary data, that is, 
+
+E[J(γ)] < E [J(0)] ,
+
+for all γ ∈ (0 , 2γ∗), where E[J(0)] is the mean limiting excess risk of ˆθinit .
+
+The proof can be found in Appendix A.4. The optimal step-size γ∗ also reflects the tradeoff between relying on the individual-level source data and on the target summaries. Consider the following cases: 1. High source uncertainty. Recall that cs is inversely proportional to the source sample size ns, while Var( W (s)) captures distributional variation in Ps. When cs + Var( W (s)) is large compared to ct, the source-trained predictor is less reliable for the target population, so SAGE moves further toward the summary-based correction. 2. Accurate target summaries. ct captures sampling uncertainty in the target subgroup summaries and is inversely proportional to the target summary sample size nt. When ct is small compared to 
+
+cs + Var( W (s)), that is, when the target summaries are precise relative to the source sampling and distributional variation, γ∗ → 1. In this case, the summary-based correction is reliable, and SAGE approaches the full one-step update. 3. No distribution shift. If Var( W (s)) = 0, then γ∗ = cs/(cs + ct), with finite-sample analogue 
+
+nt/(ns + nt). As we would expect, in the standard i.i.d. case, the optimal shrinkage agrees with the inverse variance weighting underlying pooled estimation: when the target summaries are more precise, SAGE moves more toward the target correction, while when the source sample is much larger, SAGE remains closer to the source-trained estimator. The i.i.d. step-size converges to γ0 = cs/(cs + ct) ∈
+
+(0 , 2γ∗), which is smaller than γ∗ under distribution shift. By linearity of the update and Slutsky’s theorem, its limiting risk equals that at γ0. An update that ignores distribution shift therefore takes too small a step, but it still reduces risk by Theorem 1. In this sense, it is a conservative one-step estimator. 12 4.2 SAGE at γ∗ is optimal among linear adjustments 
+
+The previous result shows that SAGE improves over the source-trained predictor for a range of step-sizes. We next ask whether a different use of the same subgroup summaries could yield a better linear adjustment. To formalize this question, we consider a broad class of estimators that start from ˆθinit and add an arbitrary linear function of the observed source-target differences in subgroup summaries. The following theorem shows that SAGE, using the optimal step-size γ∗, is asymptotically optimal within this class. The proof can be found in Appendix A.5. 
+
+Theorem 2 (Optimal linear adjustment estimator) . For each k ∈ { s, t } and g = 1 , . . . , K , define 
+
+ˆdk,g := ˆEk
+
+h
+
+Ag
+
+
+
+1, X, y 
+
+⊺i
+
+,
+
+and let ˆdk ∈ Rr denote the vector obtained by stacking ˆdk,g over g = 1 , . . . , K and removing redundant coordinates as in Assumption (3b) . Here, the same fixed coordinate selection is used for source and target, and r denotes the number of retained coordinates. Consider the class of linearly adjusted estimators using subgroup summary information, 
+
+A := {ˆθBm = ˆθinit + Bm( ˆdt − ˆds) : Bm ∈ Rp×r , Bmp
+
+→ B for some deterministic B }
+
+Let Σ( ˆθ) denote the covariance matrix of the limiting distribution of √m(ˆθ − θt). Under the conditions of Theorem 1, the SAGE estimator, ˆθSAGE (γ∗), is asymptotically optimal in A, in the sense that for every 
+
+ˆθBm ∈ A , Σ( ˆθBm ) − Σ( ˆθSAGE (γ∗)) ⪰ 0.
+
+Theorem 2 provides a random-shift analogue of classical variance reduction results based on calibration and auxiliary information (Chatterjee et al., 2016; Y.-H. Chen & Chen, 2000; Deville & S¨ arndal, 1992). It characterizes the optimal adjustment within A when uncertainty arises from both sampling variability and random distributional perturbations. 
+
+## 4.3 Entropy balancing is asymptotically a full-step update 
+
+We next compare SAGE with EB, which reweights source observations to match target subgroup summaries and minimizes the resulting weighted loss. Like SAGE, it can be applied when individual target observations are unavailable but we have access to target summaries. The weights minimize KL divergence from uniform source weights subject to the matching constraints (Hainmueller, 2012; Sheng et al., 2026). Let Z(s) 
+
+> ig
+
+=
+
+
+
+A(s)
+
+> ig
+> ⊺
+
+A(s) 
+
+> ig
+
+X(s)
+
+> i
+> ⊺
+
+A(s) 
+
+> ig
+
+y(s)
+
+> i
+> ⊺
+
+⊺
+
+∈ RL+2 denote the subgroup-g feature vector of source observation i, and let ˆdt,g be defined as in Theorem 2. Denote the vectors obtained by stacking Z(s) 
+
+> ig
+
+and ˆdt,g over g = 1 , . . . , K 
+
+by Zi and ˆdt, respectively. Apply the same fixed coordinate reduction of Assumption 3b to Zi and ˆdt,13 retaining the notation. The omitted constraints follow from the retained constraints and P 
+
+> i
+
+wi = 1, so the feasible set and entropy-balancing weights are unchanged. The entropy-balancing weights are then obtained by solving ˆw = arg min  
+
+> w1,...,w ns ≥0
+> ns
+
+X
+
+> i=1
+
+wi log( nswi)subject to 
+
+> ns
+
+X
+
+> i=1
+
+wi = 1 ,
+
+> ns
+
+X
+
+> i=1
+
+wiZi = ˆdt.
+
+(2) We then fit the following predictor using the resulting weights and source observations: ˆθEB = arg min 
+
+> θns
+
+X
+
+> i=1
+
+ˆwi ℓ(θ; X(s) 
+
+> i
+
+, y (s) 
+
+> i
+
+). (3) The following lemma shows that EB is asymptotically equivalent to full-step SAGE ( γ = 1), establishing a random-shift analogue of the classical equivalence between calibration weighting and regression adjustment (Deville & S¨ arndal, 1992). Together with Theorem 2, this implies that SAGE at the optimal step-size γ∗ < 1has asymptotic covariance no larger than that of EB. The proof is given in Appendix A.6. 
+
+Lemma 2 (EB is asymptotically a full-step update) . Let Σ( ·) be as in Theorem 2. Assume that there exists a constant κ ∈ (0 , 1) such that, with probability tending to one as m → ∞ , the solution to Eqn. (2) admits finite Lagrange multipliers and its weights satisfy min 1≤i≤ns ns ˆwi ≥ κ. Furthermore, assume that there exists 
+
+η > 0 such that Et[exp {η∥Z(t)(D)∥2}] < ∞, where Z(t)(D) denotes the stacked feature vector, defined as Zi
+
+above, of a draw D from Pt. Then under the regularity conditions in Appendix A.3, 
+
+ˆθEB − ˆθSAGE (1) = op(m−1/2),
+
+and, by Theorem 2, 
+
+Σ( ˆθEB ) − Σ( ˆθSAGE (γ∗)) ⪰ 0.
+
+## 4.4 Estimating the optimal step-size from summaries 
+
+Theorem 2 and Lemma 2 concern SAGE at the optimal step-size γ∗, which depends on unknown quantities. We now show how to estimate γ∗ using only subgroup summaries in Algorithm 2. 14 Algorithm 2 SAGE: Optimal step-size estimation  
+
+> 1:
+
+Form the source feature vectors Zi, i = 1 , . . . , n s, by stacking Z(s) 
+
+> ig
+
+=
+
+
+
+A(s) 
+
+> ig
+
+(A(s) 
+
+> ig
+
+X(s) 
+
+> i
+
+)⊺ A(s) 
+
+> ig
+
+y(s)
+
+> i
+
+⊺
+
+over g = 1 , . . . , K . 
+
+> 2:
+
+Form the source and target summary vectors ˆdk by stacking, over g = 1 , . . . , K ,ˆdk,g ←
+
+
+
+ˆπk,g 
+
+ˆπk,g ˆEk[X | Ag = 1] ˆπk,g ˆEk[y | Ag = 1] 
+
+ for k ∈ { s, t } 
+
+> 3:
+
+Remove summary coordinates that are redundant with the remaining coordinates and an intercept, using the same fixed coordinate selection for every Zi, ˆds, and ˆdt. Denote the reduced vectors by the same symbols, and let r = dim Z be the number of retained coordinates.  
+
+> 4:
+
+Form the target-source summary difference: ∆ ← ˆdt − ˆds 
+
+> 5:
+
+Estimate the source covariance: bSs ← 1
+
+> ns
+
+Pns
+
+> i=1
+
+(Zi − ˆds)( Zi − ˆds)⊺ 
+
+> 6:
+
+Compute the whitened, standardized summary difference: z ← ((1 /n s + 1 /n t) bSs)−1/2∆ 
+
+> 7:
+
+Estimate the distributional variance: ˆδ2dist ←
+
+ 1 
+
+> ns
+
++ 1
+
+> nt
+
+
+
+max 
+
+n ∥z∥22 
+
+> r
+
+− 1, 0
+
+o
+
+. 
+
+> 8:
+
+Estimate the optimal step-size: ˆ γ ← n−1   
+
+> s+ˆδ2dist
+> n−1
+> s+ˆδ2dist +n−1
+> t
+> 9:
+
+return ˆγ
+
+The intuition behind Algorithm 2 is that z standardizes the source-target summary differences by sam-pling variability alone. Without distribution shift, each coordinate of z is approximately standard Gaussian, so ∥z∥22/r ≈ 1. Under the random shift model, Lemma 1 implies that the variance of each coordinate is instead inflated to approximately 1+ δ2dist /(1 /n s +1 /n t), so the excess of ∥z∥22/r over 1 estimates the strength of the shift. Since this estimate averages over the r summary coordinates, consistency requires the summary dimension r to grow. We therefore take limits first in m (with m/n k → ck) and then in L.The following lemma establishes consistency of the estimator from Algorithm 2 in this iterated limit. The proof can be found in Appendix A.7. 
+
+Lemma 3 (Consistency of optimal step-size estimator) . Consider the random shift model and the regularity conditions of Appendix A.3, with the growing-L regime specified in Assumption (1a) . Let r = dim Z(D),and let z denote the whitened, standardized source-target summary difference in Algorithm 2. Recall that 
+
+δ2dist = Var( W (s))/m . Let 
+
+ˆδ2dist =
+
+ 1
+
+ns
+
++ 1
+
+nt
+
+  ∥z∥22
+
+r − 1
+
+
+
+> +
+
+, (x)+ := max {x, 0}, (4) 
+
+and 
+
+ˆγ = 1/n s + ˆδ2dist 
+
+1/n s + ˆδ2dist + 1 /n t
+
+.
+
+Then, for every ε > 0,
+
+lim  
+
+> L→∞
+
+lim sup 
+
+> m→∞
+
+P
+
+
+
+mˆδ2dist − Var( W (s)) > ε 
+
+
+
+= 0 ,
+
+15 and 
+
+lim  
+
+> L→∞
+
+lim sup 
+
+> m→∞
+
+P (|ˆγ − γ∗| > ε ) = 0 , γ∗ = cs + Var( W (s))
+
+cs + Var( W (s)) + ct
+
+.
+
+Here, the dependence on m and L is suppressed, and the limits are taken first with respect to m, followed by 
+
+L.
+
+## 4.5 Confidence intervals for θt
+
+Because θt cannot be estimated through direct target empirical risk minimization, inference must be based on the same summary information used for adaptation and requires accounting for both sampling and distributional variability. We first examine the limiting distribution of the SAGE estimator at a fixed γ. For a draw D from 
+
+Pk, k ∈ { s, t }, let Z(k)(D) denote its subgroup feature vector, obtained by stacking ( Ag , A g X⊺, A g y)⊺ over 
+
+g = 1 , . . . , K as in Zi above, and let dt := Et[Z(t)(D)] denote its target mean, the population analog of ˆdt. Let 
+
+β(t)(θt) denote the population slope coefficient matrix from projecting ∇θ ℓ(θt; D) onto eZ(D) = (1 , Z (D)⊺)⊺
+
+under Pt, the population analog of Step 6 of Alg. 1. Define Ξ k(D) := β(t)(θt) ⊺ {Z(k)(D) − dt}. Define the 
+
+p-dimensional source and target influence functions Φs(D; γ) := −H−1 
+
+> t
+
+{∇ θ ℓ(θt; D) − γΞs(D)} , Φt(D; γ) := γH −1 
+
+> t
+
+Ξt(D),
+
+where Ht is the population Hessian, which we estimate with bHs in Step 1 of Alg. 1. Intuitively, Φ s
+
+is the source gradient with the part explained by the subgroup features removed, and Φ t is the correction contributed by the target summaries. Since Φ t is linear in Z(t), its target sample mean depends on the target data only through the subgroup summaries. The following corollary shows that for a fixed γ, ˆθSAGE (γ) admits a linear representation composed of sample means of the influence functions Φ s(D; γ), Φt(D; γ). Applying the distributional CLT (Lemma 1) then gives asymptotic normality at γ∗.
+
+Corollary 1 (Asymptotic normality of SAGE at γ∗). Under the regularity conditions in Appendix A.3 and m/n k → ck > 0 for k ∈ { s, t } and a fixed L, SAGE evaluated at a fixed γ has the asymptotic linear representation 
+
+√m(ˆθSAGE (γ) − θt) = √m
+
+ ˆEs[Φ s(D; γ)] − ˆEt[Φ t(D; γ)] 
+
+
+
++ op(1) ,
+
+where ˆEs[Φ s(D; γ)] and ˆEt[Φ t(D; γ)] are the source and target sample means, respectively. Both influence functions have mean zero under Pt, since Et[∇θ ℓ(θt; D)] = 0 and Et[Z(t)(D)] = dt. In particular, 
+
+√m{ˆθSAGE (γ∗) − θt} d
+
+→ N (0 , ΣSAGE (γ∗)) ,
+
+where γ∗ is defined in Theorem 1 and ΣSAGE (γ∗) = ct Var t{Φt(D; γ∗)} + ( cs + Var( W (s))) Var t{Φs(D; γ∗)}.
+
+16 Dependence on L is suppressed in the notation. 
+
+Using the results from Corollary 1, we now turn to constructing confidence intervals for SAGE with the estimated step-size ˆ γ. Although individual target samples are unavailable, source observations can be used to estimate the target variability of the influence functions: by Lemma 1, source sample moments converge to the corresponding target population moments, so for each fixed L and fixed γ, empirical covariances of the fitted influence functions over source observations consistently estimate Var t{Φs(D; γ)} and Var t{Φt(D; γ)}.The plug-in confidence interval additionally relies on consistency of ˆ γ and ˆδ2dist in the iterated limit of Lemma 3. The fixed-L normality result above applies to a fixed step-size, including γ∗, rather than the estimated step-size ˆ γ.Let ˆ γ and ˆδ2dist be defined in Lemma 3. For a source observation D, define the fitted centered projection 
+
+bΞ( D) := 
+
+n ˆβ(s)(ˆθinit )
+
+o⊺
+
+{Z(s)(D) − ˆdt},
+
+where ˆβ(s)(ˆθinit ) stacks the fitted subgroup coefficients corresponding to the retained coordinates from Al-gorithm 1. The plug-in influence functions, evaluated on source observations for both covariance terms, are 
+
+bΦs(D; γ) := − bH−1
+
+> s
+
+n
+
+∇θ ℓ(ˆθinit ; D) − γ bΞ( D)
+
+o
+
+,
+
+bΦt(D; γ) := γ bH−1 
+
+> s
+
+bΞ( D).
+
+These use only source observations and the available target subgroup summaries. Define 
+
+bVSAGE = 1
+
+nt
+
+dVar s
+
+nbΦt(D; ˆ γ)
+
+o
+
++
+
+ 1
+
+ns
+
++ ˆδ2dist 
+
+dVar s
+
+nbΦs(D; ˆ γ)
+
+o
+
+,
+
+where both empirical covariances are computed over the source observations. Under the conditions of the following lemma, m bVSAGE estimates Σ SAGE (γ∗) from Corollary 1. The lemma provides a confidence interval that accounts for both sampling and distributional uncertainty. 
+
+Lemma 4 (Confidence intervals) . Under the conditions of Corollary 1 and Lemma 3, suppose additionally that, for each fixed L and k ∈ { s, t }, Et[∥Φk(D; γ∗)∥42] < ∞. Then, for any fixed coordinate j satisfying 
+
+e⊺ 
+
+> j
+
+ΣSAGE (γ∗)ej > 0 for all sufficiently large L,
+
+ˆθSAGE ,j (ˆ γ) ± z1−α/ 2
+
+q
+
+e⊺ 
+
+> j
+
+bVSAGE ej
+
+is an asymptotic 1 − α confidence interval for θt,j , with limits taken first in m, followed by L. Here ej is the 
+
+jth standard basis vector in Rp.
+
+17 5 Empirical Examples 
+
+## 5.1 Simulations 
+
+We validate our main theoretical result of Theorem 1 with simulations generated under the random shift model using the calinf R package 1. The target distribution Pt contains 16 covariates: 8 binary covariates drawn from Bern(0 .5) and 8 covariates drawn from N (0 , 1). We also generate four subgroups using two Bernoulli group indicators that are not included as predictors. The response is defined as y(k) = P8 
+
+> j=1
+
+X(k) 
+
+> j
+
++(X(k)9 )2 + ( X(k)10 )2 + P16  
+
+> j=11
+
+X(k) 
+
+> j
+
++ 1 .1X(k)1 X(k)2 + ϵnoise , for k ∈ { s, t }. Under the target distribution Pt, the covariates and noise are drawn from the fixed distributions as described, with ϵnoise ∼ Unif( −1, 1). Under the source distribution Ps, covariates and noise are drawn from randomly shifted versions of these distributions, with shift strength Var( W (s)). In each trial, we draw source individual data and target subgroup summaries, construct the least-squares estimator ˆθinit , and compute ˆθSAGE (γ) over a grid of step-sizes. No individual-level target data are used to construct the SAGE estimator. Figure 3 reports the empirical target excess risk of SAGE on a held-out test set (10,000 samples), averaged over 1,000 trials in three shift regimes. The panels correspond to settings where the source sampling and distributional uncertainty term, 1 /n s + δ2dist , is smaller than, comparable to, or larger than the target summary noise term 1 /n t. As predicted by the theory, the average target excess risk is minimized near the theoretical optimum γ∗ of Theorem 1 in each regime. The pattern also matches the intuition behind γ∗: as source noise, 1 /n s +δ2dist , grows relative to the target summary noise 1 /n t, the target excess risk is minimized at increasing step-sizes, so the update moves further toward the summary-based correction. 
+
+Figure 3: Simulation across three random shift regimes of increasing source sampling and distributional variation relative to target subgroup summaries. Each panel shows the average target excess risk of SAGE over a grid of step-sizes, γ, with sample sizes (from left to right) of ( ns = 3000 , n t = 500) , (ns = 10000 , n t =8300) , (ns = 64000 , n t = 64000). The dashed vertical line marks the theoretical optimum γ∗ derived in Theorem 1, and the orange star marks the empirical minimizer.  
+
+> 1Code to reproduce figures can be found in https://github.com/yzhangi96/summary powered prediction
+
+18 5.2 Store item demand prediction 
+
+We now return to the Store Item Demand prediction example previewed in Figure 2, using the Kaggle data introduced in Section 1. The QQ plots in Figures 1 and 8 show the variance-inflated pattern motivating the random shift model. Our goal is to predict (log) sales for a given item and day. Each experiment treats Store 01 as the source distribution and one of Stores 02-10 as the target distribution, with Item used as the subgroup. We train the initial OLS predictor on ns = 5000 randomly sampled individual-level source records using 57 features. We then combine the source data with item level target summaries computed from nt = 300 randomly sampled target records to estimate the SAGE update. Figure 4 benchmarks SAGE, two other one-step estimation approaches, EB as described in Section 4.3, and an oracle, against the source-trained predictor. All one-step methods use the target summary data to estimate the one-step correction of Algorithm 1 but use different step-size estimates. ‘One-step γ = 1’ takes an undamped Newton step. The optimal step-size approaches one when target summary noise is negligible relative to source sampling and distributional uncertainty. ‘One-step shift-ignoring’ omits the estimated shift magnitude when setting the step-size, that is, it assumes an i.i.d. setting with Var( W (s)) = 0. Finally, ‘Oracle’ selects the value of γ that minimizes MSE on the target test set and represents the optimal step-size if we had access to a large number of target observations. The plot in Figure 4 reports the percentage of MSE relative to the source-trained predictor, averaged over 300 trials, with lower values indicating better performance. Each method improves over the source-trained predictor in all nine store shifts, indicating the value of incorporating summary data for prediction. SAGE, with the estimated step-size ˆ γ, performs close to the Oracle. It also outperforms the one-step γ = 1 and shift-ignoring update, indicating that the data-adaptive step-size that accounts for both sample size 
+
+nt and distribution shift further improves predictive performance. EB matches or outperforms SAGE in three store shifts and performs worse in the remaining six. Under the assumptions of Lemma 2, exact EB is asymptotically equivalent to the full-step update ( γ = 1), while SAGE at γ∗ has asymptotic covariance no larger than that of EB. These results do not guarantee the finite-sample MSE ranking of EB and SAGE with an estimated step-size. 
+
+## 5.3 NHANES lead level prediction 
+
+We next evaluate SAGE on the preprocessed NHANES lead dataset from the tableshift package (Gardner et al., 2023) across temporal shifts. The goal is to predict individuals’ blood lead levels using 16 covariates. For each source-target year pair, we train an initial predictor using ns = 1000 individual source observations. Target subgroup summaries are obtained from nt = 800 observations, with race as the reported subgroup. Before comparing prediction performance, we examine the diagnostic plot (see Figure 9 in Appendix C.2), which visualizes the standardized mean difference statistic in Eqn. (1). Unlike the Store Item Demand 19 Figure 4: Store Item Demand prediction results for transfers from Store 01 to Stores 02-10. The plot shows the percentage of target test MSE rel-ative to the source-only OLS predictor, averaged over 300 trials. SAGE nearly matches the Oracle and consistently improves over the full-step and shift-ignoring one-step estimators. example, where the QQ plots were largely consistent with the random shift assumption, the NHANES lead shifts exhibit a mix of shift patterns. Some year pairs, such as 2001 → 2005, lie close to the i.i.d. reference line, suggesting little detectable shift in the observed covariates. Other pairs, especially larger gaps such as 1999 → 2017 and 1999 → 2015, show a pronounced S-curve. This pattern shows departures from the variance-inflated Gaussian pattern predicted by the random shift model. A hybrid of random perturbations and another shift mechanism is one possible interpretation. We show a subset of year pairs (gap ≥ 10) in Figure 5 and present the full dataset’s 45 shift pairs in Appendix C.1. Figure 5 compares two target summary sample sizes: nt = 800 and nt = 10, corresponding to 80% and 1% of the source sample size ns = 1000. SAGE improves on the source-trained predictor across all displayed year pairs with the larger target sample and most pairs with the smaller sample. When nt = 800, SAGE performs similarly to the full-step update ( γ = 1) and approaches the oracle benchmark. When 
+
+nt = 10, SAGE generally outperforms the full-step update, which can adjust too aggressively to noisy target summaries. In some cases, the one-step estimator at γ = 1 performs worse than the source-trained predictor. This comparison highlights the importance of choosing an appropriate step-size that accounts for both target summary sample size and estimated distribution shift, a key feature of SAGE. EB approximately matches the full-step estimator ( γ = 1) in several cases, but performs worse than the source-trained predictor in others. The asymptotic equivalence in Lemma 2 concerns exact EB and the full-step update under the random shift model and the lemma’s regularity conditions; it does not guarantee matching finite-sample performance for these temporal shifts. 20 Figure 5: NHANES lead prediction results with target summary sample sizes nt = 800 (top) and nt = 10 (bottom). Bars show target test MSE as a percentage of the source-trained predictor’s MSE, averaged over 300 trials; lower values indicate better performance. SAGE improves prediction for most year pairs. With nt = 800, it closely matches the full-step update ( γ = 1) and approaches the oracle benchmark; with 
+
+nt = 10, it generally outperforms the full-step update. Meanwhile, for smaller nt, the one-step γ = 1 estimator performs worse than the source-trained predictor in several cases. 
+
+## 5.4 Medicare inpatient payment prediction with SAGE-NN 
+
+One practical advantage of SAGE is that the target summaries enter through a gradient correction, rather than through a restriction on the model class. This makes the summary adaptation idea compatible with gradient-based learners beyond smooth parametric models. We illustrate this by extending SAGE to neural networks. For neural network predictors, SAGE-NN applies the summary-adapted correction to the final linear layer of a source-trained multilayer perceptron (MLP). We first train the complete network on source observations and then freeze the encoder. Then, we standardize the final hidden layer representation to improve numerical stability and refit the final linear layer by least squares on source data, ensuring that the empirical source 21 Average test MSE (300 trials) Method nt = 800 nt = 10 source-trained predictor 0.107 0.107 Oracle 0.074 0.078 SAGE 0.074 0.085 
+
+One-step γ = 1 0.074 0.088 One-step shift-ignoring 0.083 0.106 EB 0.087 0.095 Table 1: Average test MSE across the 15 NHANES lead prediction year pairs (gap ≥ 10 years), over 300 trials. The columns compare target subgroup summaries computed from nt = 800 and nt = 10 observations. Lower values indicate better performance. On average, SAGE performs better than other one-step estimators that do not adapt their step-size to account for sample size and distribution shift. gradient vanishes at ˆθinit . We then apply the SAGE procedure to the final linear layer, that is, we construct the gradients via Algorithm 1 using target subgroup summaries. For a predetermined encoder, the guarantees of Section 4 apply to the final layer parameters when the corresponding regularity conditions hold. SAGE-NN learns its encoder from the same source data used for adaptation, so these guarantees do not directly cover the full learned procedure: freezing the encoder does not account for its estimation uncertainty or dependence on the source sample. Details of SAGE-NN can be found in Algorithm 4. We evaluate SAGE-NN on the preprocessed 2011 CMS Medicare Inpatient Utilization and Payment dataset (Centers for Medicare & Medicaid Services, 2013). Our goal is to predict the (log) payment received for a diagnosis group in each hospital (e.g., UCLA Medical Center knee replacement). Suppose our source population consists of hospitals in California. How can we leverage summary information from other states to make predictions for hospitals in those target states? We first perform diagnostics of the data to better understand the distribution shift. Similar to the patterns we saw in the QQ plots of the Store Item Demand data, the diagnostic plots for the Medicare data (see Figure 10 in Appendix C.2) suggest that random perturbations explain part of these geographic shifts, although the S-curves indicate that some tail departures remain. For the NN adaptation of EB, the balanced weights are used to fit the final linear layer of the frozen source embeddings, mirroring the SAGE-NN adjustment on the final linear layer. For this experiment, we consider Midwest target states: Michigan, Minnesota, Wisconsin, Ohio, Illinois, Indiana, and Missouri. For each source-target pair, we train an initial neural network on ns = 5000 California hospital diagnosis group records using 33 covariates after encoding categorical features. Target subgroup summaries are computed from nt = 80 records using Medicare’s Diagnosis-Related Group (DRG) as the subgroup. The model is finally evaluated on an independent target test set of ntest = 1000 records, and results are averaged over 300 trials. Figure 6 reports target MSE as a percentage of that of the source-trained neural network. SAGE-NN 22 Figure 6: Medicare inpatient payment prediction results for transfers from California to seven Midwest states. Each panel shows target test MSE as a percentage of the source-only NN’s MSE, averaged over 300 trials; lower values indicate better performance. SAGE-NN improves prediction in six states and generally outperforms the full-step and shift-ignoring one-step estimators, with its largest gains in Michigan, Minnesota, and Wisconsin, where performance is close to the oracle benchmark. improves prediction in six of the seven target states, with reductions of approximately 26–39% in Michigan, Minnesota, and Wisconsin, where performance is close to the oracle benchmark. The shift-ignoring one-step estimator yields only small gains, highlighting the benefit of accounting for distribution shift. SAGE-NN also improves on the full-step update (One-step γ = 1) and EB. Missouri and Indiana remain the most challenging: SAGE-NN performs about the same as the source-trained NN. However, in those cases, the one-step estimator with γ = 1 performs worse than the source-only NN. These results show that refitting the final layer of a source-trained neural network with SAGE, using only target subgroup summaries, can improve prediction in the absence of individual-level target data. 
+
+# 6 Discussion 
+
+Motivated by diagnostics consistent with the random shift model, we proposed SAGE for the setting where individual-level data are available from a shifted source population and the target population is observed only through subgroup summaries. Our results highlight two sources of improvement over source-only training: incorporating target summaries to update a source-trained predictor and obtaining further gains by adapting the strength of the update to account for distribution shift. Under the random shift model, SAGE provides asymptotic risk reduction guarantees and plug-in confidence intervals that account for both sampling and distributional variability, all without requiring individual target observations. The step-size consistency and 23 plug-in inference guarantees use an iterated limit with a growing summary dimension r. Empirically, SAGE and its extensions produce improved predictive performance across several real-world datasets. Furthermore, SAGE produces more consistent improvements compared to EB. These improvements are also present in settings where diagnostics suggest that random perturbations do not fully explain all observed shift. One limitation is that SAGE is a one-step estimator and therefore relies on a local Taylor approximation to the target risk; when the source estimator is far from θt or the shift induces strongly nonlinear changes, this approximation may be less accurate. While the random shift model captures the variance inflated Gaussian patterns seen in several diagnostics, examples such as the S-shaped NHANES diagnostic in Figure 9 suggest that hybrid models combining random perturbations with additional structured shift components may better describe some datasets. Finite-sample risk and coverage guarantees, and guarantees that account for a source-trained encoder in SAGE-NN, remain directions for future work. 
+
+# Appendix A Details of main results 
+
+## A.1 Notation 
+
+Throughout the appendix, let k ∈ { s, t } index the source and target distributions, and let g ∈ { 1, . . . , K }
+
+index the reported subgroups. Let D(k) =  X(k), y (k), A (k) ∈ D denote a draw from Pk, where X(k) ∈ RL,
+
+y(k) ∈ R, and A(k) =
+
+
+
+A(k)1 , . . . , A (k)
+
+> K
+
+
+
+∈ { 0, 1}K . When the distribution is already specified by an operator such as Ek, ˆEk, Var k, or Cov k, we suppress the distribution superscript on the argument (e.g. we write 
+
+D = ( X, y, A ) for simplification). Notation Meaning 
+
+Ps, P t Source and target distributions. 
+
+Ek, Var k, Cov k Expectation, variance, and covariance under Pk, for k ∈ { s, t }.ˆEk[f ] Empirical average of f (D(k) 
+
+> i
+
+) over the sample from Pk.
+
+ns, n t Source individual-level sample size and target summary sample size. 
+
+m Number of regions in the random perturbation construction. 
+
+ck Asymptotic sampling ratio, m/n k → ck > 0, for k ∈ { s, t }.
+
+p Dimension of the parameter vector θ.
+
+Ht Target Hessian, Ht := Et[∇2 
+
+> θ
+
+ℓ(θt; D)] .
+
+bHs Source empirical Hessian, bHs := ˆEs[∇2 
+
+> θ
+
+ℓ(ˆθinit ; D)] .
+
+Ψt(θ) Population target gradient, Ψ t(θ) := Et[∇θ ℓ(θ; D)] .
+
+24 Notation Meaning 
+
+A(k) 
+
+> g
+
+Indicator that a draw from Pk belongs to reported subgroup g.
+
+πk,g , ˆ πk,g Population and empirical subgroup proportions, πk,g = Ek[Ag ], ˆπk,g =ˆEk[Ag ].Z(k) 
+
+> g
+
+(D) Subgroup summary feature vector, Z(k) 
+
+> g
+
+(D) := A(k)
+
+> g
+
+
+
+1, X (k)⊺, y (k)
+
+⊺
+
+∈ RL+2 .Z(k)(D) Summary feature vector formed from the stacked subgroup features with Var t{Z(D)} ≻ 0
+
+r dim Z(D)
+
+dk,g , ˆdk,g Population and empirical subgroup summary vectors, dk,g := 
+
+Ek[Zg (D)] , ˆdk,g := ˆEk[Zg (D)] .dk, ˆdk Population and empirical means of the summary features, dk := 
+
+Ek[Z(D)] , ˆdk := ˆEk[Z(D)] .
+
+eZ(k)(D) Regression feature vector including an intercept, eZ(k)(D) :=  1, Z (k)(D)⊺⊺ .C(k)(θ), ˆC(k)(θ) Population and empirical least-squares coefficient matrices for projecting 
+
+∇θ ℓ(θ; D) onto eZ(k)(D). Their intercept vectors are α(k)(θ) and ˆ α(k)(θ), and their slope matrices are β(k)(θ) and ˆβ(k)(θ), respectively. 
+
+ε(k)(θ; D) Population projection residual, ε(k)(θ; D) := ∇θ ℓ(θ; D) − α(k)(θ) −{β(k)(θ)}⊺Z(k)(D).
+
+Ξk(D) Centered projected score, Ξ k(D) := {β(t)(θt)}⊺{Z(k)(D) − dt}, for k ∈ { s, t }.We write Z(s) 
+
+> ig
+
+= Zg (D(s) 
+
+> i
+
+) and Zi = Z(D(s) 
+
+> i
+
+). Superscripts k ∈ { s, t } on these features indicate the sampling population; the feature maps and retained coordinates are the same for source and target. 
+
+## A.2 Random distribution shift 
+
+We adapt the construction details from I. Zhang and Rothenh¨ ausler (2025), with Pt being the fixed distri-bution, and include them here for completeness. Let D = ( X, y, A ) denote a draw from the underlying population distribution Pt on the data space D.Assume Pt is nonatomic and admits a sequence of finite equal-probability partitions with the approximation property below. For each m, let Im = {I1,m , . . . , I m,m } be a measurable partition of D into equal-probability regions, so that Pt(Ij,m ) = 1 /m for j = 1 , . . . , m . Assume that for every h ∈ L2(Pt), 
+
+h(D) −
+
+> m
+
+X
+
+> j=1
+
+1{D∈Ij,m }Et[h(D) | D ∈ Ij,m ]
+
+> 22
+
+→ 0. (5) This condition ensures that averages over partition cells approximate any square-integrable function as the 25 partition refines. Let W (s) 
+
+> j
+
+, j = 1 , . . . , m , be i.i.d. positive random variables with mean one and variance Var( W (s)). We assume the weights are bounded away from zero: there exists ws > 0 such that W (s) 
+
+> j
+
+≥ ws for all j. For each region Ij,m , the weight W (s) 
+
+> j
+
+determines how much probability mass source Ps assigns to that region relative to Pt. Thus, we define the randomly perturbed distribution Ps by setting its Radon-Nikodym derivative with respect to Pt,
+
+dP s
+
+dP t
+
+(D) = W (s)
+
+> j
+> 1
+> m
+
+Pmj′=1 W (s)
+
+> j′
+
+for D ∈ Ij,m .
+
+As a result, some regions in the data space of Ps have randomly higher or lower probability mass compared to Pt.Conditionally on W = ( W (s) 
+
+> j
+
+)j=1 ,...,m , {D(s) 
+
+> i
+
+}ns 
+
+> i=1
+
+are i.i.d. draws from Ps. The target sample is i.i.d. from Pt and is independent of both W and the source sample conditional on W . Let m/n k converge to some constant ck > 0 for k ∈ { s, t }. Formally, we consider sequences nk(m) as m → ∞ such that 
+
+m/n k(m) → ck > 0, a constant that measures the ratio between sampling and distributional uncertainty. Intuitively, this assumption means that sampling uncertainty (order 1 /n k) and distributional uncertainty (order 1 /m ) are of the same order. In the following, for simplicity, we notationally drop the dependence of 
+
+nk on m. We chose this asymptotic regime because, in both other regimes (where either sampling uncertainty or distributional uncertainty dominates), the trade-off between individual source data quality and quantity versus that of target summary’s is not apparent. See Jeong and Rothenh¨ ausler (2025) and Jin et al. (2025) for additional diagnostics to test the random shift assumption in real data. 
+
+## A.3 Technical conditions 
+
+We use the notation from Appendix A.1. 1. Sampling regime and random shift model. 
+
+(a) For Lemmas 3 and 4, fix a sequence of covariate features X1, X 2, . . . on D. Let ZL(D) ∈ RrL be the reduced summary vector formed from X1, . . . , X L, y, and the K fixed subgroup indicators, as in Assumption (3b) below. As L → ∞ , assume rL → ∞ while keeping Pt, ℓ, Θ ⊂ Rp, the distribution of W (s), and cs, c t fixed. The conditions below hold for each fixed L. Limits are taken first in m, with m/n k → ck, and then in L; dependence on L is otherwise suppressed. Therefore, only the collection of summary features grows; the prediction model and θt remain fixed. (b) The target distribution Pt is fixed. The source distribution Ps is generated as a dense random perturbation of Pt, as described in Appendix A.2. (c) We consider the asymptotic regime where mnk → ck ∈ (0 , ∞) for k ∈ { s, t }.26 2. Regularity of the target and source risk. 
+
+(a) The parameter space Θ ⊂ Rp is compact, and θt ∈ int(Θ) is the unique minimizer of Rt(θ) := 
+
+Et[ℓ(θ; D)]. (b) There exist L0, L 1 ∈ L2(Pt) such that, for all θ, θ ′ ∈ Θ, |ℓ(θ; D)| ≤ L0(D) and |ℓ(θ; D)−ℓ(θ′; D)| ≤ 
+
+L1(D)∥θ − θ′∥2
+
+(c) The loss ℓ(θ; D) is three times continuously differentiable in θ on an open neighborhood N ⊂ Θof θt, for Pt-almost every D.(d) The target Hessian Ht := Et[∇2 
+
+> θ
+
+ℓ(θt; D)] exists and is positive definite. (e) There exist functions Fj ∈ L2(Pt), j = 1 , 2, 3, such that sup θ∈N ∇jθ ℓ(θ; D) op 
+
+≤ Fj (D)(f) For j = 1 , 2, 3, there exist Mj ∈ L2(Pt) such that for all θ, θ ′ ∈ N , ∇jθ ℓ(θ; D) − ∇ jθ ℓ(θ′; D) op 
+
+≤
+
+Mj (D)∥θ − θ′∥2.
+
+3. Moment and identifiability conditions. 
+
+(a) Et
+
+eZ(D) eZ(D)⊺ 2
+
+> F
+
+
+
+< ∞ and Et
+
+
+
+sup θ∈N eZ(D)∇θ ℓ(θ; D)⊺ 2
+
+> F
+
+
+
+< ∞. In addition, Et∥Z(D)∥22 <
+
+∞, so the subgroup summary means dk and ˆdk are well defined. (b) For each fixed L, remove summary coordinates that are redundant with the remaining coordinates and an intercept, using the same fixed choice for source and target. Throughout, Z(D) ∈ Rr
+
+denotes the resulting summary feature vector, and all summary means and projection coefficients use these coordinates. Assume that Var t{Z(D)} ≻ 0. (c) tr H−1 
+
+> t
+
+Var t (Ξ t(D)) > 0
+
+## A.4 Proof of Theorem 1 
+
+Proof. (Optimal step-size). We first derive the step-size γ∗ that minimizes the mean of the limiting scaled excess risk variable. A Taylor expansion of the target risk around θt gives 
+
+Et[ℓ(ˆθSAGE (γ); D)] = Et[ℓ(θt; D)] + Et[∇θ ℓ(θt; D)] ⊺ nˆθSAGE (γ) − θt
+
+o
+
++ 12
+
+nˆθSAGE (γ) − θt
+
+o⊺
+
+Ht
+
+nˆθSAGE (γ) − θt
+
+o
+
++ rm.
+
+(6) Since θt is the target risk minimizer, Et[∇θ ℓ(θt; D)] = 0 . Moreover, Corollary 2 gives ˆθSAGE (γ) − θt =
+
+Op(m−1/2). The remainder in Eqn (6) can be written as 
+
+rm = 12
+
+nˆθSAGE (γ) − θt
+
+o⊺
+
+Et
+
+h
+
+∇2 
+
+> θ
+
+ℓ(eθ; D) − ∇ 2 
+
+> θ
+
+ℓ(θt; D)
+
+i n ˆθSAGE (γ) − θt
+
+o
+
+,
+
+27 where eθ lies between ˆθSAGE (γ) and θt. By Assumption (2f), 
+
+|rm| ≤ 12 Et[M2(D)] ∥eθ − θt∥2∥ˆθSAGE (γ) − θt∥22
+
+≤ 12 Et[M2(D)] ∥ˆθSAGE (γ) − θt∥32
+
+= Op(m−3/2)= op(m−1).
+
+Therefore, 
+
+m
+
+n
+
+Et[ℓ(ˆθSAGE (γ); D)] − Et[ℓ(θt; D)] 
+
+o
+
+= 12
+
+h√m
+
+nˆθSAGE (γ) − θt
+
+oi ⊺
+
+Ht
+
+h√m
+
+nˆθSAGE (γ) − θt
+
+oi 
+
++ op(1) .
+
+(7) By Corollary 2, we have the linearization 
+
+√m
+
+nˆθSAGE (γ) − θt
+
+o
+
+= −H−1
+
+> t
+
+h√m ˆEs [∇θ ℓ(θt; D) − γΞs(D)] + γ√m ˆEt[Ξ t(D)] 
+
+i
+
++ op(1) . (8) Substituting Eqn (8) into Eqn (7), we obtain 
+
+m
+
+n
+
+Et[ℓ(ˆθSAGE (γ); D)] − Et[ℓ(θt; D)] 
+
+o
+
+= Jm(γ) + op(1) ,
+
+where 
+
+Jm(γ) := m
+
+2
+
+ ˆEs [∇θ ℓ(θt; D) − γΞs(D)] + γ ˆEt[Ξ t(D)] 
+
+⊺
+
+H−1
+
+> t
+
+ ˆEs [∇θ ℓ(θt; D) − γΞs(D)] + γ ˆEt[Ξ t(D)] 
+
+
+
+.
+
+Since Et[∇θ ℓ(θt; D)] = 0 and Et[Ξ t(D)] = 0 , Lemma 1 gives 
+
+√m
+
+ γ ˆEt[Ξ t(D)] ˆEs [∇θ ℓ(θt; D) − γΞs(D)] 
+
+ d
+
+→ N
+
+0,
+
+ctγ2 Var t{Ξt(D)} 00 (cs + Var( W (s))) Var t {∇ θ ℓ(θt; D) − γΞt(D)}
+
+ .
+
+(9) It follows from the continuous mapping theorem that Jm(γ) d
+
+→ J(γ), with mean 
+
+E[J(γ)] = 12 tr 
+
+
+
+H−1
+
+> t
+
+
+
+(cs + Var( W (s))) Var t [∇θ ℓ(θt; D) − γΞt(D)] + ctγ2 Var t{Ξt(D)}
+
+ 
+
+. (10) Next, denote the population target projection residual, 
+
+ε(t)(θt; D) := ∇θ ℓ(θt; D) − α(t)(θt) − { β(t)(θt)}⊺Z(t)(D).
+
+28 Since the projection contains an intercept, Et[ε(t)(θt; D)] = 0 and Et
+
+ε(t)(θt; D){Z(t)(D) − dt}⊺ = 0 . Also, since Et[∇θ ℓ(θt; D)] = 0, 
+
+α(t)(θt) + {β(t)(θt)}⊺dt = 0 .
+
+Therefore, 
+
+∇θ ℓ(θt; D) = Ξ t(D) + ε(t)(θt; D).
+
+It follows that Cov t {∇ θ ℓ(θt; D), Ξt(D)} = Et
+
+h
+
+{Ξt(D) + ε(t)(θt; D)}Ξt(D)⊺i
+
+= Var t{Ξt(D)} + Et
+
+h
+
+ε(t)(θt; D){Z(t)(D) − dt}⊺i
+
+β(t)(θt)= Var t{Ξt(D)}.
+
+(11) Consequently, Var t {∇ θ ℓ(θt; D) − γΞt(D)} = Var t {∇ θ ℓ(θt; D)} + ( γ2 − 2γ) Var t{Ξt(D)}.
+
+Substituting this identity into Eqn (10) gives 
+
+E[J(γ)] = 12 (cs + Var( W (s))) tr H−1 
+
+> t
+
+Var t {∇ θ ℓ(θt; D)} (12) +
+
+ γ2
+
+2 (cs + Var( W (s)) + ct) − γ(cs + Var( W (s))) 
+
+
+
+tr H−1 
+
+> t
+
+Var t{Ξt(D)} . (13) Differentiating Eqn (12) with respect to γ gives 
+
+∂∂γ E[J(γ)] = 
+
+h
+
+γ(cs + Var( W (s)) + ct) − (cs + Var( W (s))) 
+
+i
+
+tr H−1 
+
+> t
+
+Var t{Ξt(D)} .
+
+By Assumption (3c), tr H−1 
+
+> t
+
+Var t{Ξt(D)} > 0. Moreover, 
+
+∂2
+
+∂γ 2 E[J(γ)] = ( cs + Var( W (s)) + ct) tr H−1 
+
+> t
+
+Var t{Ξt(D)} > 0.
+
+Thus, the unique minimizer is 
+
+γ∗ = cs + Var( W (s))
+
+cs + Var( W (s)) + ct
+
+∈ (0 , 1) .
+
+(SAGE reduces asymptotic risk mean). We next compare the mean of the limiting scaled excess-risk variable under SAGE with that under the unadjusted source estimator. Setting γ = 0 in Eqn (12) gives 
+
+E[J(0)] = 12 (cs + Var( W (s))) tr H−1 
+
+> t
+
+Var t {∇ θ ℓ(θt; D)} .
+
+29 Therefore, 
+
+E[J(γ)] − E[J(0)] = γ
+
+2
+
+h
+
+γ(cs + Var( W (s)) + ct) − 2( cs + Var( W (s))) 
+
+i
+
+tr H−1 
+
+> t
+
+Var t{Ξt(D)} . (14) For 0 < γ < 2 cs + Var( W (s))
+
+cs + Var( W (s)) + ct
+
+= 2 γ∗,
+
+we have 
+
+γ(cs + Var( W (s)) + ct) − 2( cs + Var( W (s))) < 0.
+
+Since the trace term in Eqn (14) is strictly positive, for every 0 < γ < 2γ∗,E[J(γ)] < E [J(0)] 
+
+## A.5 Proof of Theorem 2 
+
+Proof. We first verify that ˆθSAGE (γ∗) belongs to A. Let 
+
+B∗ 
+
+> m
+
+:= −γ∗ bH−1
+
+> s
+
+n ˆβ(s)(ˆθinit )
+
+o⊺
+
+. (15) By the definition of the summary-adapted gradient, bΨt =
+
+n ˆβ(s)(ˆθinit )
+
+o⊺
+
+( ˆdt − ˆds), we have ˆθSAGE (γ∗) = ˆθinit − γ∗ bH−1
+
+> s
+
+n ˆβ(s)(ˆθinit )
+
+o⊺
+
+( ˆdt − ˆds) = ˆθinit + B∗
+
+> m
+
+( ˆdt − ˆds).
+
+By Proposition 2 and Lemma 5, bH−1 
+
+> s
+
+= H−1 
+
+> t
+
++ Op(m−1/2) and ˆβ(s)(ˆθinit ) = β(t)(θt) + Op(m−1/2), respectively. Therefore, it follows that 
+
+B∗
+
+> mp
+
+→ B∗ := −γ∗H−1
+
+> t
+
+n
+
+β(t)(θt)
+
+o⊺
+
+. (16) Thus, ˆθSAGE (γ∗) ∈ A .Now consider any ˆθBm ∈ A , where Bmp
+
+→ B for a deterministic matrix B. We have 
+
+√m(ˆθBm − θt) = √m(ˆθinit − θt) + Bm
+
+√m( ˆdt − ˆds)= √m(ˆθinit − θt) + B√m( ˆdt − ˆds) + op(1) , (17) 30 because √m( ˆdt − ˆds) = Op(1) by Lemma 1. As a result, (Bm − B)√m( ˆdt − ˆds) = op(1) .
+
+Applying the linearization in Proposition 1 to Eqn (17) gives 
+
+√m(ˆθBm − θt) = −H−1
+
+> t
+
+√m ˆEs[∇θ ℓ(θt; D)] + B√m( ˆdt − ˆds) + op(1) . (18) Since Et[∇θ ℓ(θt; D)] = 0 , Lemma 1, applied jointly to ∇θ ℓ(θt; D) and Z(D), gives 
+
+√m
+
+ ˆEs[∇θ ℓ(θt; D)] ˆdt − ˆds
+
+ (19) 
+
+> d
+
+→ N
+
+0,
+
+ (cs + Var( W (s))) Var t{∇ θ ℓ(θt; D)} −(cs + Var( W (s))) Cov t{∇ θ ℓ(θt; D), Z (D)}−(cs + Var( W (s))) Cov t{Z(D), ∇θ ℓ(θt; D)} (cs + Var( W (s)) + ct) Var t{Z(D)}
+
+ .
+
+(20) It follows from (18) and (19) that the limiting covariance of ˆθBm , Σ( ˆθBm ) is given by Σ( ˆθBm ) = Σ( ˆθinit ) + ( cs + Var( W (s)) + ct)B Var t{Z(D)}B⊺
+
++ ( cs + Var( W (s))) B Cov t{Z(D), ∇θ ℓ(θt; D)}(H−1 
+
+> t
+
+)⊺
+
++ ( cs + Var( W (s))) H−1 
+
+> t
+
+Cov t{∇ θ ℓ(θt; D), Z (D)}B⊺, (21) where Σ( ˆθinit ) = ( cs + Var( W (s))) H−1 
+
+> t
+
+Var t{∇ θ ℓ(θt; D)}(H−1 
+
+> t
+
+)⊺.
+
+Because β(t)(θt) is the slope coefficient matrix of the population least-squares projection of ∇θ ℓ(θt; D)onto eZ(D), n
+
+β(t)(θt)
+
+o⊺
+
+= Cov t{∇ θ ℓ(θt; D), Z (D)} [Var t{Z(D)}]−1 . (22) Using the optimal step-size γ∗ = cs+Var( W (s))  
+
+> cs+Var( W(s))+ ct
+
+from Theorem 1, the limiting matrix in (16) is therefore 
+
+B∗ = − cs + Var( W (s))
+
+cs + Var( W (s)) + ct
+
+H−1
+
+> t
+
+n
+
+β(t)(θt)
+
+o⊺
+
+= − cs + Var( W (s))
+
+cs + Var( W (s)) + ct
+
+H−1 
+
+> t
+
+Cov t{∇ θ ℓ(θt; D), Z (D)} [Var t{Z(D)}]−1 . (23) In particular, (cs + Var( W (s)) + ct)B∗ Var t{Z(D)} = −(cs + Var( W (s))) H−1 
+
+> t
+
+Cov t{∇ θ ℓ(θt; D), Z (D)}. (24) 31 Using (24), completing the square in (21) gives Σ( ˆθBm ) = Σ( ˆθinit ) − (cs + Var( W (s)) + ct)B∗ Var t{Z(D)}(B∗)⊺
+
++ ( cs + Var( W (s)) + ct)( B − B∗) Var t{Z(D)}(B − B∗)⊺. (25) Since B∗
+
+> mp
+
+→ B∗, the asymptotic covariance of the SAGE estimator is Σ( ˆθSAGE (γ∗)) = Σ( ˆθinit ) − (cs + Var( W (s)) + ct)B∗ Var t{Z(D)}(B∗)⊺. (26) Subtracting (26) from (25) yields Σ( ˆθBm ) − Σ( ˆθSAGE (γ∗)) = ( cs + Var( W (s)) + ct)( B − B∗) Var t{Z(D)}(B − B∗)⊺ ⪰ 0. (27) The final inequality follows because cs + Var( W (s)) + ct > 0 and Var t{Z(D)} is positive definite under Assumption (3b). 
+
+## A.6 Proof of Lemma 2 
+
+Proof. We first rewrite the entropy-balancing weights optimization problem as 
+
+L(w, λ 1, λ 2) = 
+
+> ns
+
+X
+
+> i=1
+
+wi log( nswi) + λ1
+
+> ns
+
+X
+
+> i=1
+
+wi − 1
+
+!
+
+− λ⊺
+
+> 2
+> ns
+
+X
+
+> i=1
+
+wiZ(D(s) 
+
+> i
+
+) − ˆdt
+
+!
+
+.
+
+Differentiating with respect to wi gives 0 = ∂L
+
+∂w i
+
+= log( nswi) + 1 + λ1 − λ⊺ 
+
+> 2
+
+Z(D(s) 
+
+> i
+
+).
+
+Solving and rearranging, we get ˆwi = exp( −1 − ˆλ1)
+
+ns
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+Z(D(s) 
+
+> i
+
+)
+
+
+
+,
+
+where ˆλ1, ˆλ2 are chosen to satisfy the constraints. Since the weights must sum to 1, we have n−1 
+
+> s
+
+exp( −1 −
+
+ˆλ1) = 
+
+nPns 
+
+> j=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+Z(D(s) 
+
+> j
+
+)
+
+o −1
+
+. Therefore, ˆwi =exp 
+
+ˆλ⊺ 
+
+> 2
+
+Z(D(s) 
+
+> i
+
+)
+
+Pns 
+
+> j=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+Z(D(s) 
+
+> j
+
+)
+
+ =exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+Pns 
+
+> j=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> j
+
+) − ˆds}
+
+ , (28) where the second equality comes from multiplying the numerator and denominator by exp( −ˆλ⊺ 
+
+> 2
+
+ˆds). 32 We now apply results from Prop 3 to verify an assumption required for the consistency result of ˆθEB 
+
+from Prop 4: multiplying both sides of Eqn (28) by ns, subtracting 1, and taking the max over i in absolute values gives max  
+
+> i
+
+|ns ˆwi − 1| ≤ 
+
+2 max i exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+
+
+− 1
+
+1 + Op(m−1) (Eqn (72)) = op(1) 1 + Op(m−1) (Eqn (68)) = op(1) .
+
+(29) Therefore, by Prop 4, ˆθEB 
+
+> p
+
+→ θt. Combining with the assumption that θt ∈ int(Θ), ˆθEB is an interior minimizer. We can now proceed with a Taylor expansion around θt.0 = 
+
+> ns
+
+X
+
+> i=1
+
+ˆwi∇θ ℓ(ˆθEB ; D(s) 
+
+> i
+
+) = 
+
+> ns
+
+X
+
+> i=1
+
+ˆwi∇θ ℓ(θt; D(s) 
+
+> i
+
+) + 
+
+" nsX
+
+> i=1
+
+ˆwi∇2 
+
+> θ
+
+ℓ(θt; D(s) 
+
+> i
+
+)
+
+#
+
+(ˆθEB − θt) + Rm, (30) where the remainder term satisfies 
+
+∥R m∥2 =
+
+> ns
+
+X
+
+> i=1
+
+ˆwi
+
+n
+
+∇θ ℓ(ˆθEB ; D(s) 
+
+> i
+
+) − ∇ θ ℓ(θt; D(s) 
+
+> i
+
+) − ∇ 2 
+
+> θ
+
+ℓ(θt; D(s) 
+
+> i
+
+)( ˆθEB − θt)
+
+o
+
+> 2
+
+≤
+
+> ns
+
+X
+
+> i=1
+
+ˆwi ∇θ ℓ(ˆθEB ; D(s) 
+
+> i
+
+) − ∇ θ ℓ(θt; D(s) 
+
+> i
+
+) − ∇ 2 
+
+> θ
+
+ℓ(θt; D(s) 
+
+> i
+
+)( ˆθEB − θt) 2
+
+≤ 12 ∥ˆθEB − θt∥22
+
+1
+
+nsnsX
+
+> i=1
+
+ns ˆwiM2(D(s) 
+
+> i
+
+) (Assumption (2f)) 
+
+≤ 12 ∥ˆθEB − θt∥22
+
+n
+
+1 + max  
+
+> i
+
+|ns ˆwi − 1|
+
+o 1
+
+nsnsX
+
+> i=1
+
+M2(D(s) 
+
+> i
+
+)
+
+| {z }
+
+> p
+> →Et[M2(D)]
+
+= Op(∥ˆθEB − θt∥22)(1 + op(1)) Op(1) (Prop 4, Eqn (29)) = op(∥ˆθEB − θt∥2),
+
+where the last inequality uses that ns ˆwi ≤ 1 + |ns ˆwi − 1| ≤ 1 + max j |ns ˆwj − 1|.We next evaluate the first term of the Taylor expansion. Substituting Eqn. (28) gives 
+
+> ns
+
+X
+
+> i=1
+
+ˆwi∇θ ℓ(θt; D(s) 
+
+> i
+
+) = 
+
+> 1
+> ns
+
+Pns 
+
+> i=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+)
+
+> 1
+> ns
+
+Pns 
+
+> i=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+ .
+
+Since Eqn (72) already tells us that the denominator is 1 + Op(m−1), it remains to evaluate the numerator. 33 A Taylor expansion of the exponential gives 1
+
+nsnsX
+
+> i=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) = 1
+
+nsnsX
+
+> i=1
+
+h
+
+1 + ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds} + ri,m 
+
+i
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+)= 1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) + 
+
+"
+
+1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+){Z(D(s) 
+
+> i
+
+) − ˆds}⊺
+
+#
+
+ˆλ2
+
++ 1
+
+nsnsX
+
+> i=1
+
+ri,m ∇θ ℓ(θt; D(s) 
+
+> i
+
+).
+
+Applying the inequality |ex − 1 − x| ≤ 12 e|x|x2 to the remainder term, max  
+
+> i
+
+|ri,m | ≤ 12 exp 
+
+n
+
+max 
+
+> i
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+o h 
+
+max 
+
+> i
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+i2
+
+= Op(1) Op
+
+ (log m)2
+
+m
+
+
+
+= Op
+
+ (log m)2
+
+m
+
+
+
+.
+
+Therefore, 
+
+1
+
+nsnsX
+
+> i=1
+
+ri,m ∇θ ℓ(θt; D(s) 
+
+> i
+
+)
+
+> 2
+
+≤ max  
+
+> i
+
+|ri,m | 1
+
+nsnsX
+
+> i=1
+
+∥∇ θ ℓ(θt; D(s) 
+
+> i
+
+)∥2
+
+≤ max  
+
+> i
+
+|ri,m | 1
+
+nsnsX
+
+> i=1
+
+F1(D(s) 
+
+> i
+
+) (Assump.(2e), Lemma 1) = Op
+
+ (log m)2
+
+m
+
+
+
+Op(1) = op(m−1/2).
+
+Combining the above with results of Lemma 1, 1
+
+> ns
+
+Pns 
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) = Et[∇θ ℓ(θt; D)] + Op(m−1/2) = 
+
+Op(m−1/2) and 1
+
+> ns
+
+Pns 
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+){Z(D(s) 
+
+> i
+
+) − ˆds}⊺ = Cov t{∇ θ ℓ(θt; D), Z (D)} + Op(m−1/2), we get 
+
+> ns
+
+X
+
+> i=1
+
+ˆwi∇θ ℓ(θt; D(s) 
+
+> i
+
+) = 
+
+> 1
+> ns
+
+Pns 
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) + 
+
+h 1
+
+> ns
+
+Pns 
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+){Z(D(s) 
+
+> i
+
+) − ˆds}⊺
+
+i ˆλ2 + op(m−1/2)1 + Op(m−1)= 1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) + [Cov t{∇ θ ℓ(θt; D), Z (D)}] ˆλ2 + op(m−1/2)34 We next evaluate the second term in the Taylor expansion of Eqn (30): 
+
+" nsX
+
+> i=1
+
+ˆwi∇2 
+
+> θ
+
+ℓ(θt; D(s) 
+
+> i
+
+)
+
+#
+
+(ˆθEB − θt) = 
+
+"
+
+1
+
+nsnsX
+
+> i=1
+
+ns ˆwi∇2 
+
+> θ
+
+ℓ(θt; D(s) 
+
+> i
+
+)
+
+#
+
+(ˆθEB − θt)=
+
+"
+
+1
+
+nsnsX
+
+> i=1
+
+{1 + ( ns ˆwi − 1) }∇ 2 
+
+> θ
+
+ℓ(θt; D(s) 
+
+> i
+
+)
+
+#
+
+(ˆθEB − θt)=
+
+"
+
+1
+
+nsnsX
+
+> i=1
+
+∇2 
+
+> θ
+
+ℓ(θt; D(s) 
+
+> i
+
+)
+
+#
+
+(ˆθEB − θt) + 
+
+"
+
+1
+
+nsnsX
+
+> i=1
+
+(ns ˆwi − 1) ∇2 
+
+> θ
+
+ℓ(θt; D(s) 
+
+> i
+
+)
+
+#
+
+(ˆθEB − θt).
+
+By Assumption (2e), Eqn (29) and Lemma 1, 
+
+"
+
+1
+
+nsnsX
+
+> i=1
+
+(ns ˆwi − 1) ∇2 
+
+> θ
+
+ℓ(θt; D(s) 
+
+> i
+
+)
+
+#
+
+(ˆθEB − θt)
+
+> 2
+
+≤
+
+"
+
+1
+
+nsnsX
+
+> i=1
+
+|ns ˆwi − 1|∥∇ 2 
+
+> θ
+
+ℓ(θt; D(s) 
+
+> i
+
+)∥op 
+
+#
+
+∥ˆθEB − θt∥2
+
+≤ max  
+
+> i
+
+|ns ˆwi − 1| 1
+
+nsnsX
+
+> i=1
+
+F2(D(s) 
+
+> i
+
+)∥ˆθEB − θt∥2
+
+= op(1) Op(1) ∥ˆθEB − θt∥2
+
+= op(∥ˆθEB − θt∥2).
+
+Also, by Lemma 1, 1
+
+> ns
+
+Pns 
+
+> i=1
+
+∇2 
+
+> θ
+
+ℓ(θt; D(s) 
+
+> i
+
+) = Et[∇2 
+
+> θ
+
+ℓ(θt; D)] + Op(m−1/2). Therefore, 
+
+" nsX
+
+> i=1
+
+ˆwi∇2 
+
+> θ
+
+ℓ(θt; D(s) 
+
+> i
+
+)
+
+#
+
+(ˆθEB − θt) = 
+
+
+
+Et[∇2 
+
+> θ
+
+ℓ(θt; D)] 
+
+| {z }
+
+> Ht
+
++Op(m−1/2)
+
+
+
+(ˆθEB − θt)
+
+| {z }
+
+> op(1)
+
++op(∥ˆθEB − θt∥2)= Ht(ˆθEB − θt) + op(∥ˆθEB − θt∥2) + op(m−1/2)Combining the two pieces, we have 0 = 
+
+> ns
+
+X
+
+> i=1
+
+ˆwi∇θ ℓ(ˆθEB ; D(s) 
+
+> i
+
+) = 1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+)+ [Cov t{∇ θ ℓ(θt; D), Z (D)}] ˆλ2 + Ht(ˆθEB − θt) + op(m−1/2) + op(∥ˆθEB − θt∥2).
+
+Rearranging and using that ˆλ2 = Op(m−1/2) by Prop 3, ˆθEB − θt = −H−1
+
+> t
+
+ 1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) + Cov t{∇ θ ℓ(θt; D), Z (D)}ˆλ2 + op(m−1/2)
+
+
+
++ op(∥ˆθEB − θt∥2)= Op(m−1/2) + op(∥ˆθEB − θt∥2).
+
+35 Taking norms, there is a nonnegative εm = op(1) such that 
+
+∥ˆθEB − θt∥2 ≤ Op(m−1/2) + εm∥ˆθEB − θt∥2
+
+⇔ (1 − εm)∥ˆθEB − θt∥2 ≤ Op(m−1/2)Since P (εm ≤ 1/2) → 1, with probability tending to one, as m → ∞ 
+
+12 ∥ˆθEB − θt∥2 ≤ (1 − εm)∥ˆθEB − θt∥2 ≤ Op(m−1/2).
+
+Therefore, ˆθEB − θt = Op(m−1/2), (31) and ˆθEB − θt = −H−1
+
+> t
+
+ 1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) + Cov t{∇ θ ℓ(θt; D), Z (D)}ˆλ2
+
+
+
++ op(m−1/2).
+
+Finally, substituting the linearization of ˆλ2 =
+
+hdVar s{Z(D)}
+
+i−1
+
+( ˆdt − ˆds) + op(m−1/2), ˆθEB − θt = −H−1
+
+> t
+
+ 1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) + Cov t{∇ θ ℓ(θt; D), Z (D)} [Var t{Z(D)}]−1 ( ˆdt − ˆds)
+
+
+
++ op(m−1/2).
+
+(32) We now compare this expansion with SAGE at γ = 1. First, we apply the definition of SAGE and the linearization of ˆθinit − θt from Prop 1 to get ˆθSAGE (1) − θt = ˆθinit − bH−1 
+
+> s
+
+bΨt − θt = −H−1
+
+> t
+
+1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) − bH−1 
+
+> s
+
+bΨt + op(m−1/2).
+
+36 Then, by Lemma 5 and consistency of the sample Hessian from Prop 2 and OLS sample coefficients, ˆθSAGE (1) − θt = −H−1
+
+> t
+
+1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) − bH−1
+
+> s
+
+n ˆβ(s)(ˆθinit )
+
+o⊺
+
+( ˆdt − ˆds) + op(m−1/2)= −H−1
+
+> t
+
+1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) − { H−1 
+
+> t
+
++ op(1) }
+
+h
+
+{β(t)(θt)}⊺ + op(1) 
+
+i
+
+( ˆdt − ˆds) + op(m−1/2)= −H−1
+
+> t
+
+1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) − H−1 
+
+> t
+
+{β(t)(θt)}⊺( ˆdt − ˆds) + op(m−1/2)= −H−1
+
+> t
+
+1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) − H−1 
+
+> t
+
+Cov t{∇ θ ℓ(θt; D), Z (D)} [Var t{Z(D)}]−1 ( ˆdt − ˆds) + op(m−1/2)= −H−1
+
+> t
+
+1
+
+nsnsX
+
+> i=1
+
+∇θ ℓ(θt; D(s) 
+
+> i
+
+) + Cov t{∇ θ ℓ(θt; D), Z (D)} [Var t{Z(D)}]−1 ( ˆdt − ˆds)
+
+!
+
++ op(m−1/2).
+
+Comparing with Eqn 32, we get ˆθEB − ˆθSAGE (1) = op(m−1/2), i.e. 
+
+√m
+
+nˆθEB − ˆθSAGE (1) 
+
+o p
+
+→ 0.
+
+Therefore, the centered and scaled estimators have the same limiting distribution i.e. Σ( ˆθEB ) = Σ( ˆθSAGE (1)) .
+
+Applying the asymptotic covariance optimality of SAGE at γ∗ from Theorem 2 therefore gives Σ( ˆθEB ) − Σ( ˆθSAGE (γ∗)) = Σ( ˆθSAGE (1)) − Σ( ˆθSAGE (γ∗)) ⪰ 0.
+
+## A.7 Proof of Lemma 3 
+
+Proof. Fix L, and let r = dim Z(D) denote the number of summary coordinates retained under Assumption (3b). It suffices to consider L sufficiently large that r ≥ 1. Let Z(D) ∈ Rr denote the summary vector, and let ˆds and ˆdt denote the source and target summary vectors. The fourth moment assumption gives 
+
+Et∥ eZ(D)∥42 < ∞. Since each summary coordinate is a fixed linear combination of the regressors in eZ(D), it follows that Et∥Z(D)∥42 < ∞ for each fixed L. Thus both the coordinates of Z(D) and the entries of 
+
+Z(D)Z(D)⊺ are square-integrable and we can apply the distributional CLT. Therefore, by Lemma 1, ˆEs[Z(D)] p
+
+→ Et[Z(D)] and ˆEs[Z(D)Z(D)⊺] p
+
+→ Et[Z(D)Z(D)⊺]. Consequently, 
+
+bSs := ˆEs[Z(D)Z(D)⊺] − ˆds ˆd⊺
+
+> sp
+
+→ Var t(Z(D)) . Since the population covariance is positive definite, bSs is invertible with probability tending to one, and continuity of matrix inversion gives bS−1
+
+> sp
+
+→ { Var t(Z(D)) }−1 .
+
+37 By Lemma 1, applied jointly to the summary coordinates, 
+
+m1/2( ˆds − ˆdt) d
+
+→ N
+
+
+
+0, (cs + ct + Var( W (s))) Var t{Z(D)}
+
+
+
+.
+
+Since m/n s + m/n t → cs + ct, Slutsky’s theorem yields ˆds − ˆdt
+
+p1/n s + 1 /n td
+
+→ N
+
+
+
+0,
+
+
+
+1 + Var( W (s))
+
+cs + ct
+
+
+
+Var t{Z(D)}
+
+
+
+.
+
+The norm of the whitened standardized summary difference computed in Step 6 of Algorithm 2 can be written as 
+
+∥z∥22 = ( ˆds − ˆdt)⊺ bS−1 
+
+> s
+
+( ˆds − ˆdt)1/n s + 1 /n t
+
+.
+
+The continuous mapping theorem and Slutsky’s theorem therefore give, for fixed L and m → ∞ ,
+
+∥z∥22
+
+r
+
+> d
+
+→
+
+
+
+1 + Var( W (s))
+
+cs + ct
+
+ χ2
+
+> r
+
+r ,
+
+where χ2 
+
+> r
+
+denotes a chi-square random variable with r degrees of freedom. It follows that for m → ∞ 
+
+m dδ2dist =
+
+ mns
+
++ mnt
+
+  ∥z∥22
+
+r − 1
+
+
+
+> +
+> d
+
+→
+
+
+
+(cs + ct + Var( W (s))) χ2
+
+> r
+
+r − (cs + ct)
+
+
+
+> +
+
+.
+
+We now take the outer limit L → ∞ . By assumption, r → ∞ , and 
+
+E
+
+ χ2
+
+> r
+
+r
+
+
+
+= 1 , Var 
+
+ χ2
+
+> r
+
+r
+
+
+
+= 2
+
+r → 0.
+
+Hence χ2 
+
+> r
+
+/r p
+
+→ 1, and continuity of the positive part function gives 
+
+
+
+(cs + ct + Var( W (s))) χ2
+
+> r
+
+r − (cs + ct)
+
+
+
+> +
+> p
+
+→ Var( W (s)).
+
+Combining the two limits and applying Portmanteau yields, for every ε > 0, lim  
+
+> L→∞
+
+lim sup 
+
+> m→∞
+
+P
+
+
+
+mˆδ2dist − Var( W (s)) > ε 
+
+
+
+= 0 .
+
+Finally, for ˆγ = m/n s + mˆδ2dist 
+
+m/n s + mˆδ2dist + m/n t
+
+,
+
+38 applying the continuous mapping theorem gives lim  
+
+> L→∞
+
+lim sup 
+
+> m→∞
+
+P
+
+
+
+ˆγ − cs + Var( W (s))
+
+cs + ct + Var( W (s)) > ε 
+
+
+
+= 0 .
+
+## A.8 Proof of Corollary 1 
+
+Proof. Throughout the proof, the influence functions and their plug-in estimators are evaluated at γ, with this dependence suppressed (i.e Φ k and bΦk represent Φ k(γ) and bΦk(γ) respectively.). By Corollary 2, we have the linearization 
+
+√m(ˆθSAGE (γ) − θt) = −H−1
+
+> t
+
+h√m ˆEs [∇θ ℓ(θt; D) − γΞs(D)] + γ√m ˆEt[Ξ t(D)] 
+
+i
+
++ op(1) . (33) Define the p-dimensional source and target influence functions Φs(D) := −H−1 
+
+> t
+
+{∇ θ ℓ(θt; D) − γΞs(D)} , Φt(D) := γH −1 
+
+> t
+
+Ξt(D).
+
+Since θt is the target risk minimizer, Et[∇θ ℓ(θt; D)] = 0. Moreover, by the definition of Ξ k(D), Et[Ξ s(D)] = 
+
+Et[Ξ t(D)] = 0. It follows that Et[Φ s(D)] = Et[Φ t(D)] = 0 . We have that 
+
+√m(ˆθSAGE (γ) − θt) = √m
+
+hn ˆEs[Φ s(D)] − Et[Φ s(D)] 
+
+o
+
+−
+
+n ˆEt[Φ t(D)] − Et[Φ t(D)] 
+
+oi 
+
++ op(1) = √m
+
+h ˆEs[Φ s(D)] − ˆEt[Φ t(D)] − Et[Φ s(D)] − Et[Φ t(D)] 
+
+i
+
++ op(1) .
+
+(34) By Lemma 1, for each fixed L,
+
+√m
+
+ ˆEt[Φ t(D)] − Et[Φ t(D)] ˆEs[Φ s(D)] − Et[Φ s(D)] 
+
+ d
+
+→ N
+
+0,
+
+ct Var t{Φt(D)} 0p×p
+
+0p×p (cs + Var( W (s))) Var t{Φs(D)}
+
+ . (35) Applying the continuous mapping theorem and Eqn (34) and setting γ = γ∗ gives 
+
+√m(ˆθSAGE (γ∗) − θt) d
+
+→ N (0 , ΣSAGE (γ∗)) , (36) where Σ SAGE (γ∗) := ct Var t{Φt(D)} + ( cs + Var( W (s))) Var t{Φs(D)}.
+
+39 A.9 Proof of Lemma 4 
+
+Proof. Since this proof takes limits in L, we write the dependence on L explicitly where needed, i.e., Φ k,L 
+
+and Σ SAGE ,L (γ∗) denote Φ k and Σ SAGE (γ∗) from Corollary 1 for a given L. Let bΦs and bΦt denote the plug-in estimators of Φ s and Φ t, formed by replacing the population quantities with their empirical analogues. For each fixed L, consistency of the plug-in quantities, together with the continuity and moment conditions in Appendix A.3, gives for k ∈ { s, t }, ˆEs
+
+h
+
+∥bΦk(D) − Φk(D)∥22
+
+i p
+
+→ 0. Under the fourth moment assumption, both Φ k(D) and the entries of Φ k(D)Φ k(D)⊺ are square-integrable. Thus, applying Lemma 1 and using Cauchy-Schwarz gives ˆEs[bΦk(D)] = ˆEs[Φ k(D)] + op(1) p
+
+→ Et[Φ k(D)] ,
+
+ˆEs[bΦk(D)bΦk(D)⊺] = ˆEs[Φ k(D)Φ k(D)⊺] + op(1) p
+
+→ Et[Φ k(D)Φ k(D)⊺].
+
+Following the empirical covariance estimation of Jeong and Rothenh¨ ausler (2025, 2026), let 
+
+dVar s
+
+nbΦk(D(s) 
+
+> i
+
+)
+
+o
+
+:= ˆEs[bΦk(D)bΦk(D)⊺] − ˆEs[bΦk(D)] ˆEs[bΦk(D)] ⊺.
+
+Therefore, 
+
+dVar s
+
+nbΦs(D(s) 
+
+> i
+
+)
+
+o p
+
+→ Var t{Φs(D)}, dVar s
+
+nbΦt(D(s) 
+
+> i
+
+)
+
+o p
+
+→ Var t{Φt(D)}. (37) Let ˆδ2dist be as defined in Eqn (4). Define the covariance estimator at γ∗ by 
+
+bVSAGE (γ∗) := 1
+
+nt
+
+dVar s
+
+nbΦt(D(s) 
+
+> i
+
+)
+
+o
+
++
+
+ 1
+
+ns
+
++ ˆδ2dist 
+
+dVar s
+
+nbΦs(D(s) 
+
+> i
+
+)
+
+o
+
+.
+
+We now establish coordinatewise variance consistency at γ∗. For the remainder of the proof, we display the dependency on L , which was previously suppressed for notational simplicity. For a fixed coordinate j, let ej
+
+denote the corresponding standard basis vector. Assume that e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej > 0 for all sufficiently large 
+
+L to write 
+
+me ⊺ 
+
+> j
+
+bVSAGE (γ∗)ej = mnt
+
+Var t{e⊺ 
+
+> j
+
+Φt,L (D)} +
+
+ mns
+
++ mˆδ2dist 
+
+
+
+Var t{e⊺ 
+
+> j
+
+Φs,L (D)} + op(1) (38) = ct Var t{e⊺ 
+
+> j
+
+Φt,L (D)} + ( cs + mˆδ2dist ) Var t{e⊺ 
+
+> j
+
+Φs,L (D)} + op(1) . (39) By definition, e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej = ct Var t{e⊺ 
+
+> j
+
+Φt,L (D)} + ( cs + Var( W (s))) Var t{e⊺ 
+
+> j
+
+Φs,L (D)}, so subtracting this from Eqn (38) gives 
+
+me ⊺ 
+
+> j
+
+bVSAGE (γ∗)ej − e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej = ( mˆδ2dist − Var( W (s))) Var t{e⊺ 
+
+> j
+
+Φs,L (D)} + op(1) .
+
+40 Dividing by e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej > 0 gives 
+
+me ⊺ 
+
+> j
+
+bVSAGE (γ∗)ej
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+− 1 = Var t{e⊺ 
+
+> j
+
+Φs,L (D)}
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+(mˆδ2dist − Var( W (s))) + op(1) .
+
+Since 0 ≤ Var t{e⊺ 
+
+> j
+
+Φs,L (D)}
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+≤ 1
+
+cs + Var( W (s)) ,
+
+by the triangle inequality, 
+
+me ⊺ 
+
+> j
+
+bVSAGE (γ∗)ej
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+− 1 ≤ |mˆδ2dist − Var( W (s))|
+
+cs + Var( W (s)) + op(1) .
+
+Therefore, for every ε > 0, the union bound gives 
+
+P me ⊺ 
+
+> j
+
+bVSAGE (γ∗)ej
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+− 1 > ε 
+
+!
+
+≤ P
+
+
+
+|mˆδ2dist − Var( W (s))| > ε(cs + Var( W (s))) 2
+
+
+
++ o(1) .
+
+Lemma 3 gives lim  
+
+> L→∞
+
+lim sup 
+
+> m→∞
+
+P me ⊺ 
+
+> j
+
+bVSAGE (γ∗)ej
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+− 1 > ε 
+
+!
+
+= 0 . (40) Combining the fixed-L CLT in Eqn (36) with variance consistency and Slutsky’s, ˆθSAGE ,j (γ∗) − θt,j 
+
+q
+
+e⊺ 
+
+> j
+
+bVSAGE (γ∗)ejd
+
+→ N (0 , 1) , (41) with limits taken first in m, followed by L. Consequently, ˆθSAGE ,j (γ∗) ± z1−α/ 2
+
+q
+
+e⊺ 
+
+> j
+
+bVSAGE (γ∗)ej (42) is an asymptotically valid 1 − α confidence interval for θt,j .We now replace γ∗ by ˆ γ and write Φ k(γ) and bΦk(γ) to explicitly display the step-size dependence previously suppressed. We first show that, for each fixed L, the expansion in Eqn (33) holds with γ∗
+
+replaced by ˆ γ. Define the remainder by 
+
+Rm(γ) := √m(ˆθSAGE (γ) − θt) + H−1
+
+> t
+
+h√m ˆEs [∇θ ℓ(θt; D) − γΞs(D)] + γ√m ˆEt[Ξ t(D)] 
+
+i
+
+.
+
+By Corollary 2, Rm(0) = op(1) and Rm(1) = op(1). Substituting ˆθSAGE (γ) = ˆθinit − γ bH−1 
+
+> s
+
+bΨt into the 41 definition of Rm(γ) gives 
+
+Rm(γ) = Rm(0) + γ√m
+
+h
+
+− bH−1 
+
+> s
+
+bΨt + H−1
+
+> t
+
+n ˆEt[Ξ t(D)] − ˆEs[Ξ s(D)] 
+
+oi 
+
+= Rm(0) + γ{Rm(1) − Rm(0) }
+
+= (1 − γ)Rm(0) + γR m(1) .
+
+Evaluating this identity at ˆ γ and using ˆ γ ∈ [0 , 1], we get 
+
+∥Rm(ˆ γ)∥2 ≤ (1 − ˆγ)∥Rm(0) ∥2 + ˆ γ∥Rm(1) ∥2 ≤ ∥ Rm(0) ∥2 + ∥Rm(1) ∥2 = op(1) .
+
+Therefore, for each fixed L, the expansion in Eqn (33) also holds with γ∗ replaced by ˆ γ.Next, to establish the limiting distribution at ˆ γ, note that the SAGE update can be written as 
+
+√m{ˆθSAGE ,j (ˆ γ) − ˆθSAGE ,j (γ∗)}
+
+q
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+= −(ˆ γ − γ∗)
+
+√m e ⊺ 
+
+> j
+
+bH−1 
+
+> s
+
+bΨt
+
+q
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+.
+
+For every ε > 0 and M > 0, the union bound gives 
+
+P
+
+
+
+√m{ˆθSAGE ,j (ˆ γ) − ˆθSAGE ,j (γ∗)}
+
+q
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+> ε 
+
+ ≤ P
+
+
+
+|ˆγ − γ∗| > εM
+
+| {z }
+
+> (A)
+
++ P
+
+
+
+√m e ⊺ 
+
+> j
+
+bH−1 
+
+> s
+
+bΨt
+
+q
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+> M 
+
+| {z }
+
+> (B)
+
+.
+
+For each fixed M , Lemma 3 implies that ( A) converges to zero with limits taken first in m, followed by L.We now evaluate ( B). Corollary 2 and the distributional CLT in Lemma 1 give that, for each fixed L,
+
+√m e ⊺ 
+
+> j
+
+bH−1 
+
+> s
+
+bΨt has the limiting variance (cs + Var( W (s))) Var t{e⊺ 
+
+> j
+
+H−1 
+
+> t
+
+Ξs} + ct Var t{e⊺ 
+
+> j
+
+H−1 
+
+> t
+
+Ξt} = ( cs + ct + Var( W (s))) Var t{e⊺ 
+
+> j
+
+H−1 
+
+> t
+
+Ξt},
+
+where the equality follows from Ξ s(D) = Ξ t(D) by definition. Dividing by 
+
+q
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej therefore gives √m e ⊺ 
+
+> j
+
+bH−1 
+
+> s
+
+bΨt
+
+q
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ejd
+
+→ N 0, (cs + ct + Var( W (s))) Var t{e⊺ 
+
+> j
+
+H−1 
+
+> t
+
+Ξt}
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+!
+
+. (43) Next, since Φ t(γ∗) = γ∗H−1 
+
+> t
+
+Ξt,0 ≤ (cs + ct + Var( W (s))) Var t{e⊺ 
+
+> j
+
+H−1 
+
+> t
+
+Ξt}
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+= cs + ct + Var( W (s))(γ∗)2
+
+Var t{e⊺ 
+
+> j
+
+Φt(γ∗)}
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+≤ cs + ct + Var( W (s))
+
+ct(γ∗)2 ,
+
+where the last inequality follows since e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej ≥ ct Var t{e⊺ 
+
+> j
+
+Φt(γ∗)}. By Portmanteau and Cheby-42 shev’s applied to Eqn (43), lim sup 
+
+> m→∞
+
+P
+
+
+
+√m e ⊺ 
+
+> j
+
+bH−1 
+
+> s
+
+bΨt
+
+q
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+> M 
+
+ ≤ cs + ct + Var( W (s))
+
+M 2ct(γ∗)2 .
+
+Taking limits first in m, then in L, and finally letting M → ∞ in the union bound above yields, for every 
+
+ε > 0, lim  
+
+> L→∞
+
+lim sup 
+
+> m→∞
+
+P
+
+
+
+√m{ˆθSAGE ,j (ˆ γ) − ˆθSAGE ,j (γ∗)}
+
+q
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+> ε 
+
+ = 0 .
+
+Combining this with the standardized version of Eqn (36) therefore gives 
+
+√m{ˆθSAGE ,j (ˆ γ) − θt,j }
+
+q
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ejd
+
+→ N (0 , 1) , (44) with limits taken first in m, followed by L.It remains to establish variance consistency at ˆ γ. By definition, 
+
+bΦs(ˆ γ) − bΦs(γ∗) = − bH−1
+
+> s
+
+n
+
+∇θ ℓ(ˆθinit ; D) − ˆγ bΞ( D)
+
+o
+
++ bH−1
+
+> s
+
+n
+
+∇θ ℓ(ˆθinit ; D) − γ∗ bΞ( D)
+
+o
+
+= (ˆ γ − γ∗) bH−1 
+
+> s
+
+bΞ( D)= ˆγ − γ∗
+
+γ∗ bΦt(γ∗).
+
+By the same calculation, bΦt(ˆ γ) − bΦt(γ∗) = ˆγ−γ∗ 
+
+> γ∗
+
+bΦt(γ∗). Applying this and the reverse triangle inequality to the following difference in standard deviations, 
+
+q
+
+e⊺ 
+
+> j
+
+bVSAGE (ˆ γ)ej −
+
+q
+
+e⊺ 
+
+> j
+
+bVSAGE (γ∗)ej ≤
+
+ 1
+
+ns
+
++ ˆδ2dist 
+
+dVar s
+
+n
+
+e⊺
+
+> j
+
+ bΦs(ˆ γ) − bΦs(γ∗)o
+
++ 1
+
+nt
+
+dVar s
+
+n
+
+e⊺
+
+> j
+
+ bΦt(ˆ γ) − bΦt(γ∗)o1/2
+
+= |ˆγ − γ∗|
+
+γ∗
+
+ 1
+
+ns
+
++ 1
+
+nt
+
++ ˆδ2dist 
+
+dVar s{e⊺ 
+
+> j
+
+bΦt(γ∗)}
+
+1/2
+
+.
+
+(45) Since e⊺ 
+
+> j
+
+bVSAGE (γ∗)ej ≥ 1
+
+> nt
+
+dVar s{e⊺ 
+
+> j
+
+bΦt(γ∗)}, we write 
+
+qdVar s{e⊺ 
+
+> j
+
+bΦt(γ∗)} ≤ √nt
+
+q
+
+e⊺ 
+
+> j
+
+bVSAGE (γ∗)ej . Substi-tuting this bound into Eqn (45) and dividing by 
+
+q
+
+e⊺ 
+
+> j
+
+bVSAGE (γ∗)ej gives 
+
+vuut e⊺ 
+
+> j
+
+bVSAGE (ˆ γ)ej
+
+e⊺ 
+
+> j
+
+bVSAGE (γ∗)ej
+
+− 1 ≤ |ˆγ − γ∗|
+
+γ∗
+
+r
+
+1 + nt
+
+ns
+
++ nt ˆδ2dist . (46) This holds on the event the denominator is positive, which occurs with probability tending to one by Eqn 43 (40). By Lemma 3, |ˆγ − γ∗| p
+
+→ 0 and nt ˆδ2dist 
+
+> p
+
+→ Var( W (s)) 
+
+> ct
+
+. Together with nt/n s → cs/c t and γ∗ > 0, we get 1
+
+γ∗
+
+r
+
+1 + nt
+
+ns
+
++ nt ˆδ2dist 
+
+> p
+
+→ 1
+
+γ∗
+
+s
+
+1 + cs
+
+ct
+
++ Var( W (s))
+
+ct
+
+< ∞,
+
+with limits first in m then in L. Therefore, together with continuous mapping, 
+
+e⊺ 
+
+> j
+
+bVSAGE (ˆ γ)ej
+
+e⊺ 
+
+> j
+
+bVSAGE (γ∗)ejp
+
+→ 1.
+
+In addition, Eqn (40) gives 
+
+me ⊺ 
+
+> j
+
+bVSAGE (γ∗)ej
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ejp
+
+→ 1.
+
+Multiplying these two ratios therefore yields 
+
+me ⊺ 
+
+> j
+
+bVSAGE (ˆ γ)ej
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ej
+
+= e⊺ 
+
+> j
+
+bVSAGE (ˆ γ)ej
+
+e⊺ 
+
+> j
+
+bVSAGE (γ∗)ej
+
+me ⊺ 
+
+> j
+
+bVSAGE (γ∗)ej
+
+e⊺ 
+
+> j
+
+ΣSAGE ,L (γ∗)ejp
+
+→ 1.
+
+Combining this variance consistency with Eqn 44 and Slutsky’s, we get ˆθSAGE ,j (ˆ γ) − θt,j 
+
+q
+
+e⊺ 
+
+> j
+
+bVSAGE (ˆ γ)ejd
+
+→ N (0 , 1) ,
+
+with limits taken first in m, followed by L. Therefore, ˆθSAGE ,j (ˆ γ) ± z1−α/ 2
+
+q
+
+e⊺ 
+
+> j
+
+bVSAGE (ˆ γ)ej
+
+is an asymptotically valid 1 − α confidence interval for θt,j , with limits taken first in m, followed by L.
+
+# B Proofs of supporting results 
+
+## B.1 Distributional CLT 
+
+Proof. This lemma follows as a special case of Lemma 1 of I. Zhang and Rothenh¨ ausler (2025) and applying the Cram´ er-Wold device since Lemma 1 gives a distributional CLT for scalar-valued rather than vector-valued functions. Specifically, Lemma 1 considers scalar Borel measurable functions that are square-integrable under 
+
+Pf . Taking Pf = P1 = Pt and P2 = Ps,
+
+√m
+
+ 1
+
+> nt
+
+Pnt 
+
+> i=1
+
+ϕt(D(t) 
+
+> i
+
+) − Et[ϕt(D)] 
+
+> 1
+> ns
+
+Pns 
+
+> i=1
+
+ϕs(D(s) 
+
+> i
+
+) − Et[ϕs(D)] 
+
+ d
+
+→ N
+
+0,
+
+ct Var t(ϕt(D)) 00 (Var( W (s)) + cs) Var t(ϕs(D)) 
+
+ ,
+
+44 since Pt is fixed, the target component has no random-weight contribution and the limiting cross-covariance is zero. Now define as ∈ Rps and at ∈ Rpt . Applying the above for ϕs(D) = a⊺ 
+
+> s
+
+fs(D) and ϕt(D) = a⊺ 
+
+> t
+
+ft(D) gives 
+
+√m a⊺
+
+> t
+
+1
+
+ntntX
+
+> i=1
+
+ft(D(t) 
+
+> i
+
+) − Et[ft(D)] 
+
+!
+
++ a⊺
+
+> s
+
+1
+
+nsnsX
+
+> i=1
+
+fs(D(s) 
+
+> i
+
+) − Et[fs(D)] 
+
+!! 
+
+> d
+
+→ N
+
+
+
+0, c ta⊺ 
+
+> t
+
+Var t(ft(D)) at + (Var( W (s)) + cs)a⊺ 
+
+> s
+
+Var t(fs(D)) as
+
+
+
+.
+
+Then by the Cram` er-Wold device, 
+
+√m
+
+ 1
+
+> nt
+
+Pnt 
+
+> i=1
+
+ft(D(t) 
+
+> i
+
+) − Et[ft(D)] 
+
+> 1
+> ns
+
+Pns 
+
+> i=1
+
+fs(D(s) 
+
+> i
+
+) − Et[fs(D)] 
+
+ d
+
+→ N
+
+0,
+
+ct Var t(ft(D)) 0pt×ps
+
+0ps×pt
+
+ cs + Var( W (s)) Var t(fs(D)) 
+
+
+
+## B.2 Consistency and linearization of ˆθinit 
+
+Proposition 1. Under the assumptions in Appendix A.3, we have 
+
+ˆθinit = θt + Op(m−1/2),
+
+and the linearization 
+
+ˆθinit − θt = −H−1 
+
+> t
+
+ˆEs[∇θ ℓ(θt; D)] + op(m−1/2). (47) 
+
+Proof. To establish the first statement, we adapt the argument of Lemma 2 of I. Zhang and Rothenh¨ ausler (2025), with K = 1, Pf = Pt, P1 = Ps, and ˆθ = ˆθinit . Since that lemma assumes bounded loss, we verify the argument under our assumptions. By Assumption (2b), ℓ(θ; D) is square-integrable for each fixed θ.Lemma 1 therefore gives ˆEs[ℓ(θ; D)] p
+
+→ Et[ℓ(θ; D)]. Moreover, L1 is square-integrable, so the same lemma gives ˆEs[L1(D)] p
+
+→ Et[L1(D)] < ∞. Compactness of Θ and a finite-covering argument using this Lipschitz bound then yield sup 
+
+> θ∈Θ
+
+ˆEs[ℓ(θ; D)] − Et[ℓ(θ; D)] p
+
+→ 0.
+
+Since θt uniquely minimizes the continuous target risk on Θ, it follows that ˆθinit 
+
+> p
+
+→ θt.We now linearize ˆθinit − θt. Let ∆ m := ˆθinit − θt and recall that bHs(θ) := ˆEs[∇2 
+
+> θ
+
+ℓ(θ; D)] . Since ˆθinit 
+
+> p
+
+→ θt
+
+and θt ∈ int(Θ), the source first-order condition holds with probability tending to one. A Taylor expansion 45 around θt gives 0 = ˆEs[∇θ ℓ(ˆθinit ; D)] = ˆEs[∇θ ℓ(θt; D)] + bHs(θt)∆ m + 12 ˆEs
+
+∇3 
+
+> θ
+
+ℓ(θt; D)[∆ m, ∆m] + rm. (48) Here, ∇3 
+
+> θ
+
+ℓ(θ; D)[ u, v ] denotes the p-dimensional vector obtained by applying the third derivative tensor to u
+
+and v. By the Lipschitz condition on ∇3 
+
+> θ
+
+ℓ(·), 
+
+∥rm∥2 ≤ C ˆEs[M3(D)] ∥∆m∥32 (49) for a fixed constant C < ∞. Moreover, 
+
+12 ˆEs
+
+∇3 
+
+> θ
+
+ℓ(θt; D)[∆ m, ∆m]
+
+> 2
+
+≤ 12 ˆEs[F3(D)] ∥∆m∥22.
+
+By Lemma 1, ˆEs[M3(D)] = Op(1) and ˆEs[F3(D)] = Op(1). Also by Lemma 1, we have ˆEs[∇θ ℓ(θt; D)] = 
+
+Op(m−1/2), since Et[∇θ ℓ(θt; D)] = 0, and bHs(θt) − Ht = Op(m−1/2). Since bHs(θt) p
+
+→ Ht and Ht is positive definite, bHs(θt) is invertible with probability tending to one, bHs(θt)−1 = H−1 
+
+> t
+
++ Op(m−1/2) = Op(1) .
+
+We first establish the rate of ∆ m. Rearranging Eqn. (48), 
+
+∥∆m∥2 ≤ bHs(θt)−1 ˆEs[∇θ ℓ(θt; D)] 2
+
++ Cm∥∆m∥22,
+
+where Cm := ∥ bHs(θt)−1∥op 
+
+n 12 ˆEs[F3(D)] + C ˆEs[M3(D)] ∥∆m∥2
+
+o
+
+= Op(1) . Since ∆ m = op(1) by consistency, 
+
+Cm∥∆m∥2 = op(1). Thus, with probability tending to one, Cm∥∆m∥2 ≤ 1/2, and we get 
+
+∥∆m∥2 ≤ 2 bHs(θt)−1 ˆEs[∇θ ℓ(θt; D)] 2
+
+.
+
+Consequently, ∆ m = Op(m−1/2). Substituting this into Eqn (49) gives ∥rm∥2 = Op(m−3/2) and 
+
+12 ˆEs
+
+∇3 
+
+> θ
+
+ℓ(θt; D)[∆ m, ∆m]
+
+> 2
+
+= Op(m−1).
+
+46 Therefore, rearranging Eqn. (48) gives ∆m = − bHs(θt)−1 ˆEs[∇θ ℓ(θt; D)] − 12 bHs(θt)−1 ˆEs
+
+∇3 
+
+> θ
+
+ℓ(θt; D)[∆ m, ∆m] − bHs(θt)−1rm
+
+= − bHs(θt)−1 ˆEs[∇θ ℓ(θt; D)] + Op(m−1)= −H−1 
+
+> t
+
+ˆEs[∇θ ℓ(θt; D)] + 
+
+
+
+H−1 
+
+> t
+
+− bHs(θt)−1 ˆEs[∇θ ℓ(θt; D)] + Op(m−1)= −H−1 
+
+> t
+
+ˆEs[∇θ ℓ(θt; D)] + Op(m−1/2)Op(m−1/2) + Op(m−1)= −H−1 
+
+> t
+
+ˆEs[∇θ ℓ(θt; D)] + Op(m−1)= −H−1 
+
+> t
+
+ˆEs[∇θ ℓ(θt; D)] + op(m−1/2).
+
+(50) 
+
+## B.3 Consistency of bΨt and bHs
+
+Lemma 5. Under the assumptions in Appendix A.3, 
+
+bΨt = β(t)(θt)⊺( ˆdt − ˆds) + op(m−1/2) = Op(m−1/2). (51) 
+
+Proof. We first show that ˆβ(s)(ˆθinit ) − β(t)(θt) = Op(m−1/2). Recall that ˆC(s)(θ) = ˆEs[ eZ(D) eZ(D)⊺]−1 ˆEs[ eZ(D)∇θ ℓ(θ; D)⊺]is the empirical least-squares coefficient matrix obtained by projecting ∇θ ℓ(θ; D) onto an intercept and 
+
+Z(D) using the source observations. Its intercept and slope coefficients are respectively ˆ α(s)(θ) and ˆβ(s)(θ). Similarly, 
+
+C(t)(θ) = Et[ eZ(D) eZ(D)⊺]−1Et[ eZ(D)∇θ ℓ(θ; D)⊺]is the corresponding population target projection, with coefficients α(t)(θ) and β(t)(θ). We first compare ˆC(s)(θt) and C(t)(θt) By Lemma 1, ˆEs[ eZ(D) eZ(D)⊺] = Et[ eZ(D) eZ(D)⊺] + Op(m−1/2)and ˆEs[ eZ(D)∇θ ℓ(θt; D)⊺] = Et[ eZ(D)∇θ ℓ(θt; D)⊺] + Op(m−1/2). Since Et[ eZ(D) eZ(D)⊺] is full rank by Assumption (3b), ˆEs[ eZ(D) eZ(D)⊺] is invertible with probability tending to one, and its inverse is Op(1). Therefore, ˆEs[ eZ(D) eZ(D)⊺]−1 = Et[ eZ(D) eZ(D)⊺]−1 + Op(m−1/2). 47 Using the definitions of ˆC(s)(θt) and C(t)(θt), we therefore have ˆC(s)(θt) − C(t)(θt) = ˆEs[ eZ eZ⊺]−1 ˆEs[ eZ∇θ ℓ(θt; D)⊺] − Et[ eZ eZ⊺]−1Et[ eZ∇θ ℓ(θt; D)⊺]= ˆEs[ eZ eZ⊺]−1  ˆEs[ eZ∇θ ℓ(θt; D)⊺] − Et
+
+h eZ∇θ ℓ(θt; D)⊺i 
+
++
+
+h ˆEs[ eZ eZ⊺]−1 − Et[ eZ eZ⊺]−1i
+
+Et
+
+h eZ∇θ ℓ(θt; D)⊺i
+
+= Op(1) Op(m−1/2) + Op(m−1/2)O(1) = Op(m−1/2),
+
+(52) where the arguments of eZ(D) have been suppressed for readability. We next look at ˆC(s)(ˆθinit ). We first write ˆC(s)(ˆθinit ) − ˆC(s)(θt) = ˆEs[ eZ(D) eZ(D)⊺]−1 ˆEs
+
+h eZ(D)
+
+
+
+∇θ ℓ(ˆθinit ; D) − ∇ θ ℓ(θt; D)
+
+⊺i
+
+. (53) A Taylor expansion of ∇θ ℓ(ˆθinit ; D) around θt gives 
+
+∇θ ℓ(ˆθinit ; D) = ∇θ ℓ(θt; D) + ∇2 
+
+> θ
+
+ℓ(θt; D)( ˆθinit − θt) + rm(D), (54) where, by the Lipschitz condition on ∇2 
+
+> θ
+
+ℓ(θ; D) in Assumption (2f), ∥rm(D)∥2 ≤ 12 M2(D)∥ˆθinit − θt∥22.Substituting (54) into (53) gives 
+
+ˆC(s)(ˆθinit ) − ˆC(s)(θt) F
+
+≤ ˆEs[ eZ(D) eZ(D)⊺]−1
+
+> op
+
+
+
+ˆEs[∥ eZ(D)∥2∥∇ 2 
+
+> θ
+
+ℓ(θt; D)∥op ]∥ˆθinit − θt∥2 + 12 ˆEs
+
+h
+
+∥ eZ(D)∥2M2(D)
+
+i
+
+∥ˆθinit − θt∥22
+
+
+
+= Op(1) 
+
+
+
+Op(1) Op(m−1/2) + Op(1) Op(m−1)
+
+
+
+= Op(m−1/2),
+
+where we use ˆθinit − θt = Op(m−1/2) from Proposition 1. Combining this result with (52), we get ˆC(s)(ˆθinit ) − C(t)(θt) = 
+
+ ˆC(s)(ˆθinit ) − ˆC(s)(θt)
+
+
+
++
+
+ ˆC(s)(θt) − C(t)(θt)
+
+
+
+= Op(m−1/2).
+
+Therefore, ˆβ(s)(ˆθinit ) − β(t)(θt) = Op(m−1/2). We next establish the representation of bΨt. Since the least-squares projection contains an intercept, we have ˆEs
+
+"
+
+∇θ ℓ(ˆθinit ; D) − ˆα(s)(ˆθinit ) −
+
+> K
+
+X
+
+> g=1
+
+n ˆβ(s) 
+
+> g
+
+(ˆθinit )
+
+o⊺
+
+Zg (D)
+
+#
+
+= 0 . (55) 48 Moreover, since ˆθinit is an interior source empirical risk minimizer with probability tending to one, ˆEs[∇θ ℓ(ˆθinit ; D)] = 0. It follows from (55) that 0 = ˆ α(s)(ˆθinit ) + 
+
+> K
+
+X
+
+> g=1
+
+n ˆβ(s) 
+
+> g
+
+(ˆθinit )
+
+o⊺ ˆEs[Zg (D)] = ˆ α(s)(ˆθinit ) + 
+
+> K
+
+X
+
+> g=1
+
+n ˆβ(s) 
+
+> g
+
+(ˆθinit )
+
+o⊺ ˆds,g 
+
+= ˆ α(s)(ˆθinit ) + 
+
+n ˆβ(s)(ˆθinit )
+
+o⊺ ˆds.
+
+Therefore, we can write 
+
+bΨt =
+
+n ˆβ(s)(ˆθinit )
+
+o⊺
+
+( ˆdt − ˆds) = ˆ α(s)(ˆθinit ) + 
+
+n ˆβ(s)(ˆθinit )
+
+o⊺ ˆdt. (56) Finally, Lemma 1 gives ˆdt − ˆds = ( ˆdt − dt) − ( ˆds − dt) = Op(m−1/2). (57) Therefore, 
+
+bΨt −
+
+n
+
+β(t)(θt)
+
+o⊺
+
+( ˆdt − ˆds) = 
+
+hn ˆβ(s)(ˆθinit )
+
+o⊺
+
+−
+
+n
+
+β(t)(θt)
+
+o⊺i
+
+( ˆdt − ˆds)= Op(m−1/2)Op(m−1/2)= op(m−1/2)Since β(t)(θt) is fixed and ˆdt − ˆds = Op(m−1/2), we also get bΨt = Op(m−1/2)
+
+Proposition 2. Under the assumptions in Appendix A.3, 
+
+bHs = Ht + Op(m−1/2) and bH−1 
+
+> s
+
+= H−1 
+
+> t
+
++ Op(m−1/2).
+
+Proof. We can write 
+
+bHs − Ht = ˆEs[∇2 
+
+> θ
+
+ℓ(θt; D)] − Et[∇2 
+
+> θ
+
+ℓ(θt; D)] 
+
+| {z }
+
+> (1)
+
++ ˆEs
+
+h
+
+∇2 
+
+> θ
+
+ℓ(ˆθinit ; D) − ∇ 2 
+
+> θ
+
+ℓ(θt; D)
+
+i| {z }
+
+> (2)
+
+.
+
+49 (1) is Op(m−1/2) by Lemma 1. For the second term, triangle inequality and Assumption (2f) give 
+
+ˆEs
+
+h
+
+∇2 
+
+> θ
+
+ℓ(ˆθinit ; D) − ∇ 2 
+
+> θ
+
+ℓ(θt; D)
+
+i
+
+> op
+
+≤ ˆEs
+
+
+
+∇2 
+
+> θ
+
+ℓ(ˆθinit ; D) − ∇ 2 
+
+> θ
+
+ℓ(θt; D) op 
+
+
+
+≤ ˆEs[M2(D)] ∥ˆθinit − θt∥2
+
+= Op(1) Op(m−1/2)= Op(m−1/2),
+
+where ˆEs[M2(D)] = Op(1) by Lemma 1, and ˆθinit − θt = Op(m−1/2) by Proposition 1. Therefore, 
+
+bHs = Ht + Op(m−1/2).
+
+Since Ht is positive definite, bHs is invertible with probability tending to one. Therefore, we also have that 
+
+bH−1 
+
+> s
+
+= H−1 
+
+> t
+
++ Op(m−1/2). 
+
+## B.4 Asymptotic linearity of SAGE 
+
+Corollary 2. For any fixed γ ≥ 0, under the assumptions in Appendix A.3, 
+
+√m(ˆθSAGE (γ) − θt) = −H−1
+
+> t
+
+h√m ˆEs [∇θ ℓ(θt; D) − γΞs(D)] + γ√m ˆEt[Ξ t(D)] 
+
+i
+
++ op(1) . (58) 
+
+Proof. We first show that 
+
+√m bΨt = √m ˆEt[Ξ t(D)] − √m ˆEs[Ξ s(D)] + op(1) . (59) By Lemma 5, 
+
+√m bΨt = β(t)(θt)⊺√m( ˆdt − ˆds) + op(1) . (60) We also have by definition of ˆdk,
+
+β(t)(θt)⊺( ˆdt − ˆds) = β(t)(θt)⊺ n
+
+( ˆdt − dt) − ( ˆds − dt)
+
+o
+
+= ˆEt
+
+h
+
+β(t)(θt)⊺{Z(t)(D) − dt}
+
+i
+
+− ˆEs
+
+h
+
+β(t)(θt)⊺{Z(s)(D) − dt}
+
+i
+
+= ˆEt[Ξ t(D)] − ˆEs[Ξ s(D)] .
+
+Substituting this into (60) gives (59). 50 We next derive the asymptotic linear representation of the SAGE estimator. By its definition, 
+
+√m(ˆθSAGE (γ) − θt) = √m(ˆθinit − θt) − γ√m bH−1 
+
+> s
+
+bΨt. (61) By Proposition 2 and Lemma 5, bH−1 
+
+> s
+
+= H−1 
+
+> t
+
++ Op(m−1/2) and bΨt = Op(m−1/2) respectively. Consequently, 
+
+√m
+
+ bH−1 
+
+> s
+
+− H−1
+
+> t
+
+ bΨt = √m O p(m−1/2)Op(m−1/2) = Op(m−1/2)It follows that 
+
+√m bH−1 
+
+> s
+
+bΨt = H−1
+
+> t
+
+√m bΨt + op(1) . (62) Proposition 1 gives us the linearization, 
+
+√m(ˆθinit − θt) = −H−1
+
+> t
+
+√m ˆEs[∇θ ℓ(θt; D)] + op(1) .
+
+Combining this result with (61), (62), and (59), we obtain 
+
+√m(ˆθSAGE (γ) − θt) = −H−1
+
+> t
+
+√m ˆEs[∇θ ℓ(θt; D)] − γH −1 
+
+> t
+
+(√m ˆEt[Ξ t(D)] − √m ˆEs[Ξ s(D)]) + op(1) = −H−1
+
+> t
+
+h√m ˆEs [∇θ ℓ(θt; D) − γΞs(D)] + γ√m ˆEt[Ξ t(D)] 
+
+i
+
++ op(1) ,
+
+which proves (58). 
+
+## B.5 Properties of ˆθEB 
+
+Proposition 3. Define the entropy-balancing problem in Lagrangian form, 
+
+L(w, λ 1, λ 2) = 
+
+> ns
+
+X
+
+> i=1
+
+wi log( nswi) + λ1
+
+> ns
+
+X
+
+> i=1
+
+wi − 1
+
+!
+
+− λ⊺
+
+> 2
+> ns
+
+X
+
+> i=1
+
+wiZ(D(s) 
+
+> i
+
+) − ˆdt
+
+!
+
+.
+
+Let ˆλ2 ∈ Rr be a finite Lagrange multiplier associated with the reduced balancing constraints, where r =dim Z(D) after the coordinate removal in Assumption (3b) . Under the assumptions of Lemma 2, ˆλ2 =
+
+Op(m−1/2) and ˆλ2 has the linearization, 
+
+ˆλ2 =
+
+hdVar s{Z(D)}
+
+i−1
+
+( ˆdt − ˆds) + op(m−1/2).
+
+51 Proof. Eqn. (28) from Appendix A.6 gives 
+
+ns ˆwi =exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+
+
+> 1
+> ns
+
+Pns 
+
+> j=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> j
+
+) − ˆds}
+
+ , (63) Taking logs on both sides gives log( ns ˆwi) = ˆλ⊺ 
+
+> 2
+
+Z(D(s) 
+
+> i
+
+) − log 
+
+
+
+1
+
+nsnsX
+
+> j=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+Z(D(s) 
+
+> j
+
+)
+
+ (64) Multiplying each ith element by ˆ wi − n−1 
+
+> s
+
+and summing over i and using that P
+
+> i
+
+( ˆ wi − n−1 
+
+> s
+
+) = 0, 1
+
+nsnsX
+
+> i=1
+
+(ns ˆwi − 1) log( ns ˆwi) = 
+
+> ns
+
+X
+
+> i=1
+
+( ˆ wi − n−1 
+
+> s
+
+)ˆλ⊺ 
+
+> 2
+
+Z(D(s) 
+
+> i
+
+)= ˆλ⊺
+
+> 2
+
+( nsX
+
+> i=1
+
+ˆwiZ(D(s) 
+
+> i
+
+) − 1
+
+nsnsX
+
+> i=1
+
+Z(D(s) 
+
+> i
+
+)
+
+)
+
+,
+
+(65) where the second term in Eqn (64) after multiplying by P
+
+> i
+
+( ˆ wi − n−1 
+
+> s
+
+) is 0 since it is independent of i.The entropy-balancing weights are chosen to satisfy Pns 
+
+> i=1
+
+ˆwiZ(D(s) 
+
+> i
+
+) = ˆdt, while n−1
+
+> s
+
+Pns 
+
+> i=1
+
+Z(D(s) 
+
+> i
+
+) = ˆds by definition. Substituting into (65) gives 1
+
+nsnsX
+
+> i=1
+
+(ns ˆwi − 1) log( ns ˆwi) = ˆλ⊺ 
+
+> 2
+
+( ˆdt − ˆds).
+
+For a ≥ κ, the mean value theorem for the exponential function gives ( a−1) log a ≥ κ(log a)2. By assumption, 52 min i ns ˆwi ≥ κ with probability tending to one as m → ∞ . On this event, ˆλ⊺ 
+
+> 2
+
+( ˆdt − ˆds) ≥ κnsnsX
+
+> i=1
+
+{log( ns ˆwi)}2
+
+≥ κnsnsX
+
+> i=1
+
+log( ns ˆwi) − 1
+
+nsnsX
+
+> j=1
+
+log( ns ˆwj )
+
+
+
+> 2
+
+= κnsnsX
+
+> i=1
+
+hˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+i2
+
+(Eqn. (64)) = κ ˆλ⊺
+
+> 2
+
+"
+
+1
+
+nsnsX
+
+> i=1
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}{ Z(D(s) 
+
+> i
+
+) − ˆds}⊺
+
+#
+
+ˆλ2
+
+= κ ˆλ⊺ 
+
+> 2
+
+dVar s{Z(D)}ˆλ2
+
+= κ X
+
+> j
+
+ˆvj (ˆ u⊺ 
+
+> j
+
+ˆλ2)2
+
+≥ κ λ min 
+
+dVar s{Z(D)}
+
+ X 
+
+> j
+
+(ˆ u⊺ 
+
+> j
+
+ˆλ2)2
+
+= κ λ min 
+
+dVar s{Z(D)}
+
+
+
+∥ˆλ2∥22,
+
+where ˆ vj and ˆ uj denote the eigenvalues and corresponding orthonormal eigenvectors of dVar s{Z(D)}, so that 
+
+dVar s{Z(D)} = P 
+
+> j
+
+ˆvj ˆuj ˆu⊺ 
+
+> j
+
+.
+
+Applying Cauchy-Schwarz to the LHS gives ˆλ⊺ 
+
+> 2
+
+( ˆdt − ˆds) ≤ ∥ ˆλ2∥2 ∥ ˆdt − ˆds∥2. Combining these inequalities and dividing by ∥ˆλ2∥2 when ˆλ2̸ = 0 yields 
+
+κλ min 
+
+dVar s{Z(D)}
+
+
+
+∥ˆλ2∥2 ≤ ∥ ˆdt − ˆds∥2.
+
+Note that this inequality also holds when ˆλ2 = 0. By Lemma 1, for every ε > 0, 
+
+P
+
+
+
+λmin 
+
+dVar s{Z(D)}
+
+
+
+− λmin (Var t{Z(D)}) < ε 
+
+
+
+→ 1.
+
+Taking ε = 12 λmin (Var t{Z(D)}) > 0, we obtain, with probability tending to one, 
+
+λmin 
+
+dVar s{Z(D)}
+
+
+
+> λ min (Var t{Z(D)}) − ε = 12 λmin (Var t{Z(D)}) .
+
+Therefore, we have 
+
+∥ˆλ2∥2 ≤ ∥ ˆdt − ˆds∥2
+
+κλ min 
+
+dVar s{Z(D)}
+
+ ≤ 2∥ ˆdt − ˆds∥2
+
+κ λ min (Var t{Z(D)}) = Op(1) Op(m−1/2), (66) 53 where we use that ˆdt − ˆds = Op(m−1/2). by Lemma 1, so ˆλ2 = Op(m−1/2) (67) We now linearize ˆλ2. Fix 0 < ρ < η/ 2. The exponential moment assumption gives Et
+
+h
+
+(exp {ρ∥Z(D)∥2})2i
+
+=
+
+Et [exp {2ρ∥Z(D)∥2}] ≤ Et [exp {η∥Z(D)∥2}] < ∞. Thus, exp {ρ∥Z(D)∥2} is square-integrable, and by Lemma 1, 1
+
+> ns
+
+Pns 
+
+> i=1
+
+exp {ρ∥Z(D(s) 
+
+> i
+
+)∥2} p
+
+→ Et [exp {ρ∥Z(D)∥2}] . Since ns = O(m), exp 
+
+n
+
+ρ max  
+
+> i
+
+∥Z(D(s) 
+
+> i
+
+)∥2
+
+o
+
+≤
+
+> ns
+
+X
+
+> i=1
+
+exp {ρ∥Z(D(s) 
+
+> i
+
+)∥2} = Op(m).
+
+Taking logs gives max i ∥Z(D(s) 
+
+> i
+
+)∥2 = Op(log m). Therefore, max 
+
+> i
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds} ≤ ∥ ˆλ2∥2
+
+n
+
+max  
+
+> i
+
+∥Z(D(s) 
+
+> i
+
+)∥2 + ∥ ˆds∥2
+
+o
+
+= Op(m−1/2) ( Op(log m) + Op(1)) (Eqn (67)) = Op
+
+ log m
+
+√m
+
+
+
+= op(1) .
+
+(68) The weights satisfy P 
+
+> i
+
+ˆwiZ(D(s) 
+
+> i
+
+) = ˆdt and P 
+
+> i
+
+ˆwi = 1. Therefore, 
+
+> ns
+
+X
+
+> i=1
+
+ˆwi{Z(D(s) 
+
+> i
+
+) − ˆds} =
+
+> ns
+
+X
+
+> i=1
+
+ˆwiZ(D(s) 
+
+> i
+
+) − ˆdsnsX
+
+> i=1
+
+ˆwi = ˆdt − ˆds.
+
+Substituting the weight identity of Eqn. (28) into the above gives 
+
+> 1
+> ns
+
+Pns 
+
+> i=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+> 1
+> ns
+
+Pns 
+
+> i=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+ = ˆdt − ˆds. (69) We expand the numerator and denominator separately. Since max i |ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}| = op(1) with probability tending to one, the exponents have absolute value at most one. On this event, applying |ex −
+
+1 − x| ≤ 12 e|x|x2 ≤ e 
+
+> 2
+
+x2 with x = ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds} gives, for every i,
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+
+
+− 1 − ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds} ≤ e
+
+2
+
+hˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+i2
+
+≤ e
+
+2 ∥ˆλ2∥22∥Z(D(s) 
+
+> i
+
+) − ˆds∥22,
+
+(70) where we get the last inequality by Cauchy-Schwarz. 54 Evaluating the denominator, 1
+
+nsnsX
+
+> i=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+
+
+= 1
+
+nsnsX
+
+> i=1
+
+h
+
+1 + ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds} + ri,m 
+
+i
+
+= 1 + ˆλ⊺
+
+> 2
+
+"
+
+1
+
+nsnsX
+
+> i=1
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+#| {z }
+
+> = 0
+
++ 1
+
+nsnsX
+
+> i=1
+
+ri,m 
+
+= 1 + 1
+
+nsnsX
+
+> i=1
+
+ri,m ,
+
+where ri,m = exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+
+
+− 1 − ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}. Furthermore, by assumption, ∥Z(D)∥22 is square-integrable so applying Lemma 1 with the inequality ∥a − b∥22 ≤ 2∥a∥22 + 2 ∥b∥22 gives 1
+
+nsnsX
+
+> i=1
+
+∥Z(D(s) 
+
+> i
+
+) − ˆds∥22 ≤ 2
+
+(
+
+1
+
+nsnsX
+
+> i=1
+
+∥Z(D(s) 
+
+> i
+
+)∥22 + ∥ ˆds∥22
+
+)
+
+= Op(1) . (71) Applying the result of (70), we have that 
+
+1
+
+nsnsX
+
+> i=1
+
+ri,m ≤ 1
+
+nsnsX
+
+> i=1
+
+|ri,m |≤ e
+
+2nsnsX
+
+> i=1
+
+hˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+i2
+
+≤ e
+
+2 ∥ˆλ2∥22
+
+1
+
+nsnsX
+
+> i=1
+
+∥Z(D(s) 
+
+> i
+
+) − ˆds∥22 (Cauchy-Schwarz) = Op(m−1)Op(1) (Eqns (67) and (71)) = Op(m−1).
+
+Therefore, the denominator is 1
+
+nsnsX
+
+> i=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+
+
+= 1 + Op(m−1). (72) For the numerator, we have 1
+
+nsnsX
+
+> i=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+= 1
+
+nsnsX
+
+> i=1
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+| {z }
+
+> =0
+
++
+
+"
+
+1
+
+nsnsX
+
+> i=1
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}{ Z(D(s) 
+
+> i
+
+) − ˆds}⊺
+
+#
+
+ˆλ2 + 1
+
+nsnsX
+
+> i=1
+
+˜ri,m ,
+
+55 where ˜ ri,m = ri,m {Z(D(s) 
+
+> i
+
+) − ˆds}. Applying the above argument of the remainder term, ri,m , we get 
+
+1
+
+nsnsX
+
+> i=1
+
+˜ri,m 
+
+> 2
+
+≤ e
+
+2 ∥ˆλ2∥22
+
+1
+
+nsnsX
+
+> i=1
+
+∥Z(D(s) 
+
+> i
+
+) − ˆds∥32 = Op(m−1).
+
+Therefore, we get that the numerator is 1
+
+nsnsX
+
+> i=1
+
+exp 
+
+ˆλ⊺ 
+
+> 2
+
+{Z(D(s) 
+
+> i
+
+) − ˆds}
+
+
+
+{Z(D(s) 
+
+> i
+
+) − ˆds} = dVar s{Z(D)}ˆλ2 + Op(m−1). (73) Substituting Eqns (72) and (73) into Eqn. (69) gives ˆdt − ˆds = dVar s{Z(D)}ˆλ2 + Op(m−1)1 + Op(m−1) = dVar s{Z(D)}ˆλ2 + Op(m−1),
+
+where the last equality uses that ˆλ2 = Op(m−1/2). Rearranging gives us ˆλ2 =
+
+hdVar s{Z(D)}
+
+i−1
+
+( ˆdt − ˆds) + op(m−1/2). (74) 
+
+Proposition 4 (Consistency of ˆθEB ). Suppose that max i |ns ˆwi − 1| = op(1) and the assumptions of Lemma 2, 
+
+ˆθEB p
+
+→ θt
+
+Proof. We first write the difference in the weighted loss under entropy-balancing weights and the source average loss as nsX
+
+> i=1
+
+ˆwiℓ(θ; D(s) 
+
+> i
+
+) − 1
+
+nsnsX
+
+> i=1
+
+ℓ(θ; D(s) 
+
+> i
+
+) = 1
+
+nsnsX
+
+> i=1
+
+(ns ˆwi − 1) ℓ(θ; D(s) 
+
+> i
+
+).
+
+Taking absolute values and then the supremum over Θ gives sup 
+
+> θ∈Θ
+> ns
+
+X
+
+> i=1
+
+ˆwiℓ(θ; D(s) 
+
+> i
+
+) − 1
+
+nsnsX
+
+> i=1
+
+ℓ(θ; D(s) 
+
+> i
+
+) ≤ max  
+
+> i
+
+|ns ˆwi − 1| 1
+
+nsnsX
+
+> i=1
+
+sup 
+
+> θ∈Θ
+
+|ℓ(θ; D(s) 
+
+> i
+
+)|
+
+= op(1) Op(1) = op(1) ,
+
+where we apply the assumption that max i |ns ˆwi − 1| = op(1) and Assumption (2b) for the second equality. By compactness of Θ, the envelope and Lipschitz conditions in Assumption (2b), and Lemma 1, a finite-56 net argument gives sup 
+
+> θ∈Θ
+
+1
+
+nsnsX
+
+> i=1
+
+ℓ(θ; D(s) 
+
+> i
+
+) − Et[ℓ(θ; D)] = op(1) .
+
+Combining this with the preceding bound yields sup 
+
+> θ∈Θ
+> ns
+
+X
+
+> i=1
+
+ˆwiℓ(θ; D(s) 
+
+> i
+
+) − Et[ℓ(θ; D)] = op(1) .
+
+Since θ 7 → Et[ℓ(θ; D)] is continuous on the compact parameter space Θ and has the unique minimizer 
+
+θt, for every ε > 0, inf θ∈Θ
+
+> ∥θ−θt∥2≥ε
+
+Et[ℓ(θ; D)] > E t[ℓ(θt; D)] . Together with the uniform convergence, this verifies the conditions of van der Vaart (1998, Theorem 5.7). Therefore, any global minimizer ˆθEB of 
+
+Pns 
+
+> i=1
+
+ˆwiℓ(θ; D(s) 
+
+> i
+
+) satisfies ˆθEB 
+
+> p
+
+→ θt. (75) 57 C Additional empirical studies 
+
+## C.1 Full NHANES experiment 
+
+Figure 7: NHANES lead prediction results. Bars show the percentage target test MSE relative to the source-trained predictor, averaged over 300 trials. SAGE improves prediction for most year pairs, with substantial gains for larger gaps (top panel), and generally outperforms the one-step shift-ignoring estimator. Its estimated step-sizes are close to one, yielding performance similar to the full-step update (SAGE γ = 1) and approaches the oracle benchmark. 58 C.2 Diagnostic Plots 
+
+Figure 8: Normal QQ plots for the Store Item Demand dataset with source →target pairs. Each point corresponds to the standardized mean difference in Eqn (1) for one whitened coordinate. The red line is the standard Gaussian reference line, corresponding to i.i.d. sampling from the same distribution. The green line represents a Gaussian pattern with inflated variance. 
+
+Figure 9: Normal-QQ plots for NHANES lead data with year pairs source →target. Each point corresponds to the standardized mean difference in Eqn (1) for one whitened coordinate. The red line is the standard Gaussian reference line, corresponding to i.i.d. sampling from the same distribution. The green line represents a Gaussian pattern with inflated variance. 59 Figure 10: Normal-QQ plots for Medicare inpatient payment data with source →target pairs. Each point corresponds to the standardized mean difference in Eqn (1) for one whitened coordinate. The red line is the standard Gaussian reference line, corresponding to i.i.d. sampling from the same distribution. The green line represents a Gaussian pattern with inflated variance. 
+
+# D SAGE extension algorithms 
+
+Algorithm 3 SAGE with subgroup sample variances 
+
+Replace lines 6 and 8 of Algorithm 1 with the steps below. After augmentation, apply the coordinate reduction of Assumption 3b using the same retained coordinates for source and target, and fix coefficients of omitted features at zero in the minimization below. 
+
+Require: Target variances {dVar t[X | Ag = 1] , dVar t[y | Ag = 1] }g:nt(g)>1
+
+Use variances with denominator nt(g): for nt(g) > 1, multiply variances reported with denominator 
+
+nt(g) − 1 by {nt(g) − 1}/n t(g); for nt(g) = 1, set the variances to zero. 
+
+Require: Elementwise target second moments for nonempty subgroups: ˆEt[X◦2 | Ag = 1] = dVar t[X | Ag = 1] + ˆEt[X | Ag = 1] ◦2
+
+ˆEt[y2 | Ag = 1] = dVar t[y | Ag = 1] + ˆEt[y | Ag = 1] 2
+
+Require: Elementwise source second moments for nonempty subgroups: ˆEs[X◦2 | Ag = 1] =     
+
+> Pns i=1 A(s)
+> ig (X(s)
+> i)◦2
+> Pns i=1 A(s)
+> ig
+
+, ˆEs[y2 | Ag = 1] =     
+
+> Pns i=1 A(s)
+> ig (y(s)
+> i)2
+> Pns i=1 A(s)
+> ig
+
+Require: Additional second moment summary differences: ∆X2 (g) ← ˆπt,g ˆEt[X◦2 | Ag = 1] − ˆπs,g ˆEs[X◦2 | Ag = 1] ∆y2 (g) ← ˆπt,g ˆEt[y2 | Ag = 1] − ˆπs,g ˆEs[y2 | Ag = 1]  
+
+> 6:
+
+Fit on source using all reported subgroups: (ˆ α(s), { ˆβ(s)
+
+> g, 0
+
+, ˆβ(s) 
+
+> g,X
+
+, ˆβ(s) 
+
+> g,y
+
+, ˆβ(s) 
+
+> g,X 2
+
+, ˆβ(s) 
+
+> g,y 2
+
+}Kg=1 ) ∈
+
+arg min α, {βg }Kg=1 
+
+Pns 
+
+> i=1
+
+ui − α − PKg=1 A(s)
+
+> ig
+
+
+
+βg, 0 + β⊺ 
+
+> g,X
+
+X(s) 
+
+> i
+
++ βg,y y(s) 
+
+> i
+
++ β⊺ 
+
+> g,X 2
+
+(X◦2)(s) 
+
+> i
+
++ βg,y 2 (y2)(s)
+
+> i
+
+ 22 
+
+> 7:
+
+for g = 1 , . . . , K do  
+
+> 8:
+
+Estimate subgroup contribution using target summaries: 
+
+bΨt(g) ← ˆβ(s)
+
+> g, 0
+
+∆0(g) + 
+
+
+
+ˆβ(s)
+
+> g,X
+
+⊺
+
+∆X (g) + ˆβ(s) 
+
+> g,y
+
+∆y (g) + 
+
+
+
+ˆβ(s)
+
+> g,X 2
+
+⊺
+
+∆X2 (g) + ˆβ(s) 
+
+> g,y 2
+
+∆y2 (g) 
+
+> 9:
+
+end for 
+
+60 Algorithm 4 SAGE-NN: Summary adapted final layer neural network adaptation 
+
+Require: Source observations {(X(s) 
+
+> i
+
+, y (s) 
+
+> i
+
+, A (s) 
+
+> i1
+
+, . . . , A (s) 
+
+> iK
+
+)}ns
+
+> i=1
+
+Require: Target subgroup counts and moments {nt(g), bEt[X | Ag = 1] , bEt[y | Ag = 1] }Kg=1 
+
+Require: Target summary sample size nt
+
+Require: MLP encoder ϕη (X) with parameters η and a linear output layer 
+
+Require: step-size ˆ γ estimated per Algorithm 2  
+
+> 1:
+
+Define the source MLP predictor before hidden feature standardization: 
+
+f raw  
+
+> η,ω
+
+(X) ← ω⊺  1⊺ ϕη (X)⊺⊺ 
+
+> 2:
+
+Fit the complete MLP using source observations: (bηs, bωs) ← arg min η,ω 1
+
+> ns
+
+Pns 
+
+> i=1
+
+ℓ
+
+
+
+f raw  
+
+> η,ω
+
+(X(s) 
+
+> i
+
+), y (s)
+
+> i
+
+ 
+
+> 3:
+
+Freeze the source-trained encoder parameters bηs. 
+
+> 4:
+
+Compute the source mean and coordinatewise standard deviations of the final hidden-layer representa-tion: ¯ϕs ← 1
+
+> ns
+
+Pns 
+
+> i=1
+
+ϕbηs (X(s) 
+
+> i
+
+), Ds ← diag( bσs, 1, . . . , bσs,q ) 
+
+> 5:
+
+Define the standardized hidden representation and add an intercept: 
+
+zbηs (X) ← D−1
+
+> s
+
+ϕbηs (X) − ¯ϕs , ezbηs (X) ←  1⊺ zbηs (X)⊺⊺ 
+
+> 6:
+
+Refit the final linear layer by source least squares: 
+
+bθinit ← arg min θ 12ns
+
+Pns
+
+> i=1
+
+h
+
+y(s) 
+
+> i
+
+− θ⊺ ezbηs (X(s) 
+
+> i
+
+)
+
+i2 
+
+> 7:
+
+Compute the source final layer gradients: 
+
+ui ←
+
+h
+
+(bθinit )⊺ ezbηs (X(s) 
+
+> i
+
+) − y(s)
+
+> i
+
+iezbηs (X(s) 
+
+> i
+
+), i = 1 , . . . , n s 
+
+> 8:
+
+Compute the source final layer Hessian: 
+
+bHs ← 1
+
+> ns
+
+Pns 
+
+> i=1
+
+ezbηs (X(s) 
+
+> i
+
+)ezbηs (X(s) 
+
+> i
+
+)⊺ 
+
+> 9:
+
+Using {ui}ns 
+
+> i=1
+
+as the multivariate responses, apply the summary gradient reconstruction steps of Al-gorithm 1 with the source variables {A(s) 
+
+> ig
+
+, A (s) 
+
+> ig
+
+X(s) 
+
+> i
+
+, A (s) 
+
+> ig
+
+y(s) 
+
+> i
+
+} and the corresponding target subgroup summaries.  
+
+> 10:
+
+Let bΨt denote the resulting summary adapted estimate of the target final layer gradient.  
+
+> 11:
+
+Update only the final linear layer: 
+
+bθSAGE-NN ← bθinit − ˆγ bH−1 
+
+> s
+
+bΨt 
+
+> 12:
+
+return fbηs,bθSAGE-NN (X) = bθ⊺ 
+
+> SAGE-NN
+
+ezbηs (X)
+
+# References 
+
+Angelopoulos, A. N., Bates, S., Fannjiang, C., Jordan, M. I., & Zrnic, T. (2023). Prediction-powered inference. Science , 382 (6671), 669–674. Angelopoulos, A. N., Duchi, J. C., & Zrnic, T. (2023). PPI++: efficient prediction-powered inference. arXiv preprint , arXiv:2311.01453 .Ben-Tal, A., den Hertog, D., De Waegenaere, A., Melenberg, B., & Rennen, G. (2013). Robust solutions of optimization problems affected by uncertain probabilities. Management Science , 59 (2), 341–357. Bickel, P. J., Klaassen, C. A. J., Ritov, Y., & Wellner, J. A. (1993). Efficient and adaptive estimation for semiparametric models . Johns Hopkins University Press. Centers for Medicare & Medicaid Services. (2013). Medicare provider utilization and payment data: Inpatient public use file, fiscal year 2011. CMS Data. 61 Chatterjee, N., Chen, Y.-H., Maas, P., & Carroll, R. J. (2016). Constrained maximum likelihood estimation for model calibration using summary-level information from external big data sources. Journal of the American Statistical Association , 111 (513), 107–117. Chen, R., Chen, G., & Yu, M. (2023). Entropy balancing for causal generalization with target sample summary information. Biometrics , 79 (4), 3179–3190. Chen, Y.-H., & Chen, H. (2000). A unified approach to regression analysis under double-sampling designs. 
+
+Journal of the Royal Statistical Society Series B: Statistical Methodology , 62 (3), 449–460. Deng, L., Fu, S., Qin, J., & Yu, K. (2024). On combining individual-level data with summary data in statistical inferences. Statistica Sinica , 34 (3), 1505–1520. Deville, J.-C., & S¨ arndal, C.-E. (1992). Calibration estimators in survey sampling. Journal of the American Statistical Association , 87 (418), 376–382. Estes, J. P., Mukherjee, B., & Taylor, J. M. G. (2018). Empirical Bayes estimation and prediction using summary-level information from external big data sources adjusting for violations of transportability. 
+
+Statistics in Biosciences , 10 (3), 568–586. Ganin, Y., & Lempitsky, V. (2015). Unsupervised domain adaptation by backpropagation. In Proceedings of the 32nd international conference on machine learning (Vol. 37, pp. 1180–1189). PMLR. Gardner, J., Popovic, Z., & Schmidt, L. (2023). Benchmarking distribution shift in tabular data with TableShift. In Advances in neural information processing systems (Vol. 36, pp. 53385–53432). Curran Associates, Inc. Guan, A., Sahoo, R., Salomon, J., Wager, S., & Reitsma, M. (2025). Data fusion for high-resolution estimation. arXiv preprint , arXiv:2508.14858 .Hainmueller, J. (2012). Entropy balancing for causal effects: a multivariate reweighting method to produce balanced samples in observational studies. Political Analysis , 20 (1), 25–46. Haneuse, S. J.-P. A., & Wakefield, J. C. (2008). The combination of ecological and case–control data. 
+
+Journal of the Royal Statistical Society Series B: Statistical Methodology , 70 (1), 73–93. Hu, W., Wang, R., Li, W., & Miao, W. (2026). Semiparametric efficient fusion of individual data and sum-mary statistics. Journal of the American Statistical Association , 1–28. (Advance online publication) Huang, J., Smola, A. J., Gretton, A., Borgwardt, K. M., & Sch¨ olkopf, B. (2006). Correcting sample selection bias by unlabeled data. In Advances in neural information processing systems (Vol. 19, pp. 601–608). MIT Press. Jackson, C., Best, N., & Richardson, S. (2008). Hierarchical related regression for combining aggregate and individual data in studies of socio-economic disease risk factors. Journal of the Royal Statistical Society Series A: Statistics in Society , 171 (1), 159–178. Jeong, Y., & Rothenh¨ ausler, D. (2025). Calibrated inference: statistical inference that accounts for both 62 sampling uncertainty and distributional uncertainty. Journal of Machine Learning Research , 26 (196), 1–48. Jeong, Y., & Rothenh¨ ausler, D. (2026). Out-of-distribution generalization under random, dense distributional shifts. Journal of the American Statistical Association , 1–12. (Advance online publication) Jiang, J., Shu, Y., Wang, J., & Long, M. (2022). Transferability in deep learning: a survey. arXiv preprint ,
+
+arXiv:2201.05867 .Jin, Y., Egami, N., & Rothenh¨ ausler, D. (2025). Beyond reweighting: on the predictive role of covariate shift in effect generalization. Proceedings of the National Academy of Sciences , 122 (45), e2427181122. Josey, K. P., Berkowitz, S. A., Ghosh, D., & Raghavan, S. (2021). Transporting experimental results with entropy balancing. Statistics in Medicine , 40 (19), 4310–4326. Kaggle. (2018). Store item demand forecasting challenge. Kaggle competition. Koh, P. W., Sagawa, S., Marklund, H., Xie, S. M., Zhang, M., Balsubramani, A., . . . Liang, P. S. (2021). WILDS: a benchmark of in-the-wild distribution shifts. In Proceedings of the 38th international con-ference on machine learning (Vol. 139, pp. 5637–5664). PMLR. Lehmann, E. L., & Casella, G. (1998). Theory of point estimation (2nd ed.). Springer. Li, W., Jiang, F., & Zhang, X. (2026). Multi-source prediction-powered inference. arXiv preprint ,
+
+arXiv:2606.21232 .Li, Y., Wang, N., Shi, J., Liu, J., & Hou, X. (2017). Revisiting batch normalization for practical domain adaptation. In International conference on learning representations, workshop track. 
+
+Liu, J., Wang, T., Cui, P., & Namkoong, H. (2023). On the need for a language describing distribution shifts: illustrations on tabular datasets. In Advances in neural information processing systems (Vol. 36, pp. 51371–51408). Curran Associates, Inc. Murphy, K. P. (2022). Probabilistic machine learning: an introduction . MIT Press. Namkoong, H., & Duchi, J. C. (2016). Stochastic gradient methods for distributionally robust optimization with f -divergences. In Advances in neural information processing systems (Vol. 29, pp. 2208–2216). Curran Associates, Inc. Qiu, H., Dobriban, E., & Tchetgen Tchetgen, E. (2023). Prediction sets adaptive to unknown covariate shift. Journal of the Royal Statistical Society Series B: Statistical Methodology , 85 (5), 1680–1705. Schneider, S., Rusak, E., Eck, L., Bringmann, O., Brendel, W., & Bethge, M. (2020). Improving robustness against common corruptions by covariate shift adaptation. In Advances in neural information processing systems (Vol. 33, pp. 11539–11551). Curran Associates, Inc. Sheng, Y., Sun, Y., & Huang, C.-Y. (2026). Transportable inference using target population summary statistics under covariate shift. arXiv preprint , arXiv:2603.02474 .Shimodaira, H. (2000). Improving predictive inference under covariate shift by weighting the log-likelihood 63 function. Journal of Statistical Planning and Inference , 90 (2), 227–244. Sugiyama, M., Krauledat, M., & M¨ uller, K.-R. (2007). Covariate shift adaptation by importance weighted cross validation. Journal of Machine Learning Research , 8 (35), 985–1005. Sun, B., Feng, J., & Saenko, K. (2016). Return of frustratingly easy domain adaptation. In Proceedings of the AAAI conference on artificial intelligence (Vol. 30, pp. 2058–2065). Sutter, T., Krause, A., & Kuhn, D. (2021). Robust generalization despite distribution shift via minimum discriminating information. In Advances in neural information processing systems (Vol. 34, pp. 29754– 29767). Curran Associates, Inc. Taskesen, B., Yue, M.-C., Blanchet, J., Kuhn, D., & Nguyen, V. A. (2021). Sequential domain adaptation by synthesizing distributionally robust experts. In Proceedings of the 38th international conference on machine learning (Vol. 139, pp. 10162–10172). PMLR. van der Laan, M. J., & Rose, S. (2011). Targeted learning: causal inference for observational and experimental data . Springer. van der Laan, M. J., & Rubin, D. (2006). Targeted maximum likelihood learning. The International Journal of Biostatistics , 2 (1). (Article 11) van der Vaart, A. W. (1998). Asymptotic statistics (Vol. 3). Cambridge University Press. Wiesemann, W., Kuhn, D., & Sim, M. (2014). Distributionally robust convex optimization. Operations Research , 62 (6), 1358–1376. Zhang, A., Lipton, Z. C., Li, M., & Smola, A. J. (2023). Dive into deep learning . Cambridge University Press. Zhang, H., Deng, L., Schiffman, M., Qin, J., & Yu, K. (2020). Generalized integration model for improved statistical inference by leveraging external summary data. Biometrika , 107 (3), 689–703. Zhang, I., & Rothenh¨ ausler, D. (2025). Predicting data value before collection: a coefficient for prioritizing sources under random distribution shift. arXiv preprint , arXiv:2504.06570 .Zheng, J., Zheng, Y., & Hsu, L. (2022). Risk projection for time-to-event outcome leveraging summary statistics with source individual-level data. Journal of the American Statistical Association , 117 (540), 2043–2055. Zhuang, F., Qi, Z., Duan, K., Xi, D., Zhu, Y., Zhu, H., . . . He, Q. (2021). A comprehensive survey on transfer learning. Proceedings of the IEEE , 109 (1), 43–76. Zou, R., Witten, D., & Williamson, B. (2026). Generalized prediction-powered inference, with application to binary classifier evaluation. arXiv preprint , arXiv:2602.10332 .64
