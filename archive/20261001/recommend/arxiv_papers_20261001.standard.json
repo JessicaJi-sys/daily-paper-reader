@@ -1,0 +1,375 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-01T23:25:49.282990+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 9,
+    "quick_skim_target": 11,
+    "quick_selected": 9
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.32730v1",
+      "source": "arxiv",
+      "title": "Domain Adaptation with Target Information via Doubly-Anchored Distributionally Robust Optimization",
+      "abstract": "Domain Adaptation (DA) often lacks worst-case guarantees, while Distributionally Robust Optimization (DRO) based only on source data centers its ambiguity set at the source law and ignores available target structure. To bridge this gap, we introduce a doubly-anchored DRO framework whose ambiguity set is the intersection of $φ$-divergence balls centered at the source law and a source-completed target reference law, the latter pairing the target covariate law with the source conditional law. We derive dual-induced adversarial bridge geometries for symmetric and asymmetric divergence pairings, notably introducing a Kullback--Leibler/squared-Hellinger (KL/HD) bridge. This asymmetric formulation yields a Lambert-$W$ geometry in which source-side exponential risk tilting and target-side Hellinger stabilization enter through distinct terms, attenuating, but not bounding, the effect of large likelihood ratios. Furthermore, without imposing covariate shift, we establish finite-sample generalization bounds for the minimizer of a structural, loss-agnostic density-bridge risk under bounded-overlap conditions; these bounds do not apply directly to the loss-aware DRO min--max estimator. We translate our framework into a bridge-weighted Nadaraya--Watson estimator, proving uniform consistency for the source regression function and pointwise asymptotic normality, with target recovery when the source and target regression functions coincide, as under covariate shift. Finally, an empirical evaluation on a domain-shifted Fashion-MNIST dataset illustrates the finite-sample stability of the asymmetric KL/HD bridge under severe synthetic target-covariate corruption.",
+      "authors": [
+        "David Kepplinger",
+        "Anand N. Vidyashankar"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.IT",
+        "cs.LG",
+        "math.PR",
+        "math.ST"
+      ],
+      "published": "2026-09-26T15:49:01+00:00",
+      "link": "https://arxiv.org/pdf/2609.32730v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "doubly-anchored DRO handles distribution shift using target structure",
+      "llm_evidence_cn": "双锚分布鲁棒优化利用目标结构应对分布偏移",
+      "llm_evidence": "双锚分布鲁棒优化利用目标结构应对分布偏移",
+      "canonical_evidence": "双锚分布鲁棒优化利用目标结构应对分布偏移",
+      "llm_tldr_en": "A doubly-anchored distributionally robust optimization framework intersects source-centered and target-referenced ambiguity sets to give worst-case guarantees for domain adaptation under distribution shift.",
+      "llm_tldr_cn": "域自适应常缺乏最坏情况保证，而仅基于源域的分布鲁棒优化忽略目标域结构。作者提出双锚DRO框架，将模糊集取源域律与源补全目标参考律两个散度球的交集，并推导对抗桥几何，包括KL与平方Hellinger桥。该非对称形式产生Lambert-W几何，为分布偏移下的稳健学习提供理论工具。其价值在于把目标信息纳入鲁棒优化，可用于药物级OOD泛化的分布感知干预。",
+      "llm_tldr": "域自适应常缺乏最坏情况保证，而仅基于源域的分布鲁棒优化忽略目标域结构。作者提出双锚DRO框架，将模糊集取源域律与源补全目标参考律两个散度球的交集，并推导对抗桥几何，包括KL与平方Hellinger桥。该非对称形式产生Lambert-W几何，为分布偏移下的稳健学习提供理论工具。其价值在于把目标信息纳入鲁棒优化，可用于药物级OOD泛化的分布感知干预。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "drug-level out-of-distribution generalization under distribution shift",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.30831v1",
+      "source": "arxiv",
+      "title": "CDBG: Causally Motivated Dual-Invariance Learning against Topological and Predictive Shifts in EEG Workload Recognition",
+      "abstract": "Generalizing Electroencephalography (EEG)-based mental workload recognition to unseen subjects remains a formidable challenge due to severe inter-subject variability. While functional brain graphs effectively model distributed cognitive dynamics, their inherent subject-specificity induces two coupled distribution shifts: a class-conditional topological shift in the underlying functional connectivity, and a predictive mechanism shift in the learned representation-to-label mapping. Motivated by the subject-induced distribution shifts, we propose CDBG, a Causally motivated Dual-invariance learning framework for Brain Graphs. CDBG disentangles and mitigates these shifts via a two-stage rationale learning pipeline. First, it employs stochastic edge masking to extract sparse, workload-predictive graph rationales, regularized by workload-conditional Laplacian spectral alignment to enforce topological invariance across subjects. Second, it applies subject-wise Invariant Risk Minimization (IRM) to the graph representations, ensuring environment-wise risk stationarity. Extensive experiments on a self-built air traffic controller EEG cognitive workload dataset and multiple public datasets under a strict leave-one-subject-out protocol demonstrate that CDBG significantly outperforms state-of-the-art cross-subject and graph-based baselines, improving the Macro-F1 score by up to 4.23%, while simultaneously providing neurophysiologically interpretable functional rationales.",
+      "authors": [
+        "Yuzhe Zhang",
+        "Wenmin Zhou",
+        "Chengxi Xie",
+        "Kai He",
+        "Jihong Wang",
+        "Huan Liu",
+        "Man Yao",
+        "Daoqiang Zhang"
+      ],
+      "primary_category": "cs.HC",
+      "categories": [
+        "cs.HC"
+      ],
+      "published": "2026-09-25T05:22:06+00:00",
+      "link": "https://arxiv.org/pdf/2609.30831v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "invariant learning against coupled distribution shifts for unseen subjects",
+      "llm_evidence_cn": "面向未见受试者的分布偏移不变学习",
+      "llm_evidence": "面向未见受试者的分布偏移不变学习",
+      "canonical_evidence": "面向未见受试者的分布偏移不变学习",
+      "llm_tldr_en": "CDBG tackles EEG workload recognition under inter-subject distribution shift, using a causally motivated dual-invariance framework to disentangle topological and predictive shifts; it offers transferable ideas for invariant representation learning.",
+      "llm_tldr_cn": "EEG工作负荷识别因受试者差异存在拓扑与预测机制的双重分布偏移，跨被试泛化困难。本文提出因果驱动的双重不变性学习框架CDBG，通过两阶段原理学习解耦并缓解这两类偏移。实验在跨被试识别任务上提升了泛化性能。该工作为分布偏移下的不变表征学习提供了可迁移的方法思路。",
+      "llm_tldr": "EEG工作负荷识别因受试者差异存在拓扑与预测机制的双重分布偏移，跨被试泛化困难。本文提出因果驱动的双重不变性学习框架CDBG，通过两阶段原理学习解耦并缓解这两类偏移。实验在跨被试识别任务上提升了泛化性能。该工作为分布偏移下的不变表征学习提供了可迁移的方法思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "invariant representation learning for stable drug generalization",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.32141v1",
+      "source": "arxiv",
+      "title": "REALM: Regime-Switching, Explainable, and Activation-Induced Linear Models",
+      "abstract": "Deep ReLU networks are piecewise-affine mappings that partition the input space into cells, each characterized by a distinct activation pattern. This structure motivates fitting a local linear model within each cell to preserve predictive accuracy while improving interpretability. The challenge is to identify regimes that are stable, data-adaptive, and easy to explain. We propose REALM, a mixture of linear models whose regimes are induced by neural activation patterns. Because the number of activation cells in a deep neural network (DNN) can grow rapidly with depth, we first distill a deep teacher into a wide, shallow student network (WSSN), then binarize and cluster its hidden-layer activations to define the regimes and fit a linear model within each regime. Since the regimes are discovered from internal structure, the router does not carry the predictive burden. To make regime assignment interpretable, we train a multiclass logistic regression, the explanatory gate, to reproduce the regime assignments. The two-level structure is interpretable at both stages in terms of raw tabular or learned convolutional features: the gate identifies features that determine regime assignments, while the linear models identify features that drive predictions within each regime. We analyze an idealized setting that illustrates a trade-off between partition complexity and stability: as the number of regimes grows, finer partitions can improve approximation but may reduce regime-assignment stability. Experiments on tabular and image datasets show that REALM achieves competitive predictive performance relative to other DNN-guided mixture surrogates and inherently interpretable models while producing stable regime-level explanations.",
+      "authors": [
+        "Xiaoran Cheng",
+        "Sen Na",
+        "Jia Li"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "stat.ME",
+        "stat.ML"
+      ],
+      "published": "2026-09-26T01:58:18+00:00",
+      "link": "https://arxiv.org/pdf/2609.32141v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "mixture of linear models with data-adaptive activation-induced regimes",
+      "llm_evidence_cn": "由激活模式诱导机制的数据自适应混合线性模型",
+      "llm_evidence": "由激活模式诱导机制的数据自适应混合线性模型",
+      "canonical_evidence": "由激活模式诱导机制的数据自适应混合线性模型",
+      "llm_tldr_en": "Deep ReLU networks partition input space into activation cells, but stable and explainable regimes are hard to identify. REALM distills a deep teacher into a wide shallow student, then binarizes and clusters hidden activations to define regimes and fit local linear models. It yields data-adaptive expert regimes without manual semantics.",
+      "llm_tldr_cn": "深度ReLU网络按激活模式将输入空间划分为多个单元，但机制难以稳定、自适应且可解释地界定。REALM先将深度教师蒸馏为宽浅学生网络，再对隐层激活二值化聚类以定义机制，并在每个机制内拟合线性模型。该方法实现了数据驱动的专家机制划分与局部解释，为无需人工定义语义的专家专门化与混合建模提供了思路。",
+      "llm_tldr": "深度ReLU网络按激活模式将输入空间划分为多个单元，但机制难以稳定、自适应且可解释地界定。REALM先将深度教师蒸馏为宽浅学生网络，再对隐层激活二值化聚类以定义机制，并在每个机制内拟合线性模型。该方法实现了数据驱动的专家机制划分与局部解释，为无需人工定义语义的专家专门化与混合建模提供了思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.33972v1",
+      "source": "arxiv",
+      "title": "HARMONIA: Interpretable Graph Learning through Mixtures of Neural Bases",
+      "abstract": "Existing interpretable graph additive models still face limitations in either computational scalability or modeling flexibility. In terms of structural modeling, previous approaches either face quadratic scaling costs or sacrifice explicit source-to-target contribution decomposition. In terms of feature components, they rely either on per-feature neural networks or on single shared bases with limited feature specialization. We address both problems by introducing HARMONIA: Interpretable Graph Learning through Mixtures of Neural Bases, an interpretable-by-design framework. For feature modeling, HARMONIA introduces a Mixture of Neural Bases (MoNB), which routes features to specialized basis experts, enabling parameter sharing without sacrificing feature-specific specialization. For structural modeling, HARMONIA uses Relative Random Walk Probabilities (RRWP) to capture multi-hop and multi-path relationships, and proposes Sparse RRWP Aggregation (SRA) to compute these interactions through sparse graph propagation without quadratic pairwise complexity. HARMONIA retains a simple additive form in which predictions decompose into feature responses modulated by structural influence. Empirically, HARMONIA achieves stronger explanation recovery than existing interpretable graph baselines while maintaining competitive predictive performance and scaling to graphs with millions of nodes. These results show that interpretable graph learning can remain both faithful and scalable without sacrificing predictive effectiveness.",
+      "authors": [
+        "Quan D. Bui",
+        "Nguyen Do",
+        "An Nguyen Dang",
+        "Huyen Nguyen",
+        "Nhu Duc Minh Nguyen",
+        "My T. Thai"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-09-27T22:15:57+00:00",
+      "link": "https://arxiv.org/pdf/2609.33972v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Mixture of Neural Bases routes features to specialized basis experts, a MoE-style expert specialization mechanism",
+      "llm_evidence_cn": "神经基混合将特征路由到专门化基专家，是MoE式专家专门化机制",
+      "llm_evidence": "神经基混合将特征路由到专门化基专家，是MoE式专家专门化机制",
+      "canonical_evidence": "神经基混合将特征路由到专门化基专家，是MoE式专家专门化机制",
+      "llm_tldr_en": "HARMONIA tackles scalability and limited feature specialization in interpretable graph additive models with a Mixture of Neural Bases that routes features to specialized basis experts, sharing parameters without losing specialization.",
+      "llm_tldr_cn": "现有可解释图加法模型在计算可扩展性与特征专门化之间难以兼顾，要么面临二次复杂度，要么依赖单一共享基导致特征专门化不足。本文提出HARMONIA可解释框架，其中神经基混合模块MoNB将特征路由到专门化的基专家，在共享参数的同时保留特征专门化。该设计在结构建模与特征建模两方面同时改进可解释性与灵活性，为混合专家式路由与专家专门化提供了可借鉴的机制。",
+      "llm_tldr": "现有可解释图加法模型在计算可扩展性与特征专门化之间难以兼顾，要么面临二次复杂度，要么依赖单一共享基导致特征专门化不足。本文提出HARMONIA可解释框架，其中神经基混合模块MoNB将特征路由到专门化的基专家，在共享参数的同时保留特征专门化。该设计在结构建模与特征建模两方面同时改进可解释性与灵活性，为混合专家式路由与专家专门化提供了可借鉴的机制。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.34358v1",
+      "source": "arxiv",
+      "title": "FORGE: Form-Optimal Routing of Grounded Evidence for Frozen LLM Agents",
+      "abstract": "In agentic AI systems, frozen foundation models are increasingly deployed as closed-weight API endpoints, making downstream adaptation possible only through the inputs and inference procedures surrounding the model. As a result, for each input query, two coupled decisions largely determine both answer quality and token cost: what evidence to provide and how much reasoning budget to allocate. Fixed defaults along these axes are often suboptimal, misallocating support form or reasoning depth on roughly 80% of queries in our analysis. To address this challenge, we propose FORGE, a unified framework for adapting frozen models through per-query routing over a joint action space that spans both support form and thinking depth. Under an entropy-regularized, cost-aware utility objective, we derive a closed-form Boltzmann routing target and instantiate the policy as a lightweight 269K-parameter factorized router. The routing policy is trained around the frozen host, without any weight access, through a three-stage pipeline: offline arm enumeration, supervised Kullback-Leibler (KL) distillation from the Boltzmann target, and Group Relative Policy Optimization (GRPO) refinement with host feedback. Across 5 knowledge-intensive benchmarks and 8 frozen backbones ranging from 7B to 671B parameters, FORGE improves accuracy at 42-45% lower token cost on both main hosts, transfers zero-shot across hosts at lower token cost, and composes with intrinsic thinking budgets where available.",
+      "authors": [
+        "Xi Xiao",
+        "Yunbei Zhang",
+        "Chen Liu",
+        "Lin Zhao",
+        "Jialin Chen",
+        "Tianchen Zhao",
+        "Xiang Xu",
+        "Youngeun Kim",
+        "Tianyang Wang",
+        "Min Xu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CL"
+      ],
+      "published": "2026-09-28T05:33:26+00:00",
+      "link": "https://arxiv.org/pdf/2609.34358v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "per-query routing over joint action space of evidence form and reasoning depth",
+      "llm_evidence_cn": "在证据形式与推理深度构成的联合动作空间上按查询路由",
+      "llm_evidence": "在证据形式与推理深度构成的联合动作空间上按查询路由",
+      "canonical_evidence": "在证据形式与推理深度构成的联合动作空间上按查询路由",
+      "llm_tldr_en": "For frozen LLM agents, answer quality and cost depend on what evidence to supply and how much reasoning to spend, yet fixed defaults misallocate on most queries. FORGE performs per-query routing over a joint action space spanning support form and thinking depth under an entropy-regularized objective.",
+      "llm_tldr_cn": "在智能体系统中，冻结的基础模型常以闭源 API 形式部署，下游适配只能通过输入与推理过程实现，因此每个查询需同时决定提供何种证据与分配多少推理预算，而固定默认设置在分析中约有八成查询并非最优。该文提出 FORGE，一个通过按查询路由来适配冻结模型的统一框架，其联合动作空间同时覆盖支持形式与思考深度，并在熵正则目标下学习路由策略。该工作表明样本级动态路由可更优地配置异质知识来源与计算资源。",
+      "llm_tldr": "在智能体系统中，冻结的基础模型常以闭源 API 形式部署，下游适配只能通过输入与推理过程实现，因此每个查询需同时决定提供何种证据与分配多少推理预算，而固定默认设置在分析中约有八成查询并非最优。该文提出 FORGE，一个通过按查询路由来适配冻结模型的统一框架，其联合动作空间同时覆盖支持形式与思考深度，并在熵正则目标下学习路由策略。该工作表明样本级动态路由可更优地配置异质知识来源与计算资源。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.34449v1",
+      "source": "arxiv",
+      "title": "CORTEX: Learning to Share and Specialize in Dense Language Models",
+      "abstract": "Large language models are trained on heterogeneous data mixtures, where different knowledge domains require both shared knowledge and specialization. Existing modular approaches typically impose explicit components or discover modules through interpretability analysis after training. In this work, we propose CORTEX, a learning dynamics-inspired framework that learns internal modularization within dense language models. CORTEX partitions trainable matrices into parameter groups and learns module assignments from domain-conditioned gradient and cross-domain gradient similarity. We introduce the selective lesion score and module-domain mutual information to characterize the target-domain lesion effects and alignment, and analyze how module assignment affects the trade-off between assignment bias and update magnitude. Experiments with 160M, Qwen3-8B, and Qwen3-32B backbone models show that CORTEX achieves the highest synthetic-domain exact match and largest average perplexity reduction, while remaining competitive on real-domain evaluations and forming identifiable modules.",
+      "authors": [
+        "Chuiyang Meng",
+        "Ming Tang",
+        "Vincent W. S. Wong"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-09-28T07:05:32+00:00",
+      "link": "https://arxiv.org/pdf/2609.34449v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "learned modularization and specialization without manual semantics",
+      "llm_evidence_cn": "无人工语义的模块化与专门化学习",
+      "llm_evidence": "无人工语义的模块化与专门化学习",
+      "canonical_evidence": "无人工语义的模块化与专门化学习",
+      "llm_tldr_en": "CORTEX learns internal modularization in dense LLMs from domain-conditioned gradient similarity, yielding shared and specialized modules without predefined expert semantics.",
+      "llm_tldr_cn": "大模型在异构数据上训练时需兼顾共享知识与领域专门化，但现有模块化方法多依赖显式组件或训练后分析。作者提出CORTEX，受学习动力学启发，将可训练矩阵划分为参数组，并依据领域条件梯度与跨域梯度相似度学习模块分配。方法引入选择性损伤分数与模块-领域互信息来刻画专门化与对齐效果。该工作展示了在无需人工定义专家语义的情况下自发涌现共享与专门化结构。",
+      "llm_tldr": "大模型在异构数据上训练时需兼顾共享知识与领域专门化，但现有模块化方法多依赖显式组件或训练后分析。作者提出CORTEX，受学习动力学启发，将可训练矩阵划分为参数组，并依据领域条件梯度与跨域梯度相似度学习模块分配。方法引入选择性损伤分数与模块-领域互信息来刻画专门化与对齐效果。该工作展示了在无需人工定义专家语义的情况下自发涌现共享与专门化结构。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.34634v1",
+      "source": "arxiv",
+      "title": "A Persistent State for Auditable Mixture-of-Experts Routing",
+      "abstract": "Mixture-of-Experts (MoE) models repeatedly route tokens to sparse subsets of experts, but conventional routers expose no routing-specific record of how cross-layer influences accumulate. We introduce Scratchpad-Augmented Mixture-of-Experts (SA-MoE), which gives each router access to a low-dimensional persistent state that is not provided to the experts. Learned layerwise writes update this state, and their realized post-update changes exactly decompose the state-mediated contribution to any later routing margin, forming a routing ledger. Across sparsely upcycled SmolLM2- and Gemma-based models and three independent training seeds per architecture, this pathway adds less than 1% analytical forward compute and is strongly used by trained routers: local removal of its router contribution changes the selected Top-2 expert set in 87.6% and 69.9% of decisions, respectively. Relative to a matched latest-write-only control, persistent accumulation increases long-horizon future-routing accessibility by 19.4 and 12.2 percentage points, with positive effects in every seed. More than 90% of absolute ledger contribution comes from non-recent writes in both families, and full-forward suppression of ledger-selected writes changes later routing and output distributions. The ledger is an exact provenance object for the persistent-state pathway, not a complete causal explanation of routing. Sensitivity-aware scores better predict full-forward intervention effects, and post-hoc methods recover related cross-layer attribution without architectural modification. SA-MoE instead makes one routing-specific computational history explicit and directly inspectable within the model's natural forward computation.",
+      "authors": [
+        "Abdurrahman Javat",
+        "Allan Kazakov"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-09-28T08:51:09+00:00",
+      "link": "https://arxiv.org/pdf/2609.34634v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "persistent router state for auditable MoE routing",
+      "llm_evidence_cn": "为MoE路由引入可审计的持久状态",
+      "llm_evidence": "为MoE路由引入可审计的持久状态",
+      "canonical_evidence": "为MoE路由引入可审计的持久状态",
+      "llm_tldr_en": "SA-MoE gives each MoE router a low-dimensional persistent state updated by layerwise writes, forming a routing ledger that decomposes cross-layer routing influence at under 1% extra compute.",
+      "llm_tldr_cn": "该文针对传统MoE路由器无法记录跨层路由影响如何累积的问题，提出Scratchpad增强的SA-MoE，为每个路由器提供低维持久状态并由逐层写入更新，从而形成可分解的路由账本。在SmolLM2与Gemma等稀疏升级模型上，该通路仅增加不到1%的前向计算，却被训练后的路由器大量使用。该设计提升了MoE路由的可解释性与可审计性，为动态专家路由分析提供了新工具。",
+      "llm_tldr": "该文针对传统MoE路由器无法记录跨层路由影响如何累积的问题，提出Scratchpad增强的SA-MoE，为每个路由器提供低维持久状态并由逐层写入更新，从而形成可分解的路由账本。在SmolLM2与Gemma等稀疏升级模型上，该通路仅增加不到1%的前向计算，却被训练后的路由器大量使用。该设计提升了MoE路由的可解释性与可审计性，为动态专家路由分析提供了新工具。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.35649v1",
+      "source": "arxiv",
+      "title": "Transferable Mass Spectrum Prediction via Reference-Guided Test-time Specialization",
+      "abstract": "Tandem mass spectrum prediction supports compound identification across metabolomics, natural-product discovery, and environmental analysis. However, pretrained predictors often degrade under shifts in chemical space and acquisition conditions, while retraining domain-specific models from scratch is costly. We introduce SPARC, a retrieval-guided test-time specialization framework that adapts a pretrained predictor using a spectral reference library without accessing test-query spectra. For each target query, SPARC retrieves chemically related reference spectra to recalibrate fragment intensities within the learned fragmentation space. During Transfer, SPARC combines reference-guided spectral adaptation with reliability-aware consistency, using reconstruction behavior on retrieved spectra to selectively preserve trustworthy predictions during continual specialization. Across MassSpecGym, NPLIB1 and application-specific GNPS libraries, SPARC improves spectral prediction under multiple transfer settings. These results establish retrieval-guided test-time specialization as a practical strategy for extending pretrained MS/MS predictors to specific chemical and acquisition domains, with continual test-time training providing further refinement during deployment.",
+      "authors": [
+        "Yunhua Zhong",
+        "Runting Li",
+        "Yifan Li",
+        "Pan Liu",
+        "Zhiwen Yang",
+        "Zikun Wang",
+        "Yixuan Tang",
+        "Jun Xia"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-28T17:17:45+00:00",
+      "link": "https://arxiv.org/pdf/2609.35649v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "test-time specialization to counter chemical-space distribution shift",
+      "llm_evidence_cn": "面向化学空间分布漂移的测试时特化",
+      "llm_evidence": "面向化学空间分布漂移的测试时特化",
+      "canonical_evidence": "面向化学空间分布漂移的测试时特化",
+      "llm_tldr_en": "Pretrained mass spectrum predictors degrade under shifts in chemical space and acquisition conditions. SPARC adapts a pretrained predictor at test time by retrieving chemically related reference spectra to recalibrate fragment intensities with reliability-aware consistency. It mitigates distribution shift without retraining, offering a transferable test-time adaptation recipe.",
+      "llm_tldr_cn": "质谱预测模型在化学空间与采集条件变化下常出现性能退化，而从头训练领域模型代价高昂。作者提出SPARC，利用谱参考库在测试时对预训练预测器进行检索引导的强度重校准，并配合可靠性一致性约束。方法无需访问测试查询谱即可适配新分布，缓解了分布漂移下的预测退化，为分布外泛化提供了可迁移的测试时适应思路。",
+      "llm_tldr": "质谱预测模型在化学空间与采集条件变化下常出现性能退化，而从头训练领域模型代价高昂。作者提出SPARC，利用谱参考库在测试时对预训练预测器进行检索引导的强度重校准，并配合可靠性一致性约束。方法无需访问测试查询谱即可适配新分布，缓解了分布漂移下的预测退化，为分布外泛化提供了可迁移的测试时适应思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "drug-level out-of-distribution generalization under distribution shift",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.35929v1",
+      "source": "arxiv",
+      "title": "CADENCE: A Confidence-Adaptive Dual-Expert Network for Fast and Accurate Time Series Classification",
+      "abstract": "Time series classification (TSC) exhibits a sharp trade-off between accuracy and computational scalability. Meta-ensembles like HIVE-COTE 2.0 reach state-of-the-art accuracy but require extensive compute, whereas ultra-fast random convolutional transforms (e.g., MiniRocket, Hydra) run in seconds but struggle with phase-independent distributions, signal kinematics, and decision tree fragmentation on large class counts.   In this work, we present CADENCE (Confidence-Adaptive Dual-Expert Network for time series Classification Excellence), a unified, CPU-native dual-expert architecture. CADENCE decouples representation learning into two specialized pathways: (i) a Convolutional Linear Expert pairing 10,000 deterministic dilated features with closed-form L2-regularized Woodbury ridge classification, and (ii) a Distributional Interval Expert pairing competing dilated kernels (Hydra) with dyadic Cornish-Fisher moment approximations across signal kinematics and FFT spectral bands, fitted with an ExtraTrees ensemble. An internal validation meta-router with rare-class preservation dynamically selects between pure expert routing and confidence-weighted soft blending, followed by a full refit on 100% of training data.   Evaluated across all 109 equal-length UCR Archive datasets over 30 resamples (3,270 total runs), CADENCE achieves a grand mean accuracy of 0.8864. This ranks #2 across the archive, surpassed only by HIVE-COTE 2.0 (0.8895, p_Holm = 0.295, no statistically significant difference), while outperforming Hydra+MultiRocket (0.8818), MultiRocket (0.8797), and HIVE-COTE 1.0 (0.8786, p_Holm = 0.048). CADENCE closes the gap to HIVE-COTE 2.0 to 0.31 percentage points while taking an average of only 17.53 seconds per dataset on a dual-core CPU. Source code and evaluation scripts: https://github.com/onisa-jr/CADENCE.git",
+      "authors": [
+        "Onisa Mpaunda"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-28T14:05:10+00:00",
+      "link": "https://arxiv.org/pdf/2609.35929v1",
+      "tags": [
+        "keyword:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "confidence-adaptive dual-expert architecture that routes inputs across specialized pathways",
+      "llm_evidence_cn": "置信度自适应双专家架构在专门化通路间路由输入",
+      "llm_evidence": "置信度自适应双专家架构在专门化通路间路由输入",
+      "canonical_evidence": "置信度自适应双专家架构在专门化通路间路由输入",
+      "llm_tldr_en": "To balance accuracy and scalability in time series classification, CADENCE is a CPU-native dual-expert network that decouples representation into specialized pathways and adaptively routes by confidence.",
+      "llm_tldr_cn": "时间序列分类在精度与计算可扩展性之间存在尖锐权衡，元集成精度高但计算昂贵，超快随机卷积方法虽快却在相位无关分布与多类别上表现不佳。本文提出CPU原生的双专家架构CADENCE，将表示学习解耦为卷积线性专家等两条专门化通路，并依据置信度自适应地在专家间路由。该设计在保持快速推理的同时提升分类精度与稳健性，展示了置信度驱动动态专家路由的可行路径。",
+      "llm_tldr": "时间序列分类在精度与计算可扩展性之间存在尖锐权衡，元集成精度高但计算昂贵，超快随机卷积方法虽快却在相位无关分布与多类别上表现不佳。本文提出CPU原生的双专家架构CADENCE，将表示学习解耦为卷积线性专家等两条专门化通路，并依据置信度自适应地在专家间路由。该设计在保持快速推理的同时提升分类精度与稳健性，展示了置信度驱动动态专家路由的可行路径。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

@@ -48,17 +48,17 @@
 <section class="dpr-home-dashboard-card dpr-home-report-card">
   <div class="dpr-home-dashboard-header">
     <div>
-      <span class="dpr-home-dashboard-kicker">2026-09-30</span>
+      <span class="dpr-home-dashboard-kicker">2026-10-01</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">共 4 篇</strong>
+    <strong class="dpr-home-dashboard-count">共 9 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
     <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
     <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>0</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>4</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>9</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-09-30 22:41:22 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-10-01 23:34:14 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,9 +69,9 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>今天没有精读，4 篇速读全部以 6.0 分入账，主题集中在分布偏移下的预测与 MoE 稀疏架构。</p>
-<p>最值得关注两个方向：一是《Summary-powered prediction under distribution shift》用摘要驱动预测来应对分布变化；二是 HERO-MoE 的历史专家路由+保尺度融合与 OmniMoE-VL 的视觉-深度耦合路由，代表了 MoE 在路由与融合上的新设计。</p>
-<p>普通读者可先花几分钟看摘要驱动那篇理解思路，两篇 MoE 当作架构灵感速览即可，不必深挖细节。</p>
+<p>9篇速读、0精读：域适应、EEG负载识别与可解释线性模型三线并进。</p>
+<p>最值得看的是7.0分《Domain Adaptation with Target Information via Doubly-Anchored Distributionally Robust Optimization》，其次是6.0分的EEG因果双不变学习和REALM。</p>
+<p>普通读者可先读最高分那篇的摘要，再按兴趣跟进EEG负载识别或可解释模型方向。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -93,12 +93,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">速读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">4 篇</strong>
+    <strong class="dpr-home-dashboard-count">9 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Summary-powered prediction under distribution shift">Summary-powered prediction under distribution shift</span></li><li><span class="dpr-home-dashboard-paper-title" title="HERO-MoE: Historical Expert Routing with Scale-Preserving Fusion">HERO-MoE: Historical Expert Routing with Scale-Preserving Fusion</span></li><li><span class="dpr-home-dashboard-paper-title" title="OmniMoE-VL: A Sparse Vision-Language Model with Coupled Visual-Depth Routing">OmniMoE-VL: A Sparse Vision-Language Model with Coupled Visual-Depth Routing</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Domain Adaptation with Target Information via Doubly-Anchored Distributionally Robust Optimization">Domain Adaptation with Target Information via Doubly-Anchored Distributionally Robust Optimization</span></li><li><span class="dpr-home-dashboard-paper-title" title="CDBG: Causally Motivated Dual-Invariance Learning against Topological and Predictive Shifts in EEG Workload Recognition">CDBG: Causally Motivated Dual-Invariance Learning against Topological and Predictive Shifts in EEG Workload Recognition</span></li><li><span class="dpr-home-dashboard-paper-title" title="REALM: Regime-Switching, Explainable, and Activation-Induced Linear Models">REALM: Regime-Switching, Explainable, and Activation-Induced Linear Models</span></li></ul>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>4</strong></span></div>
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>9</strong></span></div>
 </section>
 </div>
 
