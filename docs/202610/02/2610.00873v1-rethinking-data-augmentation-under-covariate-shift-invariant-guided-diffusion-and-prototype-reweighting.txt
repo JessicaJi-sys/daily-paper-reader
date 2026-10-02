@@ -1,0 +1,841 @@
+Title: Rethinking Data Augmentation under Covariate Shift: Invariant-Guided Diffusion and Prototype Reweighting
+
+URL Source: https://arxiv.org/pdf/2610.00873v1
+
+Published Time: Fri, 02 Oct 2026 01:00:55 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 1
+
+# Rethinking Data Augmentation under Covariate Shift: Invariant-Guided Diffusion and Prototype Reweighting 
+
+Hongyu Cao, Xinyuan Wang, Arun Vignesh Malarkkan, Kunpeng Liu, Haifeng Chen and Yanjie Fu 
+
+Abstract —In many industrial applications, 1) tabular data is scarce and imbalanced and thus requires synthetic expansion; 2) input distributions drift between training and deployment (covariate shift); 3) validation sets often diverge from unseen test environments; or 4) standard generative models simply mimic outdated source distributions. This learning setting limits the stability of standard augmentation and adaptation pipelines. We generalize the task under such setting as the Augmented and Weighted Learning under Covariate Shift problem (AWL-CS). AWL-CS imposes two critical challenges on existing methods: 1) misleading generative guidance where models optimize for source similarity rather than downstream task relevance, and 2) structural instability of distributional density where reweighting mechanisms overfit to noisy validation signals. To tackle these challenges, we propose IGDPR (Invariant-Guided Diffusion with Prototype Reweighting), a unified framework that synergizes stable synthesis and structural adaptation: i) To achieve task-relevant generation, we steer the diffusion sampling process using invariant potentials to ensure synthetic samples align with stable decision boundaries rather than outdated correlations. ii) To ensure stable adaptation, we develop a prototype-based reweighting strategy that assesses sample reliability through structural clusters instead of isolated points, effectively filtering validation noise. Extensive experiments on real data demonstrate our method improves data quality by augmenting the most beneficial data for robust learning. 
+
+Index Terms —Data Generation, Reweighting, Latent Diffusion, Covariate Shift, Invariant Representation Learning. 
+
+I. I NTRODUCTION 
+
+# MANY industrial applications, such as healthcare an-alytics and fraud detection, rely heavily on tabular data for high-stakes decision-making [1]–[7]. Generative aug-mentation is deployed to address data scarcity and class imbalance [8]–[11]. However, real-world environments are dynamic; input distributions often drift between training and deployment (e.g., evolving fraud tactics or shifting patient demographics), thus, result into covariate shift [12], [13]. Under this context, the validation set doesn’t represent the unseen test environment, making standard augmentation and 
+
+Hongyu Cao, Xinyuan Wang, Arun Vignesh Malarkkan and Yanjie Fu are with the School of Computing and Augmented Intelligence, Arizona State University, Tempe, AZ 85281 USA (e-mail: hongyu.jack.cao@gmail.com, xwang735@asu.edu, arun.malarkkan@asu.edu, yanjie.fu@asu.edu). Kunpeng Liu is with the School of Computing, Clemson University, Clemson, SC 29634 USA (e-mail: kunpenl@clemson.edu). Haifeng Chen is with the Data Science and System Security Department, NEC Laboratories America, Princeton, NJ 08540 USA (e-mail: haifeng@nec-labs.com). Source Environment Feature 2        
+
+> Training Data Augmentation + Weighting Unseen Test Distribution (Source Distribution) guided by Validation (Shifted)
+> A75A
+
++. @ Points apie Oo = @e2e ° ket e                       
+
+> @ ae @ x@oe eX. Misleading
+> @ eg @® ei a| @©&¢ @@ A cereration @e @oo@e@ @‘
+> 55|* x
+> °oS&he a.|
+
+faae 2 2 x Goga4                              
+
+> oe So Lf nf ase aa
+> aa ae S.
+> @ Class A aa sAugmentation )@ A Giafed) «8 sat A
+> Wi Class B &Reweighting =) class aA:
+> >.(shifted) /” S¢ >Feature 1 Feature 1 /Feature1 “Y
+> oan :zMisleading Unstable Validation # Test under Covariate Shift Generation Reweighting
+> Unseen Test Environment
+
+Fig. 1: Motivation of Augmented and Weighted Learning under Covariate Shift (AWL-CS). Under distribution shift, validation-guided augmentation and reweighting may amplify spurious patterns instead of improving generalization. reweighting ineffective. This scenario can be generalized as a new learning problem: Augmented and Weighted Learning under Covariate Shift (AWL-CS) (Figure 1 ). AWL-CS enables a model to robustly generalize by leveraging invariant-guided synthesis and structure-aware reweighting. Solving AWL-CS can address multiple critical issues to increase the reliability of AI systems. For example, in many scenarios, 1) data is scarce and imbalanced, thus synthetic expansion is needed; 2) distribution shifts make gradients of source or training data misleading for future tasks; 3) validation sets contain noises that destabilizes traditional reweighting; or 4) models must prioritize stable, invariant patterns to ensure safe generalization in unseen environments. There are two major challenges in solving AWL-CS: 1) misleading generative guidance under shift, and 2) structural instability in reweighting. First, traditional generative aug-mentation focuses on maximizing statistical similarity to the source training data. However, under covariate shift, the source distribution diverges from the unseen target environment. Therefore, the generator relies on outdated source gradients, thus, produce samples that fit the past, instead of optimizing for the downstream task. Misleading generative guidance seeks to answer: how can we steer the data generation process to synthesize task-relevant samples when reliable target gradients are unavailable? Second, reweighting mechanisms suffer from structural instability of distributional density and coverage. This is because: 1) these methods align the data distribution to a validation set, thus, fail to represent the shifting test arXiv:2610.00873v1 [cs.LG] 1 Oct 2026 IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 2
+
+environment; and 2) they estimate weights for isolated points, are easily influenced by validation noises. A weighting mech-anism that aligns with noisy validation signals will destabilize the predictor. Therefore, structural instability in reweighting is intended to answer: how can we assign reliable importance scores that prioritize stable structural clusters over spurious validation artifacts? In short, existing studies show the inability of any single line of work to jointly address misleading generative guidance and structural instability under shift; a more detailed comparison is deferred to Section II. 
+
+Our insights: teaming invariant generation and reweigh-ing. We formulate a generic problem of augmented and weighted learning for covariate-shifted, label-scarce, and struc-turally unstable tabular environments. We show that AWL can be solved by synergizing invariant-guided synthesis and prototype-based reweighting, where the synthesis creates task-aligned samples to fill data gaps, and the reweighting assigns reliability scores to filter noise. In particular: i) Stable guidance is critical for effective augmentation. We find that leveraging invariant potentials to steer the diffusion process can fight against the bias introduced by outdated source gradients for robust data expansion. ii) We demonstrate that to correct distribution shifts without absorbing validation artifacts, the weighting mechanism needs to be structure-aware rather than point-wise. This requirement can be reformulated into a task of prototype-based reliability assessment within an invariant latent space. We show that the reliability assessment is indeed a function of trajectory stability and local density relative to cluster centroids. Solving this structural alignment effectively helps the model to achieve both high-fidelity data augmenta-tion and stable risk minimization in unseen test environments. 
+
+Summary of Proposed Approach . Inspired by these find-ings, we present IGDPR (Invariant-Guided Diffusion with Pro-totype Reweighting), a principled and generic augmentation-adaptation framework for the AWL-CS problem by synergiz-ing invariant-guided synthesis and prototype-based reweight-ing. The framework has two goals: 1) generating task-aligned samples that resist evolving distribution shifts; 2) ensuring stable adaptation by mitigating validation noise. To achieve Goal #1, we develop an Invariant-Guided Diffusion model. In particular, we find that generative utility can be improved by constraining the diffusion process with invariant structure knowledge. We design an invariant potential function that modifies the reverse diffusion sampling, effectively steering the generated data away from outdated source correlations and towards the stable decision boundary of the target en-vironment. To achieve Goal #2, we develop a Prototype-Based Reweighting strategy. In particular, we reformulate the instability problem into a structural matching task. We propose to assess sample reliability using prototype clusters rather than isolated points. By assigning weights based on the density of reliable prototypes in the invariant space, we effectively minimize the variance caused by noisy validation signals. Finally, we present extensive empirical results to demonstrate the effectiveness of our method in boosting performance across various real-world tabular datasets under covariate shifts. II. R ELATED WORK 
+
+AWL-CS sits at the intersection of three established lines of research, none of which jointly resolves the misleading-guidance and structural-instability challenges raised in Sec-tion I. We review each line and highlight the specific gap our method targets. 
+
+A. Generative Data Augmentation 
+
+Generative models such as GANs and diffusion models [8], [14]–[18] are widely used to enlarge tabular training sets. Con-ditional GANs (CTGAN, TVAE) use mode-specific normal-ization to address multimodality [8], while diffusion variants like TabDDPM [15] achieve broader mode coverage through iterative refinement. However, the dominant objective in this line—maximizing fidelity to the static source distribution [19], [20]—is precisely what fails under shift: source gradients are outdated proxies for an unseen target environment [21], so high-fidelity samples can amplify spurious correlations rather than fill genuine gaps [22]. Recent work on guided diffusion explores classifier or energy guidance for image domains [23], but tabular adaptations rarely incorporate invariance signals, leaving an open question on how to steer the denoising trajectory when target supervision is unavailable. 
+
+B. Distribution Reweighting under Covariate Shift 
+
+Importance weighting and density-ratio estimation meth-ods [12], [24]–[26] correct covariate shift by re-scaling train-ing samples toward a validation reference [27], [28]. The fundamental assumption is that the validation set is a faithful proxy for the test distribution—a premise that breaks under genuine covariate shift, where validation itself diverges from 
+
+Dtest . As a result, point-wise weight estimates inherit validation noise and destabilize training [29]. Related lines on noisy-label learning [30]–[32] and group-robust optimization [33] provide partial remedies but operate at the instance or pre-defined group level, missing the structural cluster signal that our prototype-based reweighting exploits. 
+
+C. Invariant and Prototype Representation Learning 
+
+Invariant risk minimization [34], [35], domain adver-sarial training [36], and gradient-alignment methods [37] learn representations whose risk is stable across environ-ments. Prototype-based approaches such as Prototypical Net-works [38], PTaRL [39], and prototype matching [40] provide complementary metric-space structure [41]. These methods are effective at aligning representations but remain decoupled from generative mechanisms: they do not synthesize new samples to cover sparse regions, so the underlying scarcity that motivates augmentation in the first place is left unaddressed. 
+
+D. Positioning of IGDPR 
+
+Our framework unifies the three perspectives above. From generative augmentation, we inherit a latent diffusion back-bone for broad mode coverage; from invariant learning, we inherit an environment-invariance constraint that yields stable IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 3
+
+supervision when validation is unreliable; and from prototype-based methods, we inherit a structural-cluster view that ag-gregates noisy point-wise signals into reliable reweighting. Crucially, these components are coupled rather than stacked: invariant potentials directly steer the diffusion sampling tra-jectory (rather than being applied as a post-hoc filter), and prototype reweighting operates inside the same invariant latent space rather than in raw feature space. This coupling is what enables IGDPR to simultaneously fill data gaps with task-aligned samples and assign reliability scores that resist validation noise. III. P ROBLEM STATEMENT 
+
+The AWL-CS Problem. We consider a supervised learning setup with input X ∈ Rd, label Y, and a latent environment variable E ∈ E indexing operating conditions, time periods, or population sub-strata. Training data is a mixture of source environments Dtrain = S 
+
+> e∈E train
+
+De, while test samples may originate from environments E′ ∈ E test unobserved at training time. We assume covariate shift with invariant conditional ,
+
+Ptrain (Y | X) = Ptest (Y | X), while the marginal P(X)
+
+drifts across environments; since E is unobserved at test time, predictions must be stable across E. We address this problem via a four-stage pipeline: partition, augmentation, reweighing, and optimization. 
+
+Partition: The dataset is partitioned into three disjoint subsets: a training set Dtrain for parameter updates, a validation set 
+
+Dval for guiding hyper-parameters, and an unseen testing set 
+
+Dtest for final evaluation. In operational environments, such as high-stakes industrial analytics, data is often scarce and the distribution shifts between the collection phase ( Dtrain ∪ D val )and the deployment phase ( Dtest ). 
+
+Augmentation: A generator G uses observed data to create auxiliary synthetic samples Dsyn . These are combined with real data to form the augmented dataset: 
+
+Daug = Dtrain ∪ D syn = {(xi, y i)}Ni=1 ∪ { (˜ xj , ˜yj )}Mj=1 , (1) where N and M denote the numbers of real and synthetic samples, respectively. 
+
+Reweighing: Subsequently, a weighting function w(x, y ) as-signs a scalar importance score to each pair in Daug to shape the distribution. However, a core assumption mismatch exists in this standard pipeline: it typically assumes that Dval is a suf-ficient proxy for Dtest . In realistic covariate shift settings, Dval 
+
+often diverges from the test environment. The consequence is that the generator mimics outdated patterns and the weighting function overfits to validation noise, leading to suboptimal generalization. 
+
+Optimization: The optimization objective is to construct a framework to i) synthesize task-relevant samples that bridge the distributional gap, and ii) assign stable importance weights to filter noise and ensure generalization. Formally, our goal is to learn a predictor fψ(p) : X → Y that minimizes the expected risk on the unseen target distribution: 
+
+ψ(p)∗ = arg min 
+
+> ψ(p)
+
+E(x,y )∼D test [ℓ(fψ(p) (x), y )] . (2) Existing methods cannot be directly applied because Dtest is unavailable during training to guide the optimization. There-fore, the practical learning objective is to approximate the target risk by minimizing the weighted empirical risk on the augmented dataset: 
+
+Lfinal (ψ(p)) = X
+
+> (x,y )∈D aug
+
+w(x, y ) · ℓ(fψ(p) (x), y ), (3) A successful solution must derive weights w(x, y ) and syn-thetic samples Dsyn such that maximizing performance on Eq. (3) translates to maximizing performance on Eq. (2), effectively bridging the distribution shift. IV. T HE IGDPR F RAMEWORK 
+
+A. Overview 
+
+Figure 2 shows the framework includes three integrated components: 1) Invariant-Guided Generation. To synthesize task-relevant data, we avoid generating directly in the noisy raw space. Instead, we employ a Task-Invariant VAE (TI-VAE) to project inputs into a disentangled latent space. Within this space, a diffusion backbone synthesizes new representations, strictly guided by invariant potentials to preserve semantic consistency. 2) Prototype-Based Reweighting. Recognizing that generative quality varies, we introduce a reweighting mechanism to quantify sample reliability. After decoding latents back to the data space, we assess their structural alignment with learned prototypes, assigning a scalar weight to every synthetic sample to downweight outliers. 3) Augmented Boosting. Finally, we construct a robust downstream predictor. By uniting original real data with these weighted synthetic samples, we optimize the predictor to leverage expanded diversity while suppressing unreliable augmentations. 
+
+B. Task-Invariant Training Data Embedding 
+
+Why Task-Invariant VAE Matters? Real world shifts and noises can lead to nonalignment between explicit training, val-idation, and testing data. Representation learning provides an opportunity to construct a latent space that disentangles stable task semantics from shifting domain noise, in order to enable effective generation and reweighting under shift. However, standard autoencoders typically focus solely on reconstruction minimization, thus, the learned embedding space often fails to eliminate domain-specific patterns and erroneous correlations found in the source distribution. In addition to reconstruction signal, which ensures the semantic validity of the decoded synthetic data, embedding learning must be supervised by two additional signals: 1) invariant task signal that provides stable supervision to steer data generation away from outdated source correlations; 2) density signal that reveals the underlying distribution structure to support prototype-based reliability assessment. 
+
+Modeling Intuition: Disentanglement via Invariance. Our intuition relies on the principle of invariant risk minimiza-tion [34]. If a latent representation captures the true structure of the task, it should be able to predict the label consis-tently across distinct environments, regardless of the distri-butional shift. By partitioning the training data into pseudo-environments (i.e., groups of data points) and enforcing the IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 4Invariant Embedding Construction Invariant Guided Generation Prototype-based Reweighing Downstream Training & Testing    
+
+> Frozen TI-VAE Encoder Env-wise invariance constraint 𝑽𝒂𝒓(ℓ𝑬𝟏 + ℓ𝑬𝟐 + … )
+> Downstream MLP
+> Regression MSE Classification ACC
+> ❌Point-wise Noisy, unstable, validation-dependent
+> ✔Prototype-based Stable structure-aware Noise-resistant
+> 3. Weighted Augmented Train Set
+> 2. Prototype-based Reweighing
+
+Phase 2: Embedding Training Phase 1 Environment Construction Phase 1 Latent Diffusion Training Phase 2: Guided Diffusion Generation 1. Prototype Detection    
+
+> Random noise
+> Frozen TI-VAE Heads
+> Invariant Guidance Signals Reward 𝑅 𝑧 ௧, 𝑦 𝑧 ௧
+> Weighted Augmented Train Set
+> Invariant latent embedding
+> 𝑧 ௧ିଵ
+> 𝑧 ଴Prediction Density Reconstruction
+> Task-aligned Synthetic Samples as Augmentation Invariant-guided trajectory Trajectory Steering By Gradient
+
+…
+
+> Forward Diffusion
+> Progressive Noise Addition
+> Downstream Training & Testing
+> 𝑥 → 𝑧
+
+Fig. 2: Overview of the proposed IGDPR (Invariant-Guided Diffusion with Prototype Reweighting) framework. The pipeline consists of four tightly coupled stages. (1) Invariant embedding construction: training data are partitioned into multiple pseudo-environments based on domain features, and a task-invariant latent space is learned via a multi-head TI-VAE with task, density, and invariance supervision. (2) Invariant-guided latent diffusion generation: a latent diffusion model is trained in the invariant space and, during sampling, its denoising trajectories are actively steered by frozen invariant guidance signals toward task-aligned and structurally stable regions. (3) Prototype-based reweighting: real and synthetic samples are clustered into structural prototypes, where reliability scores are estimated at the prototype level to avoid noisy and unstable point-wise reweighting. (4) Weighted downstream training: the downstream predictor is trained on the weighted augmented dataset to improve generalization under covariate shift. variance of the prediction risk to be zero across them, we com-pel the encoder to strip away environment-sensitive features (noise) and converge on an invariant subspace. This ensures that the subsequent diffusion model learns to generate samples of core data distribution instead of superficial variations. 
+
+TI-VAE Embedding Model. We adopt a VAE backbone to encode training samples into latent vectors, comprising: i) an encoder e that maps each training point x ∈ Rd to variational parameters (mean ⃗μ and variance ⃗σ), from which the embedding z ∈ Rk is drawn as a Gaussian sample; ii) a decoder d that reconstructs ˆx from z, given by: 
+
+(⃗μ,⃗ σ) = e(x), z ∼ N (⃗μ, diag (⃗σ 2)) , ˆx = d(z). (4) We attach two auxiliary projection heads to the embedding: i) a task head ˆy = f (z) to estimate class labels ( y); ii) a density head ˆd = h(z) to estimate local manifold density (i.e., how crowded is the neighborhood around this point), measured by the inverse average distance to its K-nearest neighbors in the latent space. 
+
+Multiple Pseudo-environment Construction to Enforce Task Invariance. To enforce invariance constraint, we first define multiple distinct environments (groups of data points) within training data. In particular, we divide training data features x into i) invariant features ( xinv ); ii) domain-specific features ( xdom ). We partition the training set into K pseudo-environments using a grouping function Π : Rddom →{1, . . . , K } that maps each sample’s domain features to an environment index: 
+
+x = ( xinv , xdom ),Ei = {(x, y ) ∈ D train : Π( xdom ) = i},i = 1 , . . . , K. 
+
+(5) Whether xdom is provided directly (e.g., explicit operating conditions on C-MAPSS) or must be recovered automatically (e.g., on Scania APS, where no explicit domain attributes exist) determines whether Π is a trivial lookup of the labeled attribute or a learned clustering on a surrogate feature; per-dataset choices are reported in Section V-A. In this way, we can factorize the joint distribution to ensure that the label dependence relies solely on the invariant features (i.e., 
+
+p(y | x) ≈ p(y | xinv )). Such partitioning can penalize representations that rely on the domain-specific features. Con-struction in two phases. The grouping function Π is realized in two phases. Phase 1 (Initial Partitioning): we run K-Means on the domain-specific subspace, assigning each sample to its nearest centroid E(0) (i) = arg min k ∥x(i)dom − ck∥22.IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 5
+
+Phase 2 (Adaptive Merging): to ensure each environment carries enough samples for a stable invariance penalty, we set a minimum-size threshold τ and iteratively merge the smallest environment Esmall into its centroid-nearest neighbor 
+
+j∗ = arg min j̸ =i ∥μ(Ei) − μ(Ej )∥2, where μ(E) is the mean of xdom within E. The procedure is summarized in Algorithm 1. 
+
+Algorithm 1 Pseudo-environment Construction with Adaptive Merging 
+
+Require: Training set D = {(xi, y i)}, domain features 
+
+{x(i)dom }, initial clusters K, minimum size threshold τ 
+
+> 1:
+
+Initialize: Apply K-Means on {x(i)dom } to obtain partitions 
+
+E = {E1, . . . , E K } 
+
+> 2:
+
+Compute centroids μk for each Ek ∈ E  
+
+> 3:
+
+while min E∈E |E| < τ do  
+
+> 4:
+
+Esmall ← arg min E∈E |E| 
+
+> 5:
+
+Etarget ← arg min E∈E ,E ̸ =Esmall ∥μ(Esmall ) − μ(E)∥2 
+
+> 6:
+
+Merge: Etarget ← Etarget ∪ Esmall ; remove Esmall from E 
+
+> 7:
+
+Recompute μ(Etarget ) 
+
+> 8:
+
+end while  
+
+> 9:
+
+return Final environments E
+
+Task-Invariant Objective. The optimization objective inte-grates the reconstruction ( LVAE ), task ( Ltask ), density ( Lden ), and invariance losses: 
+
+L = LVAE + λtask · L task + λden · L den + λinv · L inv , (6) where λtask , λ den , λ inv are the loss weights reported in Table III, and the invariance loss is the cross-environment risk variance 
+
+Linv = Var EKi (Ex∈D e ℓtask (f (z), y )) .The reconstruction term is the (negative) evidence lower bound, kept separate from Ltask so that the prior regulariza-tion is not double-counted with task supervision: LVAE =
+
+Ex
+
+h
+
+Eqϕ [log pθ (x | z)] − βKL DKL (qϕ(z | x) ∥ p(z)) 
+
+i
+
+. The task and density losses are to minimize the classification or regression error and the mean squared error against log-probability density of density estimation respectively: Ltask =
+
+E(x,y )[ℓtask (f (z), y )] , Lden = Ex[∥h(z) − log ptrain (x)∥22].Lastly, we introduce the term Var EKi (Ex∈D e ℓtask (f (z), y )) 
+
+to represent the variance of the risk across the constructed environments. By minimizing this variance, we penalize em-bedding that fluctuate due to domain shifts, effectively forcing the encoder to extract stable, invariant patterns. 
+
+C. Invariant-Guided Diffusion Generation 
+
+Why Latent Invariant Guided Diffusion Matters? To syn-thesize data, we can use standard generative models (GANs, vanilla diffusion) that maximizes the likelihood of training data. However, under the contexts of shifts, strictly mimicking training distribution is harmful; it learns unaligned correlations that do not generalize to the unseen test environment. To move beyond simple imitation of training data, we need a generation mechanism that synthesizes samples adhering to stable, task-invariant patterns. 
+
+Modeling Intuition: Navigation in Invariant Space. We treat data generation as a directed navigation problem within a latent manifold: TI-VAE learns the distribution landscape of the invariant training data embeddings; the diffusion generator should learn how to navigate the landscape to sample more data points to represent the underlying generalizable distribu-tion. Without a guided direction, the diffusion generator would simply wander back to resample the regions of seen training data. To prevent this, we introduce a direction guidance signal: an invariant reward. During the generation of new samples, this reward steers the denoising trajectory away from regions of drifted patterns and toward regions of high task relevance and structural stability under the density lens. 
+
+Step 1: Learning Data Distribution Landscape via Dif-fusion. The first step is to learn data distribution. We em-ploy a Multi-Layer Perceptron (MLP) as the backbone for a latent noise prediction network. The training objective is to learn the reverse transition probability, allowing the model to reconstruct coherent latent structures from pure noise. The process consists of a forward diffusion stage and a backward denoising stage. In the forward process, we progressively corrupt a clean latent code z0 into a noisy state zt by adding Gaussian noise ϵ. This follows the Markovian transition 
+
+q(zt | z0) = N (zt; √¯αtz0, (1 − ¯αt)I), where αt is the ratio of original signal to preserve and I is the identity matrix. In the backward process, the MLP network learns to predict the added noise to approximate the reverse transition p(zt−1 |
+
+zt), optimized by the standard DDPM noise-prediction loss 
+
+Et,z 0,ϵ 
+
+∥ϵ − ˆϵω (zt, t )∥22
+
+.
+
+Step 2: Guided Denoising as Data Generation. After learn-ing the generic data distribution, we aim to generate task-aligned samples using guided denoising. We propose to guide the denoising (sampling) process using signals from the frozen TI-VAE model (Section IV-B). 
+
+How invariance enters the guidance. Note that the reward R
+
+defined below does not contain a separate invariance term. Instead, invariance enters implicitly through the frozen TI-VAE: (i) the latent state zt itself lives in the invariant subspace learned by the encoder under the cross-environment variance penalty in Eq. (6); (ii) the task head fψ in the reward is the invariant task head trained jointly with that penalty, so the task term scores how well an invariant predictor agrees with the target label; (iii) the density head hζ and decoder d
+
+are likewise trained on the invariant representation, so their gradients only respond to variation along invariant axes. As a result, every gradient term in Eq. (8) is computed inside the invariant geometry, and guidance pushes trajectories along invariant directions even though R itself only aggregates task, density, and reconstruction. We define a guidance reward function R that aggregates these three signals as: 
+
+R(zt, ˜y) = −ℓtask (fψ (ˆ z0), ˜y)
+
+| {z }
+
+> Task
+
+− μden · hζ (ˆ z0)
+
+| {z }
+
+> Density
+
++ log pdata (d(ˆ z0)) 
+
+| {z }
+
+> Reconstruction
+
+,
+
+(7) where ˆz0 is the estimated clean latent embedding derived from 
+
+zt via Tweedie’s formula [42], μden > 0 is a reward-side density weight (distinct from the training-time λden in Eq. (6)), and pdata denotes a fixed marginal data-density estimator fit on Dtrain (e.g., a kernel density or VAE-decoder likelihood) so IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 6
+
+that the reconstruction term scores the realism of the decoded sample. The task term ensures the sample belongs to the target class ˜y and the density term avoids over-dense regions. 
+
+2.1) Steering the Denoising (Sampling) Trajectory. During the reverse denoising steps, we modify the standard DDPM update rule by injecting the gradient of the reward function to steer the generation towards the invariant decision boundary: 
+
+zt−1 = 1
+
+√αt
+
+
+
+zt − 1 − αt
+
+√1 − ¯αt
+
+ˆϵω (zt, t )
+
+
+
++γt ·∇ zt log R(zt, ˜y),
+
+(8) where the bracketed term is the standard DDPM denoising mean that moves zt toward its predicted clean state, and γt is the guidance strength that controls how strongly we enforce invariance. Each denoising iteration/trajectory can generate an embedding of a high-quality data point to synthesize. 
+
+2.2) Constructing Synthesized Data from Decoding. To construct synthetic dataset, we perform M denoising iterations and obtain a set of optimized latent embeddings, denoted by 
+
+Zsyn . We decode these data embeddings into a set of explicit data points using the pretrained decoder d(·) and develop a synthetic dataset: Dsyn = {(d(˜ zi), ˜yi) | (˜ zi, ˜yi) ∈ Z syn } , i ∈
+
+[1 , M ]. The synthetic dataset is not merely a variation of the source data, but a re-imagined distribution optimized for stability and task performance under shift. 
+
+Practical Notes. We adopt four implementation choices to keep guided sampling stable and efficient:  
+
+> •
+
+Log-gradient scaling. We apply a temperature calibra-tion R ← exp( R/τ ) together with norm clipping on 
+
+∥∇ log R∥ to prevent excessively large updates that would push trajectories off the latent manifold.  
+
+> •
+
+Computationally efficient gradients. When Rinv and Rtask 
+
+are functions of a low-dimensional latent ϕ(zt), we compute ∇zt log R = Jϕ(zt)⊤∇ϕ log R via the chain rule, where Jϕ is the Jacobian of ϕ. This keeps guidance cheap whenever ϕ has small dimension.  
+
+> •
+
+Avoiding joint training leakage. Guidance signals are applied post-training on a frozen TI-VAE, preventing the diffusion backbone from collapsing onto trivial solutions that artificially maximize R while ignoring fidelity.  
+
+> •
+
+Score estimation in guidance. When the score ∇zt log pθ
+
+used inside ∇zt log R is costly to evaluate directly, we substitute a proxy—either the norm of the denoiser output 
+
+ˆϵω (zt, t ) or a finite-difference estimate—which preserves the gradient direction at a fraction of the cost. 
+
+D. Efficient Prototype-based Reweighing of Augmented Data 
+
+Why Prototype-Based Reweighting Matters? Because invariant-guided diffusion improves coverage, but reweighting is still needed to correct residual distribution mismatch and prevent synthetic samples from distorting the effective training distribution. Standard reweighting methods optimize weights for individual samples, which makes them highly susceptible to overfitting the specific noise patterns within the small val-idation set. Our intuition is to enforce a structural constraint: a sample should be trusted only if its local neighborhood is collectively stable and task-aligned. By aggregating reliability signals such as task loss and invariance consistency at the TABLE I: Summary of Datasets and Industrial Tasks.                     
+
+> Dataset Source Task Type Samples Feat Dim. C-MAPSS Simulated Regression ∼53k 14
+> Scania APS Real Classification 76k 170
+> Gas Sensor Real Classification 13k 128
+> MetroPT-3 Real Regression 1.5M ∼5
+
+prototype level, we can effectively filter out high-frequency validation noise. 
+
+Modeling Intuition: Assigning Weights to Mixture of Structural Modes. We treat the augmented data as a collection of structural modes. Instead of treating each sample as an independent entity, we group samples that share similar char-acteristics in the raw data feature space. We identify cluster centers as prototypes that represent the dominant patterns of the underlying distribution. We calculate weights at the proto-type level to create a robust basis for data quality assessment and ignore individual sample-level noise. 
+
+Step 1: Prototype Identification in the Invariant Latent Space. The first step is to partition the augmented dataset 
+
+Daug = Dtrain ∪ D syn into clusters. We cluster on the invariant latent representations Z = Φ( X) produced by the frozen TI-VAE encoder, so that prototype structure aligns with task-relevant geometry rather than nuisance variation in raw features. We apply K-Means to divide the augmented latents into K distinct groups. The centroids of these groups are defined as prototypes, representing the structural modes of the augmented distribution under the invariant geometry. 
+
+Step 2: Prototype-level Reweighting. We weigh each cluster by considering: i) the task and invariance losses and ii) its neighborhood density. The intuition is to assign higher weights to regions that are structurally stable (low prediction and invariance errors) while down-weighting over-represented regions. Specifically, we aggregate the sample-level task, in-variance, and density losses within each cluster k to form the cluster-level weights. The prototype weight αk is formulated as: 
+
+αk = 1
+
+ ℓk 
+
+> task
+
++ ℓk
+
+> inv
+
+β ·  ℓk
+
+> den
+
+γ (9) where ℓk 
+
+> task
+
+and ℓk 
+
+> inv
+
+are the average task cross-entropy loss and invariance loss for samples in the cluster k, representing the cluster’s instability. ℓk 
+
+> den
+
+represents the local density magnitude (or latent density estimation where higher values indicate higher density). The hyperparameters β > 0 and γ > 0
+
+control the sensitivity of the weighting mechanism: a larger 
+
+β penalizes unstable clusters more heavily, while a larger γ
+
+imposes stronger penalties on redundant, high-density regions. 
+
+Step 3: Individual Sample Weight Assignment. Step 3 is to assign weights to individual samples based on their parent prototypes. We assign the prototype weight equally to each data point, so the weight of the i-th individual sample is given by wi = αk 
+
+> nk
+
+, where k denotes the nearest cluster index of the 
+
+i-th sample, αk is the importance of the k-th prototype, and nk
+
+is the total number of samples in that cluster. The same weight for cluster is for computational efficiency since calculating loss for every data point to assign weight will be time-consuming. IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 7
+
+TABLE II: Main Results on Industrial Domain Shift Benchmarks. We compare different generative augmentation methods combined with various reweighting strategies. We report Accuracy , F1-Macro (F1-M), and F1-Weighted (F1-W) for classification tasks, and MSE , RMSE , and R2 for regression tasks. The Guided Latent Diffusion generator denotes our invariant-guided latent diffusion module; paired with the Prototype reweighter (bold row) it constitutes our full method IGDPR. 
+
+Bold indicates best performance.                                                                                                                                                                                                                                                                                 
+
+> Generator Reweighter Gas Sensor (Classif.) NASA C-MAPSS (Reg.) Scania ComponentX (Classif.) MetroPT-3 (Reg.) Acc ↑F1-M ↑F1-W ↑MSE ↓RMSE ↓R2↑Acc ↑F1-M ↑F1-W ↑MSE ↓RMSE ↓R2↑
+> No Aug
+> Uniform 0.6479 0.6066 0.6069 2069.21 45.49 0.82 0.9083 0.8710 0.9021 0.2605 0.5104 0.71 Importance 0.6600 0.6225 0.6542 2067.63 45.47 0.83 0.9104 0.8748 0.9046 0.2589 0.5088 0.72 Approx. 0.4414 0.3921 0.4356 2093.73 45.76 0.78 0.8897 0.8415 0.8823 0.2516 0.5016 0.73 Prototype 0.6615 0.6284 0.6571 2064.41 45.44 0.83 0.9146 0.8793 0.9085 0.2598 0.5097 0.72
+> MLP GAN
+> Uniform 0.6410 0.6032 0.6354 2117.05 46.01 0.75 0.9121 0.8769 0.9068 0.2521 0.5021 0.73 Importance 0.6511 0.6117 0.6453 2120.64 46.05 0.74 0.9132 0.8785 0.9079 0.2514 0.5014 0.73 Approx. 0.4202 0.3814 0.4136 2113.66 45.97 0.75 0.8925 0.8453 0.8854 0.2568 0.5067 0.72 Prototype 0.6450 0.6095 0.6408 2059.92 45.38 0.84 0.9188 0.8849 0.9132 0.2536 0.5036 0.73
+> CT GAN
+> Uniform 0.6526 0.6178 0.6472 2054.08 45.33 0.85 0.9145 0.8802 0.9089 0.2558 0.5058 0.72 Importance 0.6375 0.6019 0.6324 2085.61 45.67 0.79 0.9128 0.8776 0.9071 0.2540 0.5040 0.72 Approx. 0.4174 0.3789 0.4102 2088.98 45.71 0.78 0.8951 0.8487 0.8879 0.2595 0.5094 0.71 Prototype 0.6509 0.6162 0.6458 2088.85 45.71 0.78 0.9201 0.8873 0.9152 0.2569 0.5068 0.72
+> TabDDPM
+> Uniform 0.6652 0.6318 0.6594 2059.16 45.38 0.84 0.9162 0.8821 0.9105 0.2419 0.4918 0.75 Importance 0.6541 0.6203 0.6487 2075.56 45.57 0.81 0.9151 0.8804 0.9092 0.2398 0.4897 0.76 Approx. 0.4287 0.3920 0.4211 2077.77 45.60 0.80 0.8986 0.8539 0.8921 0.2425 0.4924 0.74 Prototype 0.6724 0.6396 0.6668 2051.91 45.32 0.85 0.9220 0.8891 0.9178 0.2367 0.4866 0.77
+> Guided Latent Diffusion
+> Uniform 0.6796 0.6465 0.6751 2051.88 45.32 0.86 0.9185 0.8846 0.9134 0.2462 0.4962 0.74 Importance 0.6236 0.5892 0.6181 2087.02 45.69 0.79 0.9169 0.8827 0.9118 0.2437 0.4937 0.75 Approx. 0.4336 0.3958 0.4269 2081.64 45.62 0.80 0.9012 0.8563 0.8945 0.2454 0.4954 0.74 Prototype 0.6909 0.6587 0.6864 2044.63 45.22 0.87 0.9262 0.8948 0.9217 0.2305 0.4801 0.78
+
+E. Boosting Prediction via Integrated New Weights and Aug-mented Data 
+
+With the augmented data and corresponding new weights, we can retrain a boosted predictive model. Without loss of generality, let us use a MLP as the down stream predictive model g trained on the augmented dataset Daug , where the i-th data point is associated with a weight wi. The downstream MLP training objective is given by: 
+
+L(g) = X
+
+> (x,y,w )∈D aug
+
+w · ℓ g(x), y  (10) This weighted and augmented learning strategy allows the decision boundary to be shaped by trustworthy patterns from both the real and synthetic domains. 
+
+F. Theoretical Justification 
+
+We now connect the prototype reweighter, the density penalty, and invariance-guided synthesis to established results in importance-weighted risk minimization and information-theoretic domain generalization. 
+
+Setup. Adopting the notation of Section III, let fψ(p) : X → Y 
+
+be a predictor with bounded loss ℓ ∈ [0 , 1] . The ideal target risk is 
+
+Rtarget (θ) = E(X,Y )∼P target 
+
+ℓ(fψ(p) (X), Y ), (11) but only Ptrain is observed. Under covariate shift with invariant label conditional ( Ptarget (Y | X) = Ptrain (Y | X)), the optimal importance weight is w∗(X) = Ptarget (X)/Ptrain (X). Our prototype reweighter approximates this ratio inside an invariant latent space Z = Φ( X), where Φ denotes the frozen TI-VAE encoder map (distinct from the downstream predictor g
+
+in Eq. (10)), upweighting underrepresented prototypes rather than estimating point-wise ratios on noisy validation data. 
+
+Density penalty and effective sample size. We analyze a continuous relaxation of the prototype weights in Eq. (9). Writing dproto (z) for the soft distance to the nearest prototype and noting that − log ℓk 
+
+> task
+
+and − log ℓk 
+
+> den
+
+are the log-domain counterparts of the factors in αk, we work with 
+
+w(z) ∝ exp  −β d proto (z) − γ log ptrain (z), (12) which preserves the qualitative behaviour of αk (upweighting stable, underrepresented regions) while being amenable to standard importance-weighting analysis. The corresponding effective sample size, 
+
+neff = (P 
+
+> i
+
+wi)2
+
+P 
+
+> i
+
+w2
+
+> i
+
+, (13) governs the generalization gap of weighted ERM. Substituting the sample-to-cluster mapping wi = αk/n k from Section IV-D (with nk the cluster size) yields the closed cluster-form expression 
+
+neff = (P 
+
+> k
+
+αk)2
+
+P 
+
+> k
+
+α2
+
+> k
+
+/n k
+
+. (14) Increasing γ in Eq. (9) shrinks αk for high-density clusters, flattening the denominator P 
+
+> k
+
+α2
+
+> k
+
+/n k while leaving (P 
+
+> k
+
+αk)2
+
+approximately constant—directly inflating neff and tightening the bound in Prop. 1. 
+
+Proposition 1 (Weighted ERM bound). Assume (A1) the loss is bounded, ℓ ∈ [0 , 1] ; (A2) the weights {wi} in Eq. (12) 
+
+are bounded above by a constant W < ∞ and approximate the density ratio w∗(X) = Ptarget (X)/Ptrain (X) in the sense that EPtrain [( w − w∗)2] is small; (A3) samples {(Xi, Y i)}ni=1 
+
+are drawn i.i.d. from Ptrain ; and (A4) the hypothesis class IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 8
+
+has bounded complexity (e.g., finite Rademacher complexity). 
+
+Then, for any θ in the hypothesis class and any δ ∈ (0 , 1) ,with probability at least 1 − δ,
+
+Rtarget (θ) ≤ ˆRw(θ) + C ·
+
+s
+
+log(1 /δ )
+
+neff 
+
++ εw, (15) where the constant C depends on W and the hypothesis-class complexity, and εw collects the approximation error of 
+
+w relative to w∗. The bound follows from a Bernstein-type concentration inequality on the importance-weighted empirical process (cf. [12], [24]); a detailed argument is standard and omitted. Thus, the density factor (ℓk
+
+> den
+
+)γ in Eq. (9) inflates neff by penalizing redundant high-density modes, which tightens the second term of Eq. (15). 
+
+Remark (relating w(z) to αk). The form in Eq. (12) is a continuous, log-domain relaxation of αk: cluster-level re-liability (ℓk 
+
+> task
+
++ ℓk
+
+> inv
+
+)−β corresponds to the exponential of 
+
+−β d proto when the task/invariance loss is interpreted as a soft cluster-distance, and the density factor (ℓk
+
+> den
+
+)−γ corresponds to 
+
+exp( −γ log ptrain ). The cluster-to-sample bridge is exact and given by Eq. (14); the remaining continuous relaxation from 
+
+αk to w(z) (e.g., via local Lipschitz arguments) is left to future work. 
+
+Proposition 2 (Approximate Information Bottleneck view). 
+
+Assume (B1) the encoder g has sufficient capacity to realize the conditional risk Ex[ℓ(f (z), y )] as a function of z; (B2) the per-environment empirical risks {Ex∈D e ℓtask (f (z), y )}Ke=1 
+
+converge to their population counterparts; and (B3) the cross-environment variance term in Eq. (6) is driven to zero. Then the TI-VAE objective acts as a tractable surrogate for the constrained problem 
+
+min  
+
+> g
+
+I(Z; E) s.t. I(Z; Y ) ≥ c, (16) in the sense that vanishing risk variance implies the conditional risk E[ℓ | Z, E ] no longer depends on E, which under (B1)– (B2) approximates the conditional independence Y ⊥ E | Z
+
+and therefore 
+
+P(Y | Z, E ′) ≈ P (Y | Z), (17) for any unseen environment E′. We emphasize that this is a relaxation: the variance penalty equates the expected loss 
+
+across environments, not the full conditional distribution, so the gap between Eq. (16) and the implemented objective is non-zero in general. A formal connection between risk-variance penalties and I(Z; E) minimization is established in the IRM/V-REx literature [34] under additional assumptions on ℓ and the model class. 
+
+Combined effect with latent diffusion. When the latent dif-fusion model is trained under invariance-guided reweighting, its learned generative process approximates 
+
+pIGDPR (Z) ∝ X
+
+> i
+
+w(Zi) δ(Z − Zi), (18) which emphasizes invariant, low-density, informative regions of the latent space. Synthetic samples drawn from pIGDPR (Z)
+
+therefore (i) preserve task-relevant information, (ii) avoid environment-specific artifacts, and (iii) improve downstream generalization under domain shift—explaining the empirical gains observed in our experiments. V. E XPERIMENTS 
+
+We conduct extensive experiments on diverse industrial benchmarks to evaluate the effectiveness and mechanics of the proposed framework. Specifically, our experiments aim to answer the following core questions: Q1: Can IGDPR outperform state-of-the-art baselines under diverse industrial distribution shifts? Q2: Are both the latent diffusion backbone and the prototype-centric reweighting essential for the model’s performance? Q3: Is the framework robust to variations in key hyper-parameters, particularly the guidance parameters (γ, β ) in generation stage and the number of prototypes (K) in reweighing stage? Q4: Does reweighting filter noise in generation? Q5: Does the model effectively disentangle domain-specific noise from task-relevant information? 
+
+A. Experimental Setup 1) Data Description: We conduct experiments on four industrial benchmarks to evaluate framework robustness, comprising two regression datasets (NASA C-MAPSS [43], MetroPT-3 [44]) and two classification datasets (Scania APS [45], Gas Sensor [46]). Table I summarizes the key statistics. Specifically, these datasets are selected to represent distinct real-world distribution shifts: NASA C-MAPSS and MetroPT-3 capture explicit operating-condition variations and implicit operational mode changes, respectively. Furthermore, Scania APS characterizes population-level shifts driven by heterogeneous usage and sparsity, while Gas Sensor represents continuous temporal drift caused by sensor aging over a 36-month period. 
+
+Preprocessing. Transparent preprocessing is critical for repro-ducibility on heterogeneous tabular benchmarks; we summa-rize the per-dataset pipeline below. Scania APS contains sensor readings from heavy trucks with the goal of predicting Air Pressure System failures, characterized by extreme class im-balance and missing values. We median-impute missing entries column-wise, then apply PCA to retain 99% of the variance. Since explicit domain labels are absent, we build pseudo-environments via our automated procedure, clustering on the residual of a preliminary classifier to recover latent operational conditions. C-MAPSS simulates turbofan engine degradation under varying operating conditions and fault modes; we use the FD002 and FD004 subsets (six operating conditions) and frame the task as Remaining Useful Life prediction. Raw time-series are flattened with a sliding window of size 30, and the explicit operating-condition settings serve as ground-truth environments for the TI-VAE invariance penalty. Gas Sensor Array Drift contains 36 months of measurements from 16 chemical sensors; we treat its ten chronological batches as natural environments, training on batches 1–5 and generalizing to batches 6–10. Sensor readings are min-max normalized to 
+
+[0 , 1] to stabilize the diffusion process. MetroPT-3 follows the official benchmark preprocessing, aggregating raw signals into 
+
+∼5 statistical descriptors per window. IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 9
+
+TABLE III: Per-dataset hyperparameter configuration.                                           
+
+> Hyper-parameter Scania C-MAPSS Gas Sensor MetroPT-3
+> Batch Size 128 256 64 128 Learning Rate 1e-3 5e-4 1e-3 1e-3 Latent Dim ( z)16 16 16 16 Prototypes ( K)20 20 20 10 Reweight β1.0 0.5 1.0 1.0 Reweight γ1.0 0.5 0.5 1.0
+> λtask 1.0 1.0 1.0 1.0
+> λden 0.1 0.1 0.1 0.1
+> λinv 0.5 0.5 1.0 0.5
+
+2) Implementation and Hyperparameters: We implement IGDPR in PyTorch and run all experiments on a single NVIDIA A100 GPU. The Invariant Feature Extractor (TI-VAE) uses a symmetric encoder–decoder structure. Both branches are Multi-Layer Perceptrons (MLPs) with three hid-den layers of size [256 , 128 , 64] , LeakyReLU activations, and Batch Normalization between layers. The latent dimension 
+
+dim z is fixed at 16 across datasets to maintain a compact representation that still resolves task-relevant structure. The latent diffusion backbone is a residual MLP with 4 blocks; each block contains two linear layers and a mish activation. We adopt a cosine noise schedule with T = 1000 diffusion steps and optimize the model with AdamW. The weight coefficients 
+
+λtask , λden , and λinv balance the multi-objective loss of the TI-VAE, while β and γ control the prototype-based reweighting sensitivity; all are tuned via grid search on a held-out split derived from the training domains. The optimal per-dataset configuration is reported in Table III. 
+
+3) Evaluation Pipeline: The evaluation follows a three-stage pipeline (Figure 2): (1) Generation: We first train the TI-VAE and diffusion backbone using Dtrain and Dval ,generating synthetic augmentations Dsyn guided by the frozen VAE encoder; (2) Reweighting: We compute the reliability weights wi for each data point in the augmented dataset (Dtrain ∪ Dsyn ) based on structural stability and density; (3) Prediction: We train a standard MLP predictor on the weighted augmented dataset—using wi to modulate the train-ing loss—and report final metrics on the held-out Dtest .
+
+4) Baseline Algorithms: We compare the framework against generation methods. (1) No Aug utilizes original data without synthesis. (2) MLP GAN adapts the GAN architecture to data distributions [14]. (3) CT GAN uses mode-specific normalization to address multi-modality [8]. (4) TabDDPM 
+
+applies denoising diffusion models to feature mixtures [15]. We combine these generators with reweighting strategies. (5) Uniform weighting applies unit weights to samples. (6) 
+
+Importance weighting estimates density ratios between test and training distributions [12]. (7) Approx weighting utilizes density ratio estimation techniques [26]. For all GAN- and diffusion-based generators (MLP GAN, CT GAN, TabDDPM) we adopt the authors’ reference implementations, training to convergence on Dtrain . Each generator synthesizes a set equal in size to the original training pool, and the down-stream predictor is trained on the combined real + synthetic data, mirroring the protocol used for our proposed IGDPR framework. The Importance and Approx reweighters estimate density ratios from Dval following [12] and [26] respectively, and are paired with every generator to isolate the contribution of the weighting strategy from that of the generator. 
+
+5) Evaluation Metrics: We adopt standard metrics tailored to each task type. For regression benchmarks (C-MAPSS, MetroPT-3), we report MSE (↓), RMSE (↓), and R2 (↑) to quantify predictive precision and goodness of fit. For classifi-cation benchmarks (Gas Sensor, Scania), we report Accuracy 
+
+(Acc ↑), Macro-F1 (F1-M ↑), and Weighted-F1 (F1-W ↑). Given the extreme class imbalance in industrial datasets (e.g., Scania APS), we prioritize F1 scores to ensure the model effectively identifies rare failure events. 
+
+B. Q1: Quantitative Analysis of Generative Backbones and Reweighting Strategies 
+
+Table II reports the quantitative performance across four benchmarks. Our full method IGDPR (the Guided Latent Diffusion generator paired with the Prototype reweighter) consistently establishes a new state-of-the-art, achieving the highest classification F1 scores and lowest regression errors. These results validate the synergy between robust structural reweighting and invariant-aware generation. All numbers are averaged over five independent seeds with different random initializations and data splits. Table IV reports the per-seed standard deviation for each metric: classification stds stay 
+
+≤ 0.008 and regression RMSE stds ≤ 0.46 , small in absolute terms. While individual head-to-head gaps over the runner-up are not always larger than one standard deviation on a single benchmark, IGDPR (Guided Latent Diffusion + Prototype) is nonetheless the unique best entry on every metric of every 
+
+benchmark in Table II, indicating that the gains are systematic across datasets and metrics rather than seed-driven. 
+
+Superiority of Diffusion Baselines. The comparison be-tween generator architectures reveals a finding: diffusion-based models (TabDDPM, Guided Latent Diffusion) consistently outperform GAN-based baselines (MLP GAN, CT GAN). This validates that the iterative refinement process of diffu-sion models offers superior mode coverage for heterogeneous tabular distributions compared to the adversarial training of GANs, which often suffer from mode collapse. Our Guided Latent Diffusion further enhances this baseline, demonstrating that projecting data into an invariant latent space effectively captures complex feature interactions that are otherwise lost in raw-space generation. 
+
+Robustness of Structural vs. Instance-level Reweighting. 
+
+We evaluate the efficacy of the Prototype reweighting strategy against Uniform (baseline) and Importance (instance-wise) weighting. The results on MetroPT-3 and Scania ComponentX reveal a critical finding: structural aggregation is more ef-fective than fine-grained instance scoring. While Importance weighting attempts to optimize for individual sample quality, it often amplifies validation noise, leading to suboptimal gener-alization. In contrast, Prototype reweighting yields consistent improvements (e.g., lowest MSE of 0.2305 on MetroPT-3), validating our hypothesis that assigning weights based on cluster-level consensus effectively filters out stochastic noise while retaining diverse, high-utility structural modes. This IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 10 Baseline GAN (Uni) GAN (Pro) CTGAN Diff (Uni) Ours                         
+
+> 0.64 0.65 0.66 0.67 0.68 0.69 0.70
+> GasSensor Accuracy
+> Baseline GAN (Uni) GAN (Pro) CTGAN Diff (Uni) Ours
+> 0.900 0.905 0.910 0.915 0.920 0.925 0.930
+> Scania Accuracy
+> Baseline GAN (Uni) GAN (Pro) CTGAN Diff (Uni) Ours
+> 45.0 45.5 46.0 46.5 47.0 47.5 48.0 48.5
+> CMAPSS RMSE
+> Baseline GAN (Uni) GAN (Pro) CTGAN Diff (Uni) Ours
+> 0.22 0.23 0.24 0.25 0.26 0.27
+> MetroPT3 MSE
+> 510 20 50 100
+> Prototype Count K(Log Scale)
+> Prototype Sensitivity ( K)Ours (Proposed)
+> 510 20 50 100
+> Prototype Count K(Log Scale)
+> 510 20 50 100
+> Prototype Count K(Log Scale)
+> 510 20 50 100
+> Prototype Count K(Log Scale)
+
+Fig. 3: Ablation Study on Backbone, Reweighting Strategy, and Prototype Count. The bar charts (bottom axis) compare different generative backbones and reweighting strategies. The hatched bars denote our full method IGDPR (Guided Latent Diffusion + Prototype). The red lines (top axis) indicate the sensitivity to the number of prototypes K on a logarithmic scale. Metrics are Accuracy for the classification datasets (Gas Sensor, Scania), RMSE for C-MAPSS, and MSE for MetroPT-3. TABLE IV: Standard deviation across five random seeds , corresponding to the entries in Table II. Gains in the main table consistently exceed seed-level variance. 
+
+Method Gas Sensor C-MAPSS Scania MetroPT-3 
+
+Acc F1-M F1-W MSE RMSE R2 Acc F1-M F1-W MSE RMSE R2
+
+No Aug + Uniform 0.006 0.008 0.007 42.1 0.46 0.012 0.004 0.006 0.005 0.006 0.005 0.015 TabDDPM + Prototype 0.005 0.006 0.006 38.5 0.41 0.010 0.003 0.005 0.004 0.005 0.004 0.012 Guided Latent Diffusion + Prototype (IGDPR) 0.004 0.005 0.005 35.2 0.38 0.009 0.003 0.004 0.004 0.004 0.003 0.010 0.0 0.5 1.0                               
+
+> Density Penalty
+> 0.5 1.0 2.0
+> Invariance Guidance
+> 0.858 0.866 0.871 0.861 0.885 0.892 0.857 0.879 0.887
+> GasSensor
+> 0.0 0.5 1.0
+> Density Penalty
+> 0.882 0.895 0.901 0.889 0.919 0.926 0.884 0.912 0.918
+> Scania
+> 0.0 0.5 1.0
+> Density Penalty
+> 45.600 45.200 45.400 45.700 45.500 45.600 45.800 45.600 45.500
+> CMAPSS
+> 0.0 0.5 1.0
+> Density Penalty
+> 0.286 0.264 0.269 0.279 0.238 0.246 0.281 0.244 0.251
+> MetroPT3
+> 0.860 0.865 0.870 0.875 0.880 0.885 0.890
+> Accuracy
+> 0.885 0.890 0.895 0.900 0.905 0.910 0.915 0.920 0.925
+> F1-Macro
+> 45.2 45.3 45.4 45.5 45.6 45.7 45.8
+> RMSE
+> 0.24 0.25 0.26 0.27 0.28
+> MSE
+
+Fig. 4: Sensitivity Analysis of Hyperparameters β and γ. We report Accuracy for Gas Sensor, F1-Macro for Scania, and MSE for C-MAPSS and MetroPT-3. Brighter colors (yellow) indicate better performance. For MSE, the color scale is inverted so that lower error corresponds to brighter colors. The optimal performance is consistently observed near β = 1 .0 and γ ∈ [0 .5, 1.0] .indicates that the prototype-centric constraint is a fundamental requirement for achieving robust generalization, affirming the necessity of the reweighting module. 
+
+C. Q2: Dissecting Model Components and Structural Sensi-tivity 
+
+Figure 3 dissects the contribution of each module within our framework, evaluating the generative backbone, the reweight-ing mechanism, and the structural hyper-parameters. The re-sults validate that performance gains stem from the synergy between high-fidelity generation and robust structural con-straints, rather than either component in isolation. 
+
+Synergy of Invariant Diffusion and Structural Reweight-ing. The ablation results reveal that high-performance aug-mentation requires both generative capacity and structural constraints. While the latent diffusion backbone outperforms GAN variants by effectively modeling complex tabular mani-folds, we find that generation alone is insufficient. The critical performance leap stems from the integration of Prototype Reweighting, which acts as a reliability filter. Unlike uniform sampling that risks amplifying noise, this structural guidance directs the diffusion model’s capacity toward invariant regions, ensuring that the generated data reinforces valid patterns rather than distribution artifacts. 
+
+Trade-off between Structural Abstraction and Granularity. 
+
+As illustrated by the red trend lines in Figure 3, performance consistently peaks at lower prototype counts (e.g., K = 20 
+
+for gas sensor and scania) and degrades as K increases. This finding validates our hypothesis that meaningful reliability signals reside at the cluster level rather than the instance level. A smaller K forces the model to aggregate statistics across broader neighborhoods, establishing a robust structural consensus that filters out stochastic noise. In contrast, exces-IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 11 
+
+sive prototypes cause the model to degenerate into instance-level proxies, reintroducing the overfitting risks inherent to traditional reweighting. 
+
+D. Q3: Hyperparameter Sensitivity and Stability Analysis 
+
+We analyze the interaction between the cluster-reliability exponent ( β, applied to the combined task+invariance loss in Eq. (9)) and the density exponent ( γ, applied to the density loss in the same equation) to understand how they balance struc-tural stability with diversity. Figure 4 presents the performance heatmaps across four datasets, varying β ∈ { 0.5, 1.0, 2.0} and 
+
+γ ∈ { 0.0, 0.5, 1.0}.
+
+Necessity of Density Penalty ( γ). The ablation results confirm that penalizing redundancy is critical for preventing mode col-lapse. As observed in Figure 4, removing the penalty ( γ = 0 .0)consistently degrades performance (e.g., Scania F1 drops from 0.926 to 0.889). This validates that a moderate density penalty (γ ≥ 0.5) is required to flatten the distribution, forcing the generator to learn from diverse, informative prototypes rather than merely memorizing dominant, high-density modes. 
+
+Balancing Task Guidance ( β). The sensitivity to β highlights the trade-off between robustness and coverage. Extreme values degrade performance: low guidance (β = 0.5) leads to underfitting, while excessive guidance ( β = 2 .0) causes over-pruning, where the model discards useful structural variations. The consistent peak at β ≈ 1.0 indicates an optimal equilib-rium where the model successfully strips away noise without compromising the semantic diversity of the generated data. 
+
+Operational Robustness. Visual analysis identifies a high-performance region generally centered around β = 1 .0 and 
+
+γ ∈ [0 .5, 1.0] . While optimal settings may vary slightly depending on specific task characteristics, the stability of metrics within this range suggests it serves as a robust empir-ical baseline, reducing the need for extensive hyperparameter search in practical deployments. 
+
+Cost Analysis. Training IGDPR is longer than a vanilla VAE due to the iterative diffusion objective, but inference latency is mitigated by our latent design ( dim z = 16 ), and augmentation is an offline step that does not affect the deployed model. On C-MAPSS, synthesizing 10 ,000 samples takes ≈ 45 s on a single A100 GPU—a negligible overhead given the gains in Table II. The synthetic set size is held comparable to the original training set across all baselines. 
+
+E. Q4: Visual Verification of Invariance and Reweighting 
+
+We visually examine the learned latent space to better under-stand how our method combines generation and reweighting to achieve invariant representations. Using the MetroPT-3 and 
+
+Scania datasets, both of which exhibit strong temporal and domain shifts, we project latent features into two dimensions using t-SNE. 
+
+Manifold Densification and Noise Suppression. The visual-izations reveal two critical behaviors that validate our frame-work. First, generated samples that align with the original data manifold—effectively filling sparse regions—are consistently assigned larger weights (larger markers). This confirms that the reweighting module correctly identifies reliable synthetic data  
+
+> (a) Scania (b) MetroPT-3
+
+Fig. 5: t-SNE visualization of latent representations with generation and reweighting. Colors denote class labels, marker size indicates sample importance, and cross-shaped markers represent generated samples. Generated points that align with the original data manifold receive higher weights and help fill sparse regions, while off-manifold samples are assigned low importance. that reinforces the underlying structure. Second, and equally important, generated artifacts lying outside the main distribu-tion are consistently down-weighted. This effect is particularly distinct in the MetroPT-3 projection, where deviating points are suppressed, demonstrating that the mechanism acts as a soft filter against off-manifold noise. 
+
+Necessity of the Hybrid Framework. Overall, these vi-sual dynamics confirm the complementary roles of the two components. While Latent Diffusion ensures broad feature coverage by exploring the manifold, it requires the precision 
+
+of Prototype Reweighting to distinguish signal from noise. By selectively amplifying aligned samples while suppressing outliers, the system achieves robust domain invariance without sacrificing semantic fidelity. 
+
+F. Q5: Information-Theoretic Analysis 
+
+To quantitatively validate disentanglement beyond visual inspection, we estimate the Mutual Information (MI) between representations Z, task labels Y , and domain indices E. The theoretical objective is to maximize task relevance I(Z; Y )
+
+while minimizing domain dependence I(Z; E).Figure 6 visualizes the dynamics on the Information Plane. While raw inputs and reweighting baselines occupy the high-entanglement region (bottom-right), and standard latent dif-fusion offers moderate separation, IGDPR consistently shifts representations toward the ideal top-left corner. This trajec-tory confirms that invariance guidance effectively strips away spurious domain correlations ( I(Z; E) ↓) while preserving and amplifying predictive signals ( I(Z; Y ) ↑). We use a consistent neural MI estimator across all methods to ensure comparability; MI is measured post-hoc to validate the effect of invariance regularization rather than directly optimized. 
+
+Quantitative results on C-MAPSS. Raw inputs entangle do-main heavily ( I(Z; E)=0 .82 ) while exposing limited task sig-nal ( I(Z; Y )=0 .22 ). Reweighting-based methods partially re-duce domain dependence ( I(Z; E)=0 .63 ) but fail to materially IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 12 
+
+raise I(Z; Y ). Standard latent diffusion improves the trade-off to (0 .41 , 0.44) but remains suboptimal. IGDPR achieves the lowest domain information and highest task information, 
+
+(0 .28 , 0.66) , demonstrating superior disentanglement. 
+
+Cross-dataset consistency. The same pattern holds on MetroPT-3, Scania APS, and Gas Sensor Drift: relative to raw inputs, IGDPR cuts I(Z; E) by 35 –65% while raising 
+
+I(Z; Y ) by 40 –200% . Even compared with vanilla latent diffusion, IGDPR further reduces I(Z; E) (e.g., 0.33 → 0.27 
+
+on Gas Sensor), confirming that invariance guidance explicitly reshapes the information geometry toward the optimal region rather than relying on stochastic regularization. 
+
+G. Discussion 
+
+What drives the gains? Three convergent pieces of evi-dence point to the same conclusion: structural reweighting (Q1, Q2) consistently outperforms instance-level density-ratio weighting; sensitivity heatmaps (Q3) reveal a broad perfor-mance plateau rather than a knife-edge optimum; and t-SNE visualizations (Q4) show that off-manifold synthetic sam-ples are reliably suppressed. Combined with the information-plane shift in Q5, the picture is that invariant guidance and prototype reweighting attack two complementary failure modes—misleading generative direction and validation-noise amplification—and that addressing them jointly is essential. 
+
+When does IGDPR help most? Gains are largest on bench-marks with severe distributional gaps between Dval and Dtest 
+
+(e.g., temporal drift on Gas Sensor, population shifts on Scania APS). On benchmarks with milder shift, the prototype-reweighting component still contributes by filtering generative noise, but the absolute gap to the next-best baseline narrows. This is consistent with our framing: invariance signals provide the most leverage precisely when validation-aligned signals are least reliable. 
+
+Limitations. The method assumes domain features xdom are identifiable—either explicitly (C-MAPSS) or via residual-based clustering (Scania APS); fully unsupervised invariance discovery is left to future work. Prototype counts and guidance strength require modest per-domain tuning, but the broad plateau in Figure 4 keeps the search cheap. 
+
+H. Q6: Sensitivity to Invariance Strength ( λinv )
+
+The sensitivity analysis in §V-A examined the prototype-side hyperparameters ( β, γ, K). Here we extend the same ro-bustness check to λinv , the coefficient of the cross-environment variance penalty applied to the TI-VAE invariance loss in Eq. (6). Because λinv governs the strength of the invariance regularizer on the latent feature extractor, it directly modulates the invariance mechanism in §IV-B. 
+
+Sweep protocol. We hold all other hyperparameters at their per-dataset optima from Table III and vary 
+
+λinv ∈ {0.0, 0.1, 0.5, 1.0, 2.0, 10 .0} on NASA C-MAPSS and MetroPT-3. Environments are constructed via K-means with K=3 : on the explicit operating-condition channels for C-MAPSS, and on a PCA (d=5) -reduced feature space for MetroPT-3. For the per-dataset operating point identified by Ideal Region (High Task, Low Domain)              
+
+> 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0
+> Domain Information I(Z;E)(↓)
+> 0.1 0.2 0.3 0.4 0.5 0.6 0.7
+> Task Information  I(Z; Y) ( ↑ )
+> Dataset Method
+> CMAPSS Raw Input Gas Sensor Reweight MetroPT3 Latent Diffusion Scania Ours (IGD)
+
+Fig. 6: Information Plane Analysis. Trade-off between Do-main Information I(Z; E) and Task Information I(Z; Y )
+
+across datasets. “Ours” (marked IGD in the legend) denotes IGDPR, which consistently moves representations toward the ideal region (top-left), achieving lower domain dependence and higher task relevance compared to baselines. TABLE V: λinv sweep on C-MAPSS (RMSE ↓, single seed). The 5-seed validation at the optimum λinv =1 .0 yields 108 .74 ±
+
+0.96 RMSE, indicating that the sweep range ( ∆RMSE =3 .88 ) is approximately 4× the seed-level noise.                     
+
+> λinv 0.0 0.1 0.5 1.0 2.0 10.0 RMSE 111.48 110.27 108.82 107.60 108.99 108.85
+> ∆vs λ=0 —−1.21 −2.66 −3.88 −2.49 −2.63
+
+the sweep, we additionally run a 5-seed validation (seeds 
+
+∈ { 0, 1, 2, 3, 42 }) to quantify the noise envelope. 
+
+U-shape under invariance strength. On C-MAPSS (Ta-ble V), RMSE traces a clean U-shape: λ=0 is worst, per-formance improves monotonically up to λinv =1 .0, and over-regularization beyond that point produces a mild 1.4 RMSE rebound. The sweep range ( 3.88 ) is roughly 4× the 5-seed standard deviation at the optimum ( 0.96 ), confirming that the observed curvature reflects the invariance coefficient rather than seed noise. 
+
+Operational plateau matches the β, γ picture. Across both benchmarks, the lower envelope of RMSE falls within 
+
+λinv ∈ [0 .1, 2.0] . On C-MAPSS the four interior points span 
+
+∆RMSE = 1 .39 (∼ 1.5σ at the optimum), and on MetroPT-3 the same interval contains every sub-0.51 measurement in the sweep. This mirrors the β ≈ 1.0, γ ∈ [0 .5, 1.0] plateau in Figure 4: the framework is robust within a broad central region rather than relying on a knife-edge tuning of any single penalty coefficient. 
+
+Multi-seed noise envelope and practical defaults. The 5-seed standard deviations ( 0.96 RMSE on C-MAPSS, 0.029 
+
+on MetroPT-3) provide a practical noise floor for interpreting sweep curves: single-seed differences below ∼ 2σ should not be over-interpreted. On C-MAPSS the λinv =1 .0 optimum is well-separated from this floor and we recommend it as the default; on MetroPT-3 the optimum is less sharply identified, and any value in [0 .1, 0.5] is a defensible default. IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 13 
+
+TABLE VI: λinv sweep on MetroPT-3 (RMSE ↓, single seed). The 5-seed validation at λinv =0 .1 yields 0.510 ±0.029 RMSE; seed noise is comparable to inter-λ gaps, so single-seed rankings within the [0 .1, 2.0] plateau should be interpreted as a low-error region rather than a strict ordering.                     
+
+> λinv 0.0 0.1 0.5 1.0 2.0 10.0 RMSE 0.583 0.509 0.486 0.578 0.476 0.543
+> ∆vs λ=0 —−0.074 −0.097 −0.005 −0.107 −0.040
+
+TABLE VII: MI probe of per-dataset environment construc-tions. All four clear the I(E; X)max ≥ 0.05 nats identifiability floor by at least an order of magnitude; the non-positive resid-ual I(E; Y )−I(E; ˆY ) is consistent with env–label dependence being mediated by X.                                   
+
+> Dataset Env. construction I(E;X)max I(E;X)ΣI(E;Y)I(E;Y)−I(E; ˆY)
+> Scania residual K-means ( K=3 )0.396 4.757 0.000 −0.002
+> C-MAPSS explicit op. condition 0.501 0.954 0.007 −0.000
+> Gas Sensor explicit batch id 0.591 7.790 0.132 −0.003
+> MetroPT-3 K-means ( K=3 ) on PCA(5) features 0.626 1.146 0.469 −0.161
+
+I. Q7: Are the Constructed Environments Identifiable from Features? 
+
+The cross-environment variance penalty Linv in Eq. (6) only constrains the encoder if the assigned environment label E is non-trivially predictable from x; otherwise the penalty has no surface on which to act and the λinv sweep in §V-H would merely modulate a no-op. This is a falsifiable property of Π
+
+in Eq. (5), which we verify empirically below. 
+
+Probe protocol. For each benchmark we estimate three mutual-information quantities on the training split with histogram-based estimators: (i) I(E; X)max , the per-feature maximum across columns; (ii) I(E; X)Σ, the top-k sum across features; and (iii) I(E; Y ). We also estimate the residual 
+
+I(E; Y ) − I(E; ˆY ) using an ERM probe ˆY trained on X
+
+alone: a residual close to zero indicates env–label association mediated by X, the operating assumption shared by IRM [34] and V-REx. We adopt I(E; X)max ≥ 0.05 nats as the identifiability threshold; constructions below this floor would render Linv inoperative. 
+
+Identifiability margin and residual structure. Every chosen env construction passes the 0.05 nats threshold by at least a factor of seven; the weakest (Scania, 0.396 ) sits an order of magnitude above the cutoff, the strongest (MetroPT-3, 
+
+0.626 ) more than 12 ×. The I(E; X)Σ column exposes how env-signal is distributed: Gas Sensor’s batch-id environments spread information across sensor channels (top-k sum 7.79 ), while MetroPT-3’s PCA partition concentrates it in a smaller subset ( 1.15 ). The residual I(E; Y ) − I(E; ˆY ) is non-positive on all four benchmarks and within ±0.003 of zero on three; MetroPT-3’s larger negative residual ( −0.161 ) reflects that its env partition is itself constructed by clustering X. All residuals are consistent with the factorization p(y | x, E ) ≈ p(y | xinv )
+
+underlying Eq. (5); no benchmark exhibits an env-mediated shortcut to Y .
+
+Together with §V-H this closes a two-step verification. 
+
+The MI probe and the λinv sweep address complementary halves of the invariance pathway. Table VII certifies that Π
+
+produces an identifiable env target, so Linv has something to penalize; Tables V–VI then show that varying λinv produces a 4σ RMSE response on C-MAPSS and a measurable low-error plateau on MetroPT-3, so the penalty actually shapes the representation. Both checks are prerequisites for the §IV-B invariance mechanism. VI. C ONCLUSION 
+
+Generative augmentation and reweighting degrade under covariate shift when validation data poorly reflects the test environment: generative guidance becomes task-irrelevant and point-wise reweighting is structurally unstable. We formal-ize this as the Augmented and Weighted Learning under Covariate Shift (AWL-CS) problem and propose IGDPR, which replaces unstable, distribution-dependent supervision with invariant signals. IGDPR couples an Invariant-Guided Latent Diffusion module, which steers sampling toward task-aligned, on-manifold regions of an invariant latent space, with a Prototype-Based Reweighting module that aggregates reliability at the cluster level to suppress validation noise. Across four industrial benchmarks—explicit operating-condition shift (C-MAPSS), implicit mode change (MetroPT-3), population shift (Scania APS), and temporal drift (Gas Sensor)—IGDPR improves both accuracy and stability over GAN-, diffusion-, and reweighting-based baselines. Ablations attribute the gains to component synergy: invariant-guided generation expands task-relevant support, while prototype weighting filters spurious samples. Information-plane analysis confirms the mechanism—lower domain dependence I(Z; E)
+
+and higher task information I(Z; Y )—with seed-level devia-tions well below the head-to-head gaps. These results suggest invariance is an effective proxy objec-tive when target supervision is unavailable, unifying generation and reweighting under shift. Beyond the tabular, partially-specified-invariant setting studied here, future work may pur-sue invariance discovery without prior structure, streaming environments with drifting domain definitions, and richer modalities where the invariant subspace is learned end-to-end [47]. REFERENCES [1] M. C. Stoian, E. Giunchiglia, and T. Lukasiewicz, “A survey on deep learning approaches for tabular data generation: Utility, alignment, fidelity, privacy, diversity, and beyond,” 2026. [Online]. Available: https://arxiv.org/abs/2503.05954 [2] V. B. Vallevik, A. Babic, S. E. Marshall, S. Elvatun, H. M. Brøgger, S. Alagaratnam, B. Edwin, N. R. Veeraragavan, A. K. Befring, and J. F. Nyg˚ ard, “Can i trust my fake data – acomprehensive quality assessment framework for synthetic tabular data in healthcare,” International Journal of Medical Informatics , vol. 185, p. 105413, 2024. [Online]. Available: https://www.sciencedirect.com/ science/article/pii/S1386505624000765 [3] A. B, A. R. S., S. S. T. N, B. S. S. N. A, K. R, and M. N, “Diffusion-driven synthetic tabular data generation for enhanced dos/ddos attack classification,” 2026. [Online]. Available: https://arxiv.org/abs/2601.13197 [4] M. Golec and M. AlabdulJalil, “Interpretable llms for credit risk: A systematic review and taxonomy,” 2025. [Online]. Available: https://arxiv.org/abs/2506.04290 [5] E. Choi, S. Biswal, B. Malin, J. Duke, W. F. Stewart, and J. Sun, “Generating multi-label discrete patient records using generative adversarial networks,” in Proceedings of the 2nd Machine Learning for Healthcare Conference , ser. Proceedings of Machine Learning Research, vol. 68. Boston, MA, USA: PMLR, 2017, pp. 286–305. [Online]. Available: https://proceedings.mlr.press/v68/choi17a.html IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 14 
+
+[6] R. Liu, R. Xie, Z. Yao, Y. Fu, and D. Wang, “Continuous optimization for feature selection with permutation-invariant embedding and policy-guided search,” 2026. [Online]. Available: https://arxiv.org/abs/2505. 11601 [7] R. Liu, T. Zhe, Y. Fu, F. Xia, T. Senator, and D. Wang, “Permutation-invariant representation learning for robust and privacy-preserving feature selection,” 2026. [Online]. Available: https://arxiv.org/abs/2510. 05535 [8] L. Xu, M. Skoularidou, A. Cuesta-Infante, and K. Veeramachaneni, “Modeling tabular data using conditional GAN,” in Advances in Neural Information Processing Systems , vol. 32. Red Hook, NY, USA: Curran Associates, Inc., 2019, pp. 7335–7345. [Online]. Available: https://arxiv.org/abs/1907.00503 [9] Z. Liu, Z. Li, Z. Yang, T. Wei, J. Kang, Y. Zhu, H. Hamann, J. He, and H. Tong, “Climb: Class-imbalanced learning benchmark on tabular data,” 2025. [Online]. Available: https://arxiv.org/abs/2505.17451 [10] D. Herurkar, J. Hees, V. Tzvetkov, and A. Dengel, “Tabular data adapters: Improving outlier detection for unlabeled private data,” 2025. [Online]. Available: https://arxiv.org/abs/2504.20862 [11] K. Zhang and X. Jiang, “Sensitive data detection with high-throughput machine learning models in electrical health records,” 2023. [Online]. Available: https://arxiv.org/abs/2305.03169 [12] H. Shimodaira, “Improving predictive inference under covariate shift by weighting the log-likelihood function,” Journal of Statistical Planning and Inference , vol. 90, no. 2, pp. 227–244, 2000. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S0378375800001154 [13] J. Qui˜ nonero-Candela, M. Sugiyama, A. Schwaighofer, and N. D. Lawrence, Eds., Dataset Shift in Machine Learning . Cambridge, MA, USA: The MIT Press, 2009. [Online]. Available: https: //mitpress.mit.edu/9780262545877/dataset-shift-in-machine-learning/ [14] L. Xu and K. Veeramachaneni, “Synthesizing tabular data using generative adversarial networks,” arXiv preprint arXiv:1811.11264 ,2018. [Online]. Available: https://arxiv.org/abs/1811.11264 [15] A. Kotelnikov, D. Baranchuk, I. Rubachev, and A. Babenko, “Tabddpm: Modelling tabular data with diffusion models,” in Proceedings of the 40th International Conference on Machine Learning , ser. Proceedings of Machine Learning Research, vol. 202. Honolulu, Hawaii, USA: PMLR, 2023, pp. 7578–7596. [Online]. Available: https://arxiv.org/abs/2209.15421 [16] Y. Song, J. Sohl-Dickstein, D. P. Kingma, A. Kumar, S. Ermon, and B. Poole, “Score-based generative modeling through stochastic differential equations,” in Advances in Neural Information Processing Systems , vol. 34. Red Hook, NY, USA: Curran Associates, Inc., 2021, pp. 1881–1892. [Online]. Available: https://arxiv.org/abs/2011.13456 [17] J. Ho, A. Jain, and P. Abbeel, “Denoising diffusion probabilistic models,” in Advances in Neural Information Processing Systems ,vol. 33. Red Hook, NY, USA: Curran Associates, Inc., 2020, pp. 6840–6851. [Online]. Available: https://arxiv.org/abs/2006.11239 [18] D. P. Kingma and M. Welling, “Auto-encoding variational bayes,” in 
+
+International Conference on Learning Representations . Banff, AB, Canada: ICLR, 2014. [Online]. Available: https://arxiv.org/abs/1312. 6114 [19] Y. Cheng, C.-H. Wang, V. K. Potluru, T. Balch, and G. Cheng, “Downstream task-oriented generative model selections on synthetic data training for fraud detection models,” 2024. [Online]. Available: https://arxiv.org/abs/2401.00974 [20] A. Mumuni and F. Mumuni, “Data augmentation: A comprehensive survey of modern approaches,” Array , vol. 16, p. 100258, 2022. [Online]. Available: https://www.sciencedirect.com/science/article/pii/ S2590005622000911 [21] V. Borisov, T. Leemann, K. Seßler, J. Haug, M. Pawelczyk, and G. Kasneci, “Deep neural networks and tabular data: Asurvey,” IEEE Transactions on Neural Networks and Learning Systems , vol. 35, no. 6, p. 7499–7519, 2024. [Online]. Available: http://dx.doi.org/10.1109/TNNLS.2022.3229161 [22] Q. Hao, R. Liang, Y. Gao, H. Dong, W. Fan, L. Jiang, and P. Wang, “Is precise recovery necessary? a task-oriented imputation approach for time series forecasting on variable subset,” IEEE Transactions on Knowledge and Data Engineering , vol. 37, no. 11, pp. 6464–6477, 2025. [23] H. Xu, Q. Hao, H. Zhang, J. Zhao, Z. Qiao, L. Jiang, P. Wang, Y. Zhou, and P. Wang, “Shift-resilient diffusive imputation for variable subset forecasting,” 04 2026, pp. 7366–7377. [24] M. Sugiyama, M. Krauledat, and K.-R. M¨ uller, “Covariate shift adaptation by importance weighted cross validation,” Journal of Machine Learning Research , vol. 8, no. May, pp. 985–1005, 2007. [Online]. Available: https://jmlr.csail.mit.edu/papers/v8/sugiyama07a.html [25] J. Huang, A. Gretton, K. Borgwardt, B. Sch¨ olkopf, and A. Smola, “Correcting sample selection bias by unlabeled data,” in Advances in Neural Information Processing Systems , B. Sch¨ olkopf, J. Platt, and T. Hoffman, Eds., vol. 19. Cambridge, MA: MIT Press, 2006. [Online]. Available: https://proceedings.neurips.cc/paper files/ paper/2006/file/a2186aa7c086b46ad4e8bf81e2a3a19b-Paper.pdf [26] M. Sugiyama, S. Nakajima, H. Kashima, P. von B¨ unau, and M. Kawanabe, “Direct importance estimation with model selection and its application to covariate shift adaptation,” in 
+
+Advances in Neural Information Processing Systems , vol. 20. Red Hook, NY, USA: Curran Associates, Inc., 2007, pp. 1365– 1372. [Online]. Available: https://proceedings.neurips.cc/paper/2007/ hash/be83ab3ecd0db773eb2dc1b0a17836a1-Abstract.html [27] D. H. Nguyen, S. V. Pereverzyev, and W. Zellinger, “General regularization in covariate shift adaptation,” 2023. [Online]. Available: https://arxiv.org/abs/2307.11503 [28] X. Zhou, Y. Lin, R. Pi, W. Zhang, R. Xu, P. Cui, and T. Zhang, “Model agnostic sample reweighting for out-of-distribution learning,” 2023. [Online]. Available: https://arxiv.org/abs/2301.09819 [29] H. Cao, K. Liu, F. Xie, and S. Ray, “Flat-consensus diffusion for robust data reshaping under noisy evaluator,” 2026. [Online]. Available: https://arxiv.org/abs/2609.32696 [30] L. Jiang, Z. Zhou, T. Leung, L.-J. Li, and L. Fei-Fei, “Mentornet: Learning data-driven curriculum for very deep neural networks on corrupted labels,” in Proceedings of the 35th International Conference on Machine Learning , ser. Proceedings of Machine Learning Research, vol. 80. Stockholm, Sweden: PMLR, 2018, pp. 2304–2313. [Online]. Available: https://arxiv.org/abs/1712.05055 [31] B. Han, Q. Yao, X. Yu, G. Niu, M. Xu, W. Hu, I. W. Tsang, and M. Sugiyama, “Co-teaching: Robust training of deep neural networks with extremely noisy labels,” in Advances in Neural Information Processing Systems . Red Hook, NY, USA: Curran Associates, Inc., 2018. [Online]. Available: https://arxiv.org/abs/1804.06872 [32] H. Cao, J. Zhang, K. Liu, D. Wang, F. Xia, H. Chen, X. Hu, and Y. Fu, “Sim2act: Robust simulation-to-decision learning via adversarial calibration and group-relative perturbation,” 2026. [Online]. Available: https://arxiv.org/abs/2603.09053 [33] S. Sagawa, P. W. Koh, T. B. Hashimoto, and P. Liang, “Distributionally robust neural networks for group shifts: On the importance of regularization for worst-case generalization,” in International Conference on Learning Representations . Addis Ababa, Ethiopia: ICLR, 2020. [Online]. Available: https://arxiv.org/abs/1911.08731 [34] M. Arjovsky, L. Bottou, I. Gulrajani, and D. Lopez-Paz, “Invariant risk minimization,” 2020. [Online]. Available: https://arxiv.org/abs/1907. 02893 [35] H. Cao, K. Liu, D. Wang, and Y. Fu, “Mitigating shortcut reasoning in language models: A gradient-aware training approach,” 2026. [Online]. Available: https://arxiv.org/abs/2603.20899 [36] Y. Ganin, E. Ustinova, H. Ajakan, P. Germain, H. Larochelle, F. Laviolette, M. Marchand, and V. Lempitsky, “Domain-adversarial training of neural networks,” Journal of Machine Learning Research ,vol. 17, no. 59, pp. 1–35, 2016. [Online]. Available: https: //jmlr.org/papers/v17/15-239.html [37] Y. Shi, J. Seely, P. Torr, H. Kuehne, J. Kici´ nski, M. Perrot, T. Arbel, C. Schmid, and H. Bilen, “Gradient matching for domain generalization,” in International Conference on Learning Representations . Virtual Conference: ICLR, 2022. [Online]. Available: https://arxiv.org/abs/2104.09937 [38] J. Snell, K. Swersky, and R. Zemel, “Prototypical networks for few-shot learning,” in Advances in Neural Information Processing Systems , vol. 30. Red Hook, NY, USA: Curran Associates, Inc., 2017, pp. 4077–4087. [Online]. Available: https://arxiv.org/abs/1703.05175 [39] H. Ye, W. Fan, X. Song, S. Zheng, H. Zhao, D. Guo, and Y. Chang, “Ptarl: Prototype-based tabular representation learning via space calibration,” in International Conference on Learning Representations . Vienna, Austria: ICLR, 2024. [Online]. Available: https://arxiv.org/abs/2407.05364 [40] S. Lin, P. Zhou, Z.-Y. Hu, S. Wang, R. Zhao, Y. Zheng, L. Lin, E. Xing, and X. Liang, “Prototypical graph contrastive learning,” 2022. [Online]. Available: https://arxiv.org/abs/2106.09645 [41] R. Liu, T. Zhe, Y. Huang, S. N. Guria, X. Luo, W. Fan, Y. Fu, and D. Wang, “Hierarchical and permutation-invariant feature transformation learning via policy-guided embedding search,” 2026. [Online]. Available: https://arxiv.org/abs/2609.10225 [42] B. Efron, “Tweedie’s formula and selection bias,” Journal of the American Statistical Association , vol. 106, pp. 1602 –IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING 15 
+
+1614, 2011. [Online]. Available: https://efron.ckirby.su.domains/papers/ 2011TweediesFormula.pdf [43] A. Saxena and K. Goebel, “Turbofan engine degradation simulation data set,” NASA Ames Prognostics Data Repository, 2008, nASA Ames Research Center, Moffett Field, CA. [Online]. Available: https://data.nasa.gov/dataset/c-mapss-aircraft-engine-simulator-data [44] “Metropt-3 dataset,” UCI Machine Learning Repository, 2023. [Online]. Available: https://archive.ics.uci.edu/dataset/791/metropt% 2B3%2Bdataset [45] “Aps failure at scania trucks data set,” UCI Machine Learning Repository, scania CV AB & Donors (Tony Lindgren, Jonas Biteus). [Online]. Available: https://archive.ics.uci.edu/ml/datasets/APS+ Failure+at+Scania+Trucks [46] N. Dennler, S. Rastogi, J. Fonollosa, A. van Schaik, and M. Schmuker, “Drift in a popular metal oxide sensor dataset reveals limitations for gas classification benchmarks,” arXiv , vol. 2108.08793, 2021. [Online]. Available: https://arxiv.org/abs/2108.08793 [47] H. Xu, Z. Peng, R. Liang, and P. Wang, “CAST-Norm: Coupled adaptive spatio-temporal normalization for multivariate time series forecasting,” in Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining, Volume 2 . Republic of Korea: Association for Computing Machinery, 2026, pp. 5778–5789. [Online]. Available: https://doi.org/10.1145/3770855.3817667

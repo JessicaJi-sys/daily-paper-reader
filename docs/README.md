@@ -48,17 +48,17 @@
 <section class="dpr-home-dashboard-card dpr-home-report-card">
   <div class="dpr-home-dashboard-header">
     <div>
-      <span class="dpr-home-dashboard-kicker">2026-10-01</span>
+      <span class="dpr-home-dashboard-kicker">2026-10-02</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">共 9 篇</strong>
+    <strong class="dpr-home-dashboard-count">共 11 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
     <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
     <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>0</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>9</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>11</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-10-01 23:34:14 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-10-02 23:08:12 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,9 +69,8 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>9篇速读、0精读：域适应、EEG负载识别与可解释线性模型三线并进。</p>
-<p>最值得看的是7.0分《Domain Adaptation with Target Information via Doubly-Anchored Distributionally Robust Optimization》，其次是6.0分的EEG因果双不变学习和REALM。</p>
-<p>普通读者可先读最高分那篇的摘要，再按兴趣跟进EEG负载识别或可解释模型方向。</p>
+<p>今日0精读、11速读，三篇7.0分速读聚焦协作视觉专家、分子预测器路由与协变量偏移数据增强。</p>
+<p>最值得看：自监督视觉专家无需共享门控或跨智能体梯度也能涌现专业化，以及AssayRouter用历史效用先验</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -93,12 +92,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">速读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">9 篇</strong>
+    <strong class="dpr-home-dashboard-count">11 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Domain Adaptation with Target Information via Doubly-Anchored Distributionally Robust Optimization">Domain Adaptation with Target Information via Doubly-Anchored Distributionally Robust Optimization</span></li><li><span class="dpr-home-dashboard-paper-title" title="CDBG: Causally Motivated Dual-Invariance Learning against Topological and Predictive Shifts in EEG Workload Recognition">CDBG: Causally Motivated Dual-Invariance Learning against Topological and Predictive Shifts in EEG Workload Recognition</span></li><li><span class="dpr-home-dashboard-paper-title" title="REALM: Regime-Switching, Explainable, and Activation-Induced Linear Models">REALM: Regime-Switching, Explainable, and Activation-Induced Linear Models</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Emergent Specialization in Populations of Self-Supervised Collaborative Vision Experts Without a Shared Gate or Cross-Agent Gradients">Emergent Specialization in Populations of Self-Supervised Collaborative Vision Experts Without a Shared Gate or Cross-Agent Gradients</span></li><li><span class="dpr-home-dashboard-paper-title" title="AssayRouter: Historical Utility Priors for Frozen Molecular Predictor Routing">AssayRouter: Historical Utility Priors for Frozen Molecular Predictor Routing</span></li><li><span class="dpr-home-dashboard-paper-title" title="Rethinking Data Augmentation under Covariate Shift: Invariant-Guided Diffusion and Prototype Reweighting">Rethinking Data Augmentation under Covariate Shift: Invariant-Guided Diffusion and Prototype Reweighting</span></li></ul>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>9</strong></span></div>
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>11</strong></span></div>
 </section>
 </div>
 
