@@ -1,0 +1,3339 @@
+Title: Structure-agnostic Causal Representation Learning
+
+URL Source: https://arxiv.org/pdf/2610.00968v1
+
+Published Time: Fri, 02 Oct 2026 00:52:32 GMT
+
+Number of Pages: 46
+
+Markdown Content:
+# Structure-agnostic Causal Representation Learning 
+
+Arman Behnam 
+
+Department of Computer Science Illinois Institute of Technology Chicago, IL, USA 
+
+abehnam@hawk.illinoistech.edu 
+
+Binghui Wang 
+
+Department of Computer Science Illinois Institute of Technology Chicago, IL, USA 
+
+bwang70@illinoistech.edu 
+
+## Abstract 
+
+Causal representation learning aims to discover robust features by exploiting the causal structure underlying data generation. Existing methods require specifying the causal structure a priori, yet different structures demand fundamentally incom-patible invariance constraints, and misspecification leads to representations that discard predictive information. We introduce SaCRL, a framework that jointly identifies the causal structure and learns the corresponding invariant representation without prior structural knowledge. Our approach formulates structure selection as a soft optimization over candidate invariances using HSIC-based violation metrics, with adaptive weights that automatically concentrate on the achievable structure. We provide theoretical guarantees for structure identification, including under random-feature approximation, invariance satisfaction, and out-of-distribution generalization. Empirically, SaCRL recovers the true structure on synthetic and semi-synthetic Bayesian-network benchmarks, outperforms fixed-invariance base-lines on Colored MNIST, achieves state-of-the-art accuracy on three DomainBed benchmarks (PACS, VLCS, OfficeHome), and degrades gracefully under struc-tural misspecification and limited environment diversity. Code is available at: 
+
+https://github.com/ArmanBehnam/sacrl .
+
+## 1 Introduction 
+
+Causal representation learning [55] has emerged as a principled approach to building robust models by uncovering the underlying mechanisms that generate data, enabling generalization beyond training distributions [55, 45]. Current approaches are broadly categorized into two paradigms, each with distinct structural assumptions. Structure-based methods [73, 60, 6] require explicit knowledge of Directed Acyclic Graphs (DAGs) and complete Structural Causal Models (SCMs), imposing significant barriers when causal structures are unknown. Distribution-invariant methods [4, 30] avoid an explicit graph but enforce a fixed invariance across environments, committing to one causal structure. When that commitment is wrong, the enforced invariance discards predictive signal.         
+
+> Multi-Hospital Clinical Data
+> D={Dei}3
+> i=1
+> e1: General
+> e2: ICU
+> e3: Rural Unknown Structure for Each Variable
+> Structure-Agnostic
+> Causal Representation Learning Discovered Structures Symptoms: G1
+> Biomarker: G2
+> Vitals: G3
+> Optimal Representation ϕ∗
+> Prediction on New Hospital etest
+> Low Test Error
+
+Figure 1: Clinical toy example. Consider predicting patient outcomes from clinical data collected at several hospitals (Figure 1). Different vari-ables follow different causal patterns: symptoms arise anti-causally from the disease ( G1); biomarkers are con-founded descendants that share a genetic cause with the diagnosis ( G2); and vital signs are confounded outcomes, responding to the disease and to unobserved severity ( G3). The structure for each variable is unknown to the learner. Existing methods require manually partition variables by (a priori) causal type, a process that is error-prone (mis-specification yields suboptimal representations [78, 32]), computationally prohibitive ( O(mk) evalu-
+
+40th Conference on Neural Information Processing Systems (NeurIPS 2026). arXiv:2610.00968v1 [cs.LG] 1 Oct 2026 Struc.-Specific (Correct)               
+
+> UXY
+> True: Conf-Desc
+> Apply RG2:
+> P(Y|ϕ(X)) invariant
+> Good OOD
+> Test Error: Low
+> Struc.-Specific (Wrong)
+> UXY
+> True: Conf-Desc
+> Apply RG1:
+> ϕ(X)⊥E|Y
+> Poor OOD
+> Test Error: High
+> Struc.-Agnostic (Ours)
+> XY
+> Unknown Structure
+> Learn α:Auto-select RGk
+> Good OOD
+> Robust to Structure
+
+Figure 2: Left : When true structure (confounded-descendant) is known, applying the correct reg-ularizer yields good Out-of-Distribution perfor-mance. Middle : Misspecifying structure leads to wrong invariance constraints and poor general-ization. Right : Our structure-agnostic approach automatically discovers the structure and applies appropriate regularization.          
+
+> XzYZX⊥
+> z
+> UEX
+> (a) G1
+> XzYZX⊥
+> z
+> UE
+> X
+> (c) G2
+> XzYZX⊥
+> z
+> UE
+> X
+> (b) G3
+
+Figure 3: Three canonical causal structures: (a) anti-causal G1, (b) confounded-descendant G2
+
+(c) confounded-outcome G3. Latent variables 
+
+U, Z (shaded dashed nodes) influence the rela-tionship between observed features X (dotted box) and target Y , with environment E captur-ing distributional shifts. Magenta arrows denote causal mechanisms that distinguish each struc-ture: Y → X for anti-causal, X → Y for both confounded types. Dashed arrows represent con-founding paths through U and Z.ations for m structures over k variable subsets [88, 66]), and theoretically unsound (no guarantees exist when structure identification introduces uncertainty [81, 13]). Different causal structures demand incompatible invariance properties [40, 74]. A representation optimized for one structure performs poorly under another, as shown in Figure 2. The central question we address is can we learn optimal invariant representations without knowing the causal structure? This requires a paradigm shift from structure-specific to structure-agnostic 
+
+learning 1: jointly discover causal mechanisms generating the data and learn representations tailored to those mechanisms. The challenge is both computational (avoiding exponential structure search) and theoretical (providing guarantees when structure itself is uncertain). We introduce a kernel-based framework, Structure-agnostic Causal Representation Learning (SaCRL) ,for joint structure discovery and representation learning. SaCRL generalizes Anti-Causal Invariant Abstractions (ACIA) [7], which learns invariant representations for the anti-causal structure G1, to settings where the structure itself is unknown. The key theoretical insight is that under the true causal structure, the corresponding invariance is achievable by predictive representations, whereas wrong invariances incur irreducible violation. This asymmetry enables structure identification via a SoftMin objective that automatically concentrates on the correct structure. We prove: (i) consistent structure identification, which also holds under random-feature approximation of HSIC, (ii) bounds on the remaining invariance violation, (iii) out-of-distribution generalization bounds, and (iv) sample complexity for joint identification and generalization. Empirically, SaCRL also recovers the true structure on semi-synthetic Bayesian-network data with known ground truth, and its adaptive weights provide a calibrated confidence for the selected structure. 
+
+## 2 Background 
+
+Random variables are uppercase ( X, Y, E ), realizations lowercase ( x, y, e ), and spaces calligraphic (X , Y, E). We write |E| for set cardinality, EP [·] for expectation under P , and IA for the indicator of set A. Statistical independence is denoted X ⊥⊥ Y (unconditional) and X ⊥⊥ Y | Z (conditional). Complete notations appear in Appendix B. 
+
+2.1 Measure Theory 
+
+Following ACIA [7], this work uses measure-theoretic probability. See Appendix C.1 for formal definitions of measurable space, probability measure, product space, σ-algebra, and Markov kernel. 
+
+2.2 Canonical Causal Structures 
+
+We formalize causal relationships using DAGs in Appendix C.2, which encode the qualitative structure of causal mechanisms. There exist three canonical causal structures [74], with definitions below: 
+
+> 1It refers to the learner’s prior knowledge, not the space of all possible structures. Prior methods require specifying the true structure that governs the data in advance, whereas we eliminate this requirement by learning the structure directly from data.
+
+2Definition 2.1. Three Canonical Causal Structures. (a) Anti-causal ( G1): DAG contains edges Y → X ← E, capturing settings where labels generate observations (e.g., disease causes symptoms). (b) Confounded-descendant ( G2): Observed features decompose as X = ( Xz , X ⊥ 
+
+> z
+
+) where X⊥ 
+
+> z
+
+→
+
+Y , and a latent confounder U influences both X⊥ 
+
+> z
+
+and other components. DAG includes 
+
+X⊥ 
+
+> z
+
+→ Y with U → X⊥ 
+
+> z
+
+.(c) Confounded-outcome G3: Observed features decompose as X = ( Xz , X ⊥ 
+
+> z
+
+) where X⊥ 
+
+> z
+
+→
+
+Y → Xz , and a latent confounder U influences both Y and the latent variable Z (which in turn affects Xz ). DAG includes X⊥ 
+
+> z
+
+→ Y → Xz with U → Y and U → Z → Xz .Here, X⊥ 
+
+> Z
+
+denotes the component of X that is causally orthogonal to the Z-mediated pathway. Specifically, XZ captures variation in X that flows through the latent Z (e.g., features influenced by 
+
+Y via Z in the anti-causal structure), and X⊥ 
+
+> Z
+
+captures variation from other sources, including direct effects from Y , confounders U , or environment E. Figure 3 illustrates the three canonical structures. The three canonical structures form an exhaustive partition of valid DAGs under two mild conditions: (i) partial observability: the learner observes only (X, Y, E ) with latent confounders U unobserved; (ii) environment mechanism: E influences the system through latent confounders rather than directly rewiring the X–Y relationship. Under (i)–(ii), the causal relationship between X and Y must take one of three forms: (1) the X–Y edge is either Y → X (anti-causal G1) or X → Y (causal). In the causal direction, confounding either operates through features ( G2) or bypasses the label via a latent mediator ( G3). Bidirectional X ↔ Y violates acyclicity; unconfounded X → Y is recovered by G2
+
+with zero confounder influence. These conditions are standard in causal representation learning [74]. Our theoretical analysis relies on the distinction between observational conditioning P (Y | X = x)
+
+and interventional conditioning P (Y | do (X = x)) , where the latter severs incoming edges to 
+
+X in the causal graph. While this distinction motivates why different causal structures require different invariance properties, our method circumvents explicit do-calculus. Formal definitions of interventions and causal independence appear in Appendix C.3. 
+
+Definition 2.2 (Environment Space) . An environment space consists of a finite collection E =
+
+{e1, . . . , e m} of environments, where each environment ei ∈ E has a measurable input space 
+
+(Xei , FXei ), a measurable output space (Yei , FYei ), a probability measure Pei on the product space 
+
+(Xei × Y ei , FXei ⊗ FYei ), and a dataset Dei = {(xei 
+
+> j
+
+, y ei 
+
+> j
+
+)}nei 
+
+> j=1
+
+sampled i.i.d. from Pei .Each environment e induces a joint distribution Pe(X, Y ) that factorizes according to an underlying causal DAG Ge. We formalize this via causal spaces that pair probability measures with their generating mechanisms. The key quantity is the interventional kernel distance dK(e, e ′) measuring how causal mechanisms differ across environments. Full measure-theoretic causality definitions are in Appendix C.4. One should understand the meaning of representation for this purpose. 
+
+Definition 2.3 (Representation) . It is a measurable function ϕ : X → Z mapping input space X to a latent representation space Z, where (Z, FZ ) is a measurable space. 
+
+## 3 Problem Formulation 
+
+3.1 Motivation 
+
+Different causal structures demand fundamentally incompatible invariance properties. An anti-causal setting ( Y → X) requires representations conditionally independent of environments given the target. A confounded-descendant setting ( X → Y with confounding) requires the predictive distribution 
+
+P (Y |ϕ(X)) to be invariant. A confounded-outcome setting requires the marginal P (ϕ(X)) to be invariant. A representation optimized for one structure typically performs poorly under another. Suppose the true structure is confounded-descendant ( G2), but we enforce anti-causal invariance (I1 : ϕ(X) ⊥ E|Y ). This constraint forces the representation to discard information that varies with E conditional on Y , but in G2, this includes precisely the causal signal X → Y . The learned representation becomes predictively useless. We observe that the correct invariance is achievable (the representation can satisfy it while maintaining prediction accuracy), whereas incorrect invariances are unachievable (satisfying them requires discarding predictive information). 
+
+3.2 Problem Setup 
+
+Let E = {e1, . . . , e m} with m ≥ 2 denote the set of environments. For each environment e ∈ E , we observe a dataset De = {(xej , y ej )}ne 
+
+> j=1
+
+drawn i.i.d. from an unknown joint distribution Pe(X, Y ) on 3the product space (X × Y , FX ⊗ FY ). The data-generating process follows one of three canonical causal structures G∗ ∈ {G 1, G2, G3}, but the true structure G∗ is unknown to the learner. 
+
+Definition 3.1 (Structure-Specific Invariance) . For each causal structure Gk, the corresponding invariance condition Ik on representation ϕ : X → Z is: I1(ϕ) : ϕ(X) ⊥⊥ E | Y for anti-causal, 
+
+I2(ϕ) : Y ⊥⊥ E | ϕ(X) for confounded-descendant, and I3(ϕ) : ϕ(X) ⊥⊥ E for confounded-outcome case, where ⊥⊥ denotes statistical independence and E is the environment indicator. We formalize the structure-agnostic setting with the product causal space framework. The learner’s task is to identify which kernel family governs the observed data. Given data D = {Dei }mi=1 
+
+from m environments generated by an unknown causal structure G∗ ∈ {G 1, G2, G3}, we want to identify the true causal structure G∗ (structure discovery), find ϕ∗ : X → Z satisfying the invariance 
+
+Ik∗ corresponding to G∗, and learn predictor w∗ : Z → Y achieving optimal out-of-distribution generalization simultaneously. Formally, we solve the below objective function: 
+
+min 
+
+> ϕ,w,k
+
+
+
+max  
+
+> e∈E
+
+Re(w ◦ ϕ) + λ · I[¬I k(ϕ)] 
+
+
+
+(1) where Re(f ) = E(X,Y )∼Pe [ℓ(f (X), Y )] is the risk in environment e. The objective jointly selects the causal structure Gk, learns a representation ϕ satisfying the invariance Ik, and optimizes worst-case risk across environments. Two challenges arise: (i) the structure k is discrete, requiring search over candidates; (ii) the indicator I[·] is non-differentiable. We address both by observing that each Ik is an independence statement, which can be quantified continuously via kernel independence testing. 
+
+## 4 Kernel Independence Framework 
+
+We develop a kernel-based framework offering rigorous independence characterization and dif-ferentiable optimization. Reproducing kernel Hilbert spaces (RKHS) (See Appendix C.5) embed probability measures as unique elements, enabling independence testing via norm computations. 
+
+Definition 4.1 (Characteristic Kernel) . A kernel k : X × X → R is characteristic if the kernel mean embedding μ : P(X ) → H is injective on the space of probability measures P(X ) defined by 
+
+μP := EX∼P [k(·, X )] = 
+
+Z
+
+> X
+
+k(·, x ) dP (x) (2) Common characteristic kernels include the Gaussian RBF kernel k(x, x ′) = exp( −∥ x − x′∥2/2σ2).For characteristic kernels, μP = μQ if and only if P = Q.We quantify dependence between random variables via the cross-covariance operator CXY , whose Hilbert-Schmidt norm measures dependence strength. 
+
+Definition 4.2 (Hilbert-Schmidt Independence Criterion (HSIC)) . Let ∥ · ∥ HS be the Hilbert-Schmidt norm. The HSIC between random variables X and Y w.r.t. characteristic kernels kX and kY is: 
+
+HSIC( X, Y ) := ∥C XY ∥2HS (3) Key property of HSIC is it completely characterizes statistical independence for characteristic kernels. 
+
+Lemma 1 (HSIC Characterizes Independence) . Let kX ⊗ kY be characteristic (e.g., Gaussian or delta kernels [64]). Then: 
+
+HSIC( X, Y ) = 0 ⇐⇒ X ⊥⊥ Y (4) In practice, we estimate HSIC from finite samples using kernel matrices. 
+
+Definition 4.3 (Empirical HSIC) . Given samples {(xi, y i)}ni=1 , the empirical HSIC estimator is: 
+
+\HSIC( X, Y ) = 1
+
+n2 tr( KX HK Y H) (5) where [KX ]ij = kX (xi, x j ), [KY ]ij = kY (yi, y j ), and H = In − 1 
+
+> n
+
+1n1⊤ 
+
+> n
+
+is the centering matrix. To test conditional independence, we employ a residualization approach based on kernel regression. 
+
+Definition 4.4 (Kernel Ridge Regression) . Let {(xi, z i)}ni=1 be observations. The kernel ridge regression estimate is: 
+
+ˆmX (z) := k⊤ 
+
+> z
+
+(KZ + γI n)−1x (6) where γ > 0 is the regularization parameter, chosen via cross-validation or set to O(n−1/(2+ d)) for 
+
+d-dimensional inputs. The residual at observation i is ˜xi := xi − ˆmX (zi).4These residuals remove the dependence on Z, allowing us to test conditional independence by applying standard HSIC to the residualized variables. 
+
+Definition 4.5 (Conditional HSIC) . The conditional HSIC for testing X ⊥⊥ Y | Z is: 
+
+HSIC( X, Y | Z) := HSIC( ˜X, ˜Y ) (7) where ˜X = X − ˆmX (Z) and ˜Y = Y − ˆmY (Z) are kernel regression residuals. Below lemma states kernel regression residuals yield a consistent test for conditional independence. 
+
+Lemma 2 (Conditional HSIC Consistency) . Assume additive noise, X = mX (Z) + εX and Y =
+
+mY (Z) + εY with (εX , ε Y ) ⊥⊥ Z, bounded Lipschitz kernels with kX ⊗ kY characteristic, and 
+
+L2-consistent regression estimates ˆmX , ˆmY . Then X ⊥⊥ Y | Z ⇔ εX ⊥⊥ εY , and: 1. If X ⊥⊥ Y | Z, then \HSIC( ˜X, ˜Y ) p
+
+−→ 0.2. If X̸ ⊥⊥ Y | Z, then \HSIC( ˜X, ˜Y ) p
+
+−→ HSIC( εX , ε Y ) > 0.
+
+Under this model, the violation metrics V1 and V2, which rely on conditional HSIC, correctly detect whether the corresponding invariances hold. 
+
+## 5 Structure-agnostic Causal Representation Learning (SaCRL) 
+
+Our theoretical findings rely on standard regularity conditions for kernel methods and the representa-tion class (Appendix C.6). The key structural requirement is: 
+
+Assumption 1 (Sufficient Environment Diversity) . The training environments exhibit variation along three axes: marginal distribution P (X), conditional P (X|Y ), and outcome P (Y |X). We assume the three causal structures are distinguishable: testing I1 requires variation in P (X|Y ), testing I2
+
+requires variation in P (Y |X), and testing I3 requires variation in P (X).
+
+5.1 Structure Violation Metrics 
+
+We quantify the degree to which a representation ϕ violates structure-specific invariance using HSIC. 
+
+Definition 5.1 (Population Violation Functions) . Let ϕ : X → Z be a representation. The popu-lation violations are V ∗ 
+
+> 1
+
+(ϕ) := HSIC( ϕ(X), E | Y ) (anti-causal), V ∗ 
+
+> 2
+
+(ϕ) := HSIC( Y, E | ϕ(X)) 
+
+(confounded-descendant), and V ∗ 
+
+> 3
+
+(ϕ) := HSIC( ϕ(X), E ) (confounded-outcome). For empirical violation functions, given pooled observations {(xi, y i, e i)}Ni=1 from all envi-ronments, the empirical violations are V1(ϕ) := \HSIC( ˜ϕ, ˜E), V2(ϕ) := \HSIC( ˜Y , ˜E′), and 
+
+V3(ϕ) := \HSIC( ϕ(X), E ). Here, ˜ϕi := ϕ(xi) − ˆmϕ(yi) are residuals from regressing ϕ(X)
+
+on Y , ˜Ei := ei − ˆmE (yi) are residuals from regressing E on Y , ˜Yi := yi − ˆmY (ϕ(xi)) are residuals from regressing Y on ϕ(X) ˜E′ 
+
+> i
+
+:= ei − ˆmE′ (ϕ(xi)) are residuals from regressing E on ϕ(X), and 
+
+ˆm(·) kernel ridge regression estimates. The distinction between population ( V ∗ 
+
+> k
+
+) and empirical ( Vk) violations is essential. Theoretical results concern V ∗ 
+
+> k
+
+, while the algorithm optimizes Vk. Consistency ensures Vk(ϕ) p
+
+−→ V ∗ 
+
+> k
+
+(ϕ) as n → ∞ .
+
+5.2 Soft Structure Selection 
+
+SoftMin offers a differentiable relaxation for joint structure discovery and representation learning. 
+
+Definition 5.2 (SoftMin Aggregation) . SoftMin operator on violation metrics with temperature β is: 
+
+SoftMin β ({Vk}) := − 1
+
+β log X
+
+> k
+
+exp( −βV k) (8) 
+
+Definition 5.3 (Adaptive Structure Weights) . The adaptive weight for structure k given representation 
+
+ϕ is: 
+
+αk(ϕ) := exp( −βV k(ϕ)) 
+
+P 
+
+> j
+
+exp( −βV j (ϕ)) (9) These weights satisfy αk ≥ 0 and P 
+
+> k
+
+αk = 1 .
+
+Lemma 3 (SoftMin Properties) . SoftMin operator satisfies: 
+
+51. Bounds: min  
+
+> k
+
+Vk − log 3  
+
+> β
+
+≤ SoftMin β ({Vk}) ≤ min  
+
+> k
+
+Vk
+
+2. Limiting behavior: lim  
+
+> β→∞
+
+SoftMin β ({Vk}) = min  
+
+> k
+
+Vk
+
+3. Gradient: ∇ϕSoftMin β = P 
+
+> k
+
+αk(ϕ)∇ϕVk
+
+5.3 Unified Objective Function Definition 5.4 (SaCRL Objective) . The structure-agnostic representation learning objective is: 
+
+L(ϕ, w ) := max 
+
+> e∈E
+
+ˆRe(w ◦ ϕ)
+
+| {z }
+
+> worst-case prediction loss
+
++λ SoftMin β ({Vk(ϕ)})
+
+| {z }
+
+> adaptive invariance penalty
+
+(10) where ˆRe(f ) = 1
+
+> ne
+
+Pne 
+
+> j=1
+
+ℓ(f (xej ), y ej ) is the empirical risk in the environment e.The objective can be written with explicit structure weights: 
+
+L(ϕ, w ) = max 
+
+> e∈E
+
+ˆRe(w ◦ ϕ) + λ X
+
+> k
+
+αk(ϕ)Vk(ϕ) (11) where αk(ϕ) are the adaptive weights (Definition 5.3). 
+
+Definition 5.5 (Distributionally Robust Risk) . For risk level ρ ∈ (0 , 1] , the conditional value-at-risk (CVaR) over environments is defined as:          
+
+> CVaR ρ({ˆRe}) := inf
+> t∈R
+>  t+1
+> ρ|E|
+> X
+> e∈E
+> max( ˆRe(w◦ϕ)−t, 0) (12)
+
+CVaR interpolates between the average risk ( ρ = 1 ) and the worst-case risk max e ˆRe (ρ = 1 /|E| ); 
+
+ρ = 0 .5 (our default) averages the worst half of the environments. 
+
+Definition 5.6 (Distributionally Robust Objective) . The distributionally robust structure-agnostic objective is:          
+
+> Lρ(ϕ, w ) := CVaR ρ
+> 
+> {ˆRe(w◦ϕ)}e∈E
+> 
+> +λSoftMin β({Vk(ϕ)}k)(13)
+
+ρ = 1 /|E| recovers Definition 5.4. We use ρ = 1 /|E| for theoretical analysis and ρ = 0 .5 in practice. 
+
+CVaR ρ is convex with a closed-form subgradient (Proposition 1, Appendix F). 
+
+Optimization: The problem admits a bilevel decomposition, with the structure weights α in the outer problem and (ϕ, w ) in the inner problem (Appendix F.1).The optimization problem is challenging due to (i) the non-convex loss landscape with multiple local minima, and (ii) the difficulty of jointly optimizing all variables. To address these challenges, we adopt the following observations and optimization strategies: 1. Single-loop relaxation: Instead of solving the bilevel optimization problem explicitly, we employ a single-loop algorithm in which α is implicitly determined via a SoftMin operator. 2. Multi-start initialization: We run the optimization from M ≥ 10 random initializations and select the solution with the lowest objective value L.3. Temperature annealing: We initialize the SoftMin temperature β with a small value to allow soft selection, and gradually increase it to βmax to encourage hard selection. 4. Validation-based selection: Among the resulting stationary points, we select the model that achieves the best performance on held-out environments. Because V1 and V2 condition on the current ϕ, the conditioning target moves during training. Our guarantees (Section 6) are stated at the converged representation, where conditioning is on a fixed ϕ.In practice, the ERM warm start, temperature annealing, and cross-fitted residuals (Appendix H.7) stabilize training, and conditioning on an exponential-moving-average (EMA) copy of the encoder gives nearly identical results (Appendix H.8). The soft weights αk only guide optimization: the identified structure is the hard decision ˆk = arg min k Vk(ϕT ) made after training (Algorithm 1). 
+
+Computation Speedup: Computing empirical HSIC (Definition 4.3) requires O(n2) time and storage, which is prohibitive for large-scale datasets. To improve scalability, we employ ef-ficient approximation techniques using the random Fourier features, with Algorithm details in Appendix F. With D random Fourier features ψ [50] (Definition F.1, Appendix F), the approxi-mate HSIC is \HSIC RFF (X, Y ) = ∥ ˆΣψX ψY − ˆμψX ˆμ⊤ 
+
+> ψY
+
+∥2 
+
+> F
+
+, which costs O(nD 2) time and O(nD )
+
+6memory, versus O(n2) for both with exact HSIC; memory saving makes kernel penalties feasible on image data (Appendix H.11). The identification guarantee survives this approximation: with 
+
+D = Ω( κ4η−2d log( n/δ ′)) random features, where η is the faithfulness gap, ˆk = k∗ with probability at least 1 − 6 exp( −nη 2/(8192 κ4)) − δ′ (Corollary 1). Algorithm details are deferred to Appendix F. 
+
+Selection Confidence: SaCRL reports two confidence measures for ˆk: the weight margin α(1) − α(2) 
+
+between the two largest adaptive weights, and the permutation p-value of min k Vk against the null threshold τα (Definition G.2). A large margin means one structure clearly fits best. If min k Vk > τ α,no candidate invariance holds exactly, and ˆk should be read as the closest canonical structure. We calibrate the margin against identification accuracy on data with known structure (Section 7). 
+
+Heterogeneous Structures: When different feature subsets follow different causal patterns, we extend the framework to per-feature structure assignment σ∗ : {1, . . . , d } → { 1, 2, 3, ⊥} via the objective Lhet (ϕ, w ) = max e ˆRe(w ◦ ϕ) + λ Pdj=1 SoftMin β ({V (j) 
+
+> k
+
+(ϕ)}k), applying SoftMin independently per feature. A calibrated permutation threshold τ (j) 
+
+> α
+
+controls the false-positive rate for features with σ∗(j) = ⊥. Per-feature identification guarantees mirror Theorem D.2 with sample cost scaling as O(d). Full treatment is in Appendix G. 
+
+## 6 Theoretical Guarantees 
+
+We establish four theoretical results: (1) violation characterization showing the correct structure is identifiable, (2) finite-sample structure identification holding under random-feature approximation (Corollary 1), (3) representation optimality, and (4) out-of-distribution generalization bounds. The details of the theoretical results and proofs are discussed in Appendix D and Appendix E, respectively. 
+
+## 7 Experiments 
+
+We evaluate SaCRL across synthetic and real-world settings, addressing four questions: Q1: Can the method identify the true causal structure from data? Q2: Does correct structure identification improve OOD generalization? Q3: Does SaCRL outperform fixed-invariance baselines on standard domain generalization benchmarks? Q4: How does it behave under structural misspecification and limited environment diversity? Additional experiments are deferred to Appendix H .
+
+7.1 Experimental Setup Baselines. We compare against: ERM (no invariance), IRM [4] (enforces I2, i.e., assumes G2), 
+
+VREx [30] (variance-based regularization), and CIRCE [47] (enforces I1, i.e., assumes G1). 
+
+Metrics. For synthetic data: we use structure identification accuracy (percentage of runs identifying the correct Gk) and OOD test accuracy on a held-out environment with larger distribution shift. For real-world datasets, we use OOD accuracy on the anti-correlated test environment. Results are means over 5 random seeds, and ± denotes the standard deviation across seeds. 
+
+Implementation Details. For synthetic data, we use 3-layer MLPs with hidden dimensions [256, 128] for both encoder and predictor. For Colored MNIST, we use a 4-layer CNN encoder with base channels 32. For PACS, VLCS, and OfficeHome, we use a frozen ImageNet-pretrained ResNet18 followed by an MLP encoder with hidden dimensions [256, 128] and a linear predictor; the same model produces both the identified structures (Table 4) and the accuracies (Table 5). We select the invariance penalty weight λ ∈ { 0.5, 1.0, 2.0, 5.0} per experiment by OOD accuracy, i.e., test-domain (oracle) selection in the terminology of Gulrajani and Lopez-Paz [20] ( λ=5 .0 for Section 7.6; sensitivity in Appendix H.3), and use CVaR with ρ = 0 .5. We train with Adam optimizer (learning rate 10 −4 for synthetic, 5 × 10 −5 for images) using balanced environment sampling. Random Fourier Features (RFF) with D = 1000 dimensions are used to approximate HSIC, reducing memory from 
+
+O(n2) to O(nD ) with time linear in n. Full hyperparameters are provided in Appendix H.1. 
+
+7.2 Experiment 1: Structure Identification Setup. We generate synthetic data from each of the three canonical causal structures G1, G2, G3 (Defi-nition 3.1). For each structure, we create m = 3 environments with n total samples (divided equally across environments) and d = 10 features. We vary the sample size n ∈ { 500 , 1000 , 2000 , 5000 } to study the effect of data availability on structure identification accuracy. For each Gk, environments differ in noise scale ( G1, G3) or confounder mean ( G2); weight matrices are sampled from N (0 , 0.52)
+
+and fixed across runs. Full generative equations are in Appendix H.2. 7Table 2: Semi-synthetic Bayesian-network benchmarks. Violation: the competing invariance’s violation before training, measured in standard deviations of the permutation null. Margin: α(1) −α(2) .                                    
+
+> Benchmark Network (nodes) YTrue Violation ID acc. (%) Margin asia_g3 ASIA (8) either G356.3 95.0 (19/20) 0.45 asia_g2 ASIA (8) either G224.6 90.0 (18/20) 0.42 alarm_co ALARM (37) CO G328.3 85.0 (17/20) 0.35 sachs_g2 SACHS (11) Akt G26.4 85.0 (17/20) 0.25 alarm_g2 ALARM (37) EXPCO2 G24.2 75.0 (15/20) 0.18
+
+Results. Table 1 reports structure identification accuracy. Identification accuracy reaches at least 95% at n=5000 and at least 89% at n=2000 , demonstrating that the violation-based approach successfully distinguishes the three canonical structures. Table 1: Structure identification accuracy (%) across sample sizes and true structures. Results averaged over 20 random seeds. Standard deviations in parentheses.                                   
+
+> True Structure n= 500 n= 1000 n= 2000 n= 5000
+> G1(anti-causal) 73.5 (2.8) 85.0 (2.1) 92.5 (1.4) 96.5 (0.9)
+> G2(conf-desc) 68.0 (3.2) 81.5 (2.5) 89.0 (1.8) 95.0 (1.1)
+> G3(conf-out) 78.5 (2.4) 88.5 (1.9) 94.0 (1.2) 97.5 (0.7)
+
+Performance improves monotonically with sample size, consistent with the consis-tency result in Theorem D.2. Structure G3
+
+is identified most reliably because its invari-ance ϕ(X) ⊥ E is unconditional and thus has higher statistical power. Structure G2 is most challenging in small-sample regimes due to the need to estimate conditional in-dependence Y ⊥ E | ϕ(X).
+
+Semi-synthetic Bayesian networks. To test identification where the ground truth is fixed indepen-dently of our method, we build five benchmarks from three published Bayesian networks (ASIA, SACHS, ALARM). For each, we choose a target Y , take X as its Markov blanket, induce environ-ments by soft interventions on a latent parent outside the blanket, and read the canonical structure off the published DAG by the rules of Section 2; each structure is verified in simulation before training (Appendix H.6). These topologies admit G2 and G3 but not G1, which would require the Markov blanket of Y to consist only of its descendants. SaCRL selects the correct structure in the majority of runs (75–95%, Table 2), whereas returning any single structure by default is correct on at most 3/5. Accuracy and margin are highest on the most separated benchmark (asia_g3) and lowest on the least separated one (alarm_g2), as predicted by the dependence of Theorem D.2 on the faithfulness gap η.
+
+7.3 Experiment 2: OOD Generalization Setup. Following [4], we construct a binary classification task on MNIST digits (0–4 vs. 5–9) where color is spuriously correlated with the label. Specifically, for each digit, we assign color (red or green) based on its label with probability ρe in environment e. Training uses two environments with 
+
+ρ1 = 0 .9 and ρ2 = 0 .8, while the test environment has ρtest = 0 .1 (anti-correlation). The true causal structure is anti-causal ( G1): the digit label causes the color assignment, not vice versa. 
+
+Results. We subsample 5000 examples per training environment and 5000 test examples to ensure balanced evaluation. Table 3 reports the results. Table 3: Colored MNIST OOD Acc. on anti-correlated test environment.                   
+
+> Method OOD Acc (%) ID. Stru. ERM 27.2 ±11.3 —IRM 21.3 ±13.2 G2(fixed) VREx 24.3 ±12.8 —CIRCE 10.3 ±0.5 G1(fixed)
+> SaCRL 45.2 ±10.0 G1(92%)
+
+SaCRL identifies G1 in 92% of runs and attains the highest OOD accuracy (45.2%, +18pp over ERM). ERM relies on the spurious color. IRM enforces I2, the invariance of the wrong structure, and falls below ERM, which is the misspecification cost illustrated in Figure 2. CIRCE targets the correct invari-ance I1, yet its fixed penalty does not overcome the color shortcut under our shared training budget. SaCRL selects the invariance from data, without prior knowledge of the structure. 
+
+7.4 Experiment 3: Structure Analysis on PACS 
+
+The PACS dataset [31] is an important benchmark for image classification under domain shift. It contains images from four distinct visual domains (Photo, Art Painting, Cartoon, and Sketch), each depicting the seven object categories (dog, elephant, giraffe, guitar, horse, house, and person) under different styles and appearances. Overall, the dataset includes 9,991 images, with domain-specific subsets ranging from natural photographs to artistic and hand-drawn sketches, making it a challenging testbed for methods to generalize across unseen domains. 8Table 4: Structure selected on PACS; each row trains on the other three domains (5 seeds). Margin: 
+
+α(1) − α(2) ; p: permutation p-value of min k Vk; Seeds: agreement of ˆk across seeds; Cal. acc.: identification accuracy of synthetic runs in the same margin bin (Appendix H.5).                                         
+
+> Held-out α1α2α3ˆkMargin pSeeds Cal. acc. (%) Photo 0.21 0.68 0.11 G20.47 0.008 5/5 86.1 Art Painting 0.59 0.31 0.10 G10.28 0.021 5/5 65.0 Cartoon 0.35 0.52 0.13 G20.17 0.037 4/5 65.0 Sketch 0.63 0.25 0.12 G10.38 0.014 5/5 86.1
+
+Table 4 reports the adaptive weights and the confidence measures of Section 5 for each leave-one-domain-out split. Since PACS has no ground-truth DAG, we make three verifiable claims. (i) The selection responds to the data : two different structures are selected across splits, so SaCRL does not return a default. (ii) Confidence tracks the margin : seeds agree 5/5 on the three splits with margin at least 0.28 and 4/5 on Cartoon, the split with the smallest margin; on synthetic data with known structure, the margins of Photo and Sketch fall in a bin with 86.1% identification accuracy, and those of Art and Cartoon in a bin with 65.0%. (iii) No canonical invariance holds exactly : p < 0.05 on every split, so ˆk is the closest canonical structure for each training set rather than an identified one. 
+
+7.5 Experiment 4: Domain Generalization on DomainBed Setup. We further evaluate SaCRL on DomainBed [20], a benchmark suite to test how well models generalize to unseen domains. Besides PACS [31] (4 domains, 7 classes), we choose two additional benchmarks: VLCS [67] (4 domains: Caltech101, LabelMe, SUN09, VOC2007; 5 classes), and OfficeHome [70] (4 domains: Art, Clipart, Product, Real-World; 65 classes). Each spans diverse domain shifts in style, viewpoint, and resolution. We follow the leave-one-domain-out protocol with the model of Section 7.1. Freezing the backbone holds representation capacity fixed, so differences across methods trace to the objective rather than to encoder optimization. Table 5: Results on DomainBed benchmarks: average leave-one-domain-out OOD accuracy (%).                                                                
+
+> PACS VLCS OfficeHome Method Photo Art Cartoon Sketch Avg Caltech LabelMe SUN09 VOC Avg Art Clipart Product Real Avg ERM 93.2 66.0 51.8 37.6 62.2 94.0 60.2 69.9 73.0 74.3 49.9 41.7 66.7 67.7 56.5 IRM 93.2 66.2 51.7 37.6 62.2 95.0 60.1 70.1 72.6 74.5 49.0 41.2 66.5 67.7 56.1 VREx 93.0 65.5 51.6 37.9 62.0 93.3 60.2 69.8 71.0 73.6 48.6 41.2 66.2 67.6 55.9 CIRCE 92.5 64.5 51.4 37.3 61.4 93.8 60.0 67.7 69.7 72.8 49.0 41.9 66.0 67.4 56.1
+> SaCRL 94.0 68.5 54.0 40.5 64.3 97.7 64.4 75.7 77.1 78.7 52.9 46.5 69.1 69.8 59.6
+
+Table 5 shows the comparison results with recent baselines. SaCRL achieves the best per-domain and average accuracy on all benchmarks, with average improvements over +2.1pp (PACS), +4.2pp (VLCS), and +3.1pp (OfficeHome). Fixed-invariance baselines (IRM, VREx, CIRCE) show no consistent improvement, confirming that adaptive structure is essential when the governing causal structure varies across domains. 
+
+Fine-tuned backbone. Fine-tuning ResNet18 end-to-end (PACS, Photo held out, 3 seeds) raises all methods by 1.0–2.0pp; SaCRL (95.0) is on par with ERM (95.1) and IRM (95.2) (Appendix H.12). Photo is ImageNet-like, so the pretrained backbone is near saturation and the choice of objective matters little; SaCRL’s gains concentrate on the stylized domains and on VLCS (Table 5). 
+
+7.6 Experiment 5: Robustness to Misspecification and Limited Diversity 
+
+We stress-test SaCRL when (a) the true DGP falls outside the three canonical structures and (b) environment diversity is reduced. We use a bidirectional feedback DGP X ↔ Y with mixing coefficient ν ∈ [0 , 1] : ν=0 is causal X→Y (G2), ν=1 is anti-causal Y →X (G1), and intermediate values fit none of G1–G3. Diversity is controlled by δmin (Definition C.19). SaCRL outperforms every evaluated baseline in each setting (Table 6). Near the endpoints it selects the nearer structure ( G2 at ν=0 .25 , G1 at ν=0 .75 ). At ν=0 .50 , where no candidate holds, the weights stay spread ( α1 ≈ α2 ≈ 0.42 , α3 ≈ 0.16 ): SaCRL acts as a soft model average instead of committing to a wrong structure, and still exceeds ERM by 12.7pp. A finer sweep (Appendix H.4) shows α1
+
+9Table 6: Robustness under misspecification ( ν) and limited diversity ( δmin ). OOD accuracy (%) over 5 seeds. ID. Stru.: majority structure (seeds agreeing).                                                                                 
+
+> Setting ERM IRM VREx CIRCE SaCRL ID. Stru.
+> Misspecification ( δmin =1 .0):
+> ν=0 .25 (near-causal) 34.4 ±2.7 ———50.2 ±3.7 G2(4/5)
+> ν=0 .50 (bidirectional) 61.2 ±3.8 61.3 ±4.2 61.4 ±4.4 66.5 ±2.6 73.9 ±4.1 G2(5/5)
+> ν=0 .75 (near-anticausal) 98.5 ±0.6 ———99.6 ±0.3 G1(4/5)
+> Limited diversity ( ν=0 .50 ):
+> δmin =1 .0(full) 61.2 ±3.8 61.3 ±4.2 61.4 ±4.4 66.5 ±2.6 73.9 ±4.1 G2(5/5)
+> δmin =0 .5(moderate) 56.9 ±2.5 ———67.2 ±1.8 G2(5/5)
+> δmin =0 .2(low) 53.1 ±1.7 ———59.7 ±3.7 G2(4/5)
+> δmin =0 .05 (minimal) 50.2 ±2.0 ———57.2 ±3.7 G2(5/5)
+
+increasing and α2 decreasing monotonically in ν, crossing at ν=0 .50 , with SoftMin outperforming hard arg min selection throughout and by the widest margin at the crossover. Under reduced diversity, identification remains stable and the gain over ERM persists at δmin =0 .05 , consistent with Assumption 1 governing the informativeness of the penalty rather than its feasibility. 
+
+7.7 Ablation Studies 
+
+Table 7: Ablation on G2 (n=2000 ). Default: SoftMin, β annealing 1→50 , λ=1 .0, ρ=0 .5.                      
+
+> Variant Stru. ID (%) OOD Acc (%) Full method 89.0 84.2 Hard arg min k79.5 79.8 Fixed β= 10 83.0 81.5 Fixed λ= 0 .172.5 78.3 Fixed λ= 5 .088.5 81.0 Uniform ( ρ=1 )88.0 82.1 Worst-case ( ρ=1 /|E| )87.5 81.4
+
+We conduct ablations on synthetic G2 data with 
+
+n = 2000 samples to isolate the contribution of each component. Results are shown in Table 7. Replacing SoftMin with hard arg min k selection during training lowers identification accuracy from 89.0% to 79.5%: early in training, violation esti-mates are noisy, and hard selection commits pre-maturely to whichever structure has the smallest estimate. SoftMin delays commitment until the rep-resentation is informative; the reported structure is still the hard decision ˆk made after training. The effect of varying the number of training envi-ronments m is reported in Appendix H.10, where we observe that m ≥ 3 yields reliable structure identification while m = 2 is unstable. Hyperparameter sensitivity sweeps and a cross-fitting variant of conditional HSIC are reported in Appendix H.3 and Appendix H.7, respectively. Computational efficiency analysis (training time, memory, runtime breakdown) is in Appendix H.11. 
+
+## 8 Conclusion 
+
+We proposed a structure-agnostic approach to causal representation learning that formulates causal structure selection as a soft optimization problem over HSIC-based invariance violation metrics. The key insight is that correct invariances can be achieved with zero violation while preserving predictive accuracy, whereas incorrect invariances cannot, enabling automatic structure identification through optimization. We developed (i) a unified measure-theoretic framework that extends prior work on anti-causal learning to confounded-descendant and confounded-outcome settings; (ii) an efficient learning algorithm whose complexity scales linearly with the number of candidate structures, leveraging SoftMin aggregation and RFF-based HSIC approximations; and (iii) theoretical guarantees for structure identification, under random-feature approximation, invariance satisfaction, and OOD generalization. Empirically, SaCRL recovers the true structure on synthetic and semi-synthetic Bayesian-network benchmarks with a calibrated confidence, surpasses fixed-invariance baselines on Colored MNIST and three DomainBed benchmarks, and remains robust under bidirectional dynamics and limited environment diversity. 
+
+## Acknowledgments and Disclosure of Funding 
+
+We thank the anonymous reviewers for their constructive comments. This work was supported in part by the National Science Foundation under Grant Nos. ECCS-2216926, CCF-2331302, CNS-2241713, and CNS-2339686. 10 References 
+
+[1] Kartik Ahuja, Ethan Caballero, Dinghuai Zhang, Jean-Christophe Gagnon-Audet, Yoshua Bengio, Ioannis Mitliagkas, and Irina Rish. Invariance principle meets information bottleneck for out-of-distribution generalization. Advances in Neural Information Processing Systems ,2021. [2] Kartik Ahuja, Divyat Mahajan, Yixin Wang, and Yoshua Bengio. Interventional causal repre-sentation learning. In International conference on machine learning , 2023. [3] Kartik Ahuja, Amin Mansouri, and Yixin Wang. Multi-domain causal representation learning via weak distributional invariances. In Artificial Intelligence and Statistics , 2024. [4] Martin Arjovsky, Léon Bottou, Ishaan Gulrajani, and David Lopez-Paz. Invariant risk mini-mization. arXiv preprint arXiv:1907.02893 , 2019. [5] Solon Barocas, Moritz Hardt, and Arvind Narayanan. Fairness and machine learning: Limita-tions and opportunities . MIT press, 2023. [6] Arman Behnam and Binghui Wang. Graph neural network causal explanation via neural causal models. In European conference on computer vision , pages 410–427. Springer, 2024. [7] Arman Behnam and Binghui Wang. Measure-theoretic anti-causal representation learning. 
+
+Advances in Neural Information Processing Systems , 38:61375–61431, 2025. [8] Johann Brehmer, Pim De Haan, Phillip Lippe, and Taco S Cohen. Weakly supervised causal representation learning. Advances in Neural Information Processing Systems , 2022. [9] Simon Buchholz, Goutham Rajendran, Elan Rosenfeld, Bryon Aragam, Bernhard Schölkopf, and Pradeep Ravikumar. Learning linear causal representations from interventions under general nonlinear mixing. Advances in Neural Information Processing Systems , 36, 2024. [10] Tiffany Cai, Hongseok Namkoong, and Steve Yadlowsky. Diagnosing model performance under distribution shift. Operations Research , 74(2):898–916, 2026. [11] Daniel C Castro, Ian Walker, and Ben Glocker. Causality matters in medical imaging. Nature Communications , 11(1):3673, 2020. [12] Junbum Cha, Sanghyuk Chun, Kyungjae Lee, Han-Cheol Cho, Seunghyun Park, Yunsung Lee, and Sungrae Park. Swad: Domain generalization by seeking flat minima. Advances in Neural Information Processing Systems , 34:22405–22418, 2021. [13] Yongqiang Chen, Yonggang Zhang, Yatao Bian, Han Yang, MA Kaili, Binghui Xie, Tongliang Liu, Bo Han, and James Cheng. Learning causally invariant representations for out-of-distribution generalization on graphs. In Advances in Neural Information Processing Systems ,2022. [14] Yongqiang Chen, Wei Huang, Kaiwen Zhou, Yatao Bian, Bo Han, and James Cheng. Under-standing and improving feature learning for out-of-distribution generalization. Advances in Neural Information Processing Systems , 36, 2024. [15] Alexandra Chouldechova. Fair prediction with disparate impact: A study of bias in recidivism prediction instruments. Big data , 5(2):153–163, 2017. [16] Cathy Mengying Fang, Auren R Liu, Valdemar Danry, Eunhae Lee, Samantha WT Chan, Pat Pataranutaporn, Pattie Maes, Jason Phang, Michael Lampe, Lama Ahmad, et al. How ai and human behaviors shape psychosocial effects of extended chatbot use: A longitudinal randomized controlled study. arXiv preprint arXiv:2503.17473 , 2025. [17] Samuel G Finlayson, Adarsh Subbaswamy, Karandeep Singh, John Bowers, Annabel Kupke, Jonathan Zittrain, Isaac S Kohane, and Suchi Saria. The clinician and dataset shift in artificial intelligence. New England Journal of Medicine , 385(3):283–286, 2021. 11 [18] Yaroslav Ganin, Evgeniya Ustinova, Hana Ajakan, Pascal Germain, Hugo Larochelle, François Laviolette, Mario March, and Victor Lempitsky. Domain-adversarial training of neural networks. 
+
+Journal of machine learning research , 17(59):1–35, 2016. [19] Shurui Gui, Meng Liu, Xiner Li, Youzhi Luo, and Shuiwang Ji. Joint learning of label and environment causal independence for graph out-of-distribution generalization. Advances in Neural Information Processing Systems , 36, 2024. [20] Ishaan Gulrajani and David Lopez-Paz. In search of lost domain generalization. In International Conference on Learning Representations , 2021. [21] Christina Heinze-Deml, Jonas Peters, and Nicolai Meinshausen. Invariant causal prediction for nonlinear models. Journal of Causal Inference , 6(2):20170016, 2018. [22] Aapo Hyvärinen and Petteri Pajunen. Nonlinear independent component analysis: Existence and uniqueness results. Neural networks , 12(3):429–439, 1999. [23] Ray Jiang, Silvia Chiappa, Tor Lattimore, András György, and Pushmeet Kohli. Degenerate feedback loops in recommender systems. In Proceedings of the 2019 AAAI/ACM Conference on AI, Ethics, and Society , pages 383–390, 2019. [24] Yibo Jiang and Victor Veitch. Invariant and transportable representations for anti-causal domain shifts. Advances in Neural Information Processing Systems , 35:20782–20794, 2022. [25] Charles Jones, Daniel C Castro, Fabio De Sousa Ribeiro, Ozan Oktay, Melissa McCradden, and Ben Glocker. A causal perspective on dataset bias in machine learning for medical imaging. 
+
+Nature Machine Intelligence , 6(2):138–146, 2024. [26] Jivat Neet Kaur, Emre Kiciman, and Amit Sharma. Modeling the data-generating process is necessary for out-of-distribution generalization. arXiv preprint arXiv:2206.07837 , 2022. [27] Ilyes Khemakhem, Diederik Kingma, Ricardo Monti, and Aapo Hyvarinen. Variational au-toencoders and nonlinear ica: A unifying framework. In International conference on artificial intelligence and statistics , pages 2207–2217. PMLR, 2020. [28] Hannah R Kirk, Alexander Whitefield, Paul Röttger, Andrew Bean, Katerina Margatina, Juan Ciro, Rafael Mosquera, Max Bartolo, Adina Williams, He He, et al. The prism alignment dataset: What participatory, representative and individualised human feedback reveals about the subjective and multicultural alignment of large language models. Advances in Neural Information Processing Systems , 37:105236–105344, 2024. [29] Jon Kleinberg, Sendhil Mullainathan, and Manish Raghavan. Inherent trade-offs in the fair determination of risk scores. arXiv preprint arXiv:1609.05807 , 2016. [30] David Krueger, Ethan Caballero, Joern-Henrik Jacobsen, Amy Zhang, Jonathan Binas, Dinghuai Zhang, Remi Le Priol, and Aaron Courville. Out-of-distribution generalization via risk extrapo-lation (rex). In International Conference on Machine Learning , 2021. [31] Da Li, Yongxin Yang, Yi-Zhe Song, and Timothy M Hospedales. Deeper, broader and artier domain generalization. In IEEE international conference on computer vision , 2017. [32] Haoyang Li, Ziwei Zhang, Xin Wang, and Wenwu Zhu. Learning invariant graph representations for out-of-distribution generalization. Advances in Neural Information Processing Systems ,2022. [33] Zachary Lipton, Yu-Xiang Wang, and Alexander Smola. Detecting and correcting for label shift with black box predictors. In International conference on machine learning , pages 3122–3130. PMLR, 2018. [34] Chang Liu, Xinwei Sun, Jindong Wang, Haoyue Tang, Tao Li, Tao Qin, Wei Chen, and Tie-Yan Liu. Learning causal semantic representation for out-of-distribution prediction. Advances in Neural Information Processing Systems , 34:6155–6170, 2021. 12 [35] Jiashuo Liu, Tianyu Wang, Peng Cui, and Hongseok Namkoong. On the need for a language describing distribution shifts: Illustrations on tabular datasets. Advances in Neural Information Processing Systems , 36:51371–51408, 2023. [36] Francesco Locatello, Stefan Bauer, Mario Lucic, Gunnar Raetsch, Sylvain Gelly, Bernhard Schölkopf, and Olivier Bachem. Challenging common assumptions in the unsupervised learning of disentangled representations. In international conference on machine learning , pages 4114– 4124. PMLR, 2019. [37] Mingsheng Long, Zhangjie Cao, Jianmin Wang, and Michael I Jordan. Conditional adversarial domain adaptation. Advances in neural information processing systems , 31, 2018. [38] Chaochao Lu, Yuhuai Wu, José Miguel Hernández-Lobato, and Bernhard Schölkopf. Invariant causal representation learning for out-of-distribution generalization. In International Conference on Learning Representations , 2021. [39] Fangrui Lv, Jian Liang, Shuang Li, Bin Zang, Chi Harold Liu, Ziteng Wang, and Di Liu. Causality inspired representation learning for domain generalization. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , 2022. [40] Maggie Makar and Alexander D’Amour. Fairness and robustness in anti-causal prediction. 
+
+arXiv preprint arXiv:2209.09423 , 2022. [41] Jovana Mitrovic, Dino Sejdinovic, and Yee Whye Teh. Causal inference via kernel deviance measures. Advances in neural information processing systems , 31, 2018. [42] Hyeonseob Nam, HyunJae Lee, Jongchan Park, Wonjun Yoon, and Donggeun Yoo. Reducing domain gap by reducing style bias. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 8690–8699, 2021. [43] Juan Perdomo, Tijana Zrnic, Celestine Mendler-Dünner, and Moritz Hardt. Performative prediction. In International conference on machine learning , pages 7599–7609. PMLR, 2020. [44] Jonas Peters, Peter Bühlmann, and Nicolai Meinshausen. Causal inference by using invariant prediction: identification and confidence intervals. Journal of the Royal Statistical Society Series B: Statistical Methodology , 78(5):947–1012, 2016. [45] Jonas Peters, Dominik Janzing, and Bernhard Schölkopf. Elements of Causal Inference: Foundations and Learning Algorithms . MIT Press, 2017. [46] Mohammad Pezeshki, Diane Bouchacourt, Mark Ibrahim, Nicolas Ballas, Pascal Vincent, and David Lopez-Paz. Discovering environments with xrm. arXiv preprint arXiv:2309.16748 , 2023. [47] Roman Pogodin, Namrata Deka, Yazhe Li, Danica J Sutherland, Victor Veitch, and Arthur Gretton. Efficient conditionally invariant representation learning. arXiv , 2022. [48] Roman Pogodin, Antonin Schrab, Yazhe Li, Danica J Sutherland, and Arthur Gretton. Practical kernel tests of conditional independence. arXiv preprint arXiv:2402.13196 , 2024. [49] Stephan Rabanser, Stephan Günnemann, and Zachary Lipton. Failing loudly: An empirical study of methods for detecting dataset shift. Advances in Neural Information Processing Systems , 32, 2019. [50] Ali Rahimi and Benjamin Recht. Random features for large-scale kernel machines. Advances in neural information processing systems , 20, 2007. [51] Alexandre Ramé, Kartik Ahuja, Jianyu Zhang, Matthieu Cord, Léon Bottou, and David Lopez-Paz. Model ratatouille: Recycling diverse models for out-of-distribution generalization. In 
+
+International Conference on Machine Learning , pages 28656–28679. PMLR, 2023. [52] Karen Sachs, Omar Perez, Dana Pe’er, Douglas A Lauffenburger, and Garry P Nolan. Causal protein-signaling networks derived from multiparameter single-cell data. Science , 308(5721): 523–529, 2005. 13 [53] Nino Scherrer, Olexa Bilaniuk, Yashas Annadani, Anirudh Goyal, Patrick Schwab, Bernhard Schölkopf, Michael C Mozer, Yoshua Bengio, Stefan Bauer, and Nan Rosemary Ke. Learning neural causal models with active interventions. arXiv preprint arXiv:2109.02429 , 2021. [54] Bernhard Schölkopf, Dominik Janzing, Jonas Peters, Eleni Sgouritsa, Kun Zhang, and Joris Mooij. On causal and anticausal learning. arXiv preprint arXiv:1206.6471 , 2012. [55] Bernhard Schölkopf, Francesco Locatello, Stefan Bauer, Nan Rosemary Ke, Nal Kalchbrenner, Anirudh Goyal, and Yoshua Bengio. Toward causal representation learning. Proceedings of the IEEE , 109(5):612–634, 2021. [56] Jessica Schrouff, Alexis Bellot, Amal Rannen-Triki, Alan Malek, Isabela Albuquerque, Arthur Gretton, Alexander D’Amour, and Silvia Chiappa. Mind the graph when balancing data for fairness or robustness. Advances in Neural Information Processing Systems , 37:29913–29947, 2024. [57] Rajen D Shah and Jonas Peters. The hardness of conditional independence testing and the generalised covariance measure. 2020. [58] Mrinank Sharma, Meg Tong, Tomek Korbak, David Duvenaud, Amanda Askell, Sam Bowman, Esin Durmus, Zac Hatfield-Dodds, Scott Johnston, Shauna Kravec, et al. Towards understanding sycophancy in language models. In International Conference on Learning Representations ,volume 2024, pages 110–144, 2024. [59] Jia Shi, Gautam Gare, Jinjin Tian, Siqi Chai, Zhiqiu Lin, Arun Vasudevan, Di Feng, Francesco Ferroni, and Shu Kong. Lca-on-the-line: Benchmarking out-of-distribution generalization with class taxonomies. arXiv preprint arXiv:2407.16067 , 2024. [60] Chandler Squires and Caroline Uhler. Causal structure learning: A combinatorial perspective. 
+
+Foundations of Computational Mathematics , 23(5):1781–1815, 2023. [61] Chandler Squires, Anna Seigal, Salil S Bhate, and Caroline Uhler. Linear causal disentanglement via interventions. In International Conference on Machine Learning , 2023. [62] Adarsh Subbaswamy and Suchi Saria. From development to deployment: dataset shift, causality, and shift-stable models in health ai. Biostatistics , 21(2):345–352, 2020. [63] Yongduo Sui, Qitian Wu, Jiancan Wu, Qing Cui, Longfei Li, Jun Zhou, Xiang Wang, and Xiangnan He. Unleashing the power of graph data augmentation on covariate distribution shift. 
+
+Advances in Neural Information Processing Systems , 36, 2024. [64] Zoltán Szabó and Bharath K Sriperumbudur. Characteristic and universal tensor product kernels. 
+
+Journal of Machine Learning Research , 18(233):1–29, 2018. [65] Remi Tachet des Combes, Han Zhao, Yu-Xiang Wang, and Geoffrey J Gordon. Domain adaptation with conditional distribution matching and generalized label shift. Advances in Neural Information Processing Systems , 33:19276–19289, 2020. [66] Eric J Tchetgen Tchetgen, Andrew Ying, Yifan Cui, Xu Shi, and Wang Miao. An introduction to proximal causal learning. arXiv preprint arXiv:2009.10982 , 2020. [67] Antonio Torralba and Alexei A Efros. Unbiased look at dataset bias. In CVPR , 2011. [68] Ramakrishna Vedantam, David Lopez-Paz, and David J Schwab. An empirical investigation of domain generalization with empirical risk minimizers. In Advances in Neural Information Processing Systems , 2021. [69] Victor Veitch, Alexander D’Amour, Steve Yadlowsky, and Jacob Eisenstein. Counterfac-tual invariance to spurious correlations: Why and how to pass stress tests. arXiv preprint arXiv:2106.00545 , 2021. [70] Hemanth Venkateswara, Jose Eusebio, Shayok Chakraborty, and Sethuraman Panchanathan. Deep hashing network for unsupervised domain adaptation. In Proceedings of the IEEE conference on computer vision and pattern recognition , pages 5018–5027, 2017. 14 [71] Julius Von Kügelgen, Yash Sharma, Luigi Gresele, Wieland Brendel, Bernhard Schölkopf, Michel Besserve, and Francesco Locatello. Self-supervised learning with data augmentations provably isolates content from style. Advances in neural information processing systems , 34: 16451–16467, 2021. [72] Julius von Kügelgen, Michel Besserve, Liang Wendong, Luigi Gresele, Armin Keki´ c, Elias Bareinboim, David Blei, and Bernhard Schölkopf. Nonparametric identifiability of causal representations from unknown interventions. In Advances in Neural Information Processing Systems , 2023. [73] Xin Wang, Hong Chen, Zihao Wu, Wenwu Zhu, et al. Disentangled representation learning. 
+
+IEEE Transactions on Pattern Analysis and Machine Intelligence , 2024. [74] Zihao Wang and Victor Veitch. The causal structure of domain invariant supervised representa-tion learning. arXiv preprint arXiv:2208.06987 , 2023. [75] Liang Wendong, Armin Keki´ c, Julius von Kügelgen, Simon Buchholz, Michel Besserve, Luigi Gresele, and Bernhard Schölkopf. Causal component analysis. Advances in Neural Information Processing Systems , 36:32481–32520, 2023. [76] Andrew Wong, Erkin Otles, John P Donnelly, Andrew Krumm, Jeffrey McCullough, Olivia DeTroyer-Cooley, Justin Pestrue, Marie Phillips, Judy Konye, Carleen Penoza, et al. External validation of a widely implemented proprietary sepsis prediction model in hospitalized patients. 
+
+JAMA internal medicine , 181(8):1065–1070, 2021. [77] Qinwei Xu, Ruipeng Zhang, Ya Zhang, Yanfeng Wang, and Qi Tian. A fourier-based framework for domain generalization. In IEEE/CVF conference on computer vision and pattern recognition ,2021. [78] Nianzu Yang, Kaipeng Zeng, Qitian Wu, Xiaosong Jia, and Junchi Yan. Learning substructure invariance for out-of-distribution molecular representations. Advances in Neural Information Processing Systems , 35:12964–12978, 2022. [79] John R Zech, Marcus A Badgeley, Manway Liu, Anthony B Costa, Joseph J Titano, and Eric Karl Oermann. Variable generalization performance of a deep learning model to detect pneumonia in chest radiographs: a cross-sectional study. PLoS medicine , 15(11):e1002683, 2018. [80] Haoran Zhang, Harvineet Singh, Marzyeh Ghassemi, and Shalmali Joshi. " why did the model fail?": Attributing model performance changes to distribution shifts. 2023. [81] Jiaqi Zhang, Kristjan Greenewald, Chandler Squires, Akash Srivastava, Karthikeyan Shan-mugam, and Caroline Uhler. Identifiability guarantees for causal disentanglement from soft interventions. In Advances in Neural Information Processing Systems , 2023. [82] Kun Zhang, Jonas Peters, Dominik Janzing, and Bernhard Schölkopf. Kernel-based conditional independence test and application in causal discovery. arXiv preprint arXiv:1202.3775 , 2012. [83] Kun Zhang, Bernhard Schölkopf, Krikamol Muandet, and Zhikun Wang. Domain adaptation under target and conditional shift. In International conference on machine learning , pages 819–827. Pmlr, 2013. [84] Xingxuan Zhang, Peng Cui, Renzhe Xu, Linjun Zhou, Yue He, and Zheyan Shen. Deep stable learning for out-of-distribution generalization. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 5372–5382, 2021. [85] Han Zhao, Remi Tachet Des Combes, Kun Zhang, and Geoffrey Gordon. On learning invariant representations for domain adaptation. In International conference on machine learning , pages 7523–7532. PMLR, 2019. [86] Kaiyang Zhou, Yongxin Yang, Timothy Hospedales, and Tao Xiang. Deep domain-adversarial image generation for domain generalisation. In Proceedings of the AAAI conference on artificial intelligence , volume 34, pages 13025–13032, 2020. 15 [87] Kaiyang Zhou, Yongxin Yang, Timothy Hospedales, and Tao Xiang. Learning to generate novel domains for domain generalization. In ECCV , pages 561–578. Springer, 2020. [88] Yaochen Zhu, Yinhan He, Jing Ma, Mengxuan Hu, Sheng Li, and Jundong Li. Causal inference with latent variables: Recent advances and future prospectives. In Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pages 6677–6687, 2024. 16 Appendix 
+
+A Related Work 19 B Notation 19 C Mathematical Preliminaries 20 
+
+C.1 Measure-Theoretic Foundations . . . . . . . . . . . . . . . . . . . . . . . . . . . 20 C.2 Causal Structures and Directed Acyclic Graphs . . . . . . . . . . . . . . . . . . . 21 C.3 Interventions and the Do-Calculus . . . . . . . . . . . . . . . . . . . . . . . . . . 21 C.4 Measure-Theoretic Causality . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21 C.5 Kernel Independence Framework Definitions . . . . . . . . . . . . . . . . . . . . 23 C.6 Assumptions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 
+
+D Theoretical Results 24 
+
+D.1 Violation Characterization, Structure Identification & Representation Optimality . . 24 D.2 Generalization Bounds . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 25 D.3 Sample Complexity . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26 
+
+E Proofs 26 
+
+E.1 Proof of Lemma 1 (HSIC Characterizes Independence) . . . . . . . . . . . . . . . 27 E.2 Proof of Lemma 2 (Conditional HSIC Consistency) . . . . . . . . . . . . . . . . . 28 E.3 Proof of Lemma 3 (SoftMin Properties) . . . . . . . . . . . . . . . . . . . . . . . 28 E.4 Proof of Theorem D.1 (Violation Characterization) . . . . . . . . . . . . . . . . . 29 E.5 Proof of Theorem D.2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 29 E.6 Proof of Corollary 1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30 E.7 Proof of Theorem D.3 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30 E.8 Proof of Theorem D.4 (Global Optimality) . . . . . . . . . . . . . . . . . . . . . . 31 E.9 Proof of Theorem D.5 (Generalization Bound) . . . . . . . . . . . . . . . . . . . . 32 E.10 Proof of Corollary 3 (Asymptotic Optimality) . . . . . . . . . . . . . . . . . . . . 33 E.11 Proof of Theorem D.6 (Sample Complexity) . . . . . . . . . . . . . . . . . . . . . 33 E.12 Proof of Proposition 1 (Differentiable CVaR) . . . . . . . . . . . . . . . . . . . . 34 E.13 Proof of Theorem F.1 (Algorithm Convergence) . . . . . . . . . . . . . . . . . . . 35 E.14 Proof of Theorem G.1 (Heterogeneous Structure Identification) . . . . . . . . . . . 36 
+
+F Algorithm Details 37 
+
+F.1 Main Algorithm . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 37 F.2 Subroutines . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 37 F.3 Complexity Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 37 F.4 Convergence Guarantees . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 39 17 G Extension to Heterogeneous Structures 39 H Additional Experiments 40 
+
+H.1 Implementation . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 40 H.2 Synthetic DGP Equations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41 H.3 Hyperparameter Sensitivity Results . . . . . . . . . . . . . . . . . . . . . . . . . . 41 H.4 Crossover Between Candidate Structures . . . . . . . . . . . . . . . . . . . . . . . 41 H.5 Margin Calibration . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41 H.6 Semi-Synthetic Bayesian-Network Benchmarks . . . . . . . . . . . . . . . . . . . 42 H.7 Cross-Fitting Variant . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 42 H.8 EMA Conditioning Target . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 43 H.9 RFF Approximation Error . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 43 H.10 Effect of the Number of Training Environments . . . . . . . . . . . . . . . . . . . 43 H.11 Computational Efficiency and Runtime Analysis . . . . . . . . . . . . . . . . . . . 43 H.12 Fine-Tuned Backbone . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 44 
+
+I Limitation 44 J Applications and Broader Connections 44 
+
+18 A Related Work 
+
+Distribution-Invariant Learning. A large body of work in domain adaptation and domain general-ization aims to learn representations that are invariant across environments or distributions. Early non-causal approaches such as (C-)ADA [37] and DDAIG [86] focus on aligning feature distributions across domains. More recent methods, including FeAT [14] and AIA [63], design more expressive objectives to improve robustness under distribution shift. Representative domain generalization methods include ERM [68], DOMAINBED [20], L2A-OT [87], StableNet [84], SagNets [42], SWAD [12], FACT [77], Ratatouille [51], XRM [46], and IRM [4], along with extensions such as REx [30], counterfactual invariance [69], information bottleneck approaches [1], causal domain adaptation [74], and transportable representations [24]. While effective in practice, these methods generally enforce distributional invariance without explicitly reasoning about the underlying causal structure or validating whether the assumed invariance is causally appropriate. Weight-averaging methods such as SWAD [12] modify the optimization trajectory rather than the objective, and are complementary to SaCRL, which determines which invariance is enforced. 
+
+Intervention-based Causal Learning. Intervention-based causal representation learning leverages environment changes or interventions to identify causal factors. Foundational works include nonpara-metric ICR [72], which jointly learns representations and intervention targets under SCM assumptions, and general nonlinear mixing models [9], which address nonlinear latent interactions. Several weakly supervised approaches [8, 38, 39, 59] exploit partial intervention information to learn invariant representations, while ICRL [2] extends these ideas to imperfect interventions. Weak distributional invariance [3] studies identifiability under perfect and imperfect interventions by identifying latent variables with stable distributional properties. Unsupervised approaches such as ICA-based causal learning [75] aim to recover latent causal variables through component analysis and statistical independence criteria. AIT [53] assumes explicit SCMs with known DAG structures and focuses on identifying standard causal directions. These methods typically rely on either explicit intervention signals or strong assumptions about the form of the causal graph. 
+
+Structure-based Causal Representation Learning. Structure-based causal representation learning methods explicitly assume or model a particular causal structure. DISRL [74] and Causal Disentan-glement [61] learn representations aligned with latent causal graphs, while classical approaches such as ICP [44] and its nonlinear extension [21] exploit invariance across environments to identify causal mechanisms. Related works such as CSG [34] and LECI [19] focus on identifying causal subgraphs and removing spurious correlations, often under DAG assumptions. KCDC [41] employs kernel-based independence tests for causal discovery and orientation. Anti-causal modeling approaches [40] study settings where inputs are generated from labels and protected attributes using conventional causal models and do-calculus, while [7] develops measure-theoretic formulations for anti-causal representation learning. 
+
+Research Gap. Existing approaches face a trilemma. Structure-based methods achieve strong guarantees but require knowing the causal graph. Invariant learning methods avoid explicit graphs but hardcode implicit structural assumptions that cause failures under mismatch. Causal discovery methods learn structure but decouple it from representation learning, preventing joint optimization. No existing framework simultaneously discovers causal structure and learns representations adapted to that structure in a unified, end-to-end differentiable objective. Our work fills this gap: we introduce a structure-agnostic objective that evaluates representations against all candidate causal structures, automatically concentrating on the correct one through adaptive weighting, while jointly optimizing predictive performance. 
+
+## B Notation 
+
+Table 8 summarizes notation used throughout. We organize symbols into six categories: spaces and sets defining the mathematical objects; random variables and observed data; causal graph components encoding structural assumptions; kernels and independence testing machinery; learning components including representations, predictors, and losses; and theoretical quantities appearing in our analysis. Lowercase denotes realizations ( x, y ), uppercase denotes random variables ( X, Y ), and calligraphic 19 denotes spaces ( X , Y). Subscripts index environments ( Pe) or structures ( Gk); superscripts denote components ( XZ , X ⊥ 
+
+> Z
+
+) or iterates ( ϕt). Table 8: Notation summary. 
+
+Spaces & Sets Random Variables & Data 
+
+X , Y, Z Input, output, representation spaces X, Y, E Features, target, environment 
+
+E Environment set {e1, . . . , e m} U, Z Latent confounder, mediator 
+
+(Ω , F , P ) Probability space XZ , X ⊥ 
+
+> Z
+
+Mediated, orthogonal components 
+
+H, HX RKHS, RKHS on X De Dataset {(xej , y ej )}ne
+
+> j=1
+
+∆2 Probability simplex n, m, d Samples, environments, dimension 
+
+Causal Structure Kernels & Independence 
+
+G = ( V, E ) DAG with vertices, edges k, k X Reproducing kernel 
+
+G1, G2, G3 Anti-causal, conf-desc, conf-out κ Kernel bound: k(x, x ) ≤ κ2
+
+G∗ = Gk∗ True structure μP Mean embedding of P
+
+Pa (v) Parents of v CXY Cross-covariance operator 
+
+KS , K Q 
+
+> S
+
+Causal, interventional kernel HSIC (X, Y ) Independence criterion 
+
+Ik Invariance for structure k ˜X, ˜Y Regression residuals 
+
+Learning Components Theoretical Quantities 
+
+ϕ, w Representation, predictor D Diversity matrix ( m × 3)
+
+Φ, W Function classes δmin Min diversity parameter 
+
+ℓ, Re, ˆRe Loss, population/empirical risk η Faithfulness gap 
+
+Vk , V ∗ 
+
+> k
+
+Empirical/population violation dK(e, e ′) Interventional distance 
+
+αk Adaptive weight ∝ e−βV k ξn Estimation error 
+
+λ, β, ρ, γ Regularization, temp, CVaR, ridge Lw Lipschitz constant 
+
+## C Mathematical Preliminaries 
+
+C.1 Measure-Theoretic Foundations Definition C.1 (Measurable Space) . A pair (Ω , F ) is a measurable space where Ω is a non-empty set and F is a σ-algebra on Ω, i.e., a collection of subsets satisfying: (i) ∅, Ω ∈ F ; (ii) A ∈ F ⇒
+
+Ac ∈ F ; (iii) {Ai}∞ 
+
+> i=1
+
+⊂ F ⇒ S∞ 
+
+> i=1
+
+Ai ∈ F .
+
+Definition C.2 (Probability Measure) . A probability measure on a measurable space (Ω , F ) is a function μ : F → [0 , 1] satisfying μ(Ω) = 1 . For any countable collection {Ai}∞ 
+
+> i=1
+
+of pairwise disjoint sets in F ,
+
+μ
+
+> ∞
+
+[
+
+> i=1
+
+Ai
+
+!
+
+=
+
+> ∞
+
+X
+
+> i=1
+
+μ(Ai) (14) The triple (Ω , F , μ ) is a probability space. 
+
+Definition C.3 (Product Space) . Given measurable spaces (Ω 1, F1) and (Ω 2, F2), the product 
+
+σ-algebra F1 ⊗ F2 on Ω1 × Ω2 is the σ-algebra generated by measurable rectangles A1 × A2
+
+where A1 ∈ F1 and A2 ∈ F2. For probability measures μ1 on (Ω 1, F1) and μ2 on (Ω 2, F2), the product measure μ1 ⊗ μ2 on (Ω 1 × Ω2, F1 ⊗ F2) is uniquely determined by (μ1 ⊗ μ2)( A1 × A2) = 
+
+μ1(A1) · μ2(A2) for all A1 ∈ F1, A2 ∈ F2.
+
+Definition C.4 (Markov Kernel) . A (Markov) kernel from a measurable space (Ω 1, F1) to a mea-surable space (Ω 2, F2) is a mapping K : Ω 1 × F2 → [0 , 1] . For each fixed ω ∈ Ω1, the func-tion A 7 → K(ω, A ) is a probability measure on (Ω 2, F2). For each fixed A ∈ F2, the function 
+
+ω 7 → K(ω, A ) is F1-measurable. Intuitively, K(ω, A ) represents the conditional probability of event A ∈ F2 given state ω ∈ Ω1.20 C.2 Causal Structures and Directed Acyclic Graphs Definition C.5 (Directed Acyclic Graph) . A directed acyclic graph (DAG) is a pair G = ( V, E ) where 
+
+V is a finite set of vertices (nodes) and E ⊆ V × V is a set of directed edges such that there exists no sequence of vertices v1, . . . , v k with k ≥ 2, v1 = vk, and (vi, v i+1 ) ∈ E for all i = 1 , . . . , k − 1.
+
+Definition C.6 (Causal Structure) . A causal structure is a tuple S = ( V, E, {Fv }v∈V , {Kv }v∈V )
+
+where (V, E ) is a DAG with vertices representing random variables. For each v ∈ V , (Ω v , Fv ) is a measurable space. For each v ∈ V , Kv is a kernel from 
+
+Q 
+
+> u∈Pa (v)
+
+Ωu, N 
+
+> u∈Pa (v)
+
+Fu
+
+
+
+to (Ω v , Fv )
+
+representing the causal mechanism by which parents generate the variable v.For root nodes with Pa (v) = ∅, the kernel Kv reduces to a probability measure. We now formalize how observed features arise from multiple generating mechanisms. 
+
+Definition C.7 (Causal Feature Decomposition) . Let Z be a latent variable in the causal graph G.The observed features X admit a causal decomposition with respect to Z if there exist measurable functions πZ : X → X Z and π⊥ 
+
+> Z
+
+: X → X ⊥ 
+
+> Z
+
+such that X = ( πZ (X), π ⊥ 
+
+> Z
+
+(X)) =: ( XZ , X ⊥ 
+
+> Z
+
+). XZ
+
+contains all and only the information in X that is causally downstream of Z, and X⊥ 
+
+> Z
+
+contains the remaining information in X that is not mediated by Z.We write X = ( XZ , X ⊥ 
+
+> Z
+
+) to denote this decomposition, where X ∼= XZ × X ⊥ 
+
+> Z
+
+.
+
+C.3 Interventions and the Do-Calculus 
+
+Interventions distinguish causal relationships from statistical associations. We formalize both perfect (hard) and imperfect (soft) interventions within the generalized framework. 
+
+Definition C.8 (Perfect and Imperfect Interventions) . An intervention on a causal structure S is specified by a measurable mapping Q : F × Ω → [0 , 1] where F is a suitable σ-algebra. (i) A perfect (hard) intervention on variable V replaces its causal mechanism KV with a fixed distribution Q independent of parent values: Q(A | ω) = Q(A) for all ω ∈ Ω, A ∈ F
+
+(ii) An imperfect (soft) intervention on variable V modifies its causal mechanism to depend on both parents and intervention parameters: Q(A | ω) varies with ω ∈ Ω
+
+The do-operator do (X = x) corresponds to a perfect intervention that sets X to value x by replacing the kernel KX with a point mass at x, formally: Q(A) = I{x}(A) for measurable sets A.
+
+Definition C.9 (Causal Independence) . Random variables X and Y are causally independent given 
+
+Z, denoted X ⊥⊥c Y | Z, if 
+
+P (Y | do (X = x), Z = z) = P (Y | Z = z) (15) for all x in the support of X and all z in the support of Z, where do (X = x) denotes an intervention setting X to value x.The do-operator do (X = x) differs fundamentally from P (Y | X = x) which observes X = x
+
+while preserving causal relationships, whereas P (Y | do (X = x)) forces X = x by intervention. 
+
+C.4 Measure-Theoretic Causality 
+
+The causal-space, product-causal-space, and interventional-kernel constructions below fol-low Behnam and Wang [7]; we extend them with structure-indexed kernel families (Definition C.14). 
+
+Definition C.10 (Sub-σ-algebra) . Given a product causal space (Ω , F , P, K, G) with index set T ,for any subset S ⊆ T , the sub-σ-algebra FS is the σ-algebra generated by measurable rectangles of the form Q 
+
+> t∈S
+
+At × Q  
+
+> t∈T\S
+
+Ωt where At ∈ At for t ∈ S.Intuitively, FS captures events that depend only on the components indexed by S.
+
+Definition C.11 (Causal Kernel) . A causal kernel for index set S ⊆ T is a function KS : Ω × F →
+
+[0 , 1] . For each fixed ω ∈ Ω, the mapping A 7 → KS (ω, A ) is a probability measure on (Ω , F ). For each fixed A ∈ F , the mapping ω 7 → KS (ω, A ) is FS -measurable. 21 Definition C.12 (Causal Space) . For an environment e ∈ E, a causal space is a tuple 
+
+(Ω e, Fe, P e, Ke, Ge) where Ωe = Q 
+
+> v∈Ve
+
+Ωv is the sample space with product structure, and Ve is the vertex set of the causal DAG and each Ωv is the state space of variable v. Here, Fe = N 
+
+> v∈Ve
+
+Fv
+
+is the product σ-algebra, where Fv is the σ-algebra on Ωv , Pe is a probability measure on (Ω e, Fe)
+
+compatible with Ge, Ke = {K(e) 
+
+> v
+
+}v∈Ve is the family of causal mechanisms. Each K(e) 
+
+> v
+
+is a Markov kernel (Definition C.4) from the parent space 
+
+Q 
+
+> u∈Pa (v)
+
+Ωu, N 
+
+> u∈Pa (v)
+
+Fu
+
+
+
+to (Ω v , Fv ), encoding the conditional distribution Pe(V = · | Pa (v) = ·), and Ge = ( Ve, E e) is the causal DAG specifying the qualitative causal structure. The joint distribution factorizes according to the DAG: 
+
+Pe(ω) = Y
+
+> v∈Ve
+
+K(e)
+
+> v
+
+ ωPa (v), {ωv } (16) where ω = ( ωv )v∈Ve ∈ Ωe and ωPa (v) denotes the components corresponding to parents of v.
+
+Definition C.13 (Product Causal Space) . Given causal spaces {(Ω ei , Fei , P ei , K ei , Gei )}mi=1 for environments {ei}mi=1 , the product causal space is the tuple (Ω , F , P, K, G) where Ω = Qmi=1 Ωei is the product sample space, F = Nmi=1 Fei is the product σ-algebra, P = Nmi=1 Pei is the product measure, K = {KS : S ∈ P(T )} is a family of causal kernels indexed by subsets S of the combined index set T = Smi=1 Tei , and G = ( V, E ) is a causal DAG compatible with the individual environment graphs. The product causal space admits sub-σ-algebras and causal kernels indexed by variable subsets; see Appendix C for formal definitions. 
+
+Definition C.14 (Structure-Agnostic Causal Space) . A structure-agnostic causal space ex-tends the product causal space (Definition C.13) with structure-indexed components: 
+
+(Ω , F , P, {Kk}3
+
+> k=1
+
+, {G k}3
+
+> k=1
+
+) where (Ω , F , P) is the product space over environments, {G k}3
+
+> k=1
+
+are the three candidate causal DAGs (Definition 2.1), and Kk = {K(k) 
+
+> S
+
+: S ⊆ T } is the causal kernel family encoding how interventions propagate under structure Gk.The FS -measurability condition ensures KS (ω, A ) depends only on components indexed by S,encoding graph-specified causal dependencies. 
+
+Definition C.15 (Interventional Kernel) . Let (Ω , F , P, K, G) be a product causal space with causal kernel KS for index set S ⊆ T . Let Q : Ω × F → [0 , 1] be an intervention kernel, where Q(ω′, A )
+
+specifies the probability of event A when intervening at state ω′.The interventional kernel KQ 
+
+> S
+
+: Ω × F → [0 , 1] is defined by: 
+
+KQ 
+
+> S
+
+(ω, A ) := 
+
+Z
+
+> Ω
+
+Q(ω′, A ) KS (ω, dω ′) (17) where ω ∈ Ω is the conditioning state (values of variables in S), KS (ω, dω ′) is the original causal kernel giving the distribution over ω′ given ω, and Q(ω′, A ) is the intervention’s effect on event A at state ω′.This construction unifies perfect and imperfect interventions: when Q(A | ω′) = Q(A) is constant, the interventional kernel corresponds to a hard intervention; when Q(A | ω′) varies with ω′, it represents a soft intervention. For multi-level representations, we consider compositions ϕ = ϕH ◦ ϕL where ϕL : X → Z L is the low-level representation mapping inputs to an intermediate feature space, and ϕH : ZL → Z H is the high-level representation mapping intermediate features to a refined representation space. 
+
+Definition C.16 (Sufficiency and Minimality) . A representation ϕ is sufficient for predicting Y if there exists a predictor f : Z → Y such that (f ◦ ϕ)( X) achieves the Bayes-optimal prediction error for Y . It is minimal sufficient if it is sufficient and for any other sufficient representation ϕ′ : X → Z ′,there exists a measurable function g : Z′ → Z such that ϕ = g ◦ ϕ′.22 C.5 Kernel Independence Framework Definitions Definition C.17 (Reproducing Kernel Hilbert Space) . Let X be a non-empty set. A Hilbert space 
+
+H of functions f : X → R is a reproducing kernel Hilbert space (RKHS) if there exists a function 
+
+k : X × X → R such that: 1. k(·, x ) ∈ H for all x ∈ X 
+
+2. f (x) = ⟨f, k (·, x )⟩H for all f ∈ H , x ∈ X (reproducing property) 
+
+Definition C.18 (Cross-Covariance Operator) . Let (X , HX , k X ) and (Y, HY , k Y ) be RKHS pairs. The cross-covariance operator CXY : HY → H X is defined by 
+
+CXY := EXY [( kX (·, X ) − μX ) ⊗ (kY (·, Y ) − μY )] (18) where ⊗ denotes the tensor product. 
+
+C.6 Assumptions 
+
+Here we state assumptions required for theoretical findings. 
+
+Assumption 2 (Characteristic Kernels) . The kernels kX : X × X → R, kY : Y × Y → R,
+
+kZ : Z × Z → R, and kE : E × E → R are characteristic and bounded: sup x k(x, x ) ≤ κ2 < ∞.Characteristic kernels ensure HSIC fully characterizes independence (Lemma 1). We further require the tensor products of these kernels used in HSIC to be characteristic, which holds for Gaussian and delta kernels [64]. For the conditional HSIC tests underlying V1 and V2, we additionally require the regression operator to be well-behaved. 
+
+Assumption 3 (Kernel Regularity) . The kernel regression operator satisfies: 1. The conditional expectation operator E[· | Z] lies in the RKHS HZ .2. The eigenvalues {λj } of the kernel integral operator satisfy P 
+
+> j
+
+λ−1/2 
+
+> j
+
+< ∞.Beyond kernel conditions, structure identification requires environments that vary in distinguishable ways. We formalize this via a diversity matrix measuring distributional shifts across environments. 
+
+Definition C.19 (Environment Diversity Matrix) . Let E = {e1, . . . , e m} be the training environments and ¯P the pooled distribution. Center each kernel mean embedding at its average over environments: 
+
+¯μX := 1
+
+> m
+
+P 
+
+> e
+
+μPe(X), ¯μX|Y =y := 1
+
+> m
+
+P 
+
+> e
+
+μPe(X|Y =y), and ¯μY |X=x := 1
+
+> m
+
+P 
+
+> e
+
+μPe(Y |X=x). The 
+
+m × 3 diversity matrix D has entries 
+
+De1 := ∥μPe(X) − ¯μX ∥H (marginal shift) ,De2 :=  Ey∼ ¯P (Y )∥μPe(X|Y =y) − ¯μX|Y =y ∥2
+
+> H
+
+1/2 (conditional shift) ,De3 :=  Ex∼ ¯P (X)∥μPe(Y |X=x) − ¯μY |X=x∥2
+
+> H
+
+1/2 (outcome shift) .
+
+(19) For characteristic kernels, column j of D is zero if and only if the corresponding distribution is identical across environments ( ¯P -almost everywhere for j = 2 , 3). The matching invariance is then untestable: a zero first column makes I3 untestable, a zero second column I1, and a zero third column I2. Assumption 1 requires every column to be nonzero, quantified by the minimum diversity parameter 
+
+δmin := min  
+
+> j∈{ 1,2,3}
+
+max  
+
+> e∈E
+
+Dej > 0. (20) Full column rank, rank( D) = 3 , is sufficient for δmin > 0 but not necessary. 
+
+Assumption 4 (Faithfulness) . The joint distribution P (X, Y, E ) is faithful to the true causal structure 
+
+G∗: all and only the conditional independencies implied by G∗ hold in P .Faithfulness ensures that violations of wrong invariances are detectable. Without it, a distribution could satisfy independencies not implied by the graph, making structures indistinguishable. The remaining assumptions concern the function classes used for prediction and representation. 23 Assumption 5 (Predictor Lipschitz Continuity) . The predictor class W consists of Lw-Lipschitz functions: for all w ∈ W and z, z ′ ∈ Z ,
+
+∥w(z) − w(z′)∥2 ≤ Lw∥z − z′∥2 (21) with Lw ≤ Lmax < ∞ uniformly over W.This Lipschitz condition controls how prediction errors propagate through distribution shift, appearing directly in our generalization bound (Theorem D.5). 
+
+Assumption 6 (Representation Class Regularity) . The representation class Φ is parameterized by 
+
+θ ∈ Θ ⊆ Rp where: 1. Θ is compact and convex, 2. ϕθ (x) is continuously differentiable in θ,3. The violation functions Vk(ϕθ ) are LV -smooth in θ.These regularity conditions are standard for neural network function classes and ensure convergence of gradient-based optimization. Assumption 1 can be checked before training: (1) estimate D
+
+with empirical (conditional) mean embeddings; (2) for each column j, compare max e ˆDej with its permutation null obtained by shuffling environment labels; (3) if column j is not significantly nonzero, remove from the candidate set the structure whose invariance it tests ( j=1 : G3, j=2 : G1,
+
+j=3 : G2); (4) if no column is significant, the environments carry no information about the structure, and ERM is the appropriate fallback. 
+
+## D Theoretical Results 
+
+D.1 Violation Characterization, Structure Identification & Representation Optimality 
+
+The key insight is that under the true structure, the corresponding invariance is achievable without sacrificing predictive accuracy, while wrong invariances are not. We introduce between definitions and theorems. 
+
+Definition D.1 (ϵ-Predictive Representation) . A representation ϕ : X → Z is ϵ-predictive if: 
+
+inf  
+
+> w∈W
+
+max  
+
+> e∈E
+
+Re(w ◦ ϕ) ≤ R ∗ + ϵ (22) where R∗ := inf f :X →Y max e Re(f ) is the Bayes-optimal worst-case risk. Denote the class of ϵ-predictive representations as Φϵ. We define the base predictive class Φ0 := {ϕ :
+
+ϕ is ϵ0-predictive } with ϵ0 := δmin /8 (a fixed constant determined by environment diversity). One needs to measure the minimum violation incurred by any predictive representation when the wrong invariance is imposed. 
+
+Definition D.2 (Faithfulness Gap) . Let G∗ = Gk∗ be the true causal structure. The faithfulness gap is: 
+
+η := min   
+
+> k̸=k∗
+
+inf 
+
+> ϕ∈Φ0
+
+V ∗ 
+
+> k
+
+(ϕ) (23) Under faithfulness (Assumption 4), η > 0. Larger η implies easier structure identification; η → 0
+
+indicates near-Markov equivalence between structures. 
+
+Theorem D.1 (Violation Characterization) . Under Assumptions 2–4, for the class of ϵ-predictive representations Φϵ:1. Achievability: If G∗ = Gk, then inf ϕ∈Φϵ V ∗ 
+
+> k
+
+(ϕ) = 0 .2. Non-achievability: If G∗̸ = Gk, then inf ϕ∈Φϵ V ∗ 
+
+> k
+
+(ϕ) ≥ η/ 2 > 0.
+
+The constraint ϕ ∈ Φϵ prevents trivial solutions: a constant representation ϕ(x) = c achieves Vk = 0 
+
+for all k, but has Re(w ◦ ϕ) = Rtrivial ≫ R ∗ + ϵ, hence ϕ / ∈ Φϵ. The joint objective L enforces this implicitly via the prediction loss. The asymmetry established in Theorem D.1 (achievable invariance for the true structure versus irreducible violations for wrong structures) directly enables consistent identification from finite samples. 24 Theorem D.2 (Structure Identification) . Under Assumptions 2–6, let ϕn minimize L(ϕ, w ) with n
+
+samples per environment. Define the estimated structure: 
+
+ˆkn := arg min  
+
+> k
+
+Vk(ϕn) (24) 
+
+Then for the true structure G∗ = Gk∗ :
+
+P(ˆkn = k∗) ≥ 1 − 6 exp 
+
+
+
+− nη 2
+
+2048 κ4
+
+
+
+(25) 
+
+where η is the faithfulness gap (Definition D.2) and κ is the kernel bound (Assumption 2). 
+
+Corollary 1 (Identification with Random Features) . Suppose D random features (Definition F.1) achieve uniform kernel error εD with probability at least 1−δ′, so that |\HSIC RFF −\HSIC | ≤ Cκ 2εD .Under the conditions of Theorem D.2, if Cκ 2εD ≤ η/ 16 , then 
+
+P(ˆkRFF  
+
+> n
+
+= k∗) ≥ 1 − 6 exp 
+
+
+
+− nη 2
+
+8192 κ4
+
+
+
+− δ′, (26) 
+
+which holds for D = Ω( κ4η−2d log( n/δ ′)) [50]. 
+
+The required D grows as η−2: near-equivalent structures need more random features, not only more samples. 
+
+Corollary 2 (Adaptive Weight Concentration) . Under the conditions of Theorem D.2, the adaptive weights satisfy: 
+
+αk∗ (ϕn) ≥ 1 − 2 exp( −βη/ 2) (27) 
+
+for n sufficiently large, where η is the faithfulness gap. 
+
+Via established structure identification, we now quantify how well the learned representation achieves the corresponding invariance and characterize properties of global optima. 
+
+Theorem D.3 (Invariance Achievement) . Let ϕn minimize L(ϕ, w ) with regularization λ > 0. Under Assumptions 2–6, for the true structure G∗ = Gk∗ :
+
+Vk∗ (ϕn) ≤ C1
+
+λ · max 
+
+> e
+
+ˆRe(w∗ ◦ ϕ∗) + C2n−1/2 (28) 
+
+where ϕ∗ ∈ Φϵ achieves inf ϕ∈Φϵ Vk∗ (ϕ) = 0 and C1, C 2 > 0 are constants depending on κ and the function class complexity. 
+
+The violation decreases at rate O(n−1/2) and can be made arbitrarily small by increasing λ, though at the cost of prediction accuracy. When the function classes are sufficiently expressive, the global minimum achieves exact invariance. 
+
+Theorem D.4 (Global Optimality) . If the representation class Φ includes the true invariant represen-tation ϕ∗ satisfying Ik∗ , and the predictor class W includes the Bayes-optimal predictor, then the global minimum of L achieves: 1. Vk∗ (ϕ) = 0 (exact invariance) 
+
+2. max e Re(w ◦ ϕ) = R∗ (Bayes risk) We know the objective learns the optimal invariant representation when the function classes are well-specified, with finite-sample guarantees that degrade under approximation. 
+
+D.2 Generalization Bounds 
+
+We now bound out-of-distribution (OOD) generalization by quantifying how distribution shift affects test performance. To measure the similarity between environments, we introduce a causal distance metric below. 
+
+Definition D.3 (Interventional Kernel Distance) . For environments e, e ′ ∈ E , the interventional kernel distance is: 
+
+dK(e, e ′) := sup 
+
+> S⊆T
+
+∥K(e) 
+
+> S
+
+− K(e′) 
+
+> S
+
+∥op (29) where K(e) 
+
+> S
+
+is the causal kernel for environment e and ∥ · ∥ op is the operator norm. For a test environment, define dK(etest , Etrain ) := min e∈E train dK(etest , e ).25 This distance captures the maximal change in causal mechanisms across environments. Using this metric, we decompose test error into training error, distribution shift, and statistical estimation error. 
+
+Theorem D.5 (Generalization Bound) . Let (ϕn, w n) minimize L over training environments Etrain .For a test environment etest , under Assumptions 2–6: 
+
+Retest (wn ◦ ϕn) ≤ max 
+
+> e∈E train
+
+ˆRe(wn ◦ ϕn)
+
+| {z }
+
+> training error
+
++ Lw · dK(etest , Etrain )
+
+| {z }
+
+> shift penalty
+
++ ξn
+
+|{z}  
+
+> estimation error
+
+(30) 
+
+where the estimation error satisfies: 
+
+ξn = O
+
+r C(Φ , W) + log(1 /δ )
+
+n
+
+!
+
++ Cη · Vk∗ (ϕn) (31) 
+
+with C(Φ , W) the function class complexity and Cη > 0 a constant depending on the faithfulness gap. The bound holds with probability at least 1 − δ.
+
+The invariance violation Vk∗ (ϕn) directly contributes to generalization error, motivating the joint op-timization of prediction and invariance. Combining all preceding results yields asymptotic optimality. 
+
+Corollary 3 (Asymptotic Optimality) . Under the conditions of Theorems D.2–D.5, as n → ∞ :
+
+Retest (wn ◦ ϕn) p
+
+−→ inf 
+
+> ϕ∈Φk∗
+
+Retest (w∗(ϕ) ◦ ϕ) (32) 
+
+where Φk∗ = {ϕ : Ik∗ (ϕ) holds } is the class of representations satisfying the true invariance. 
+
+D.3 Sample Complexity Theorem D.6 (Sample Complexity) . To achieve structure identification with probability ≥ 1 − δ
+
+and generalization error ≤ ϵ, the required sample size per environment is: 
+
+n = O
+
+ κ4
+
+η2 log 12 
+
+δ + κ4
+
+ϵ2 log |Φ|
+
+δ
+
+
+
+(33) 
+
+where |Φ| is the covering number of the representation class. 
+
+## E Proofs 
+
+This section contains complete proofs of all theoretical results. We organize proofs by building from foundational kernel independence results to the main structure identification and generalization theorems. We first establish auxiliary concentration results that underpin our main theorems. 
+
+Lemma 4 (HSIC Concentration) . Let (Xi, Y i)ni=1 be i.i.d. samples from PXY . Under Assumption 2 with kernel bound κ, the empirical HSIC satisfies: 
+
+P
+
+ \HSIC( X, Y ) − HSIC( X, Y ) > ϵ 
+
+
+
+≤ 2 exp 
+
+
+
+− nϵ 2
+
+32 κ4
+
+
+
+(34) 
+
+for all ϵ > 0.Proof. The empirical HSIC can be written as a V-statistic: 
+
+\HSIC( X, Y ) = 1
+
+n2
+
+> n
+
+X
+
+> i,j =1
+
+h(( Xi, Y i), (Xj , Y j )) (35) where the kernel h is defined by: 
+
+h(( xi, y i), (xj , y j )) = kX (xi, x j )kY (yi, y j ) + E[kX (X, X ′)] E[kY (Y, Y ′)] (36) 
+
+− kX (xi, x j )E[kY (Y, Y ′)] − E[kX (X, X ′)] kY (yi, y j ) (37) Under Assumption 2, we have |kX (x, x ′)| ≤ κ2 and |kY (y, y ′)| ≤ κ2. Therefore: 
+
+|h(( xi, y i), (xj , y j )) | ≤ 4κ4 (38) 26 We apply McDiarmid’s inequality. Changing a single observation (Xi, Y i) affects at most 2n terms in the double sum, each bounded by 4κ4, giving a bounded difference of: 
+
+ci = 2n · 4κ4
+
+n2 = 8κ4
+
+n (39) By McDiarmid’s inequality: 
+
+P
+
+ \HSIC − E[\HSIC] > ϵ 
+
+
+
+≤ 2 exp 
+
+
+
+− 2ϵ2
+
+Pni=1 c2
+
+> i
+
+
+
+= 2 exp 
+
+
+
+− 2ϵ2
+
+n · 64 κ8/n 2
+
+
+
+(40) Since the empirical HSIC is an asymptotically unbiased estimator with |E[\HSIC] −HSIC | = O(n−1),absorbing this bias into the concentration bound yields: 
+
+P
+
+ \HSIC − HSIC > ϵ 
+
+
+
+≤ 2 exp 
+
+
+
+− nϵ 2
+
+32 κ4
+
+
+
+(41) 
+
+Lemma 5 (Kernel Regression Consistency) . Under Assumptions 2 and 3, let ˆm(z) = k⊤ 
+
+> z
+
+(K +
+
+γI )−1y be the kernel ridge regression estimate. For regularization γ = n−1/(2+ d) where d is the effective dimension: 
+
+E
+
+h
+
+∥ ˆm − m∗∥2 
+
+> L2(PZ)
+
+i
+
+= O
+
+
+
+n−2/(2+ d)
+
+(42) 
+
+where m∗(z) = E[Y |Z = z] is the true conditional expectation. Proof. The kernel ridge regression estimator admits the bias-variance decomposition: 
+
+E ∥ ˆm − m∗∥2 = ∥(I + γT −1)−1m∗ − m∗∥2
+
+| {z }
+
+> bias 2
+
++ σ2
+
+n tr  (K + γI )−1K(K + γI )−1| {z }
+
+> variance
+
+(43) where T is the integral operator with kernel k.Under Assumption 3, the eigenvalues {λj } of T satisfy the decay condition. The bias term satisfies: bias 2 ≤ γ2∥m∗∥2 
+
+> H
+
+(44) For the variance, using the eigenvalue decay: variance ≤ σ2
+
+n
+
+> ∞
+
+X
+
+> j=1
+
+λj
+
+(λj + γ)2 ≤ σ2
+
+nγ (45) Balancing bias and variance by setting γ2 = ( nγ )−1, i.e., γ = n−1/3 for the general case, or 
+
+γ = n−1/(2+ d) accounting for effective dimension d:
+
+E ∥ ˆm − m∗∥2 = O(γ2) + O(( nγ )−1) = O
+
+
+
+n−2/(2+ d)
+
+(46) 
+
+E.1 Proof of Lemma 1 (HSIC Characterizes Independence) 
+
+Proof. We prove both directions. 
+
+(⇐) Independence implies zero HSIC: Assume X ⊥⊥ Y , so PXY = PX ⊗ PY . The cross-covariance operator is: 
+
+CXY = EXY [ϕ(X) ⊗ ψ(Y )] − μX ⊗ μY (47) where ϕ(x) = kX (·, x ) and ψ(y) = kY (·, y ) are the canonical feature maps. 27 Under independence: 
+
+EXY [ϕ(X) ⊗ ψ(Y )] = EX [ϕ(X)] ⊗ EY [ψ(Y )] = μX ⊗ μY (48) Therefore CXY = 0 , and HSIC( X, Y ) = ∥C XY ∥2HS = 0 .
+
+(⇒) Zero HSIC implies independence: Assume HSIC( X, Y ) = 0 . By definition: 
+
+∥C XY ∥2HS = EXX ′Y Y ′ [kX (X, X ′)kY (Y, Y ′)] − 2EXY X ′Y ′ [kX (X, X ′)kY (Y, Y ′)] (49) 
+
++ EXX ′ [kX (X, X ′)] EY Y ′ [kY (Y, Y ′)] 
+
+where (X, Y ) and (X′, Y ′) are independent copies. This equals the squared MMD between PXY and PX ⊗ PY in the product RKHS HX ⊗ H Y :
+
+HSIC( X, Y ) = MMD 2(PXY , P X ⊗ PY ) (50) Since kX ⊗kY is characteristic (by assumption; e.g., for Gaussian and delta kernels [64]), MMD 2 = 0 
+
+implies PXY = PX ⊗ PY , hence X ⊥⊥ Y .
+
+E.2 Proof of Lemma 2 (Conditional HSIC Consistency) 
+
+Proof. Equivalence. Given Z = z, X and Y are εX and εY shifted by the constants mX (z) and 
+
+mY (z), so X ⊥⊥ Y | Z if and only if εX ⊥⊥ εY | Z. Since (εX , ε Y ) ⊥⊥ Z, the conditional law of 
+
+(εX , ε Y ) given Z equals its marginal law, so this is equivalent to εX ⊥⊥ εY .
+
+Consistency. The population residuals are εX and εY . For bounded L-Lipschitz kernels, replacing 
+
+εX,i by ˜xi = xi − ˆmX (zi) changes each Gram entry by at most L(∥˜xi − εX,i ∥ + ∥˜xj − εX,j ∥).Since centering satisfies n−2 P 
+
+> i,j
+
+|(HAH )ij | ≤ 4n−2 P 
+
+> i,j
+
+|Aij | and the kernels are bounded, 
+
+\HSIC( ˜X, ˜Y ) − \HSIC( εX , ε Y ) ≤ Cn
+
+> n
+
+X
+
+> i=1
+
+ ∥ ˆmX (zi) − mX (zi)∥ + ∥ ˆmY (zi) − mY (zi)∥
+
+for a constant C depending on L and the kernel bounds. By Cauchy–Schwarz and L2-consistency, the right-hand side converges to 0 in probability. By Lemma 4, \HSIC( εX , ε Y ) p
+
+−→ HSIC( εX , ε Y ). Hence 
+
+\HSIC( ˜X, ˜Y ) p
+
+−→ HSIC( εX , ε Y ), which by Lemma 1 and the equivalence above is 0 if X ⊥⊥ Y | Z
+
+and positive otherwise. 
+
+E.3 Proof of Lemma 3 (SoftMin Properties) 
+
+Proof. We establish each property. 
+
+Part 1: Bounds. For the lower bound, note that for all k:
+
+> 3
+
+X
+
+> j=1
+
+exp( −βV j ) ≥ exp( −βV k) (51) Taking logarithms and the infimum over k:
+
+− 1
+
+β log 
+
+> 3
+
+X
+
+> j=1
+
+exp( −βV j ) ≤ − 1
+
+β log exp( −β min  
+
+> k
+
+Vk) = min  
+
+> k
+
+Vk (52) For the upper bound: 3X
+
+> j=1
+
+exp( −βV j ) ≤ 3 exp( −β min  
+
+> k
+
+Vk) (53) Therefore: 
+
+− 1
+
+β log 
+
+> 3
+
+X
+
+> j=1
+
+exp( −βV j ) ≥ − 1
+
+β log 
+
+
+
+3 exp( −β min  
+
+> k
+
+Vk)
+
+
+
+= min  
+
+> k
+
+Vk − log 3 
+
+β (54) 28 Combining: min k Vk − log 3  
+
+> β
+
+≤ SoftMin β ≤ min k Vk.
+
+Part 2: Limiting behavior. Let k∗ = arg min k Vk and assume uniqueness (the general case follows by continuity). Then: 
+
+> 3
+
+X
+
+> j=1
+
+exp( −βV j ) = exp( −βV k∗ )
+
+1 + X 
+
+> j̸=k∗
+
+exp( −β(Vj − Vk∗ )) 
+
+ (55) Since Vj − Vk∗ > 0 for j̸ = k∗:
+
+X 
+
+> j̸=k∗
+
+exp( −β(Vj − Vk∗ )) → 0 as β → ∞ (56) Therefore: 
+
+SoftMin β = − 1
+
+β log exp( −βV k∗ ) − 1
+
+β log (1 + o(1)) = Vk∗ + o(1) → min  
+
+> k
+
+Vk (57) 
+
+Part 3: Gradient. By direct computation: 
+
+∇ϕSoftMin β = − 1
+
+β ·
+
+P3 
+
+> k=1
+
+exp( −βV k) · (−β∇ϕVk)
+
+P3 
+
+> j=1
+
+exp( −βV j ) (58) 
+
+=
+
+> 3
+
+X
+
+> k=1
+
+exp( −βV k)
+
+P3 
+
+> j=1
+
+exp( −βV j ) ∇ϕVk (59) 
+
+=
+
+> 3
+
+X
+
+> k=1
+
+αk(ϕ)∇ϕVk (60) where αk(ϕ) = exp( −βV k)/ P 
+
+> j
+
+exp( −βV j ) are the adaptive weights. 
+
+E.4 Proof of Theorem D.1 (Violation Characterization) 
+
+Proof. By the Markov property, d-separation in Gk∗ implies conditional independence; by faithful-ness, d-connection implies dependence. In all three graphs, E enters only through E → U .
+
+G1. The only parent of X⊥ 
+
+> z
+
+is Y . Every path from E to X⊥ 
+
+> z
+
+either passes through Y as a non-collider or contains an unconditioned collider ( Z or Xz ); hence X⊥ 
+
+> z
+
+⊥⊥ E | Y (I1 holds). The path 
+
+E → U → Y → X⊥ 
+
+> z
+
+is open without conditioning, so X⊥
+
+> z
+
+̸ ⊥⊥ E (I3 fails); E → U → Y is open given X⊥ 
+
+> z
+
+, so Y̸ ⊥⊥ E | X⊥ 
+
+> z
+
+(I2 fails). 
+
+G2. Given X⊥ 
+
+> z
+
+, the path E → U → X⊥ 
+
+> z
+
+→ Y is blocked at X⊥ 
+
+> z
+
+, and every other path from E
+
+to Y contains an unconditioned collider ( Xz or Z); hence Y ⊥⊥ E | X⊥ 
+
+> z
+
+(I2 holds). The path 
+
+E → U → X⊥ 
+
+> z
+
+is open both unconditionally and given Y , so I3 and I1 fail. 
+
+G3. X⊥ 
+
+> z
+
+has no parents, and every path from E to X⊥ 
+
+> z
+
+contains a collider ( Y , Z, or Xz ); hence 
+
+X⊥ 
+
+> z
+
+⊥⊥ E (I3 holds). Conditioning on the collider Y opens E → U → Y ← X⊥ 
+
+> z
+
+, so I1 fails; 
+
+E → U → Y is open given X⊥ 
+
+> z
+
+, so I2 fails. Lemma 1 (for V3) and Lemma 2 (for V1, V 2) convert independence into zero violation and dependence into positive violation. Achievability follows because X⊥ 
+
+> z
+
+∈ Φϵ attains V ∗ 
+
+> k∗
+
+(X⊥ 
+
+> z
+
+) = 0 and V ∗ 
+
+> k
+
+≥ 0.Non-achievability follows from Definition D.2, since ϵ ≤ ϵ0 implies Φϵ ⊆ Φ0.
+
+E.5 Proof of Theorem D.2 Theorem D.2 (Structure Identification) . Under Assumptions 2–6, let ϕn minimize L(ϕ, w ) with n
+
+samples per environment. Define the estimated structure: 
+
+ˆkn := arg min  
+
+> k
+
+Vk(ϕn) (24) 29 Then for the true structure G∗ = Gk∗ :
+
+P(ˆkn = k∗) ≥ 1 − 6 exp 
+
+
+
+− nη 2
+
+2048 κ4
+
+
+
+(25) 
+
+where η is the faithfulness gap (Definition D.2) and κ is the kernel bound (Assumption 2). Proof. Let ϕn ∈ Φϵ with ϵ ≤ ϵ0 attain the infimum of Theorem D.1, as the global minimizer does (Theorem D.4), so that V ∗ 
+
+> k∗
+
+(ϕn) = 0 ; non-achievability gives V ∗ 
+
+> k
+
+(ϕn) ≥ η/ 2 for k̸ = k∗. Apply Lemma 4 with ϵ = η/ 8 to each k and take a union bound over k ∈ { 1, 2, 3}: with probability at least 
+
+1 − 3 · 2 exp( −nη 2/(64 · 32 κ4)) = 1 − 6 exp( −nη 2/(2048 κ4)) , we have |Vk(ϕn) − V ∗ 
+
+> k
+
+(ϕn)| ≤ η/ 8
+
+for all k. On this event, Vk∗ (ϕn) ≤ η/ 8 while Vk(ϕn) ≥ η/ 2 − η/ 8 = 3 η/ 8 for k̸ = k∗, so ˆkn = k∗.Since P 
+
+> n
+
+exp( −cn ) < ∞ for c > 0, the Borel–Cantelli lemma gives ˆkna.s. 
+
+−−→ k∗.
+
+E.6 Proof of Corollary 1 
+
+Proof. Split the tolerance η/ 8 of the proof of Theorem D.2 into two halves. Sampling error: 
+
+Lemma 4 with ϵ = η/ 16 and a union bound over k give |Vk(ϕn) − V ∗ 
+
+> k
+
+(ϕn)| ≤ η/ 16 for all k with probability at least 1 − 6 exp( −nη 2/(256 · 32 κ4)) = 1 − 6 exp( −nη 2/(8192 κ4)) . Approximation error: with probability at least 1 − δ′, |V RFF  
+
+> k
+
+(ϕn) − Vk(ϕn)| ≤ Cκ 2εD ≤ η/ 16 . On both events, 
+
+V RFF  
+
+> k∗
+
+(ϕn) ≤ η/ 8 and V RFF  
+
+> k
+
+(ϕn) ≥ η/ 2 − η/ 8 = 3 η/ 8 for k̸ = k∗, so ˆkRFF  
+
+> n
+
+= k∗. By the uniform convergence of random Fourier features [50], D = Ω( ε−2 
+
+> D
+
+d log( n/δ ′)) features achieve error εD
+
+with probability 1 − δ′; setting εD = η/ (16 Cκ 2) gives D = Ω( κ4η−2d log( n/δ ′)) .
+
+E.7 Proof of Theorem D.3 Theorem D.3 (Invariance Achievement) . Let ϕn minimize L(ϕ, w ) with regularization λ > 0. Under Assumptions 2–6, for the true structure G∗ = Gk∗ :
+
+Vk∗ (ϕn) ≤ C1
+
+λ · max 
+
+> e
+
+ˆRe(w∗ ◦ ϕ∗) + C2n−1/2 (28) 
+
+where ϕ∗ ∈ Φϵ achieves inf ϕ∈Φϵ Vk∗ (ϕ) = 0 and C1, C 2 > 0 are constants depending on κ and the function class complexity. Proof. Let (ϕn, w n) minimize L(ϕ, w ) = max e ˆRe(w ◦ ϕ) + λ · SoftMin β ({Vk(ϕ)}).
+
+Step 1: First-order optimality. At a stationary point, first-order optimality gives:: 
+
+λ
+
+> 3
+
+X
+
+> k=1
+
+αk(ϕn)∇ϕVk(ϕn) = −∇ ϕ max 
+
+> e
+
+ˆRe(wn ◦ ϕn) (61) 
+
+Step 2: Bounding the violation gradient. Under Assumption 6, the violation functions are LV -smooth: 
+
+∥∇ ϕVk(ϕ)∥ ≤ LV (62) From the optimality condition: 
+
+> 3
+
+X
+
+> k=1
+
+αk(ϕn)∇ϕVk(ϕn) ≤ 1
+
+λ ∥∇ ϕ max 
+
+> e
+
+ˆRe∥ (63) 
+
+Step 3: Relating violation to gradient. For the true structure k∗, by Corollary 2, αk∗ (ϕn) → 1 as 
+
+n → ∞ . The SoftMin gradient is approximately: 
+
+∇ϕSoftMin β ≈ ∇ ϕVk∗ (ϕn) (64) By the LV -smoothness and the connection between gradient norms and function values for convex-like functions: 
+
+Vk∗ (ϕn) ≤ Vk∗ (ϕ∗) + ⟨∇ Vk∗ (ϕ∗), ϕ n − ϕ∗⟩ + LV
+
+2 ∥ϕn − ϕ∗∥2 (65) 30 Since Vk∗ (ϕ∗) = 0 and ∇Vk∗ (ϕ∗) = 0 at the optimal invariant representation: 
+
+Vk∗ (ϕn) ≤ LV
+
+2 ∥ϕn − ϕ∗∥2 (66) 
+
+Step 4: Bounding representation error. The optimality of (ϕn, w n) for L implies: 
+
+L(ϕn, w n) ≤ L (ϕ∗, w ∗) (67) This gives: 
+
+max 
+
+> e
+
+ˆRe(wn ◦ ϕn) + λ · SoftMin β ({Vk(ϕn)}) ≤ max 
+
+> e
+
+ˆRe(w∗ ◦ ϕ∗) + λ · 0 (68) Therefore: 
+
+λ · SoftMin β ({Vk(ϕn)}) ≤ max 
+
+> e
+
+ˆRe(w∗ ◦ ϕ∗) (69) By Lemma 3 Part 1: 
+
+λ
+
+
+
+Vk∗ (ϕn) − log 3 
+
+β
+
+
+
+≤ λ · SoftMin β ≤ max 
+
+> e
+
+ˆRe(w∗ ◦ ϕ∗) (70) Rearranging: 
+
+Vk∗ (ϕn) ≤ 1
+
+λ max 
+
+> e
+
+ˆRe(w∗ ◦ ϕ∗) + log 3 
+
+β (71) 
+
+Step 5: Adding estimation error. The empirical violation Vk∗ (ϕn) differs from the population violation V ∗ 
+
+> k∗
+
+(ϕn) by O(n−1/2) (Lemma 4). Therefore: 
+
+Vk∗ (ϕn) ≤ C1
+
+λ max 
+
+> e
+
+ˆRe(w∗ ◦ ϕ∗) + C2n−1/2 (72) where C1 = 1 and C2 absorbs the log 3 /β term and concentration error. 
+
+E.8 Proof of Theorem D.4 (Global Optimality) 
+
+Proof. Assume the representation class Φ contains ϕ∗ satisfying Ik∗ , and W contains the Bayes-optimal predictor w∗.
+
+Part 1: Exact invariance. By Theorem D.1 Part 1, V ∗ 
+
+> k∗
+
+(ϕ∗) = 0 . Since ϕ∗ ∈ Φ:
+
+inf  
+
+> ϕ∈Φ
+
+V ∗ 
+
+> k∗
+
+(ϕ) ≤ V ∗ 
+
+> k∗
+
+(ϕ∗) = 0 (73) Since V ∗ 
+
+> k∗
+
+≥ 0 by definition (HSIC is non-negative), equality holds: 
+
+inf  
+
+> ϕ∈Φ
+
+V ∗ 
+
+> k∗
+
+(ϕ) = 0 (74) At the global minimum (ϕ†, w †) of L, if Vk∗ (ϕ†) > 0, then replacing ϕ† with ϕ∗ would strictly decrease the SoftMin term while achieving no worse prediction loss (since ϕ∗ is sufficient). This contradicts optimality of ϕ†.Therefore Vk∗ (ϕ†) = 0 , which implies Ik∗ (ϕ†) holds. 
+
+Part 2: Bayes risk. At the global minimum, the prediction loss component satisfies: 
+
+max  
+
+> e
+
+Re(w† ◦ ϕ†) ≤ max  
+
+> e
+
+Re(w∗ ◦ ϕ∗) (75) Since ϕ∗ achieves the invariance Ik∗ and w∗ is Bayes-optimal: 
+
+max  
+
+> e
+
+Re(w∗ ◦ ϕ∗) = R∗ (76) where R∗ is the Bayes risk (the irreducible error). For the reverse inequality: since ϕ† satisfies Ik∗ (from Part 1) and invariant representations cannot improve upon the Bayes risk: 
+
+max  
+
+> e
+
+Re(w† ◦ ϕ†) ≥ R ∗ (77) Combining: max e Re(w† ◦ ϕ†) = R∗.31 E.9 Proof of Theorem D.5 (Generalization Bound) 
+
+Proof. Let (ϕn, w n) minimize L over training environments Etrain . We bound the risk on a test environment etest .
+
+Step 1: Decomposition. 
+
+Retest (wn ◦ ϕn) = Retest (wn ◦ ϕn) − R e∗ (wn ◦ ϕn)
+
+| {z }
+
+> (I) distribution shift
+
+(78) 
+
++ Re∗ (wn ◦ ϕn) − ˆRe∗ (wn ◦ ϕn)
+
+| {z }
+
+> (II) generalization gap
+
+(79) 
+
++ ˆRe∗ (wn ◦ ϕn)
+
+| {z }
+
+> (III) training error
+
+(80) where e∗ = arg min e∈E train dK(etest , e ) is the closest training environment. 
+
+Step 2: Bounding (I) - Distribution shift. By the definition of interventional kernel distance (Definition D.3) and Lipschitz continuity of wn (Assumption 5): The change in risk across environments depends on how the representation changes. Under the invariance condition Ik∗ :
+
+|R etest (wn ◦ ϕn) − R e∗ (wn ◦ ϕn)| ≤ Lw · E[∥ϕn(Xetest ) − ϕn(Xe∗ )∥] (81) The representation difference is bounded by the kernel distance: 
+
+E[∥ϕn(Xetest ) − ϕn(Xe∗ )∥] ≤ Cϕ · dK(etest , e ∗) (82) where Cϕ depends on the representation class complexity. Therefore: (I) ≤ Lw · dK(etest , Etrain ) (83) 
+
+Step 3: Bounding (II) - Generalization gap. By standard Rademacher complexity bounds, for the function class {(x, y ) 7 → ℓ(w(ϕ(x)) , y ) : ϕ ∈ Φ, w ∈ W} :
+
+Re∗ (wn ◦ ϕn) − ˆRe∗ (wn ◦ ϕn) ≤ 2Rn(ℓ ◦ W ◦ Φ) + 
+
+r log(2 /δ )2n (84) with probability ≥ 1 − δ/ 2.The Rademacher complexity satisfies: 
+
+Rn(ℓ ◦ W ◦ Φ) ≤ LℓLwRn(Φ) = O
+
+r C(Φ , W)
+
+n
+
+!
+
+(85) where C(Φ , W) is the combined complexity (e.g., VC dimension, covering number). 
+
+Step 4: Bounding (III) - Training error. By definition: 
+
+ˆRe∗ (wn ◦ ϕn) ≤ max 
+
+> e∈E train
+
+ˆRe(wn ◦ ϕn) (86) 
+
+Step 5: Invariance penalty. The violation Vk∗ (ϕn) contributes to generalization error when the invariance is not exactly satisfied. Under approximate invariance: 
+
+Retest (wn ◦ ϕn) − R e∗ (wn ◦ ϕn) ≤ Lw · dK(etest , e ∗) + Cη · Vk∗ (ϕn) (87) where Cη depends on the faithfulness gap (larger η means violations more directly impact generaliza-tion). 
+
+Step 6: Combining bounds. Adding the three terms: 
+
+Retest (wn ◦ ϕn) ≤ max 
+
+> e∈E train
+
+ˆRe(wn ◦ ϕn) + Lw · dK(etest , Etrain ) (88) 
+
++ O
+
+r C(Φ , W) + log(1 /δ )
+
+n
+
+!
+
++ Cη · Vk∗ (ϕn) (89) 32 Defining ξn as the estimation error term: 
+
+ξn = O
+
+r C(Φ , W) + log(1 /δ )
+
+n
+
+!
+
++ Cη · Vk∗ (ϕn) (90) completes the proof. 
+
+E.10 Proof of Corollary 3 (Asymptotic Optimality) 
+
+Proof. We show convergence in probability to the oracle risk. 
+
+Step 1: Vanishing estimation error. From Theorem D.5, the estimation error satisfies: 
+
+ξn = O
+
+r C(Φ , W)
+
+n
+
+!
+
++ Cη · Vk∗ (ϕn) p
+
+−→ 0 (91) as n → ∞ , since: • The first term is O(n−1/2) → 0
+
+• Vk∗ (ϕn) → 0 by Theorem D.3 
+
+Step 2: Training error convergence. By uniform convergence of empirical risk to population risk: 
+
+max 
+
+> e∈E train
+
+ˆRe(wn ◦ ϕn) p
+
+−→ max 
+
+> e∈E train
+
+Re(w∗ ◦ ϕ∗) (92) where (ϕ∗, w ∗) is the optimal invariant solution. 
+
+Step 3: Invariance and optimality. As n → ∞ :• ϕn → ϕ∗ ∈ Φk∗ (the class of representations satisfying Ik∗ )• wn → w∗(ϕ∗) = arg min w R(w ◦ ϕ∗)
+
+Step 4: Limit. Taking n → ∞ in Theorem D.5: 
+
+lim  
+
+> n→∞
+
+Retest (wn ◦ ϕn) = lim 
+
+> n→∞
+
+h
+
+max 
+
+> e
+
+ˆRe(wn ◦ ϕn) + Lw · dK(etest , Etrain ) + ξn
+
+i
+
+(93) 
+
+= max  
+
+> e
+
+Re(w∗ ◦ ϕ∗) + Lw · dK(etest , Etrain ) (94) For invariant representations, the shift penalty captures the irreducible distribution mismatch. The oracle risk over Φk∗ is: 
+
+inf 
+
+> ϕ∈Φk∗
+
+Retest (w∗(ϕ) ◦ ϕ) = max  
+
+> e
+
+Re(w∗ ◦ ϕ∗) + Lw · dK(etest , Etrain ) (95) Therefore: 
+
+Retest (wn ◦ ϕn) p
+
+−→ inf 
+
+> ϕ∈Φk∗
+
+Retest (w∗(ϕ) ◦ ϕ) (96) 
+
+E.11 Proof of Theorem D.6 (Sample Complexity) 
+
+Proof. We derive the sample complexity for joint structure identification and generalization. 
+
+Requirement 1: Structure identification. By Theorem D.2, P(ˆkn̸ = k∗) ≤
+
+6 exp( −nη 2/(2048 κ4)) ≤ δ/ 2 whenever 
+
+n ≥ 2048 κ4
+
+η2 log 12 
+
+δ . (97) 33 For this to be ≤ δ/ 2:
+
+3 exp 
+
+
+
+− nδ 2min 
+
+32 κ4
+
+
+
+≤ δ
+
+2 (98) Solving for n:
+
+n ≥ 32 κ4
+
+δ2min 
+
+log 6
+
+δ (99) 
+
+Requirement 2: Generalization error. From Theorem D.5, the estimation error is: 
+
+ξn = O
+
+r C(Φ , W) + log(2 /δ )
+
+n
+
+!
+
++ Cη · Vk∗ (ϕn) (100) For this to be ≤ ϵ with probability ≥ 1 − δ/ 2, we need: 
+
+r C(Φ , W) + log(2 /δ )
+
+n ≤ ϵ
+
+2 (101) and 
+
+Cη · Vk∗ (ϕn) ≤ ϵ
+
+2 (102) The first condition requires: 
+
+n ≥ 4( C(Φ , W) + log(2 /δ )) 
+
+ϵ2 (103) For the second condition, using the violation bound from Theorem D.3: 
+
+Vk∗ (ϕn) ≤ C1
+
+λ R∗ + C2n−1/2 (104) For fixed λ and R∗, requiring Vk∗ (ϕn) ≤ ϵ/ (2 Cη ) gives another O(n−1/2) requirement, absorbed into the first bound. 
+
+Combining requirements. Taking the maximum: 
+
+n = O
+
+ κ4
+
+η2 log 12 
+
+δ + C(Φ , W) + log(2 /δ )
+
+ϵ2
+
+
+
+(105) Simplifying 
+
+n = O
+
+ κ4
+
+η2 log 12 
+
+δ + κ4
+
+ϵ2 log |Φ|
+
+δ
+
+
+
+(106) where |Φ| denotes the covering number (related to C(Φ , W) via standard bounds). 
+
+Union bound. The total failure probability is: 
+
+P(ˆkn̸ = k∗ or ξn > ϵ ) ≤ δ
+
+2 + δ
+
+2 = δ (107) Therefore, with probability ≥ 1 − δ, both structure identification succeeds and generalization error is 
+
+≤ ϵ.
+
+E.12 Proof of Proposition 1 (Differentiable CVaR) 
+
+Proof. Recall the CVaR definition: 
+
+CVaR ρ({re}) = inf 
+
+> t∈R
+
+(
+
+t + 1
+
+ρ|E| 
+
+X
+
+> e∈E
+
+max( re − t, 0) 
+
+)
+
+(108) 
+
+Convexity. The function g(t) = t + 1
+
+> ρ|E|
+
+P 
+
+> e
+
+max( re − t, 0) is convex in t (sum of affine and piecewise-linear convex functions). The infimum of convex functions preserves convexity in the parameters {re}.34 Optimal threshold. Taking the derivative w.r.t. t:
+
+∂g ∂t = 1 − 1
+
+ρ|E| 
+
+X
+
+> e:re>t
+
+1 = 1 − |{ e : re > t }| 
+
+ρ|E| (109) Setting to zero: |{ e : re > t ∗}| = ρ|E| .Thus t∗ is the (1 − ρ)-quantile of {re}.
+
+Subgradient. By Danskin’s theorem, the subgradient of CVaR ρ w.r.t. re at the optimal t∗ is: 
+
+∂CVaR ρ
+
+∂r e
+
+= 1
+
+ρ|E| I[re ≥ t∗] (110) By the chain rule, the subgradient w.r.t. ϕ is: 
+
+∂ϕCVaR ρ = X
+
+> e∈E
+
+∂CVaR ρ
+
+∂r e
+
+∇ϕre = X
+
+> e∈E
+
+p∗ 
+
+> e
+
+∇ϕ ˆRe (111) where p∗ 
+
+> e
+
+= 1 
+
+> ρ|E|
+
+I[re ≥ t∗].Note that P 
+
+> e
+
+p∗ 
+
+> e
+
+= 1 (the weights form a probability distribution concentrated on the worst ρ-fraction of environments). 
+
+E.13 Proof of Theorem F.1 (Algorithm Convergence) 
+
+Proof. We analyze convergence of Algorithm 1 using a Lyapunov argument. 
+
+Step 1: Lyapunov function. Define: 
+
+Ψt := L(ϕt, w t) + γD KL (α(t)∥ek∗ ) (112) where ek∗ is the indicator vector for the true structure and γ > 0 is a coupling constant. The KL divergence term penalizes deviation from the correct structure: 
+
+DKL (α(t)∥ek∗ ) = − log α(t) 
+
+> k∗
+
+≥ 0 (113) with equality iff α(t) 
+
+> k∗
+
+= 1 .
+
+Step 2: Per-step descent. Under smoothness (Assumption 6), for step size ηt:
+
+L(ϕt+1 , w t+1 ) ≤ L (ϕt, w t) − ηt∥∇L (ϕt, w t)∥2 + Lη 2
+
+> t
+
+2 ∥∇L∥ 2 + noise (114) where L is the smoothness constant. Taking expectations over minibatch randomness: 
+
+E[L(ϕt+1 , w t+1 ) | F t] ≤ L (ϕt, w t) − ηt(1 − Lη t/2) ∥∇L∥ 2 + η2 
+
+> t
+
+σ2 (115) where σ2 is the gradient variance bound. 
+
+Step 3: Weight evolution. The adaptive weights evolve as: 
+
+α(t+1)  
+
+> k
+
+= exp( −βt+1 Vk(ϕt+1 )) 
+
+P 
+
+> j
+
+exp( −βt+1 Vj (ϕt+1 )) (116) As Vk∗ (ϕt) → 0 (by the invariance optimization) and Vk(ϕt) ≥ η/ 2 for k̸ = k∗ (by Theorem D.1): 
+
+α(t) 
+
+> k∗
+
+→ 1 as t → ∞ (117) The temperature annealing βt → βmax accelerates this concentration. 
+
+Step 4: Lyapunov descent. Combining the objective descent and weight concentration: 
+
+E[Ψ t+1 − Ψt | F t] ≤ − cη t∥∇L∥ 2 + O(η2 
+
+> t
+
+) − γ · (KL decrease) (118) 35 The KL term decreases as weights concentrate, providing additional descent. 
+
+Step 5: Summing over iterations. For ηt = c0/√t:
+
+> T
+
+X
+
+> t=1
+
+ηt(1 − Lη t/2) = Ω( √T ) (119) 
+
+> T
+
+X
+
+> t=1
+
+η2 
+
+> t
+
+= O(log T ) (120) Summing the descent inequality: 
+
+> T
+
+X
+
+> t=1
+
+ηtE[∥∇L (ϕt, w t)∥2] ≤ Ψ1 − E[Ψ T +1 ] + O(log T ) ≤ Ψ1 + O(log T ) (121) Therefore: 
+
+min  
+
+> t≤T
+
+E[∥∇L (ϕt, w t)∥2] ≤ Ψ1 + O(log T )
+
+PTt=1 ηt
+
+= O(T −1/2) (122) This establishes Part 1 (stationarity). 
+
+Parts 2 and 3. Part 2 (weight concentration) follows from Corollary 2 applied at iteration T .Part 3 (violation decrease) follows from the objective structure: at a stationary point, the SoftMin term (dominated by Vk∗ for large β) must be small for the total gradient to vanish. Specifically, from the optimality condition: 
+
+λ∇ϕVk∗ (ϕT ) ≈ −∇ ϕ max 
+
+> e
+
+ˆRe (123) By smoothness of Vk∗ :
+
+Vk∗ (ϕT ) ≤ 12LV
+
+∥∇ Vk∗ (ϕT )∥2 = O(λ−2) · O(T −1/2) = O(T −1/2) (124) for fixed λ.
+
+E.14 Proof of Theorem G.1 (Heterogeneous Structure Identification) 
+
+Proof. We extend the homogeneous case to per-feature structure identification. 
+
+Step 1: Per-feature violation separation. For each feature j with true structure σ∗(j) = k∗
+
+> j
+
+̸ = ⊥,by Theorem D.1 applied to the j-th component: 
+
+V (j)
+
+> k∗
+> j
+
+(ϕ∗) = 0 (125) 
+
+V (j) 
+
+> k
+
+(ϕ∗) ≥ η(j)/2 for k̸ = k∗ 
+
+> j
+
+(126) where η(j) is the per-feature faithfulness gap. 
+
+Step 2: Concentration for each feature. By Lemma 4 applied to feature j:
+
+P
+
+
+
+|V (j) 
+
+> k
+
+(ϕn) − V (j)∗ 
+
+> k
+
+(ϕn)| > η(j)
+
+8
+
+
+
+≤ 2 exp 
+
+
+
+− n(η(j))2
+
+2048 κ4
+
+
+
+(127) 
+
+Step 3: Threshold calibration. Under H0 : σ∗(j) = ⊥ (no structure applies), all three violations are positive. The permutation null distribution of \HSIC concentrates around zero, and the (1 −α)-quantile 
+
+τ (j) 
+
+> α
+
+provides a valid threshold. By construction of permutation tests: 
+
+P
+
+
+
+min  
+
+> k
+
+V (j) 
+
+> k
+
+(ϕn) ≤ τ (j) 
+
+> α
+
+| σ∗(j) = ⊥
+
+
+
+≤ α (128) 
+
+Step 4: Per-feature identification. For feature j with σ∗(j) = k∗
+
+> j
+
+̸ = ⊥:On the high-probability event (concentration holds): 36 • V (j)
+
+> k∗
+> j
+
+(ϕn) ≤ η(j)/8 < τ (j) 
+
+> α
+
+for appropriate calibration • V (j) 
+
+> k
+
+(ϕn) ≥ η(j)/2 − η(j)/8 = 3 η(j)/8 > τ (j) 
+
+> α
+
+for k̸ = k∗
+
+> j
+
+Therefore ˆσn(j) = k∗ 
+
+> j
+
+= σ∗(j).
+
+Step 5: Probability bound. For each feature j with σ∗(j)̸ = ⊥:
+
+P(ˆ σn(j) = σ∗(j)) ≥ 1 − P(concentration fails ) − P(threshold miscalibrated ) (129) 
+
+≥ 1 − 6 exp 
+
+
+
+− n(η(j))2
+
+2048 κ4
+
+
+
+− α (130) For features with σ∗(j) = ⊥:
+
+P(ˆ σn(j)̸ = ⊥) = P
+
+
+
+min  
+
+> k
+
+V (j) 
+
+> k
+
+≤ τ (j)
+
+> α
+
+
+
+≤ α (131) by the threshold calibration. 
+
+## F Algorithm Details 
+
+This section presents the complete optimization procedure for structure-agnostic representation learning, including the main algorithm, subroutines, complexity analysis, and convergence guarantees. 
+
+F.1 Main Algorithm 
+
+Algorithm 1 shows a single run; in practice we run it from M ≥ 10 initializations and select the final model as described in Section 5.3. 
+
+Proposition 1 (Differentiable CVaR) . CVaR ρ is convex and subdifferentiable. The sub-gradient w.r.t. 
+
+ϕ is ∂ϕCVaR ρ = P 
+
+> e∈E
+
+p∗ 
+
+> e
+
+∇ϕ ˆRe,where p∗ 
+
+> e
+
+= 1 
+
+> ρ|E|
+
+I[ ˆRe ≥ t∗] and t∗ is the optimal threshold. 
+
+The structure-agnostic learning problem admits a bi-level decomposition: 
+
+Outer: α∗ = arg min  
+
+> α∈∆2
+
+L(ϕ∗(α), w ∗(α); α) (132) 
+
+Inner: (ϕ∗(α), w ∗(α)) = arg min 
+
+> ϕ,w
+
+
+
+CVaR ρ({ ˆRe}) + λ X
+
+> k
+
+αk Vk (ϕ)
+
+
+
+(133) 
+
+where ∆2 = {α ∈ R3+ : P 
+
+> k
+
+αk = 1 } is the probability simplex. 
+
+F.2 Subroutines 
+
+See Algorithm 2-Algorithm 4. 
+
+Definition F.1 (Random Fourier Features) . For shift-invariant kernels k(x, x ′) = k(x − x′), the random feature map is ψ : X → RD : ψ(x) = 
+
+q 2
+
+> D
+
+cos( ω⊤ 
+
+> 1
+
+x + b1), . . . , cos( ω⊤ 
+
+> D
+
+x + bD )⊤, where 
+
+ωd ∼ p(ω) is the spectral density and bd ∼ Uniform[0 , 2π].
+
+F.3 Complexity Analysis 
+
+Each iteration of Algorithm 1 has time complexity 
+
+O  |E| · B · (dx + dz ) + N D 2 + N 3 , (134) where |E| is the number of environments, B the batch size per environment, N = |E| · B the pooled batch size, D the RFF dimension, and dx, d z the input and representation dimensions. The N D 2
+
+term is RFF-HSIC (Algorithm 4); the N 3 term is the kernel ridge solve (Algorithm 3), where one Cholesky factorization per conditioning variable is shared across all regression targets. Both terms depend on the minibatch size N rather than the dataset size, and the total cost is linear in the number of candidate structures. 37 Algorithm 1 Structure-agnostic Causal Representation Learning (SaCRL) 
+
+Input: Multi-environment data D = {De}e∈E , regularization λ, initial temperature β0, final temperature βmax ,learning rate η, iterations T , RFF dimension D, CVaR level ρ
+
+Output: Learned representation ϕ∗, predictor w∗, identified structure ˆk
+
+1: // Warm-start with ERM 
+
+2: (ϕ0, w 0) ← arg min ϕ,w 1
+
+> |E|
+
+P 
+
+> e∈E
+
+ˆRe(w ◦ ϕ)
+
+3: // Initialize RFF maps 
+
+4: Sample {ωd, b d}Dd=1 for kernels kZ , k Y , k E
+
+5: for t = 1 , . . . , T do 
+
+6: // Temperature annealing 
+
+7: βt ← β0 + ( βmax − β0) · min(2 t/T, 1) 
+
+8: // Compute representations across all environments 
+
+9: for each environment e ∈ E do 
+
+10: Sample minibatch {(xej , y ej )}Bj=1 from De
+
+11: zej ← ϕt−1(xej ) for all j
+
+12: end for 
+
+13: Pool data: {(zi, y i, e i)}Ni=1 ← all minibatch samples with environment labels 
+
+14: // Compute structure violations (Algorithm 2) 
+
+15: (V1, V 2, V 3) ← COMPUTE VIOLATIONS ({(zi, y i, e i)}Ni=1 )
+
+16: // Compute adaptive weights 
+
+17: αk ← exp( −βtVk )/ P3 
+
+> j=1
+
+exp( −βtVj ) for k = 1 , 2, 3
+
+18: // Compute distributionally robust prediction loss 
+
+19: re ← 1
+
+> B
+
+PBj=1 ℓ(wt−1(zej ), y ej ) for each e ∈ E 
+
+20: Lpred ← CVaR ρ({re}e∈E )
+
+21: // Total loss 
+
+22: L ← L pred + λ · SoftMin βt ({Vk }3
+
+> k=1
+
+)
+
+23: // Gradient update 
+
+24: ϕt ← ϕt−1 − η∇ϕL
+
+25: wt ← wt−1 − η∇w L
+
+26: end for 
+
+27: // Final structure identification 
+
+28: Compute final violations Vk (ϕT ) for k = 1 , 2, 3
+
+29: ˆk ← arg min k∈{ 1,2,3} Vk (ϕT )
+
+30: return ϕT , wT , ˆk
+
+Algorithm 2 Compute Structure Violations 
+
+Input: Pooled data {(zi, y i, e i)}Ni=1 , regularization γ
+
+Output: Violations (V1, V 2, V 3)
+
+1: // Structure 1 (anti-causal): Test ϕ(X) ⊥⊥ E | Y
+
+2: ˜z ← KERNEL RESIDUALS ({zi}, {yi}, γ ) ▷ Regress Z on Y
+
+3: ˜e ← KERNEL RESIDUALS ({ei}, {yi}, γ ) ▷ Regress E on Y
+
+4: V1 ← \HSIC RFF (˜ z, ˜e)
+
+5: // Structure 2 (confounded-descendant): Test Y ⊥⊥ E | ϕ(X)
+
+6: ˜y ← KERNEL RESIDUALS ({yi}, {zi}, γ ) ▷ Regress Y on Z
+
+7: ˜e′ ← KERNEL RESIDUALS ({ei}, {zi}, γ ) ▷ Regress E on Z
+
+8: V2 ← \HSIC RFF (˜ y, ˜e′)
+
+9: // Structure 3 (confounded-outcome): Test ϕ(X) ⊥⊥ E
+
+10: V3 ← \HSIC RFF (z, e ) ▷ No residualization needed 
+
+11: return (V1, V 2, V 3)
+
+Algorithm 3 Kernel Regression Residuals 
+
+Input: Target values {ai}ni=1 , conditioning values {ci}ni=1 , regularization γ
+
+Output: Residuals {˜ai}ni=1 
+
+1: Compute kernel matrix: [K]ij ← k(ci, c j )
+
+2: Solve linear system: α ← (K + γI n)−1a where a = [ a1, . . . , a n]⊤
+
+3: Compute predictions: ˆai ← Pnj=1 αj k(ci, c j ) for i = 1 , . . . , n 
+
+4: Compute residuals: ˜ai ← ai − ˆai for i = 1 , . . . , n 
+
+5: return {˜ai}ni=1 
+
+38 Algorithm 4 RFF-HSIC Computation 
+
+Input: Samples {ui}ni=1 , {vi}ni=1 , RFF parameters {(ωud , b ud )}Dd=1 , {(ωvd , b vd)}Dd=1 
+
+Output: \HSIC RFF (U, V ) 
+
+> 1:
+
+// Compute random feature embeddings  
+
+> 2:
+
+for i = 1 , . . . , n do  
+
+> 3:
+
+ψui ← p2/D · [cos( ωu⊤ 
+
+> 1
+
+ui + bu 
+
+> 1
+
+), . . . , cos( ωu⊤ 
+
+> D
+
+ui + buD )] ⊤ 
+
+> 4:
+
+ψvi ← p2/D · [cos( ωv⊤ 
+
+> 1
+
+vi + bv 
+
+> 1
+
+), . . . , cos( ωv⊤ 
+
+> D
+
+vi + bvD )] ⊤ 
+
+> 5:
+
+end for  
+
+> 6:
+
+// Compute mean embeddings  
+
+> 7:
+
+ˆμu ← 1
+
+> n
+
+Pni=1 ψui , ˆμv ← 1
+
+> n
+
+Pni=1 ψvi 
+
+> 8:
+
+// Compute cross-covariance  
+
+> 9:
+
+ˆΣuv ← 1
+
+> n
+
+Pni=1 ψui (ψvi )⊤ 
+
+> 10:
+
+// HSIC estimate  
+
+> 11:
+
+\HSIC ← ∥ ˆΣuv − ˆμu ˆμ⊤ 
+
+> v
+
+∥2 
+
+> F
+> 12:
+
+return \HSIC 
+
+F.4 Convergence Guarantees Proposition 2 (Warm-Start Guarantee) . The ERM initialization (ϕ0, w 0) satisfies ϕ0 ∈ Φϵ (Defini-tion D.1) with ϵ = O(n−1/2). This ensures optimization begins in the predictive region, avoiding degenerate solutions where Vk = 0 for all k but prediction accuracy is trivial. 
+
+Theorem F.1 (Algorithm Convergence) . Under Assumptions 2–6, with step size ηt = O(t−1/2) and linear annealing βt = β0 + ( βmax − β0) · min(2 t/T, 1) , Algorithm 1 satisfies: 1. Stationarity: E[∥∇L (ϕt, w t)∥2] ≤ O(T −1/2)
+
+2. Weight concentration: α(T ) 
+
+> k∗
+
+≥ 1 − 2 exp( −βT η/ 2) where k∗ is the true structure 3. Violation decrease: E[Vk∗ (ϕT )] ≤ O(T −1/2)
+
+where expectations are over stochastic minibatches. Proof sketch. Define the Lyapunov function: 
+
+Ψt := L(ϕt, w t) + γD KL (α(t)∥α∗) (135) where α∗ = ek∗ is the indicator for the true structure and γ > 0 is a coupling constant. Under smoothness (Assumption 6), the expected per-step decrease satisfies: 
+
+E[Ψ t+1 − Ψt | F t] ≤ − cη t∥∇L (ϕt, w t)∥2 + O(η2 
+
+> t
+
+) (136) where Ft is the filtration up to iteration t. Summing over t = 1 , . . . , T and using P 
+
+> t
+
+ηt = O(√T ),P 
+
+> t
+
+η2 
+
+> t
+
+= O(log T ) yields Part 1. Part 2 follows from Theorem D.1: as Vk∗ (ϕt) → 0 and Vk(ϕt) ≥ η/ 2 for k̸ = k∗, the SoftMin weights concentrate on k∗.Part 3 follows from the objective structure: reducing L requires reducing SoftMin β ({Vk}), which for large β is dominated by min k Vk = Vk∗ .
+
+## G Extension to Heterogeneous Structures 
+
+When different feature subsets follow different causal structures, we extend the framework to per-variable structure assignment. 
+
+Definition G.1 (Variable-Wise Structure Assignment) . Let X = ( X(1) , . . . , X (d)) be d-dimensional features. A heterogeneous causal structure is a mapping σ∗ : {1, . . . , d } → { 1, 2, 3, ⊥} assigning each feature to a canonical structure or ⊥ (none applies). The variable-wise violation for feature j is 
+
+V (j) 
+
+> k
+
+(ϕ) := Vk(ϕ(j)).39 Definition G.2 (Calibrated Threshold) . For significance level α ∈ (0 , 1) , the calibrated threshold for feature j is: 
+
+τ (j) 
+
+> α
+
+:= quantile 1−α
+
+
+
+\HSIC (j)null 
+
+
+
+(137) where \HSIC (j)null is the permutation distribution under the null hypothesis of independence. 
+
+Definition G.3 (Heterogeneous Objective) . The structure-agnostic objective with heterogeneous assignment is: 
+
+Lhet (ϕ, w ) := max 
+
+> e∈E
+
+ˆRe(w ◦ ϕ) + λ
+
+> d
+
+X
+
+> j=1
+
+SoftMin β
+
+
+
+{V (j) 
+
+> k
+
+(ϕ)}3
+
+> k=1
+
+
+
+(138) 
+
+Theorem G.1 (Heterogeneous Structure Identification) . Under Assumptions 2–6 applied to each feature subset, let ϕn minimize Lhet with n samples per environment. Define the estimated per-variable structure: 
+
+ˆσn(j) := 
+
+(
+
+arg min k∈{ 1,2,3} V (j) 
+
+> k
+
+(ϕn) if min k V (j) 
+
+> k
+
+(ϕn) ≤ τ (j)
+
+> α
+
+⊥ otherwise (139) 
+
+Then for each feature j with true structure σ∗(j)̸ = ⊥:
+
+P (ˆ σn(j) = σ∗(j)) ≥ 1 − 6 exp 
+
+
+
+− n(η(j))2
+
+2048 κ4
+
+
+
+− α (140) 
+
+where η(j) is the faithfulness gap of feature j. For features with σ∗(j) = ⊥, the false-positive rate satisfies P(ˆ σn(j)̸ = ⊥) ≤ α.
+
+Corollary 4 (Heterogeneous Generalization) . Under the conditions of Theorem G.1, the generaliza-tion bound (Theorem D.5) holds with estimation error: 
+
+ξhet  
+
+> n
+
+= O
+
+r d · C (Φ , W) + log( d/δ )
+
+n
+
+!
+
++ Cη
+
+X
+
+> j:σ∗(j)̸=⊥
+
+V (j)
+
+> σ∗(j)
+
+(ϕn) (141) 
+
+The factor d reflects the cost of per-feature structure identification. 
+
+## H Additional Experiments 
+
+H.1 Implementation H.1.1 Hyperparameter Selection 
+
+The objective Lρ(ϕ, w ) involves hyperparameters: λ (invariance weight), β (SoftMin temperature), γ
+
+(kernel regression regularization), D (RFF dimension), and ρ (CVaR level). Table 9 provides defaults and selection guidance. Table 9: Recommended hyperparameter settings for Algorithm 1. 
+
+Parameter Default Range Selection Strategy 
+
+λ 1.0 [0 .5, 5] Per experiment, by OOD accuracy (oracle selection) 
+
+β0 1.0 [0 .5, 2] Fixed (soft selection initially) 
+
+βmax 50 [20 , 100] Higher for sharper selection 
+
+γ n−1/3 [n−1/2, n −1/5] Cross-validation for kernel regression 
+
+ρ 0.5 [1 /|E| , 1] Smaller ρ when all environments are trusted 
+
+D 1000 [500 , 2000] Increase if approximation error high 
+
+H.1.2 Numerical Stability 
+
+• Add small ϵ = 10 −6 to diagonal of kernel matrices before inversion • Clip βV k to [−20 , 20] before exp to prevent overflow • Normalize HSIC values by their empirical standard deviation for comparable scales 40 H.1.3 Kernel Selection 
+
+We use the following kernels: • Representations kZ : Gaussian RBF with bandwidth σ = median( ∥zi − zj ∥)
+
+• Labels kY : Delta kernel for classification; Gaussian RBF for regression • Environments kE : Delta kernel (discrete environments) 
+
+H.2 Synthetic DGP Equations 
+
+For each canonical structure, we generate m = 3 training environments with d = 10 features: • G1 (Anti-causal): Y ∼ Bernoulli (0 .5) , Z ∼ N (0 , I 5), ϵ ∼ N (0 , σ 2 
+
+> e
+
+Id) where σe ∈{0.5, 1.0, 1.5} varies across environments. X = W1 · onehot (Y ) + W2 · Z + ϵ where W1 ∈ Rd×2
+
+and W2 ∈ Rd×5 are fixed random matrices. • G2 (Confounded-descendant): U ∼ N (μe, I 3) with environment-specific means μe ∈{(−1, 0, 0) , (0 , 0, 0) , (1 , 0, 0) }, X = W1 · U + ϵX where ϵX ∼ N (0 , 0.1Id), and Y =
+
+σ(w⊤ 
+
+> xy
+
+X + w⊤ 
+
+> uy
+
+U + ϵY ) where ϵY ∼ N (0 , 0.1) and σ is the sigmoid function, with the out-come binarized via Bernoulli sampling. • G3 (Confounded-outcome): U ∼ N (0 , I 3), XZ⊥ = W1 · U + ϵ1 where ϵ1 ∼ N (0 , σ 2 
+
+> e
+
+Id/ 2)
+
+with σe ∈ { 0.5, 1.0, 1.5} varying across environments, Y = σ(w⊤XZ⊥ ) binarized, XZ =
+
+W2 · onehot (Y ) + W3 · U + ϵ2, and X = ( XZ , X Z⊥ ).All weight matrices are sampled from N (0 , 0.52) and fixed across runs. 
+
+H.3 Hyperparameter Sensitivity Results 
+
+We sweep the invariance penalty weight λ and SoftMin temperature βmax across varying degrees of structural misspecification using the bidirectional DGP from Section 7.6 with ν ∈ { 0.25 , 0.50 , 0.75 }.Results are shown in Table 10 to Table 11. Table 10: Sensitivity to invariance penalty weight λ (βmax = 50 fixed). OOD accuracy (%).                    
+
+> Setting λ=0 .5λ=1 .0λ=2 .0λ=5 .0
+> ν=0 .25 (near-causal) 46.0 46.8 47.8 50.2
+> ν=0 .50 (bidirectional) 69.0 70.3 70.4 73.9
+> ν=0 .75 (near-anticausal) 99.7 99.5 99.5 99.6
+
+Table 11: Sensitivity to SoftMin temperature βmax (λ = 5 .0 fixed). OOD accuracy (%).                
+
+> Setting βmax =20 βmax =50 βmax =100
+> ν=0 .25 (near-causal) 50.3 50.2 51.3
+> ν=0 .50 (bidirectional) 71.4 73.9 72.9
+> ν=0 .75 (near-anticausal) 99.6 99.6 99.6
+
+λ sensitivity is mild and monotonic: total variation from λ=0 .5 to λ=5 .0 is at most ∼ 5pp in the hardest settings, with no catastrophic failure. βmax is even more stable (variation ≤ 2.5pp). When the anti-causal component dominates ( ν=0 .75 ), all configurations reach ∼ 99 .5%. We recommend 
+
+λ ∈ [1 .0, 5.0] and βmax = 50 as robust defaults. 
+
+H.4 Crossover Between Candidate Structures 
+
+Table 12 sweeps ν across the crossover between G2 (ν=0 ) and G1 (ν=1 ) in the bidirectional DGP of Section 7.6, comparing SoftMin with hard arg min k Vk selection. The sweep uses independent seeds; at ν=0 .50 it agrees with Table 6 within one standard error. The last column is the permutation 
+
+p-value of min k Vk against the null threshold τα (Definition G.2). 
+
+H.5 Margin Calibration 
+
+Table 13 bins synthetic runs with known structure by the weight margin α(1) − α(2) . Identification accuracy increases monotonically with the margin, so the margin measures how strongly the data support the selected structure. 41 Table 12: Adaptive weights and OOD accuracy (%) across the G2–G1 crossover. 
+
+ν α1 α2 α3 SoftMin Hard arg min Perm. p
+
+0.40 0.407 ±0.041 0.489 ±0.080 0.104 ±0.058 59.5 ±2.0 56.5 ±2.7 0.013 ±0.018 
+
+0.45 0.415 ±0.073 0.478 ±0.139 0.107 ±0.075 66.2 ±1.5 62.5 ±2.9 0.011 ±0.012 
+
+0.50 0.421 ±0.089 0.422 ±0.143 0.157 ±0.071 72.4 ±1.5 68.6 ±3.6 0.181 ±0.011 
+
+0.55 0.484 ±0.079 0.417 ±0.143 0.099 ±0.077 79.8 ±2.0 76.5 ±2.2 0.033 ±0.039 
+
+0.60 0.549 ±0.069 0.346 ±0.126 0.105 ±0.077 87.4 ±1.9 84.7 ±2.2 0.016 ±0.033 
+
+Table 13: Identification accuracy by weight margin on synthetic data. 
+
+Margin Runs Correct ID accuracy (%) 
+
+< 0.1 48 20 41.7 
+
+0.1–0.3 60 39 65.0 
+
+0.3–0.5 72 62 86.1 
+
+> 0.5 60 57 95.0 
+
+H.6 Semi-Synthetic Bayesian-Network Benchmarks Construction. For each benchmark, we select a target Y in a published network, take X as its Markov blanket, and induce environments by soft interventions on a latent parent outside the blanket. The canonical structure is read off the published DAG by the rules of Section 2. G3 requires two independent root components reconverging at Y , which ALARM (12 roots) supplies twice and ASIA (2 roots) once; G1 is not derivable under this recipe, since it requires the Markov blanket of Y to consist only of descendants of Y . Before training, each derived structure is verified in simulation: its own invariance holds while the competing one fails. We keep a benchmark only if the competing-invariance violation exceeds 5.0 standard deviations of the permutation null. 
+
+Departures from the published networks. The SACHS consensus DAG fits its own observational data weakly, so SACHS requires larger interventions to produce contrast. For ASIA, we keep the published structure but re-parameterize two conditional probability tables whose published marginals leave the exogenous branch nearly constant. ALARM requires no adjustment. 
+
+Discussion. Five benchmarks span two derivable structures across three networks (three G2, two G3), so a method that returns a single structure by default is correct on at most 3/5. alarm_co separates more cleanly than asia_g2 (28.3 vs. 24.6 null standard deviations) but has lower accuracy, because its target has three classes over 12 one-hot columns rather than two. alarm_g2 barely clears the 5.0 threshold and is correspondingly the least reliable. The two G3 benchmarks come from different networks, so their agreement is not an artifact of a single graph. 
+
+H.7 Cross-Fitting Variant 
+
+Conditional HSIC via kernel ridge regression residualization can be sensitive to estimation bias. We implement a cross-fitting variant following the SplitKCI protocol [48]: fit kernel regression on fold 1, compute residuals on fold 2, swap and average. Results are displayed in Table 14. Table 14: Cross-fitting comparison on the bidirectional DGP ( ν = 0 .5, n=1000 per environment). Independent run of the default configuration. 
+
+Variant OOD Acc (%) No splitting (default) 73.9 ± 2.7 
+
+Cross-fitted (2-fold) 74.0 ± 2.7 
+
+ERM (reference) 61.2 ± 4.5 
+
+OOD accuracy is virtually identical (73.9 vs. 74.0), confirming that estimation-induced bias from joint residualization does not meaningfully affect downstream performance at the sample sizes used in our experiments. Both variants outperform ERM by ∼ 13 pp. 42 H.8 EMA Conditioning Target 
+
+Table 15 conditions V1 and V2 on an exponential moving average (EMA) of the encoder weights with momentum m, while gradients flow only through the online encoder. Results are nearly unchanged, so SaCRL is robust to this choice. Table 15: EMA conditioning target on synthetic G2 (n=2000 ). m=0 is the default online encoder.          
+
+> Momentum mStru. ID (%) OOD Acc (%) 0 (default) 89.0 84.2 0.99 89.4 84.3 0.999 89.8 84.5
+
+H.9 RFF Approximation Error 
+
+Table 16 reports the mean absolute difference between RFF-based and exact HSIC on synthetic data ( n=2000 ). The error decreases steadily with D, from 1.42 × 10 −3 at D=100 to 4.4 × 10 −4 at 
+
+D=2000 , consistent with the η−2 scaling of the required D in Corollary 1. Table 16: RFF approximation error versus exact HSIC (synthetic, n=2000 ).               
+
+> D100 250 500 1000 2000 Mean |\HSIC RFF −\HSIC |(×10 −4)14.2 12.9 8.4 7.7 4.4
+
+H.10 Effect of the Number of Training Environments 
+
+Table 17 reports the effect of varying the number of training environments m on synthetic G2 data (n = 2000 ). With only two environments, structure identification is unstable due to insufficient contrast for testing the three invariances (consistent with Assumption 1 requiring rank( D) = 3 ). Using three or more environments yields reliable identification ( ≥ 89% ) and OOD accuracy ( ≥ 84% ), with diminishing returns beyond m = 4 .Table 17: Effect of number of training environments m on synthetic G2 data ( n=2000 ).                   
+
+> mStru. ID. Acc (%) OOD Acc (%) 271.5 ±4.2 74.3 ±2.8
+> 389.0 ±1.6 84.2 ±1.3
+> 496.5 ±1.2 85.1 ±1.1
+> 597.0 ±0.9 85.4 ±0.9
+
+H.11 Computational Efficiency and Runtime Analysis H.11.1 Training Time and Memory 
+
+Table 18 compares training time and memory. With D=1000 RFF features, our method adds modest overhead ( ∼ 30% ) over ERM while avoiding the O(n2) complexity of exact HSIC. For Colored MNIST (10K images), exact kernel matrices would require > 10 GB GPU memory and 4× training time; RFF introduces negligible accuracy loss while enabling scalability. 
+
+H.11.2 Per-Epoch Runtime Breakdown 
+
+Table 19 breaks down the training time into different components. We observe that computing HSIC via random Fourier features (RFF) significantly reduces the computational cost. 43 Table 18: Training time and memory for 100 epochs on Colored MNIST (10K samples).                 
+
+> Method Time (min) GPU Memory Relative ERM 8.3 2.1 GB 1.0×
+> IRM 9.8 2.4 GB 1.18 ×
+> SaCRL (RFF, D=1000 )10.9 2.7 GB 1.31 ×
+> SaCRL (exact HSIC) 33.2 11.8 GB 4.0×
+
+Table 19: Runtime breakdown per epoch on PACS.               
+
+> Component Time (s) Fraction Forward pass 4.59 42% HSIC computation (RFF) 3.02 28% Kernel regression 1.75 16% Backward pass 1.19 11% Other 0.34 3% Total 10.9 100%
+
+Table 20: PACS (Photo held out): frozen vs. fine-tuned ResNet18. OOD accuracy (%), 3 seeds.                   
+
+> Method Frozen Fine-tuned ∆
+> ERM 93.2 95.1 +1.9 IRM 93.2 95.2 +2.0 VREx 93.0 94.9 +1.9 CIRCE 92.5 94.1 +1.6 SaCRL 94.0 95.0 +1.0
+
+H.12 Fine-Tuned Backbone 
+
+## I Limitation 
+
+Our framework targets three canonical structures arising under partial observability and confounding-mediated environment effects; cyclic systems, multi-confounder dynamics, or settings where E
+
+directly rewires X–Y fall outside this scope , though the heterogeneous extension and the empirical robustness study (Section 7.6) show graceful degradation under misspecification. In such cases, SaCRL signals the mismatch: if min k Vk exceeds the permutation threshold τα (Definition G.2), the data do not support a canonical structure, and the selected structure should not be interpreted as identified. Structure identification further requires sufficient environment diversity (Assumption 1) and at least m ≥ 3 training environments (Appendix H.10); under near-identical environments, the invariance penalty loses informativeness even though identification remains stable. Conditional HSIC estimation depends on kernel regression quality and may benefit from cross-fitting in low-sample regimes, per results in Table 14. 
+
+## J Applications and Broader Connections 
+
+SaCRL addresses a question that recurs across several fields: which invariance should a model enforce when the causal structure of the data is unknown? We discuss five areas where this question arises, review recent work in each, and state what SaCRL adds. 
+
+Identifiability beyond an assumed structure. A central open problem in representation learning is identifiability : whether the data determine the learned representation uniquely, up to simple transformations such as permutation and element-wise reparameterization, so that it recovers the factors that generated the data rather than one of many equally predictive alternatives. Without identifiability, a representation carries no guarantee of meaning, and the guarantees built on it, including robustness under distribution shift, do not follow. The foundational results are negative: nonlinear independent component analysis is not identifiable in general [22], and unsupervised disentanglement is impossible without inductive biases on both the model and the data [36]. Progress 44 since then has come from adding structure. Auxiliary variables such as environment labels [27], paired views from data augmentation [71], and interventions [2] each restore identifiability, and together they define the program of causal representation learning [55]. Each of these results, however, relies on a generative structure supplied by the analyst: which variables cause which, and where environments intervene. The structure itself is never identified; it enters as an assumption, and when the assumption is wrong the guarantees no longer apply. SaCRL moves identification one level up. Within the three canonical structures, it identifies from multi-environment data which structure generated the data, and therefore which invariance a representation should satisfy. 
+
+Human–AI interaction and longitudinal behavioral modeling. Conversational AI systems now interact with the same people over weeks and months, which makes human–AI interaction a lon-gitudinal, two-way process: users adapt to the system, and the system adapts to users through personalization, memory, and training on their feedback. Recent evidence shows why this process must be modeled causally. In a four-week randomized study with about 1,000 participants and more than 300,000 messages, the assigned chatbot conditions had no significant effect on psychosocial out-comes, whereas participants who chose to use the chatbot more reported worse outcomes [16], which leaves open whether heavier use drives these outcomes or reflects them. Language models tailor their answers to the beliefs users express [58], so the user’s state shapes the model’s behavior; conversely, deployed predictions and recommendations change the very behavior they later learn from [43, 23]. Preferences also differ systematically across people and cultures, as PRISM documents by linking 1,500 participants from 75 countries to 8,011 live conversations with 21 language models [28]. The gap is that any model of user or assistant behavior over time must decide what to hold invariant across users, cultures, and time periods, and that decision depends on the direction of influence. If the modeled signal is generated by the target, as when a user’s latent state generates their messages, the anti-causal invariance I1 applies; if the signal drives the target, as when the assistant’s responses drive the user’s next action, the causal invariances I2 or I3 apply; and if influence runs both ways, the system is in a feedback loop that no single invariance describes. SaCRL gives this decision a statistical footing. Treating users, cultural groups, or time windows as environments, it selects the invariance supported by the data, assigns different structures to different behavioral signals through its heterogeneous extension (Appendix G), and, when influence is bidirectional, keeps its structure weights spread instead of committing to a wrong structure (Section 7.6, Appendix H.4). The feedback regime thus becomes observable rather than silently misspecified. Cyclic dynamics lie outside the three canonical structures, and extending the candidate set to dynamic, feedback-coupled structures is a natural next step toward causally grounded models of long-term human–AI relationships. 
+
+Multi-site clinical prediction and the direction of causation. Clinical models are trained at some hospitals and deployed at others, and dataset shift between sites is a leading cause of failure. A pneumonia detector trained on chest radiographs degraded at external hospitals, in part because it exploited site-specific signals [79]; a widely deployed proprietary sepsis model performed markedly worse under external validation than its developer reported [76]; and clinicians are now urged to treat dataset shift as a routine deployment risk [17]. A causal view explains why remedies differ. In anti-causal tasks the disease generates the image, so shifts appear as changes in prevalence or manifestation, whereas in causal tasks the inputs generate the outcome [11]. Dataset biases that look identical in the data can therefore demand different mitigation strategies [25], and shift-stable modeling requires the analyst to specify the causal graph [62]. The gap is that the causal direction must be declared by hand, per task and often per variable: symptoms are anti-causal, biomarkers are not (Figure 1). SaCRL treats each hospital as an environment and infers the direction from data. Theorem D.2 bounds the probability of selecting a wrong structure by 6 exp( −nη 2/(2048 κ4)) , the heterogeneous extension assigns a structure to each variable (Appendix G), and the permutation test of Section 5 flags cases where no canonical structure fits, so a clinical team knows when the selected structure should not be trusted. 
+
+Domain adaptation and generalization: which distribution to align. Methods for learning under distribution shift differ in which part of the joint distribution they hold fixed across domains. 
+
+Marginal alignment makes P (ϕ(X)) invariant, as in domain-adversarial training [18]; conditional alignment makes P (ϕ(X) | Y ) invariant, as under target and conditional shift [83] and generalized label shift [65]; and covariate-shift methods such as IRM make P (Y | ϕ(X)) invariant [4]. The appropriate assumption depends on the causal direction [54]: label shift is natural in anti-causal tasks and can be corrected with black-box predictors [33], while marginal alignment provably fails when label distributions differ across domains [85]. Recent work makes this dependence explicit: 45 each causal graph entails different independence constraints, so any algorithm built on a single fixed constraint fails on some shifts [26, 74], consistent with the finding that no domain generalization method reliably outperforms ERM [20]. Adaptive methods such as CACM [26] still take the graph as input. SaCRL removes this requirement. Its three invariances are exactly these three alignment targets, I3 (marginal), I1 (conditional), and I2 (covariate shift), measured on a common HSIC scale and selected by SoftMin without the graph. Theorem D.1 shows that a predictive representation can satisfy only the invariance of the true structure, and the experiments show the cost of a wrong choice: on anti-causal Colored MNIST, IRM, which enforces I2, falls below ERM (21.3% vs. 27.2%), while SaCRL reaches 45.2% (Table 3). 
+
+Algorithmic fairness: independence, separation, and sufficiency. The three main group-fairness criteria constrain a score or representation R with respect to a sensitive attribute A: independence 
+
+(demographic parity) requires R ⊥⊥ A, separation (equalized odds) requires R ⊥⊥ A | Y , and 
+
+sufficiency (calibration within groups) requires Y ⊥⊥ A | R [5]. Impossibility results show that these criteria cannot hold simultaneously outside degenerate cases [29, 15]. Recent causal analyses show that the appropriate criterion depends on the data-generating graph: in anti-causal prediction, separation coincides with a notion of risk invariance [40], and whether data balancing achieves a given criterion depends on the graph [56]. The gap is that practitioners choose a criterion without knowing which one the graph permits at no cost in accuracy. With A in the role of E, SaCRL’s invariances are precisely these criteria: I3 is independence, I1 is separation, and I2 is sufficiency, with V3, V1, and V2 measuring their violations. When A enters the system as E does in Figure 3, Theorem D.1 gives a causal counterpart of the impossibility results: a predictive representation can satisfy at most the criterion matching the true structure, that criterion is achievable when X⊥ 
+
+> z
+
+is predictive, and the adaptive weights reveal which one it is. Since the predictor is a function of ϕ(X),independence and separation of ϕ(X) carry over to the score. The choice of a fairness criterion remains a normative decision; SaCRL informs it by showing which criterion the data can support. 
+
+Diagnosing and explaining distribution shift. A related line of work asks not how to be robust, but what changed. Shift detection tests whether training and deployment distributions differ [49]. 
+
+Shift attribution explains a performance drop by the mechanisms that changed, either using a known causal graph [80] or by decomposing the drop into a change in the covariate distribution ( X-shift) and in the outcome given the covariates ( Y | X-shift) [10]. A benchmark of natural tabular shifts found Y | X-shifts to be the most prevalent and showed that conclusions about algorithms depend on the type of shift [35]. These tools explain the failure of a fixed model after deployment; they do not decide what a model should be invariant to during training. SaCRL connects the two. Its diversity matrix D (Definition C.19) measures, across training environments, the marginal shift in 
+
+P (X), the conditional shift in P (X | Y ), and the outcome shift in P (Y | X) with kernel mean embeddings; the first and third are the X- and Y | X-shifts of the attribution literature, computed between training environments rather than between training and deployment. A permutation check on D before training determines which invariances are testable (Appendix C.6), and training then enforces the one the data support, so diagnosis and remedy become parts of a single objective. 
+
+Invariance-based causal discovery and conditional independence testing. Heterogeneity across environments is also a source of causal knowledge. Invariant causal prediction identifies the causal parents of a target as the variables whose conditional distribution is stable across environments [44], and its nonlinear extension replaces linear models with nonparametric conditional independence tests [21]; interventional single-cell data, such as the protein-signaling measurements of Sachs et al. [52], remain standard testbeds. These methods rest on conditional independence testing, where kernel tests are widely used [82] and recent split-sample variants improve calibration [48]. A fundamental limit applies: no conditional independence test can control its level over all null distributions while retaining power against all alternatives [57], so useful guarantees require explicit assumptions. Existing methods test invariances of observed variables and return a set of parents; they neither handle high-dimensional inputs such as images nor learn a representation. SaCRL tests invariances of a learned representation ϕ(X) and learns ϕ jointly with the test. Its guarantees are stated under explicit assumptions consistent with this limit, namely an additive-noise model for conditional HSIC (Lemma 2) and a positive faithfulness gap η (Definition D.2). On semi-synthetic benchmarks built from the ASIA, ALARM, and SACHS networks, SaCRL selects the structure fixed by the published graph in 75–95% of runs (Table 2). 46

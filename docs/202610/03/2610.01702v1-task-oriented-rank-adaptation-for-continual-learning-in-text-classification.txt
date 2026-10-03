@@ -1,0 +1,366 @@
+Title: Task-Oriented Rank Adaptation for Continual Learning in Text Classification
+
+URL Source: https://arxiv.org/pdf/2610.01702v1
+
+Published Time: Fri, 02 Oct 2026 01:45:14 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# Task-Oriented Rank Adaptation for Continual Learning in Text Classification 
+
+Rey Sanchez Lopez 1, Eduardo Morales Manzanares 1, and Hugo Jair Escalante 1,2
+
+> 1
+
+INAOE, Puebla, Mexico 
+
+> 2
+
+The University of Texas at El Paso, El Paso, TX, USA 
+
+rey.rsl@inaoep.mx 
+
+Abstract. Continual learning (CL) in text classification faces two critical challenges: catastrophic forgetting and negative transfer across sequential tasks. Parameter-Efficient Fine-Tuning (PEFT) methods such as LoRA enable efficient adaptation by learning low-rank updates of the model parameters. However, these compact representations are normally trained in isolation, limiting their reuse across related tasks. We introduce Task-Oriented Rank Adaptation (TORA), a geometric routing framework that leverages the low-rank structure of LoRA adapters to decide whether to transfer knowledge from the most compatible expert ( Boosting ) or isolate the new task ( Shielding ) based on structural similarity. Evaluated across 15 diverse text classification benchmarks, TORA consistently avoids harmful routing decisions: compatible tasks exceed their isolated performance while reducing training time, and structurally distant tasks are protected from interference with no loss in accuracy. With a single geometric threshold and no reliance on task identities or predefined sequences, TORA provides a simple and effective approach for dynamic adapter routing in sequential text classification systems. 
+
+Keywords: Continual Learning · Parameter-Efficient Fine-Tuning · Adapter Routing · Task Geometry · Text Classification. 
+
+## 1 Introduction 
+
+Transformer architectures have established the fundamental baseline for Text Classification applications [20]. However, extending these architectures to operate in sequential and dynamic environments introduces the Continual Learning (CL) problem, a machine learning paradigm that involves training a model on a sequential stream of tasks [4]. The primary objective is to adapt to new domains while maintaining high performance on previously seen tasks, even when access to historical training data is no longer available. When a neural network is trained incrementally across multiple domains, it is highly susceptible to catastrophic forgetting [13], a phenomenon where learning new representations overwrites and degrades previously learned parameters. Furthermore, adapting the model to new data distributions often leads to negative transfer [25], where the interference between unrelated tasks deteriorates the overall accuracy and stability of the system. arXiv:2610.01702v1 [cs.CL] 1 Oct 2026 2 R. Sánchez et al. 
+
+To mitigate catastrophic forgetting, recent literature has heavily adopted Parameter-Efficient Fine-Tuning (PEFT) mechanisms [6]. Specifically, Low-Rank Adaptation (LoRA) encapsulates task-specific learning into small, low-dimensional weight matrices [8]. By keeping the original pre-trained model frozen, LoRA perfectly protects the base knowledge from being overwritten. However, this architectural separation also becomes a major limitation in continual learning scenarios, because these standard PEFT modules operate in strict isolation, the learned representations remain stored within their specific adapters. This strict separation prevents positive transfer between tasks with similar data distributions [2]. Consequently, models are forced to learn similar concepts from Scratch for every new task, ignoring the computational advantages of knowledge reuse and unnecessarily increasing the number of parameters. We introduce Task-Oriented Rank Adaptation (TORA), a dynamic routing framework that overcomes the limitations of static adapter isolation in continual learning. In TORA, each previously learned LoRA adapter is treated as an expert, and the shared SVD reference space is constructed from the collection of all learned experts. Incoming tasks are projected into this common geometric space, where structural affinity is estimated through cosine similarity [14] between the new task and the stored experts. When affinity is detected, the router transfers knowledge from the most compatible expert to accelerate convergence ( Boosting ); otherwise, it enforces parameter isolation to prevent negative interference ( Shielding ) [15]. We validate this framework through a geometric analysis of 15 text classification benchmarks and a Monte Carlo simulation, demonstrating empirical advantages over static baselines in both accuracy and parameter efficiency. The main contributions of this work are summarized as follows: 
+
+– We propose Task-Oriented Rank Adaptation (TORA) , a geometric routing framework that estimates task affinity directly from LoRA adaptation weights in a shared SVD reference space, eliminating the need for semantic routing or trainable gating networks. 
+
+– We introduce a compact geometric task fingerprint that represents each LoRA adapter as a low-dimensional structural signature. These fingerprints enable efficient similarity estimation while avoiding computationally expensive manifold-based comparisons, making dynamic routing practical for continual learning. 
+
+– We validate the proposed framework on 15 text classification benchmarks and Monte Carlo simulations, demonstrating improved routing reliability, positive transfer, and computational savings over isolated training. 
+
+## 2 Related Work 
+
+In text classification, CL addresses the challenge of training models on sequential data streams without suffering from catastrophic forgetting. Early measures primarily focused on regularization, which penalizes changes to essential weights [10], and rehearsal mechanisms, which store [3] or generate [19] examples of past Task-Oriented Rank Adaptation 3
+
+domains. Although these methods prove effective, they impose limitations in memory and computational cost. Conversely, recent paradigms highlight a positive aspect of sequential learning: accumulating knowledge across multiple domains can actively enhance a model’s few-shot adaptation capabilities [9]. Building upon these insights, the proposed TORA framework transitions from expensive data-replay and complex regularization strategies to a purely parameter-efficient geometric routing. By evaluating structural task affinities, TORA dynamically transfers past knowledge to accelerate convergence on related domains, while strictly isolating incompatible parameters to prevent interference. To reduce the cost of adapting large language models, PEFT methods such as LoRA have become standard. LoRA freezes the base model and learns low-rank updates, allowing multiple tasks to be trained one after another in the same model. This makes training more efficient and scalable. However, it still does not define how knowledge should be shared or separated between tasks. Recent research has proposed dynamic architectural approaches to overcome static isolation. Methods such as orthogonal adaptation [23] and multi-task dynamic routing [24] attempt to project new knowledge into distinct subspaces or learn unified representations. While these approaches improve parameter distribution, they often rely on trainable routing mechanisms or computationally expensive similarity estimation, and still lack a simple criterion to evaluate the structural compatibility between sequential tasks before initialization. This reveals a gap for a lightweight routing strategy that directly exploits the geometry of adapter parameters. TORA addresses this gap by representing each task as a compact geometric fingerprint in a shared SVD reference space, enabling deterministic structural similarity estimation without semantic representations, trainable routing modules, or computationally expensive manifold operations. 
+
+## 3 The TORA Framework 
+
+TORA evaluates the geometric compatibility between sequential domains before parameter initialization, replacing the default assumption of task isolation in PEFT methods. An expert is defined as a task-specific LoRA adapter trained on a given domain and stored in a memory pool, encapsulating its optimized weights without interfering with previously learned distributions. Figure 1 illustrates the high-level operation of the framework. Specifically, the continual learning cycle works as follows: when a new task arrives, it is trained for one epoch to get a partial adapter. The SVD of its weights is then computed to extract its geometric fingerprint ( ϕnew ). This representation is compared against the reference space built from the previously stored experts. If the structural similarity is above the angular threshold, the router triggers a transfer protocol, loading the weights of the most compatible expert as a starting point for the new task. If not, the shielding protocol is activated and new adaptation matrices ( A and B) are trained from scratch. Once training is complete, the resulting adapter is saved to the memory pool, updating the reference space for any future tasks. 4 R. Sánchez et al. 
+
+The framework builds upon the mathematical foundation of LoRA. During standard training, LoRA freezes a pre-trained weight matrix W0 ∈ Rd×d and constrains its update by representing it with a low-rank decomposition ∆W = BA .The matrices are defined as B ∈ Rd×r and A ∈ Rr×d, where the rank r ≪ d. The forward pass is thus modified to: 
+
+W = W0 + ∆W = W0 + BA 
+
+Within this formulation, matrix A acts as a feature extractor that maps the input down to a lower-dimensional, information-dense subspace. Matrix 
+
+B subsequently projects these representations back to the original dimension. By capturing task-specific knowledge in these low-rank matrices, the model significantly reduces the number of trainable parameters. To enable dynamic routing, TORA evaluates the structural affinity of these learned projections. During the training phase of a new task, TORA applies SVD to the existing adapter weight matrices to isolate their core semantic directions. For a given adaptation matrix ∆W , the decomposition is defined as: 
+
+∆W = U ΣV T
+
+where the orthogonal matrix U contains the left singular vectors that define the geometric rotation in the output space, the diagonal matrix Σ contains the singular values that quantify the magnitude of variance along each principal direction, and the matrix V contains the principal components that define the spatial orientation of the learned task. 
+
+3.1 Reference Space Construction 
+
+To determine geometric compatibility, the system first builds a shared geometric space from the N −1 previously learned LoRA adapters, since the incoming (N -th) task is the one currently being evaluated and has not yet become an expert. Each expert denotes the complete set of LoRA adaptation parameters associated with a previously learned task. For each layer l and attention projection 
+
+p, the corresponding weight tensors are flattened into vectors and stacked into a variability matrix. In simple terms, this matrix acts as a consolidated memory bank that aggre-gates the parametric signatures of all previously learned domains. By grouping these isolated expert vectors together, the resulting matrix captures the complete spatial variance of the model’s history. This representation is highly effective because it allows the subsequent SVD to extract the shared principal components creating a unified reference space to evaluate any new incoming task:              
+
+> M(l,p )=
+> h
+> vec
+> 
+> A(l,p )1
+> 
+> vec
+> 
+> B(l,p )1
+> 
+> · · · vec
+> 
+> A(l,p )
+> N−1
+> 
+> vec
+> 
+> B(l,p )
+> N−1
+> i
+> ∈RD×(N−1)
+> (1) where D=d×rand vec (·)flattens a matrix into a column vector. After row-wise centering, SVD is applied:
+
+Task-Oriented Rank Adaptation 5
+
+˜M(l,p ) = U(l,p ) S(l,p ) V(l,p )⊤
+
+(2) 
+
+The left singular vectors U(l,p ) form the orthonormal basis of the reference space [7]. Only the first k components are retained, where k is the minimum number of directions that explain 60% of the total variance: 
+
+k = min 
+
+(
+
+j
+
+Pji=1 s2
+
+> i
+
+PN −1 
+
+> i=1
+
+s2
+
+> i
+
+≥ 0.60 
+
+)
+
+(3) In the context of a continuous stream of N domains, this formulation establishes an iterative routing cycle. At any given step, the memory pool maintains N − 1
+
+established expert representations to evaluate a single incoming task. Following adaptation, the newly processed task is integrated into the expert memory, dynamically updating the reference space for the subsequent iteration. 
+
+Fig. 1: Architectural diagram of the Task-Oriented Rank Adaptation (TORA) framework. The diagram illustrates the routing process, structural affinity evalu-ation and the memory of task experts. 
+
+3.2 Task Fingerprint Generation 
+
+To characterize a task in the reference space, its LoRA weights are projected onto the k selected singular vectors as: 
+
+λ(l,p ) = U(l,p )⊤ 
+
+> k
+
+· vec 
+
+
+
+W(l,p )
+
+(4) where W(l,p ) denotes the LoRA weight matrix at layer l and projection p, vec (·)
+
+vectorizes it, and U(l,p ) 
+
+> k
+
+contains the top-k singular vectors obtained via SVD from 6 R. Sánchez et al. 
+
+historical task representations (Section 3.1). The resulting λ(l,p ) ∈ Rk encodes the alignment of the task with the principal directions of the reference space. The task fingerprint is then constructed by concatenating these projections across all adaptation weights. In the case of DistilBERT, which comprises 6 Transformer layers with LoRA modules applied to the ( q_lin , k_lin , and v_lin )projections, this results in 18 modules and 36 parameter matrices ( A and B per module). By projecting each of these 36 matrices onto its k = 4 most relevant singu-lar vectors (the eigenvectors that satisfy the variance threshold), the model is compressed from its high-dimensional parameter space into an exact coordinate: 
+
+ϕ =
+
+h
+
+λ(1 ,q) 
+
+> A
+
+∥ λ(1 ,q) 
+
+> B
+
+∥ · · · ∥ λ(6 ,v)
+
+> B
+
+i
+
+∈ R144 (5) This 144-dimensional vector ( 36 sub-matrices × 4 principal components) encodes the absolute position of the task in the shared SVD space, and serves as the compact geometric signature used by the router to compare structural affinities across datasets. 
+
+3.3 Routing Mechanism with Shielding and Boosting 
+
+The routing mechanism operates entirely a priori : the transfer decision is made before completing the full training of the incoming task, incurring only the cost of a single training epoch (approximately 10–12 seconds). Let E = {e1, e 2, . . . , e N −1}
+
+denote the set of N − 1 expert adapters stored in memory. The procedure is as follows: 1. Initial training. The incoming task Tnew is trained for 1 epoch, yielding a partial adapter with weights {A(l,p ) 
+
+> new
+
+, B(l,p ) 
+
+> new
+
+}.2. SVD space construction. The reference space is built from the N − 1
+
+stored experts following the procedure described in Section 3.1. 3. Fingerprint computation. Let ϕnew represent the extracted principal component vector of the incoming task, and ϕi represent the vectors of the previously learned experts. To obtain these representations, the partial adapter of the incoming task (trained for 1 epoch) and the adapters of all experts (trained for 20 epochs) are projected onto the shared SVD space, yielding the final dimensional fingerprints ϕnew , ϕi ∈ R144 for each expert 
+
+ei ∈ E .4. Similarity ranking. Subsequently, the framework employs cosine similarity as the parametric distance metric to quantify the geometric overlap between representations. The structural affinity dictates the adaptation strategy through the following protocol: The cosine similarity and angular distance between the incoming task and each expert are computed as: 
+
+θi = arccos 
+
+ ϕnew · ϕi
+
+∥ϕnew ∥ ∥ ϕi∥
+
+
+
+· 180 ◦
+
+π , i = 1 , . . . , N − 1 (6) Task-Oriented Rank Adaptation 7
+
+The experts are then sorted in ascending order of θi, defining a ranking σ
+
+such that: 
+
+θσ(1) ≤ θσ(2) ≤ · · · ≤ θσ(N −1) (7) where σ(k) denotes the index of the k-th most similar expert. In particular, 
+
+σ(1) identifies the Top-1 expert : the stored adapter whose weight space is geometrically closest to the incoming task. 5. Routing decision. 
+
+The mean angular distance over the Top-3 most similar experts is used as the decision router tool, derived in the Section 5.1 and is calculated as: 
+
+¯θ3 = 13
+
+> 3
+
+X
+
+> k=1
+
+θσ(k) (8) This average characterizes the geometric neighborhood of the incoming task. The routing decision is then: 
+
+Winit =
+
+(
+
+Wexp (σ(1)) if ¯θ3 < 84 .5◦ (TORA: Top-1 expert transfer) 
+
+W0 if ¯θ3 ≥ 84 .5◦ (Shielding: train from scratch) (9) where Wexp (σ(1)) are the weights of the Top-1 expert and W0 denotes randomly initialized LoRA weights. 6. Full training. The incoming task is trained to completion using Winit as initialization. Upon convergence, the resulting adapter is stored in memory as a new expert available for future routing decisions. 
+
+## 4 Experimental Setup 
+
+To evaluate the proposed framework across diverse linguistic domains, the exper-imental setup includes 15 text classification datasets. The selected benchmarks cover a wide range of Text Classification tasks to ensure a robust evaluation of the structural affinity metric across geometrically distinct data distributions, as used in previous work [23]. 
+
+4.1 Datasets and Benchmarks 
+
+For reproducibility TORA is evaluated on a set of 15 text classification tasks derived from three sources: Yelp Polarity, Amazon Polarity, Yahoo Answers, and AG News datasets [26], DBPedia [11], GLUE [22], and SuperGLUE [21]. Table 1 summarizes the selected tasks. 
+
+4.2 Implementation Details 
+
+The experiments use DistilBERT [18], a distilled version of BERT [5] that retains 97% of its performance with 40% of the parameters. For the PEFT 8 R. Sánchez et al. 
+
+configuration (Table 2), LoRA modules are injected into the self-attention layers of the Transformer [12]. Following [8], we set the adaptation rank to r = 64 , as larger ranks yield diminishing returns while lower ranks already capture the relevant adaptation subspace. This choice balances expressivity and efficiency for the 15 heterogeneous NLP tasks considered ( r ≪ d = 768 ). For DistilBERT ( d = 768 ), this results in adapter matrices A ∈ R64 ×768 and 
+
+B ∈ R768 ×64 , reducing the number of trainable parameters per projection from 
+
+d2 to 2rd (i.e., ∼6× reduction). Across all 18 LoRA-injected projections, this yields 1.77M parameters per task, compared to 10.62M for full fine-tuning. Table 1: Evaluation tasks for the TORA framework. 
+
+Task Benchmark Type Description 
+
+Yelp Polarity CL Benchmark Binary classification Sentiment in Yelp reviews Amazon Polarity CL Benchmark Binary classification Sentiment in Amazon reviews DBPedia-14 CL Benchmark 14-class classification DBPedia article categories Yahoo Answers CL Benchmark 10-class classification Topics in Yahoo questions AG News CL Benchmark 4-class classification News classification MNLI GLUE Natural language inference Entailment/contradiction/neutral QQP GLUE Paraphrase detection Duplicate question detection RTE GLUE Natural language inference Binary entailment SST-2 GLUE Binary classification Sentiment in movie reviews WiC SuperGLUE Word sense disambiguation Word sense in context CB SuperGLUE Natural language inference 3-class entailment COPA SuperGLUE Causal reasoning Plausible alternative selection BoolQ SuperGLUE Binary QA Yes/no questions on paragraphs MultiRC SuperGLUE Multiple-choice QA Multi-sentence questions IMDB Standalone Binary classification Sentiment in movie reviews 
+
+Table 2: Experimental hyperparameter configuration.                 
+
+> Hyperparameter Value
+> Base model DistilBERT-base-uncased LoRA rank ( r)64 LoRA alpha ( α)16 LoRA dropout 0.1 LoRA bias none LoRA target modules q_lin, k_lin, v_lin
+> Transformer layers 6Expert training epochs 20 Routing epoch 1Learning rate (all tasks) 5×10 −5
+> SVD variance threshold 60% Fingerprint dimensionality 144 Angular routing threshold ( ¯θ3)84 .5◦
+
+Within the PEFT configuration (Table 2), we set α = 16 , dropout = 0 .1, and bias= none , following standard LoRA practice [8]. Freezing bias terms ensures that task-specific information is captured exclusively by the low-rank adapters, which is required for our SVD-based analysis. We compare two training settings: Scratch ,where LoRA adapters are randomly initialized for each task, and Transfer , where TORA initializes adapters via the proposed similarity-based routing mechanism. Task-Oriented Rank Adaptation 9
+
+## 5 Evaluation Methodology and Experimental Results 
+
+We evaluate continual learning along two complementary dimensions. First, we analyze temporal dynamics by tracking accuracy across epochs, comparing TORA against a continuous baseline (a single LoRA adapter without parameter isolation). This reveals when positive transfer (Boosting) occurs and confirms effective mitigation of catastrophic forgetting. Second, we assess robustness to task order via a Monte Carlo simulation [16] with N = 100 ,000 random task sequences, estimating long-term behavior under stochastic arrivals and the probability of transfer or isolation. Based on this, tasks are categorized as structural hubs that enable knowledge sharing or isolated nodes that require shielding. 
+
+5.1 Experimental results 
+
+Table 3 shows a geometric structure across the 15 benchmarks. While all tasks remain below 84 .5◦ when considering only the nearest neighbor ( ¯θ1), progressively larger neighborhoods improve separability. The Top-3 average ( ¯θ3) yields the most stable boundary: tasks that benefit from transfer consistently fall below 84 .5◦,whereas isolated tasks exceed this threshold. In contrast, smaller neighborhoods are more sensitive to individual neighbor variability, while expanding to larger neighborhoods (e.g., ¯θ4 and ¯θ5) introduces more distant experts into the average, diluting the local geometric structure and leading to misclassifications such as AGNEWS. These results identify ¯θ3 as the most robust routing criterion for the 15-task benchmark considered in this work; consequently, it was selected as the decision metric. Table 3: Cosine similarity (in degrees) between each incoming task and its Top-5 nearest experts, along with cumulative averages ¯θk for k = 1 , . . . , 5. The routing threshold of 84 .5◦ applied to ¯θ3 provides the clearest separation between transfer and shielding decisions.                                                                  
+
+> Task θ1θ2θ3θ4θ5¯θ1¯θ2¯θ3¯θ4¯θ5Decision
+> IMDB 75.9348 78.2152 81.5054 81.9472 83.3364 75.9348 77.0750 78.5518 79.4006 80.1878 Transfer WIC 78.2600 80.1432 86.1518 86.2642 86.3813 78.2600 79.2016 81.5183 82.7048 83.4401 Transfer RTE 78.6749 79.5074 87.4172 87.7247 87.7818 78.6749 79.0912 81.8665 83.3311 84.2212 Transfer COPA 79.5401 81.8497 82.7471 82.9056 83.0827 79.5401 80.6949 81.3790 81.7606 82.0250 Transfer YELP 79.8080 84.1105 88.0673 88.8443 91.1074 79.8080 81.9593 83.9953 85.2075 86.3875 Transfer MULTIRC 80.4721 80.7501 81.1396 82.0910 82.0954 80.4721 80.6111 80.7873 81.1132 81.3096 Transfer QQP 81.1524 81.3621 81.6509 81.7015 81.9840 81.1524 81.2573 81.3885 81.4667 81.5702 Transfer YAHOO 81.0267 84.4764 85.9152 86.1951 86.6186 81.0267 82.7516 83.8061 84.4034 84.8464 Transfer AMAZON 82.0722 82.6582 84.5824 85.4851 85.5997 82.0722 82.3652 83.1043 83.6995 84.0795 Transfer BOOLQ 82.3213 82.3664 82.5222 82.9515 83.2081 82.3213 82.3439 82.4033 82.5404 82.6739 Transfer DBPEDIA 82.6105 82.6738 82.7011 82.8122 83.9575 82.6105 82.6421 82.6618 82.6994 82.9510 Transfer AGNEWS 84.0747 84.0747 85.0874 85.1226 85.6418 84.0747 84.0747 84.4123 84.5898 84.8002 Transfer SST2 83.8398 85.1843 85.2407 85.9529 85.9926 83.8398 84.5121 84.7549 85.0544 85.2420 Shielding CB 83.2625 85.9329 88.2758 88.5630 89.2346 83.2625 84.5977 85.8237 86.5085 87.0538 Shielding MNLI 84.0934 85.4571 87.0392 89.4239 90.3129 84.0934 84.7753 85.5299 86.5034 87.2653 Shielding
+
+5.2 Interference Prevention (Shielding) 
+
+Table 4 shows demonstrates that TORA reliably prevents negative transfer by enforcing isolation when ¯θ3 ≥ 84 .5◦. For CB, MNLI, and SST-2, this avoids degra-10 R. Sánchez et al. 
+
+dation caused by incompatible representations. In particular, forcing transfer on MNLI reduces accuracy to 0.628 while doubling training time, whereas Shielding preserves baseline performance (0.652) with efficient 10-epoch training. This confirms that the routing mechanism not only enables transfer when beneficial, but also robustly avoids detrimental interactions. 
+
+5.3 Positive Transfer (Boosting) 
+
+Table 5 shows that TORA effectively exploits geometric affinity ( ¯θ3 < 84 .5◦)to enable positive transfer, surpassing isolated training ( Scratch ). Gains are particularly pronounced in tasks with higher abstraction or limited data. For instance, COPA achieves a +11 .11% improvement while reducing training by 10 epochs when initialized from DBPedia, indicating efficient reuse of geometric aligned representations that accelerates convergence and enhances performance. Table 4: Interference Prevention: Performance and computational cost of forcing geometric transfer versus applying the Shielding protocol.                 
+
+> Task Forced Transfer Scratch (TORA) Avoided Degradation Epochs Saved Routing Decision
+> CB 0.820 0.820 0.000 10 Isolation (Scratch) MNLI 0.628 0.652 +0.024 10 Isolation (Scratch) SST2 0.870 0.870 0.000 10 Isolation (Scratch)
+
+Table 5: Positive Transfer: Target tasks that surpassed their asymptotic accuracy limits under the TORA routing mechanism.                                                     
+
+> Task Scratch Baseline TORA Accuracy Relative Gain Epochs Saved Routing Decision
+> COPA 0.450 0.500 +11.11% 10 Transfer from DBPEDIA MULTIRC 0.544 0.580 +6.62% 10 Transfer from SST2 WIC 0.662 0.702 +6.04% 0Transfer from DBPEDIA BOOLQ 0.632 0.656 +3.80% 10 Transfer from QQP RTE 0.602 0.621 +3.16% 5Transfer from YELP AMAZON 0.876 0.892 +1.83% 10 Transfer from AGNEWS QQP 0.772 0.782 +1.30% 0Transfer from RTE YAHOO 0.700 0.722 +1.03% 10 Transfer from DBPEDIA YELP 0.894 0.908 +1.01% 10 Transfer from CB IMDB 0.830 0.832 +0.24% 10 Transfer from WIC
+
+5.4 Temporal Dynamics and Performance 
+
+The geometric classification directly determines convergence dynamics. Table 5 and table 4 shows epoch-wise validation accuracy across the 15 datasets, compar-ing isolated training against TORA. For geometric hubs (e.g., IMDB, MultiRC, QQP), TORA induces a clear Boosting effect: initializing from the nearest expert yields higher early accuracy and faster convergence, indicating effective reuse of aligned representations. For structurally divergent tasks (SST-2, MNLI, CB), TORA activates Shielding when ¯θ3 ≥ 84 .5◦, preventing negative transfer. In these cases, isolated initialization preserves baseline performance while avoiding degradation, demonstrating that the routing mechanism both accelerates learning when beneficial and enforces isolation when necessary. Task-Oriented Rank Adaptation 11 
+
+5.5 Monte Carlo simulations 
+
+To evaluate robustness to task order, we run a Monte Carlo simulation with 100,000 random task sequences (Table 6). The results confirm stable routing behavior: dissimilar tasks such as SST-2 and MNLI consistently trigger Shielding 
+
+(99.5%), while related tasks like COPA achieve successful transfer in 80.8% of cases. These results indicate that routing decisions are driven by latent-space structure rather than task order, ensuring consistent performance in continual learning settings. Table 6: Routing probability distribution following Monte Carlo simulation (N = 100 , 000 ).                         
+
+> Task (Domain) Isolation Prob. (Scratch) Transfer Prob. Geometric Classification The Isolated Cases (Isolators)
+> SST2 99.50% 0.50% Highly Isolated Node CB 99.50% 0.50% Highly Isolated Node MNLI 99.50% 0.50% Highly Isolated Node AGNEWS 69.00% 31.00% Rigid Knowledge Node
+> The Compatible Cases (Hubs)
+> COPA 19.20% 80.80% Highly Compatible Node MULTIRC 19.40% 80.60% Highly Compatible Node BOOLQ 19.90% 80.10% Central Hub IMDB 21.80% 78.20% Central Hub
+
+5.6 Continual Learning Results and Dynamic Routing Efficacy 
+
+Since continual learning is highly sensitive to task order, we compare TORA against manually designed sequences derived from analysis: a similar-first (sen-timent analysis, followed by topic classification, and finally reasoning tasks) order and its reverse as shown in Table 8. Table 7 shows that task ordering alone has a strong impact on performance, with results ranging from 60.75% to 66.99% across our two sequences, and from 64.8% to 72.3% across the three handcrafted orders of O-LoRA [23]. This confirms that manually defining optimal sequences is not scalable. In contrast, TORA removes this dependency entirely by dynamically deciding when to transfer or isolate knowledge based on geometric affinity, achieving AT = 75 .56% at best and AT = 75 .40% on average across all five evaluated sequences, outperforming O-LoRA in every tested order while exhibiting significantly lower variance across sequences (0.33% (TORA) vs 7.5% (O-LoRA)). 
+
+## 6 Discussion 
+
+The results show a clear and consistent pattern across all 15 evaluated tasks. TORA never made a routing decision that hurt performance: tasks that were geometrically close to existing experts benefited from knowledge transfer, while 12 R. Sánchez et al. 
+
+structurally distant tasks were protected by the Shielding protocol. This was achieved without any task identity information or manually designed sequences, which suggests that the angular distance in the SVD parameter space is a reliable indicator of task compatibility across diverse text classification domains. The following subsections discuss the theoretical and practical implications of this finding. Table 7: Continual learning performance comparison across 15 text classification tasks. We report the Average Final Accuracy ( AT ) for different sequence configu-rations.                              
+
+> Method / Configuration Order AT(%)
+> CL Ours (Similar Tasks First) 160.75 CL Ours (Reverse Order) 266.99 CL Ours Avg –63.87 O-LoRA [23] 372.3 O-LoRA [23] 464.8 O-LoRA [23] 571.6 O-LoRA Avg –69.6
+> TORA 175.45
+> TORA 275.47
+> TORA 375.23
+> TORA 475.31
+> TORA 575.56 TORA Avg –75.40
+
+Table 8: Detailed evaluation sequences for the static routing configurations.                                                                                                                    
+
+> Framework Order Task Sequence Ours 1Yelp →Amazon →IMDB →SST-2 →Yahoo →DBPedia →AGNews →QQP
+> →BoolQ →MultiRC →WiC →RTE →COPA →MNLI →CB
+> 2Exact reverse of Order 1
+> O-LoRA 3MNLI →CB →WiC →COPA →QQP →BoolQ →RTE →IMDB →Yelp →
+> Amazon →SST-2 →DBPedia →AGNews →MultiRC →Yahoo
+> 4MultiRC →BoolQ →WiC →MNLI →CB →COPA →QQP →RTE →IMDB
+> →SST-2 →DBPedia →AGNews →Yelp →Amazon →Yahoo
+> 5Yelp →Amazon →MNLI →CB →COPA →QQP →RTE →IMDB →SST-2
+> →DBPedia →AGNews →Yahoo →MultiRC →BoolQ →WiC
+
+6.1 Geometric Phase Transition and the Divergence Threshold 
+
+The threshold ¯θ3 = 84 .5◦ emerges from the intrinsic geometry of the DistilBERT adapter space [1]. In high-dimensional spaces, orthogonal vectors ( 90 ◦) indicate complete independence between subspaces, a property that O-LoRA explicitly exploits by projecting new task updates onto the orthogonal complement of previous ones [23]. TORA operates on the same geometric principle, but uses the angular distance as a continuous compatibility measure rather than enforcing strict orthogonality. A cosine similarity of 84 .5◦ (≈ 0.095 ) marks the practical boundary where shared variance becomes too small to support positive transfer. Below this threshold, the gradient directions [17] of the incoming task align sufficiently with the prior expert to enable knowledge reuse. Above it, forcing Task-Oriented Rank Adaptation 13 
+
+parameter transfer acts as a perturbation that requires the optimizer to unlearn irrelevant features, degrading performance. 
+
+6.2 Structural Dynamics: Hubs vs. Isolated Nodes 
+
+The routing decisions reveal two clearly distinct task roles. Broad datasets like DBPedia act as knowledge hubs, learning general geometric patterns that transfer easily to related domains and accelerate convergence. In contrast, tasks with strict objective functions such as MNLI, CB, and SST-2 develop incompatible parameter structures that require isolation. Forcing knowledge reuse in these cases causes geometric interference, confirming that the Shielding mechanism is essential to prevent negative transfer. 
+
+6.3 Computational Efficiency and Limitations 
+
+Beyond mitigating catastrophic forgetting, TORA reduces computational over-head by initializing LoRA modules with geometric aligned weights, allowing tasks to skip the initial exploratory phase of gradient descent and reach convergence faster, as shown by the epoch savings reported in Table 5. However, the current system uses a fixed neighborhood size k = 3 and a static divergence threshold, which may limit scalability in longer task sequences. As the number of experts grows, a static k risks capturing overlapping or contradictory gradient directions. Future work should explore dynamic neighborhood selection, such as adaptive clustering or density-based routing, to maintain transfer quality as the expert pool scales to 50 or more sequential tasks. 
+
+## 7 Conclusion 
+
+This work presented TORA, a geometric routing framework for continual learning in text classification that decides whether to transfer or isolate knowledge based solely on the angular distance between task fingerprints in the SVD parameter space. Evaluated across 15 diverse benchmarks, TORA never induced a harmful routing decision: compatible tasks benefited from the Boosting protocol, saving up to 10 training epochs while exceeding isolated baselines, and structurally distant tasks were protected by Shielding , preventing catastrophic forgetting without any accuracy loss. With a single geometric threshold of ¯θ3 = 84 .5◦ and no reliance on task identities or predefined sequences, TORA demonstrates that the intrinsic geometry of adapter weights is a sufficient and reliable signal for autonomous knowledge routing in sequential text classification systems. 
+
+## References 
+
+> 1. Aghajanyan, A., Gupta, S., Zettlemoyer, L.: Intrinsic dimensionality explains the effectiveness of language model fine-tuning. In: Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics. pp. 7319–7328 (2021)
+
+14 R. Sánchez et al. 2. Caruana, R.: Multitask learning. Machine learning 28 , 41–75 (1997) 3. Chaudhry, A., Rohrbach, M., Elhoseiny, M., Ajanthan, T., Dokania, P.K., Torr, P.H., Ranzato, M.: On tiny episodic memories in continual learning. arXiv preprint arXiv:1902.10486 (2019) 4. De Lange, M., Aljundi, R., Masana, M., Parisot, S., Zhu, X., Kolenčík, A., Be-lagiannis, V., Tuytelaars, T.: A continual learning survey: Defying forgetting in classification tasks. IEEE transactions on pattern analysis and machine intelligence 
+
+44 (7), 3366–3385 (2021) 5. Devlin, J., Chang, M.W., Lee, K., Toutanova, K.: BERT: Pre-training of deep bidirectional transformers for language understanding. In: Burstein, J., Doran, C., Solorio, T. (eds.) Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers). pp. 4171–4186. Association for Computational Linguistics, Minneapolis, Minnesota (Jun 2019). https://doi.org/10.18653/v1/ N19-1423 , https://aclanthology.org/N19-1423/ 
+
+6. Ding, N., Qin, Y., Yang, G., Wei, F., Yang, Z., Su, Y., Hu, S., Chen, Y., Chan, C.K., Chen, W., et al.: Parameter-efficient fine-tuning of large-scale pre-trained language models. Nature Machine Intelligence 5(3), 220–235 (2023) 7. Gur-Ari, G., Roberts, D.A., Dyer, E.: Gradient descent happens in a tiny subspace. In: arXiv preprint arXiv:1812.04754 (2018) 8. Hu, E.J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., Wang, L., Chen, W.: Lora: Low-rank adaptation of large language models. In: International Conference on Learning Representations (2021) 9. Ke, Z., Lin, H., Shao, Y., Xu, H., Shu, L., Liu, B.: Continual training of language models for few-shot learning. In: Goldberg, Y., Kozareva, Z., Zhang, Y. (eds.) Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing. pp. 10205–10216. Association for Computational Linguistics, Abu Dhabi, United Arab Emirates (Dec 2022). https://doi.org/10.18653/v1/2022. emnlp-main.695 , https://aclanthology.org/2022.emnlp-main.695/ 
+
+10. Kirkpatrick, J., Pascanu, R., Rabinowitz, N., Veness, J., Desjardins, G., Rusu, A.A., Milan, K., Quan, J., Ramalho, T., Grabska-Barwinska, A., et al.: Overcoming catastrophic forgetting in neural networks. Proceedings of the national academy of sciences 114 (13), 3521–3526 (2017) 11. Lehmann, J., et al.: Dbpedia – a large-scale, multilingual knowledge base extracted from wikipedia. Semantic Web 6(2), 167–195 (2015) 12. Lialin, V., Deshpande, V., Rumshisky, A.: Scaling down to scale up: A guide to parameter-efficient fine-tuning. In: arXiv preprint arXiv:2303.15647 (2023) 13. McCloskey, M., Cohen, N.J.: Catastrophic interference in connectionist networks. Psychology of learning and motivation 24 , 109–165 (1989) 14. Mikolov, T., Sutskever, I., Chen, K., Corrado, G.S., Dean, J.: Distributed repre-sentations of words and phrases and their compositionality. In: Advances in neural information processing systems. vol. 26 (2013) 15. Pruksachatkun, Y., Phang, J., Liu, H., Htut, P.M., Zhang, X., Peng, R., Gehrmann, S., Bowman, S.R., Cho, K.: Intermediate-task transfer learning with pretrained language models: When and why does it work? In: Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics. pp. 5231–5247 (2020) 16. Robert, C., Casella, G.: Monte Carlo statistical methods. Springer (2004) 17. Ruder, S.: An overview of gradient descent optimization algorithms. arXiv preprint arXiv:1609.04747 (2016) 18. Sanh, V., Debut, L., Chaumond, J., Wolf, T.: Distilbert, a distilled version of bert: smaller, faster, cheaper and lighter. arXiv preprint arXiv:1910.01108 (2019) Task-Oriented Rank Adaptation 15 19. Sun, F.K., Ho, C.H., Lee, H.Y.: {LAMAL}: {LA}nguage modeling is all you need for lifelong language learning. In: International Conference on Learning Representations (2020), https://openreview.net/forum?id=Skgxcn4YDS 
+
+20. Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.N., Kaiser, Ł., Polosukhin, I.: Attention is all you need. In: Advances in neural information processing systems. vol. 30 (2017) 21. Wang, A., Pruksachatkun, Y., Nangia, N., Singh, A., Michael, J., Hill, F., Levy, O., Bowman, S.R.: SuperGLUE: A stickier benchmark for general-purpose language understanding systems. In: Advances in Neural Information Processing Systems. vol. 32 (2019) 22. Wang, A., Singh, A., Michael, J., Hill, F., Levy, O., Bowman, S.R.: GLUE: A multi-task benchmark and analysis platform for natural language understanding. In: Proceedings of the EMNLP 2018 Workshop BlackboxNLP (2018) 23. Wang, X., Chen, T., Ge, Q., Xia, H., Bao, R., Zheng, R., Zhang, Q., Gui, T., Huang, X.: Orthogonal subspace learning for language model continual learning. In: Bouamor, H., Pino, J., Bali, K. (eds.) Findings of the Association for Computational Linguistics: EMNLP 2023. pp. 10658–10671. Association for Computational Linguis-tics, Singapore (Dec 2023). https://doi.org/10.18653/v1/2023.findings-emnlp. 715 , https://aclanthology.org/2023.findings-emnlp.715/ 
+
+24. Wang, Z., Zhang, Z., Ebrahimi, S., Sun, R., Zhang, H., Arik, S.O., Pfister, T.: Dualprompt: Complementary prompting for rehearsal-free continual learning. In: European Conference on Computer Vision. pp. 631–648. Springer (2022) 25. Wang, Z., Dai, Z., Póczos, B., Carbonell, J.: Characterizing and avoiding negative transfer. In: Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. pp. 11293–11302 (2019) 26. Zhang, X., Zhao, J., LeCun, Y.: Character-level convolutional networks for text classification. In: Advances in Neural Information Processing Systems (NeurIPS) (2015)

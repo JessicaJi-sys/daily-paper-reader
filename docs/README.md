@@ -48,17 +48,17 @@
 <section class="dpr-home-dashboard-card dpr-home-report-card">
   <div class="dpr-home-dashboard-header">
     <div>
-      <span class="dpr-home-dashboard-kicker">2026-10-02</span>
+      <span class="dpr-home-dashboard-kicker">2026-10-03</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">共 11 篇</strong>
+    <strong class="dpr-home-dashboard-count">共 3 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
     <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
     <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>0</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>11</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>3</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-10-02 23:08:12 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-10-03 22:07:44 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,8 +69,7 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>今日0精读、11速读，三篇7.0分速读聚焦协作视觉专家、分子预测器路由与协变量偏移数据增强。</p>
-<p>最值得看：自监督视觉专家无需共享门控或跨智能体梯度也能涌现专业化，以及AssayRouter用历史效用先验</p>
+<p>2026-10-03 日报速读3篇：因果表示学习、MoE路由与持续学习文本分类。最值得看的是《Structure-agnostic Causal Representation Learning》（7.0/10），探讨不依赖结构假设的因果表征；MoE路由一文（6.0/10）关注专家混合大模型的交叉熵引导。普通读者可先读因果表征这篇，再按兴趣跟进后两篇。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -92,12 +91,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">速读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">11 篇</strong>
+    <strong class="dpr-home-dashboard-count">3 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Emergent Specialization in Populations of Self-Supervised Collaborative Vision Experts Without a Shared Gate or Cross-Agent Gradients">Emergent Specialization in Populations of Self-Supervised Collaborative Vision Experts Without a Shared Gate or Cross-Agent Gradients</span></li><li><span class="dpr-home-dashboard-paper-title" title="AssayRouter: Historical Utility Priors for Frozen Molecular Predictor Routing">AssayRouter: Historical Utility Priors for Frozen Molecular Predictor Routing</span></li><li><span class="dpr-home-dashboard-paper-title" title="Rethinking Data Augmentation under Covariate Shift: Invariant-Guided Diffusion and Prototype Reweighting">Rethinking Data Augmentation under Covariate Shift: Invariant-Guided Diffusion and Prototype Reweighting</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Structure-agnostic Causal Representation Learning">Structure-agnostic Causal Representation Learning</span></li><li><span class="dpr-home-dashboard-paper-title" title="Cross-Entropy Guided Routing in Mixture-of-Experts Large Language Models">Cross-Entropy Guided Routing in Mixture-of-Experts Large Language Models</span></li><li><span class="dpr-home-dashboard-paper-title" title="Task-Oriented Rank Adaptation for Continual Learning in Text Classification">Task-Oriented Rank Adaptation for Continual Learning in Text Classification</span></li></ul>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>11</strong></span></div>
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>3</strong></span></div>
 </section>
 </div>
 

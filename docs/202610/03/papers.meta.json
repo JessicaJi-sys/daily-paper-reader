@@ -1,0 +1,54 @@
+{
+  "label": "2026-10-03",
+  "date": "2026-10-03",
+  "generated_at": "2026-10-03T22:07:46",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202610/03/2610.00968v1-structure-agnostic-causal-representation-learning",
+      "section": "quick",
+      "title_en": "Structure-agnostic Causal Representation Learning",
+      "authors": "Arman Behnam, Binghui Wang",
+      "date": "2026-10-01",
+      "pdf": "https://arxiv.org/pdf/2610.00968v1",
+      "score": "7.0",
+      "evidence": "无需先验因果结构的不变表示学习",
+      "tldr": "因果表示学习常需预先指定因果结构，但不同结构对应互不兼容的不变性约束，错误指定会丢失预测信息。SaCRL将结构选择建模为候选不变性的软优化，用基于HSIC的违反度量与自适应权重，在无先验结构下联合识别因果结构并学习不变表示。理论上给出结构识别、不变性满足与OOD泛化保证；实验在合成/半合成贝叶斯网络恢复真实结构，在Colored MNIST超越固定不变性基线，并在PACS、VLCS、OfficeHome取得SOTA。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Causal representation learning aims to discover robust features by exploiting the causal structure underlying data generation. Existing methods require specifying the causal structure a priori, yet different structures demand fundamentally incompatible invariance constraints, and misspecification leads to representations that discard predictive information. We introduce SaCRL, a framework that jointly identifies the causal structure and learns the corresponding invariant representation without prior structural knowledge. Our approach formulates structure selection as a soft optimization over candidate invariances using HSIC-based violation metrics, with adaptive weights that automatically concentrate on the achievable structure. We provide theoretical guarantees for structure identification, including under random-feature approximation, invariance satisfaction, and out-of-distribution generalization. Empirically, SaCRL recovers the true structure on synthetic and semi-synthetic Bayesian-network benchmarks, outperforms fixed-invariance baselines on Colored MNIST, achieves state-of-the-art accuracy on three DomainBed benchmarks (PACS, VLCS, OfficeHome), and degrades gracefully under structural misspecification and limited environment diversity. Code is available at: https://github.com/ArmanBehnam/sacrl.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202610/03/2609.37751v1-cross-entropy-guided-routing-in-mixture-of-experts-large-language-models",
+      "section": "quick",
+      "title_en": "Cross-Entropy Guided Routing in Mixture-of-Experts Large Language Models",
+      "authors": "Yury Nahshan, Nati Daniel, Jacob Goldberger, Yoli Shavit",
+      "date": "2026-09-29",
+      "pdf": "https://arxiv.org/pdf/2609.37751v1",
+      "score": "6.0",
+      "evidence": "以token误差监督动态路由，使路由器亲和度对齐误差",
+      "tldr": "稀疏MoE大模型用路由器将token分给少量专家，但负载均衡与语言建模目标无法让路由亲和度对齐token级误差。本文提出两种token误差监督：一是预测各专家误差分数，用亲和度加权聚合对齐下一token交叉熵，并以个体分数衰减亲和度后做top-K选择；二是直接对齐路由器亲和度与模型目标，无需额外头或推理改动。在Granite等两个MoE骨干、四个多选题基准上，平均提升约2.3个百分点，ARC-Challenge最高提升2.94点。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Sparse mixture-of-experts (MoE) large language models scale model capacity by routing each token to a small subset of experts. Their routers are regularized with load balancing terms and learn affinity scores through the language-model objective. However, these objectives do not provide direct alignment between routing affinities and token-level error. We introduce token-error supervision for sparse routing in two forms. The first form predicts an error score per expert. The affinity-weighted aggregate of these scores is aligned to the next-token cross-entropy loss, while the individual scores attenuate affinity before top-$K$ selection. The second directly aligns the router's affinities to the model's objective without requiring an additional head or inference-time modification. Both formulations use the Itakura--Saito divergence or an exponential negative log-likelihood for aligning affinities and token errors. Across two sparse MoE backbones and four multiple-choice question-answering benchmarks, we evaluate both supervision mechanisms. On Granite, our method improves accuracy by approximately 2.3 percentage points on average over a parameter-matched routing baseline. With stronger supervision, the gain on ARC-Challenge reaches 2.94 points. Both mechanisms preserve the native sparse execution budget and aggregation policy. Our code is available in the supplementary materials.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202610/03/2610.01702v1-task-oriented-rank-adaptation-for-continual-learning-in-text-classification",
+      "section": "quick",
+      "title_en": "Task-Oriented Rank Adaptation for Continual Learning in Text Classification",
+      "authors": "Rey Sanchez Lopez, Eduardo Morales Manzanares, Hugo Jair Escalante",
+      "date": "2026-10-01",
+      "pdf": "https://arxiv.org/pdf/2610.01702v1",
+      "score": "6.0",
+      "evidence": "几何路由在专家适配器间决定知识迁移或隔离",
+      "tldr": "文本分类持续学习面临灾难性遗忘与跨任务负迁移，LoRA 等参数高效微调常独立训练适配器，难以复用知识。本文提出 TORA，一种利用 LoRA 低秩结构的几何路由框架，依据结构相似度选择从最兼容专家迁移（Boosting）或隔离新任务（Shielding）。在 15 个文本分类基准上，TORA 避免有害路由：兼容任务性能超过独立训练且减少训练时间，远距离任务免受干扰且精度不降。仅需单一几何阈值，不依赖任务身份或预设序列，为动态适配器路由提供简单有效方案。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Continual learning (CL) in text classification faces two critical challenges: catastrophic forgetting and negative transfer across sequential tasks. Parameter-Efficient Fine-Tuning (PEFT) methods such as LoRA enable efficient adaptation by learning low-rank updates of the model parameters. However, these compact representations are normally trained in isolation, limiting their reuse across related tasks. We introduce Task-Oriented Rank Adaptation (TORA), a geometric routing framework that leverages the low-rank structure of LoRA adapters to decide whether to transfer knowledge from the most compatible expert (Boosting) or isolate the new task (Shielding) based on structural similarity. Evaluated across 15 diverse text classification benchmarks, TORA consistently avoids harmful routing decisions: compatible tasks exceed their isolated performance while reducing training time, and structurally distant tasks are protected from interference with no loss in accuracy. With a single geometric threshold and no reliance on task identities or predefined sequences, TORA provides a simple and effective approach for dynamic adapter routing in sequential text classification systems.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
