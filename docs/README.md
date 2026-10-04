@@ -48,17 +48,17 @@
 <section class="dpr-home-dashboard-card dpr-home-report-card">
   <div class="dpr-home-dashboard-header">
     <div>
-      <span class="dpr-home-dashboard-kicker">2026-10-03</span>
+      <span class="dpr-home-dashboard-kicker">2026-10-04</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">共 3 篇</strong>
+    <strong class="dpr-home-dashboard-count">共 5 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
     <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
     <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>0</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>3</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>5</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-10-03 22:07:44 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-10-04 22:24:05 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,7 +69,7 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>2026-10-03 日报速读3篇：因果表示学习、MoE路由与持续学习文本分类。最值得看的是《Structure-agnostic Causal Representation Learning》（7.0/10），探讨不依赖结构假设的因果表征；MoE路由一文（6.0/10）关注专家混合大模型的交叉熵引导。普通读者可先读因果表征这篇，再按兴趣跟进后两篇。</p>
+<p>今日速读 5 篇，无精读，聚焦智能体路由与模型泛化、剪枝三个方向。最值得关注的是 HM-ROUTER 的模型与工具联合路由思路，以及 STAMP 无需目标数据即可预测分布外泛化。建议普通读者优先从这两篇入手，了解路由优化与泛化评估的实用价值。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -91,12 +91,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">速读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">3 篇</strong>
+    <strong class="dpr-home-dashboard-count">5 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Structure-agnostic Causal Representation Learning">Structure-agnostic Causal Representation Learning</span></li><li><span class="dpr-home-dashboard-paper-title" title="Cross-Entropy Guided Routing in Mixture-of-Experts Large Language Models">Cross-Entropy Guided Routing in Mixture-of-Experts Large Language Models</span></li><li><span class="dpr-home-dashboard-paper-title" title="Task-Oriented Rank Adaptation for Continual Learning in Text Classification">Task-Oriented Rank Adaptation for Continual Learning in Text Classification</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="HM-ROUTER: Joint Model and Harness Routing for Agentic Systems">HM-ROUTER: Joint Model and Harness Routing for Agentic Systems</span></li><li><span class="dpr-home-dashboard-paper-title" title="STAMP: Predicting Out-of-Distribution Generalization without Target Data">STAMP: Predicting Out-of-Distribution Generalization without Target Data</span></li><li><span class="dpr-home-dashboard-paper-title" title="MoRA: MoE Pruning via Router Bias Learning and Expert Approximation">MoRA: MoE Pruning via Router Bias Learning and Expert Approximation</span></li></ul>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>3</strong></span></div>
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>5</strong></span></div>
 </section>
 </div>
 

@@ -1,0 +1,215 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-04T22:22:20.097458+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 5,
+    "quick_skim_target": 11,
+    "quick_selected": 5
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2609.32213v1",
+      "source": "arxiv",
+      "title": "HM-ROUTER: Joint Model and Harness Routing for Agentic Systems",
+      "abstract": "Agent performance depends on both the underlying model and the harness that manages its tool use and execution. Selecting a suitable pair requires accounting for their compatibility, yet training samples may cover only a subset of the growing combination space. We introduce HM-Router, a routing method that jointly selects a model and harness for each query. It learns separate model and harness representations shared across routes, with an interaction term inspired by canonical polyadic (CP) tensor decomposition to capture how their compatibility varies with the query. This sharing allows training samples from observed pairs to inform predictions for unobserved combinations. We curate a benchmark from 12 public agent benchmarks, covering 293 routes, 73 models, and 25 harnesses. HM-Router exceeds the strongest evaluated learned baseline by 7.3 percentage points in mean routing accuracy and leads at all seven evaluated cost budgets on the six-benchmark subset. When 90% of routes have their training outcomes withheld, allowing unobserved combinations improves normalized accuracy by 15.8 points over restricting the same router to observed routes. HM-Router has also demonstrated training sample efficiency for new routes and components and generalization to unseen benchmarks. Our code and data are open-sourced at https://github.com/hmarkc/HM-Router.",
+      "authors": [
+        "Hao Mark Chen",
+        "Royson Lee",
+        "Yasuyuki Okoshi",
+        "Dimitris Anastasiou",
+        "Wayne Luk",
+        "Hongxiang Fan"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CL"
+      ],
+      "published": "2026-09-26T04:19:28+00:00",
+      "link": "https://arxiv.org/pdf/2609.32213v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "joint routing that generalizes to unobserved combinations",
+      "llm_evidence_cn": "可泛化到未观测组合的联合路由",
+      "llm_evidence": "可泛化到未观测组合的联合路由",
+      "canonical_evidence": "可泛化到未观测组合的联合路由",
+      "llm_tldr_en": "HM-Router jointly selects a model and harness per query using shared representations and a CP-decomposition interaction term, generalizing to unobserved combinations.",
+      "llm_tldr_cn": "论文针对智能体性能同时取决于模型与其执行工具链、而训练样本只覆盖部分组合的问题，提出 HM-Router。方法为每个查询联合选择模型与工具链，学习跨路由共享的表示，并用受 CP 张量分解启发的交互项刻画兼容性随查询变化。该共享机制使已观测组合的样本能推断未观测组合，并在 293 条路由的基准上验证。其路由泛化到未见组合的思路，对冷启动药物对路由有借鉴意义。",
+      "llm_tldr": "论文针对智能体性能同时取决于模型与其执行工具链、而训练样本只覆盖部分组合的问题，提出 HM-Router。方法为每个查询联合选择模型与工具链，学习跨路由共享的表示，并用受 CP 张量分解启发的交互项刻画兼容性随查询变化。该共享机制使已观测组合的样本能推断未观测组合，并在 293 条路由的基准上验证。其路由泛化到未见组合的思路，对冷启动药物对路由有借鉴意义。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.32672v1",
+      "source": "arxiv",
+      "title": "STAMP: Predicting Out-of-Distribution Generalization without Target Data",
+      "abstract": "Predicting whether a trained model will generalize under distribution shift remains difficult, especially when target-domain data are unavailable. We introduce STAMP (Semantic Temporal Augmented Model Prediction), a source-only, target-label-free criterion that estimates out-of-distribution (OOD) performance from paired source-domain images. STAMP computes the output-space correlation ratio $η^2=S_B/S_T$ by contrasting semantically stable pairs with random pairs: higher $η^2$ indicates that model outputs vary with semantic identity rather than nuisance variation. On 44 chest X-ray models spanning CNNs, ViTs, MetaFormers, foundation models, and SSL/VLM probes, temporal STAMP attains Spearman correlations of $0.844$--$0.855$ with macro AUROC on VinDr-CXR, CheXpert, and MIMIC-CXR; a class-matched variant improves single-class RSNA from $0.311$ to $0.663$. STAMP attains the best average source-only medical ranking and outperforms the target-domain ATC and AoTL estimators without any target data. On 27 ImageNet models, temperature-scaled STAMPTS attains $ρ{=}0.984$ on ObjectNet and $ρ\\geq0.905$ on four additional distribution shifts, with partial correlations of $0.662$--$0.949$ after controlling for ImageNet accuracy. Requiring approximately 12s per model on one GPU, STAMP is a practical pre-deployment model-selection and auditing tool.",
+      "authors": [
+        "Md Kawsher Mahbub",
+        "Milon Biswas"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-26T14:28:06+00:00",
+      "link": "https://arxiv.org/pdf/2609.32672v1",
+      "tags": [
+        "keyword:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "predicting out-of-distribution generalization under distribution shift without target data",
+      "llm_evidence_cn": "无目标数据下预测分布偏移的分布外泛化",
+      "llm_evidence": "无目标数据下预测分布偏移的分布外泛化",
+      "canonical_evidence": "无目标数据下预测分布偏移的分布外泛化",
+      "llm_tldr_en": "STAMP is a source-only, target-label-free criterion that estimates out-of-distribution performance under distribution shift without any target-domain data.",
+      "llm_tldr_cn": "论文针对在无目标域数据时难以预测模型分布外泛化能力的问题，提出 STAMP 判据。方法仅利用源域成对图像，通过对比语义稳定对与随机对计算输出空间相关比 η²，以衡量输出随语义而非噪声变化的程度。在 44 个胸部 X 光模型上，其与宏观 AUROC 的 Spearman 相关达 0.844–0.855。该工作为分布偏移下的泛化评估提供无需目标标签的实用工具，可迁移至药物级 OOD 评估。",
+      "llm_tldr": "论文针对在无目标域数据时难以预测模型分布外泛化能力的问题，提出 STAMP 判据。方法仅利用源域成对图像，通过对比语义稳定对与随机对计算输出空间相关比 η²，以衡量输出随语义而非噪声变化的程度。在 44 个胸部 X 光模型上，其与宏观 AUROC 的 Spearman 相关达 0.844–0.855。该工作为分布偏移下的泛化评估提供无需目标标签的实用工具，可迁移至药物级 OOD 评估。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "drug-level out-of-distribution generalization under distribution shift",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.00367v1",
+      "source": "arxiv",
+      "title": "MoRA: MoE Pruning via Router Bias Learning and Expert Approximation",
+      "abstract": "Mixture-of-Experts (MoE) models enable parameter scaling with limited per-token computation by activating only a small subset of experts for each token, but deploying them still requires loading the complete expert pool into memory. Structured expert pruning can effectively reduce the memory usage by removing experts. However, existing pruning methods either use expert ranking criteria that are not well aligned with model performance or rely on effective expert subset searching that is computationally expensive. Moreover, these methods typically overlook the routing-behavior redundancy among the retained experts. In this paper, we propose MoE Pruning via Router Bias Learning and Expert Approximation (MoRA), a framework for structured MoE expert pruning. We introduce a learnable router bias for each expert and optimize these biases by minimizing the language-modeling loss and a routing-diversity regularizer. The learned router biases sharpen the routing probability distributions to identify experts critical to model performance while encouraging the selection of experts with diverse routing preferences. In addition, we introduce an expert approximation mechanism as a post-pruning enhancement. It leverages the remaining experts to approximate the outputs of pruned experts by affine transformation, further improving the performance of the pruned model. We evaluate MoRA on Qwen3-30B-A3B, DeepSeek-V2-Lite, and Moonlight-16B-A3B, removing 25\\% and 50\\% of the routed experts in each MoE layer. Extensive experiments on nine zero-shot benchmarks show that MoRA outperforms state-of-the-art pruning algorithms. Our code will be released.",
+      "authors": [
+        "Yushuai Sun",
+        "Zikun Zhou",
+        "Lin Gao",
+        "Jun Yu",
+        "Wenjie Pei"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-30T06:38:43+00:00",
+      "link": "https://arxiv.org/pdf/2610.00367v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "router bias learning and expert approximation for structured MoE expert specialization",
+      "llm_evidence_cn": "通过路由器偏置学习与专家近似实现MoE专家专门化",
+      "llm_evidence": "通过路由器偏置学习与专家近似实现MoE专家专门化",
+      "canonical_evidence": "通过路由器偏置学习与专家近似实现MoE专家专门化",
+      "llm_tldr_en": "Deploying MoE models requires loading all experts. MoRA performs structured expert pruning via router bias learning and expert approximation, addressing ranking criteria and routing redundancy issues.",
+      "llm_tldr_cn": "针对MoE模型部署时需加载全部专家、现有结构化剪枝方法排序准则与性能不匹配且忽视路由冗余的问题，本文提出MoRA框架。它通过路由器偏置学习与专家近似进行结构化专家剪枝，在压缩专家池的同时兼顾模型性能与路由行为冗余。该工作聚焦MoE专家与路由机制，对理解专家专门化与路由行为有方法层面的参考价值，但并非面向DDI或OOD泛化。",
+      "llm_tldr": "针对MoE模型部署时需加载全部专家、现有结构化剪枝方法排序准则与性能不匹配且忽视路由冗余的问题，本文提出MoRA框架。它通过路由器偏置学习与专家近似进行结构化专家剪枝，在压缩专家池的同时兼顾模型性能与路由行为冗余。该工作聚焦MoE专家与路由机制，对理解专家专门化与路由行为有方法层面的参考价值，但并非面向DDI或OOD泛化。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.00558v1",
+      "source": "arxiv",
+      "title": "Redundancy Meets Synergy: Dependency-aware Expert Selection for MoE via Submodular Optimization",
+      "abstract": "While Mixture-of-Experts (MoE) models effectively scale model capacity through sparse activation, their deployment is often bottlenecked by prohibitive memory requirements. Extracting a compact subset of experts presents a promising solution. However, existing expert selection heuristics predominantly rely on Top-k ranking, which isolates the evaluation of individual experts and ignores the intricate inter-expert dependencies introduced by the MoE gating network. In this paper, we propose DS-MoE, a theoretically grounded framework that redefines expert selection via difference-of-submodular (DS) optimization. By analyzing the second-order Taylor expansion of the loss degradation, we reveal functional duality within expert combinations: redundancy (where experts encode overlapping representations) and synergy (where experts provide complementary error cancellation). To navigate this duality, we mathematically decouple redundancy reduction from synergy maximization by formulating the selection objective as a DS function. Furthermore, we devise a tailored majorization-minimization (MM) algorithm with provable monotonicity guarantees to efficiently identify the optimal expert subset. Extensive experiments demonstrate that DS-MoE effectively preserves indispensable expert combinations, achieving superior performance compared to the state-of-the-art baselines.",
+      "authors": [
+        "Zheng Lin",
+        "Shaoke Fang",
+        "Yuxin Zhang",
+        "Jinfeng Xu",
+        "Zihan Fang",
+        "Zhe Chen",
+        "Wei Ni",
+        "Jun Luo",
+        "Symeon Chatzinotas"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.DC"
+      ],
+      "published": "2026-09-30T18:33:27+00:00",
+      "link": "https://arxiv.org/pdf/2610.00558v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "difference-of-submodular optimization for dependency-aware MoE expert selection and specialization",
+      "llm_evidence_cn": "差分次模优化实现依赖感知的MoE专家选择与专门化",
+      "llm_evidence": "差分次模优化实现依赖感知的MoE专家选择与专门化",
+      "canonical_evidence": "差分次模优化实现依赖感知的MoE专家选择与专门化",
+      "llm_tldr_en": "DS-MoE reframes MoE expert selection as difference-of-submodular optimization, using a second-order loss analysis to capture inter-expert redundancy and synergy beyond Top-k ranking.",
+      "llm_tldr_cn": "针对MoE部署内存瓶颈与Top-k专家选择忽略专家间依赖的问题，本文提出DS-MoE框架，通过差分次模优化分析损失退化的二阶泰勒展开，刻画专家组合中的冗余与协同。实验显示依赖感知选择能在压缩专家子集的同时保持甚至提升性能，为MoE专家专门化提供了理论与方法工具。",
+      "llm_tldr": "针对MoE部署内存瓶颈与Top-k专家选择忽略专家间依赖的问题，本文提出DS-MoE框架，通过差分次模优化分析损失退化的二阶泰勒展开，刻画专家组合中的冗余与协同。实验显示依赖感知选择能在压缩专家子集的同时保持甚至提升性能，为MoE专家专门化提供了理论与方法工具。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "mixture-of-experts architecture for drug pair modeling",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.01418v1",
+      "source": "arxiv",
+      "title": "SpikeMoE: Brain-Inspired Competitive Routing for Flexible Spiking Mixture-of-Experts",
+      "abstract": "Spiking Neural Networks (SNNs) enable event-driven computation through biologically inspired dynamics at the neuronal scale, while Mixture-of-Experts (MoE) perform conditional computation through expert selection at the model scale. Integrating their strengths offers potential for flexible neural architectures. A key challenge, however, lies in designing an expert selection mechanism based on spiking activity. To address this, we introduce a spike-based k-WTA Router inspired by competition-inhibition observed in the hippocampal CA1 region. The router incorporates lateral inhibition and refractory period to select Top-K experts according to discrete spike counts. Building on this, we present SpikeMoE, a framework that integrates neuronal-scale spiking dynamics with model-scale expert selection. To address incomplete multisensory inputs in multimodal tasks, we further equip SpikeMoE with a two-stage missing-modality modeling module that combines empirical prototypes from an observed-modality pool with modality-specific learnable embeddings to construct missing-modality representations. Experiments on vision, language, and multimodal benchmarks demonstrate that SpikeMoE achieves state-of-the-art performance among the SNN baselines, matches or exceeds the performance of ANN counterparts, and maintains robustness across diverse missing-modality conditions. These results demonstrate a favorable trade-off between performance and energy efficiency, validating the integration of spiking dynamics with sparse expert computation and highlighting SpikeMoE as a promising approach to energy-efficient brain-inspired computing.",
+      "authors": [
+        "Xiaoli Liu",
+        "Yujie Liang",
+        "Jialin Li",
+        "Malu Zhang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-10-01T10:22:00+00:00",
+      "link": "https://arxiv.org/pdf/2610.01418v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "spike-based k-WTA router selects Top-K experts dynamically",
+      "llm_evidence_cn": "脉冲k-WTA路由器动态选择Top-K专家",
+      "llm_evidence": "脉冲k-WTA路由器动态选择Top-K专家",
+      "canonical_evidence": "脉冲k-WTA路由器动态选择Top-K专家",
+      "llm_tldr_en": "Integrating spiking neural networks with mixture-of-experts, this paper proposes a spike-based k-WTA router with lateral inhibition and refractory period to dynamically select Top-K experts, yielding flexible conditional computation.",
+      "llm_tldr_cn": "针对脉冲神经网络与混合专家结合时专家选择机制难以基于脉冲活动设计的问题，本文提出受海马CA1竞争抑制启发的脉冲式k-WTA路由器。该路由器引入侧抑制与不应期，依据离散脉冲计数动态选择Top-K专家，从而构建SpikeMoE框架。该工作为动态专家路由提供了生物启发式实现，对需要在不同输入下自适应激活专家的MoE建模具有方法借鉴意义。",
+      "llm_tldr": "针对脉冲神经网络与混合专家结合时专家选择机制难以基于脉冲活动设计的问题，本文提出受海马CA1竞争抑制启发的脉冲式k-WTA路由器。该路由器引入侧抑制与不应期，依据离散脉冲计数动态选择Top-K专家，从而构建SpikeMoE框架。该工作为动态专家路由提供了生物启发式实现，对需要在不同输入下自适应激活专家的MoE建模具有方法借鉴意义。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
