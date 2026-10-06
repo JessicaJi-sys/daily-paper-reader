@@ -1,0 +1,343 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-06T01:04:07.646255+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 7,
+    "quick_skim_target": 11,
+    "quick_selected": 7
+  },
+  "deep_dive": [
+    {
+      "id": "2610.03456v1",
+      "source": "arxiv",
+      "title": "Beyond Random Splits: Evaluating Drug-Target Affinity Models Under Chemically and Biologically Motivated Distribution Shifts Copy",
+      "abstract": "Drug-target affinity (DTA) prediction is widely used to prioritize candidate compounds before costly experimental screening. DTA models are often compared under a single data split, even though deployment may require extrapolation to new chemical series, new protein targets, or both. We ask whether the distribution shift used for evaluation changes which architecture appears best. We curate 718,800 unique drug-protein pairs from the ChEMBL and BindingDB datasets. We compare a Morgan-fingerprint + protein-CNN baseline with 12 controlled architectures that combine four drug representations with three ESM-2 interaction modes. Mean validation RMSE increases from 0.950 and 0.945 under scaffold and fingerprint-cluster OOD to 1.299 and 1.321 under protein-cluster and dual OOD. Model rankings are similar across the two chemical shifts (tau = 0.79), but agreement with scaffold OOD falls under protein OOD (tau = 0.39) and reverses under dual OOD (tau = -0.55). Held-out evaluation, repeated seeds, group-aware bootstrap analysis, and a size-matched control support the same conclusion: architecture selection depends on the form of extrapolation, not only on average error or training-set size. DTA benchmarks should therefore match the chemical and target shifts expected at deployment.",
+      "authors": [
+        "Minjae Chung",
+        "Clara Li",
+        "Malar Paavai Muthukumaran",
+        "Shaunna Wang",
+        "Aniket Ramkrishnan Iyer",
+        "Shaun Qien Yeau Tan",
+        "Harinishree Sathu",
+        "Micky C. Nnamdi",
+        "J. Ben Tamo",
+        "Benoit Louis Marteau",
+        "May Dongmei Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-10-02T15:33:20+00:00",
+      "link": "https://arxiv.org/pdf/2610.03456v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Evaluating drug-target affinity models under chemically and biologically motivated distribution shifts",
+      "llm_evidence_cn": "化学与生物驱动的分布偏移下评估药物-靶点亲和力模型",
+      "llm_evidence": "化学与生物驱动的分布偏移下评估药物-靶点亲和力模型",
+      "canonical_evidence": "化学与生物驱动的分布偏移下评估药物-靶点亲和力模型",
+      "llm_tldr_en": "The paper curates 718800 drug-protein pairs and shows that chemically and biologically motivated distribution shifts change which DTA architecture appears best.",
+      "llm_tldr_cn": "药物-靶点亲和力预测模型常仅在单一数据划分下比较，但实际部署需外推到新化学系列、新蛋白靶点或两者兼有。本文从ChEMBL与BindingDB整理718800个唯一药物-蛋白对，系统比较Morgan指纹加蛋白CNN基线及12种受控架构在不同偏移下的表现。结果显示验证RMSE在骨架与新靶点偏移下显著上升，且不同划分会改变最优架构结论，凸显药物级OOD评估中分布偏移设计的关键作用。",
+      "llm_tldr": "药物-靶点亲和力预测模型常仅在单一数据划分下比较，但实际部署需外推到新化学系列、新蛋白靶点或两者兼有。本文从ChEMBL与BindingDB整理718800个唯一药物-蛋白对，系统比较Morgan指纹加蛋白CNN基线及12种受控架构在不同偏移下的表现。结果显示验证RMSE在骨架与新靶点偏移下显著上升，且不同划分会改变最优架构结论，凸显药物级OOD评估中分布偏移设计的关键作用。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "drug-level out-of-distribution generalization under distribution shift",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2609.33119v1",
+      "source": "arxiv",
+      "title": "MedRouter: Demystifying Knowledge Differences Across Medical LLMs for Routing-Based Reasoning",
+      "abstract": "Medical question answering spans diverse specialties and modalities, and individual medical large language models (LLMs) exhibit distinct strengths across tasks and domains. This heterogeneity suggests that combining specialists may enable broader coverage of medical questions than relying on any single model. However, existing LLM routing methods primarily seek to balance answer quality and inference cost, leaving open how to exploit differences in specialist competence to improve medical reasoning. In this paper, we introduce MedRouter, an agentic system that uses an embedding-based multi-label router to select and query specialist LLMs, then passes their responses to a generator to produce the final answer. We further propose SCALE (Specialist Competence-Aware Learning), a two-stage training framework that first trains the Router with specialist correctness supervision and then optimizes its selections through reinforcement learning. The second stage uses a Performance Gain Reward (PGR) that measures how specialist information affects the generator's answer correctness relative to answering without that information. Experiments on eight text-based and multimodal medical QA benchmarks show that MedRouter outperforms the strongest routing baseline by 8% in average accuracy. Our analysis of specialist outputs further reveals distinct strengths and complementary question-level coverage, motivating learned routing to combine these capabilities for more comprehensive medical reasoning.",
+      "authors": [
+        "Lang Cao",
+        "Binghang Lu",
+        "Yuhao Shen",
+        "Yue Guo"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-09-27T02:39:31+00:00",
+      "link": "https://arxiv.org/pdf/2609.33119v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "embedding-based multi-label router selects specialist LLMs to exploit heterogeneous competence for reasoning",
+      "llm_evidence_cn": "基于嵌入的多标签路由选择专家模型，利用异构能力差异进行推理",
+      "llm_evidence": "基于嵌入的多标签路由选择专家模型，利用异构能力差异进行推理",
+      "canonical_evidence": "基于嵌入的多标签路由选择专家模型，利用异构能力差异进行推理",
+      "llm_tldr_en": "MedRouter uses an embedding-based multi-label router to select specialist medical LLMs and a generator to merge their answers, exploiting competence differences across specialties.",
+      "llm_tldr_cn": "医学问答覆盖多专科与多模态，不同医学大模型在任务与领域上各有强弱，如何利用专家差异提升推理仍待探索。本文提出MedRouter智能体系统，用基于嵌入的多标签路由器选择并查询专科模型，再由生成器整合回答。实验表明路由式组合可覆盖更广的医学问题并提升推理质量。该工作为异构知识源的动态选择与整合提供了参考。",
+      "llm_tldr": "医学问答覆盖多专科与多模态，不同医学大模型在任务与领域上各有强弱，如何利用专家差异提升推理仍待探索。本文提出MedRouter智能体系统，用基于嵌入的多标签路由器选择并查询专科模型，再由生成器整合回答。实验表明路由式组合可覆盖更广的医学问题并提升推理质量。该工作为异构知识源的动态选择与整合提供了参考。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can models dynamically adapt knowledge integration strategies to different drug pairs when heterogeneous knowledge sources contribute unequally across instances?",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.35549v2",
+      "source": "arxiv",
+      "title": "RareDx: Controlled Knowledge Integration and Graph-Grounded Policy Optimization for Rare-Disease Diagnosis",
+      "abstract": "Rare-disease diagnosis is a long-tail reasoning problem: phenotypes are incomplete, individual disorders are sparsely documented, and relevant evidence is distributed across ontologies, gene annotations, and biomedical text. Language models consequently favor common conditions, miss rare candidates, or produce plausible but invalid names. We introduce RareDx, which couples controlled evidence use with knowledge-graph-grounded policy optimization. RareDx-Harness normalizes heterogeneous records into one ranked-diagnosis task and compares direct inference, static retrieval, adaptive tools, and structured phenotype-gene-disease reasoning over a shared knowledge layer. The training pipeline combines Top-10 post-training with RareDx-KGPO, our knowledge-graph-grounded policy optimization method. Its reward projects predictions into a canonical disease graph and integrates curated graded relevance, ontology proximity, biomedical similarity, and phenotype consistency. Vocabulary and output-budget constraints prevent dense partial credit from rewarding fabricated or overlong differentials. Across eight benchmarks, the complete RareDx system centered on Qwen3.5-9B reaches 38.34 macro Hit@10, 1.60 points above GPT-5.5 under the archived protocol; a disjoint validation-selection audit retains a 6.80-point routing gain over Direct on held-out cases. The 27B system reaches 23.53/36.56/40.76 at Hit@1/5/10. Controlled ablations show that retrieval is not uniformly helpful and that controlled routing is central to the gain. These results indicate that structured medical knowledge can turn a compact model into a competitive diagnostic ranker across heterogeneous long-tail settings in clinical practice.",
+      "authors": [
+        "Bo Zhang",
+        "Yuchen Wang",
+        "Dongbai Li",
+        "Matthew Yu Heng Wong",
+        "Qingkai Zeng",
+        "Lijun Wang",
+        "Tien-Yin Wong",
+        "Peng Cui",
+        "Tianyu Liu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-09-28T16:24:54+00:00",
+      "link": "https://arxiv.org/pdf/2609.35549v2",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "controlled integration of heterogeneous knowledge sources across instances",
+      "llm_evidence_cn": "跨实例对异构知识源的受控整合",
+      "llm_evidence": "跨实例对异构知识源的受控整合",
+      "canonical_evidence": "跨实例对异构知识源的受控整合",
+      "llm_tldr_en": "RareDx couples controlled evidence use with knowledge-graph-grounded policy optimization to integrate heterogeneous knowledge for long-tail rare-disease diagnosis.",
+      "llm_tldr_cn": "罕见病诊断是长尾推理问题，表型不完整且证据分散于本体、基因注释与文献中，语言模型往往偏向常见病或生成看似合理但无效的结论。本文提出RareDx，将受控证据使用与知识图谱接地的策略优化相结合，统一比较直接推理、静态检索、自适应工具与结构化表型-基因-疾病推理。实验表明该方法能更有效地按实例整合异构知识并提升罕见病候选排序质量。",
+      "llm_tldr": "罕见病诊断是长尾推理问题，表型不完整且证据分散于本体、基因注释与文献中，语言模型往往偏向常见病或生成看似合理但无效的结论。本文提出RareDx，将受控证据使用与知识图谱接地的策略优化相结合，统一比较直接推理、静态检索、自适应工具与结构化表型-基因-疾病推理。实验表明该方法能更有效地按实例整合异构知识并提升罕见病候选排序质量。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can models dynamically adapt knowledge integration strategies to different drug pairs when heterogeneous knowledge sources contribute unequally across instances?",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2609.37789v1",
+      "source": "arxiv",
+      "title": "Predictive Self-Supervised Learning Provably Identifies Stochastic Signals under Nuisance",
+      "abstract": "Self-supervised learning (SSL) by predicting in latent space, without generating the input data itself, learns highly abstract, useful representations. Intuitively, this success is often attributed to its ability to discard nuisance information that is irrelevant to prediction. However, this poses a conundrum: both stochastic variation in a prediction-relevant latent signal and true nuisance make observations partly unpredictable; how could they be distinguished? Surprisingly, we prove that common SSL methods can achieve exactly this, by implicitly instantiating a latent-variable model with stochastic dynamics and observation-private nuisance. We trace their ability to recover the stochastic signal to two complementary principles: Predictive mutual information maximization ensures that representations retain the information needed for prediction, while latent distribution matching constrains how this information is encoded, thereby making the retained signal identifiable. We confirm this identifiability result in simulations for Gaussian predictors, which recover the true signal up to an affine transformation even in dynamic, nuisance-laden environments.",
+      "authors": [
+        "Fabian A. Mikulasch",
+        "Friedemann Zenke"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-09-29T15:20:02+00:00",
+      "link": "https://arxiv.org/pdf/2609.37789v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "provably separates prediction-relevant stochastic signal from nuisance, yielding invariant representations",
+      "llm_evidence_cn": "可证明地分离预测相关随机信号与干扰，获得不变表示",
+      "llm_evidence": "可证明地分离预测相关随机信号与干扰，获得不变表示",
+      "canonical_evidence": "可证明地分离预测相关随机信号与干扰，获得不变表示",
+      "llm_tldr_en": "This work proves that common predictive SSL methods implicitly instantiate a latent-variable model with stochastic dynamics and observation-private nuisance, exactly separating signal from nuisance.",
+      "llm_tldr_cn": "自监督学习通过潜在空间预测学到抽象表示，通常被认为能丢弃与预测无关的干扰信息，但预测相关信号的随机变化与真实干扰都使观测不可预测，二者难以区分。本文证明常见SSL方法可隐式实例化含随机动态与观测私有干扰的潜变量模型，从而精确分离二者。研究给出两条互补原理，解释了不变信号的可恢复性。为不变表示学习提供了理论支撑。",
+      "llm_tldr": "自监督学习通过潜在空间预测学到抽象表示，通常被认为能丢弃与预测无关的干扰信息，但预测相关信号的随机变化与真实干扰都使观测不可预测，二者难以区分。本文证明常见SSL方法可隐式实例化含随机动态与观测私有干扰的潜变量模型，从而精确分离二者。研究给出两条互补原理，解释了不变信号的可恢复性。为不变表示学习提供了理论支撑。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "invariant representation learning for stable drug generalization",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.02584v1",
+      "source": "arxiv",
+      "title": "Dense Mixture-of-Experts as a Reparameterized Wide FFN: A Granularity Sweep at Fixed Compute",
+      "abstract": "Sparse Mixture-of-Experts (MoE) models combine learned routing with selection from a large expert pool. We isolate the contribution of dynamic expert combination using a dense analogue: $K$ SwiGLU experts, all active for every token and combined by a softmax gate, at fixed total FFN width. With no larger pool or discrete selection, the dense baseline is the $K=1$ case. Validation loss varies non-monotonically with $K$: $K=2$ improves over the baseline by $0.0048$, whereas $K=4$ and $K=6$ worsen it by $0.0053$ and $0.0197$, respectively. Routing generally remains soft and expert usage balanced, except in the first layer of the $K=4$ model, where routing is nearly one-hot. Forcing this gate to uniform increases loss by $2.4$ nats on a diagnostic subset, indicating that its concentrated routing is functionally important. We further show that the architecture is exactly a dense SwiGLU with token-dependent, simplex-constrained group scaling and contains the dense baseline in its function class. These single-run results suggest a granularity sweet spot for always-active, softly gated FFNs at fixed width, with $K=2$ performing best among the configurations tested.",
+      "authors": [
+        "Vu Quang Hoang",
+        "Nghia Hieu Nguyen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-10-01T23:31:06+00:00",
+      "link": "https://arxiv.org/pdf/2610.02584v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "dynamic expert combination and routing granularity",
+      "llm_evidence_cn": "动态专家组合与路由粒度",
+      "llm_evidence": "动态专家组合与路由粒度",
+      "canonical_evidence": "动态专家组合与路由粒度",
+      "llm_tldr_en": "Treating dense K-expert softmax gating as a reparameterized wide FFN, the study sweeps K at fixed compute and finds non-monotonic loss with mostly soft balanced routing.",
+      "llm_tldr_cn": "稀疏专家混合依赖学习式路由与大规模专家池，使动态专家组合本身的贡献难以被隔离。本文用稠密类比开展研究：K个SwiGLU专家对每个token全激活并由softmax门控组合，在固定总FFN宽度下扫描K，K=1为基线。结果显示验证损失随K非单调变化，K=2略有改善而K=4、K=6变差，且路由大多保持软性与均衡。该工作澄清了动态专家组合的粒度效应，对MoE路由设计具参考价值。",
+      "llm_tldr": "稀疏专家混合依赖学习式路由与大规模专家池，使动态专家组合本身的贡献难以被隔离。本文用稠密类比开展研究：K个SwiGLU专家对每个token全激活并由softmax门控组合，在固定总FFN宽度下扫描K，K=1为基线。结果显示验证损失随K非单调变化，K=2略有改善而K=4、K=6变差，且路由大多保持软性与均衡。该工作澄清了动态专家组合的粒度效应，对MoE路由设计具参考价值。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.02701v1",
+      "source": "arxiv",
+      "title": "Conditional Capacity and Routing in Mixture-of-Experts Particle Transformers",
+      "abstract": "Mixture-of-Experts (MoE) models can increase parameter capacity without proportionally increasing active computation, but it is unclear how this trade-off behaves in particle-physics transformers. We study dense and MoE Particle Transformers on 188-class JetClass-II, varying expert count, routing capacity, top-K, and auxiliary loss. We find that, when token dropping is avoided, top-1 MoE models improve over the dense baseline at nearly unchanged nominal forward compute, while further increasing the number of stored experts produces little additional accuracy gain. Activating multiple experts per token yields additional predictive improvements at higher computational cost. Routing analyses show that expert assignments become more strongly associated with particle identity and kinematics in some configurations, but this structure does not increase monotonically with classification performance. These results highlight the need to distinguish stored parameter capacity, active computation, routing capacity, and routing organization when evaluating sparse expert models for jet classification. Code and experiment configurations are available at https://github.com/kpendiyala/MPT.",
+      "authors": [
+        "Kaushik Pendiyala",
+        "Haris Zia",
+        "Trevin Lee",
+        "Timothy Legge",
+        "Alejandro J. De Leon",
+        "Zihan Zhao",
+        "Aaron Wang",
+        "Abhijith Gandrakota",
+        "Jennifer Ngadiuba",
+        "Richard Cavanaugh",
+        "Javier Duarte"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "hep-ex"
+      ],
+      "published": "2026-10-02T02:35:28+00:00",
+      "link": "https://arxiv.org/pdf/2610.02701v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "expert routing capacity and specialization in MoE",
+      "llm_evidence_cn": "MoE中的专家路由容量与专门化",
+      "llm_evidence": "MoE中的专家路由容量与专门化",
+      "canonical_evidence": "MoE中的专家路由容量与专门化",
+      "llm_tldr_en": "Studying dense and MoE particle transformers on JetClass-II, top-1 MoE beats dense at similar compute while adding experts yields little gain; routing becomes more input-associative.",
+      "llm_tldr_cn": "专家混合可在不成比例增加计算的前提下提升参数容量，但该权衡在粒子物理Transformer中尚不清楚。本文在188类JetClass-II上系统变化专家数、路由容量、top-K与辅助损失，对比稠密与MoE模型。结果显示在避免token丢弃时，top-1 MoE以几乎不变的标称计算超过稠密基线，而继续增加专家数收益有限；每token激活多专家则需更高计算换性能。路由分析表明专家分配与输入特征关联增强，对MoE路由设计具参考意义。",
+      "llm_tldr": "专家混合可在不成比例增加计算的前提下提升参数容量，但该权衡在粒子物理Transformer中尚不清楚。本文在188类JetClass-II上系统变化专家数、路由容量、top-K与辅助损失，对比稠密与MoE模型。结果显示在避免token丢弃时，top-1 MoE以几乎不变的标称计算超过稠密基线，而继续增加专家数收益有限；每token激活多专家则需更高计算换性能。路由分析表明专家分配与输入特征关联增强，对MoE路由设计具参考意义。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.02795v1",
+      "source": "arxiv",
+      "title": "Efficient Memory Crystallization for Graph Learning under Non-Stationary Distribution Shifts",
+      "abstract": "Deep graph learning models deployed in real-world systems often need to cope with non-stationary environments, where the underlying graph distribution drifts continually over time. Prevailing solutions rely on training auxiliary generative modules to synthesize memory graphs for cross-domain adaptation, which incurs substantial computational overhead and scales poorly under prolonged distribution shifts. We argue that a more economical path exists: rather than generating memory, one can crystallize it. To this end, we propose Efficient Memory Crystallization (EMC), a training-free test-time framework that distills each incoming graph domain into a compact, semantically faithful memory through a closed-form solution to a memory-oriented distribution-matching objective, thereby eliminating redundant domain information under continual covariate shifts. To preserve both generalizability and adaptability as the model traverses a long sequence of target domains, EMC further models inter-domain dependencies through state-evolving memories and admits a theoretically grounded, tighter generalization error bound than direct adaptation. Extensive experiments demonstrate the superior performance of EMC over state-of-the-art baselines on graphs under non-stationary distribution shifts, while reducing average runtime by 87.4% and GPU memory consumption by 92.4% relative to the recent competitor, making continual graph adaptation practical at scale.",
+      "authors": [
+        "Yue Hou",
+        "Ruomei Liu",
+        "Yingke Su",
+        "Junran Wu",
+        "Ke Xu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-10-02T04:35:59+00:00",
+      "link": "https://arxiv.org/pdf/2610.02795v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "test-time adaptation to non-stationary distribution shifts via memory crystallization",
+      "llm_evidence_cn": "通过记忆结晶实现非平稳分布偏移下的测试时自适应",
+      "llm_evidence": "通过记忆结晶实现非平稳分布偏移下的测试时自适应",
+      "canonical_evidence": "通过记忆结晶实现非平稳分布偏移下的测试时自适应",
+      "llm_tldr_en": "Efficient Memory Crystallization is a training-free test-time framework that distills each incoming graph domain into compact memory to handle non-stationary distribution shifts.",
+      "llm_tldr_cn": "图学习模型在真实系统中常面临图分布随时间持续漂移的非平稳环境，而主流方法依赖训练辅助生成模块合成记忆图，计算开销大且难以应对长期偏移。该文提出高效记忆结晶EMC，一种免训练的测试时框架，通过闭式解将每个新到域蒸馏为紧凑且语义忠实的记忆。实验表明该方法能在显著降低开销的同时适应持续分布偏移，为分布偏移下的泛化提供了高效自适应范式。",
+      "llm_tldr": "图学习模型在真实系统中常面临图分布随时间持续漂移的非平稳环境，而主流方法依赖训练辅助生成模块合成记忆图，计算开销大且难以应对长期偏移。该文提出高效记忆结晶EMC，一种免训练的测试时框架，通过闭式解将每个新到域蒸馏为紧凑且语义忠实的记忆。实验表明该方法能在显著降低开销的同时适应持续分布偏移，为分布偏移下的泛化提供了高效自适应范式。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "drug-level out-of-distribution generalization under distribution shift",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.03265v1",
+      "source": "arxiv",
+      "title": "SPEAR: A Spectral-Disentangled MoE Neural Operator with Knowledge-Guided Expert Aggregation for Large-Scale PDE Pretraining",
+      "abstract": "Large-scale pre-training has improved the generalization of neural operators across diverse PDEs. However, existing PDE foundation models still struggle with heterogeneous dynamics, where shared representations may cause knowledge interference, while mixture-of-experts (MoE) architectures suffer from increasing expert redundancy. We propose SPEAR, a spectral-disentangled MoE neural operator with knowledge-guided expert aggregation for large-scale PDE pre-training. SPEAR decouples latent features into low- and high-frequency components, enabling shared modeling of transferable dynamics and specialized learning of PDE-specific patterns. To address expert redundancy, we design a knowledge-guided expert aggregation strategy that measures expert similarity from dataset-specific learned knowledge and routing preferences, enabling the identification and consolidation of similar experts. Experiments on twelve PDE datasets and multiple downstream benchmarks demonstrate superior performance in pre-training, fine-tuning, and transfer learning. Furthermore, our aggregation strategy reduces the number of experts by 50\\% while maintaining or improving prediction accuracy, achieving a balance between model efficiency and generalization for PDE foundation models.",
+      "authors": [
+        "Dengdi Sun",
+        "Xiaoya Zhou",
+        "Xiao Wang",
+        "Wanli Lyu",
+        "Jin Tang",
+        "Bin Luo"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-10-02T13:10:09+00:00",
+      "link": "https://arxiv.org/pdf/2610.03265v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "MoE with knowledge-guided expert aggregation for specialized regimes",
+      "llm_evidence_cn": "知识引导专家聚合的MoE用于专门化建模",
+      "llm_evidence": "知识引导专家聚合的MoE用于专门化建模",
+      "canonical_evidence": "知识引导专家聚合的MoE用于专门化建模",
+      "llm_tldr_en": "SPEAR is a spectral-disentangled MoE neural operator that decouples latent features into frequency bands for shared and specialized learning, with knowledge-guided expert aggregation to reduce redundancy.",
+      "llm_tldr_cn": "大规模PDE预训练提升了神经算子的泛化能力，但共享表示易引发知识干扰，MoE架构又面临专家冗余问题。本文提出SPEAR，将隐特征解耦为低频与高频成分，使可迁移动力学共享建模、PDE特有模式专门学习，并设计知识引导的专家聚合机制以缓解冗余。实验表明该框架在异构动力学下实现了更好的泛化与更高效的专家利用，为异构分布下的专家专门化与知识整合提供了可借鉴思路。",
+      "llm_tldr": "大规模PDE预训练提升了神经算子的泛化能力，但共享表示易引发知识干扰，MoE架构又面临专家冗余问题。本文提出SPEAR，将隐特征解耦为低频与高频成分，使可迁移动力学共享建模、PDE特有模式专门学习，并设计知识引导的专家聚合机制以缓解冗余。实验表明该框架在异构动力学下实现了更好的泛化与更高效的专家利用，为异构分布下的专家专门化与知识整合提供了可借鉴思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

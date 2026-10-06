@@ -1,0 +1,166 @@
+Title: Conditional Capacity and Routing in Mixture-of-Experts Particle Transformers
+
+URL Source: https://arxiv.org/pdf/2610.02701v1
+
+Published Time: Mon, 05 Oct 2026 00:30:43 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+FERMILAB-PUB-26-0717-CMS-LDRD 
+
+# Conditional Capacity and Routing in Mixture-of-Experts Particle Transformers 
+
+Kaushik Pendiyala 1,* Haris Zia 2,* Trevin Lee 2,* 
+
+Timothy Legge 2 Alejandro J. De Leon 2 Zihan Zhao 2 Aaron Wang 3
+
+Abhijith Gandrakota 4 Jennifer Ngadiuba 4 Richard Cavanaugh 4 Javier Duarte 21University of California Davis, Davis, CA, USA 
+
+> 2
+
+University of California San Diego, San Diego, CA, USA 
+
+> 3
+
+University of Illinois at Chicago, Chicago, IL, USA 
+
+> 4
+
+Fermi National Accelerator Laboratory, Batavia, IL, USA 
+
+> *
+
+These authors contributed equally to this work. 
+
+# Abstract 
+
+Mixture-of-Experts (MoE) models can increase parameter capacity without propor-tionally increasing active computation, but it is unclear how this trade-off behaves in particle-physics transformers. We study dense and MoE Particle Transform-ers on 188-class JetClass-II, varying expert count, routing capacity, top-K, and auxiliary loss. We find that, when token dropping is avoided, top-1 MoE models improve over the dense baseline at nearly unchanged nominal forward compute, while further increasing the number of stored experts produces little additional accuracy gain. Activating multiple experts per token yields additional predictive improvements at higher computational cost. Routing analyses show that expert assignments become more strongly associated with particle identity and kinematics in some configurations, but this structure does not increase monotonically with classification performance. These results highlight the need to distinguish stored parameter capacity, active computation, routing capacity, and routing organization when evaluating sparse expert models for jet classification. Code and experiment configurations are available at https://github.com/kpendiyala/MPT .
+
+# 1 Introduction 
+
+Particle Transformer (ParT) incorporates pairwise particle information into attention for jet classifica-tion [Qu et al., 2022]. Extending classification to the diverse resonance signatures in JetClass-II [Li et al., 2024] raises the question of how to allocate model capacity. Dense scaling increases parameters and computation together. Sparse mixture-of-experts (MoE) layers select a few expert networks per token, allowing parameter growth without proportional growth in active computation [Shazeer et al., 2017, Fedus et al., 2021]. However, this does not guarantee better predictions. Restricted expert capacity can cause token assignments to be dropped, while more active experts change both computation and expert output combinations. Simultaneously, routing according to identifiable particle properties does not neces-sarily improve whole-jet classification. We therefore evaluate predictive performance together with routing behavior to determine whether more structured routing accompanies improved classification. We compare dense ParT and MoEParT across expert count, capacity, top-K, and auxiliary loss. We find that no-drop top-1 expert scaling changes routing without improving accuracy, whereas top-2 improves prediction at higher nominal compute. Capacity constraints accompany degraded performance, and stronger routing association is not a monotonic indicator of better classification. 
+
+> Preprint.
+
+1arXiv:2610.02701v1 [cs.LG] 2 Oct 2026 Together, these results separate the effects of stored capacity, active computation, and routing structure in MoE-based jet classifiers. 
+
+# 2 Related Work 
+
+Deep learning for jet tagging. Modern jet-tagging methods increasingly operate directly on sets of reconstructed particles rather than relying only on engineered jet observables. ParticleNet represents jets as particle clouds and applies dynamic graph convolution, providing a strong benchmark for constituent-based jet classification [Qu and Gouskos, 2020]. Particle Transformer (ParT) subsequently introduced a Transformer architecture that incorporates pairwise particle interactions into the attention mechanism and achieved improved performance on the large-scale JetClass benchmark [Qu et al., 2022]. Our work retains the ParT representation and attention structure while modifying the feed-forward sublayers through sparse mixture-of-experts routing. 
+
+Large-scale jet pre-training and JetClass-II. JetClass-II extends large-scale jet classification to a substantially broader set of boosted-jet signatures. The Sophon framework uses a Particle Transformer pre-trained on a 188-class JetClass-II classification task and demonstrates the utility of the learned representation for heavy-resonance searches and transfer learning [Li et al., 2024]. In contrast, our study uses the JetClass-II classification task as a controlled setting for comparing dense and sparse-expert Particle Transformers, focusing on conditional parameter capacity, routing capacity, active computation, and routing organization rather than on downstream transfer. 
+
+Sparse mixture-of-experts models. Mixture-of-experts models use learned routing to activate only a subset of model parameters for each input, increasing stored parameter capacity without requiring all parameters to be evaluated for every token. Early sparsely gated MoE models demonstrated large increases in parameter capacity through conditional computation [Shazeer et al., 2017]. GShard extended sparse expert routing to large Transformer models and distributed training [Lepikhin et al., 2021], while Switch Transformers simplified routing to a single active expert and emphasized expert-capacity and load-balancing issues [Fedus et al., 2021]. Subsequent work such as ST-MoE further studied training stability and transfer behavior in sparse expert Transformers [Zoph et al., 2022]. These studies motivate our separation of stored expert capacity, active expert computation, and routing capacity when evaluating MoEParT. 
+
+Mixture-of-experts models in high-energy physics. Mixture-of-experts architectures have also begun to appear in high-energy physics. Genovese et al. combine graph Transformers with MoE layers for event-level signal-background classification, emphasizing expert specialization and interpretability [Genovese et al., 2025]. Our setting differs in that we study sparse expert routing within a Particle Transformer operating on constituent-level jet representations. To our knowledge, prior work has not systematically studied sparse MoE routing within the Particle Transformer architecture for large-scale jet classification. 
+
+# 3 Model, data, and evaluation 
+
+Architecture and routing. Both architectures embed 17 particle features with widths 
+
+(128 , 512 , 128) and use eight heads, eight particle-attention blocks, and two class-attention blocks. Pair embedding widths are (64 , 64 , 64 , 8) ; the classifier has a 512-unit hidden layer and 188 outputs. Dense feed-forward networks and individual experts use 128 → 512 → 128 with GELU. Particle and class-attention blocks use dropout 0.1 and 0, respectively. MoEParT replaces feed-forward networks in all ten blocks with E experts. For a token x, a learned linear router produces p(x) = softmax( W x + b) and selects the K largest probabilities, where K is the number of active experts per token. For T flattened tokens, the per-expert assignment capacity is 
+
+C = ⌊c ⌈T K/E ⌉⌋ (1) where E is the number of experts and c is the capacity factor; assignments exceeding an expert’s capacity are dropped. For K > 1, the selected routing weights are renormalized before combining expert outputs, so increasing K changes both active computation and how expert contributions 2Figure 1: Overview of the dense Particle Transformer and MoEParT architectures. Dense ParT and MoEParT share the embedding and classifier architecture; MoEParT differs by replacing the dense feed-forward network with a sparsely routed mixture of experts. Both models produce a single 188-class jet prediction. 
+
+Figure 2: Dense and mixture-of-experts transformer blocks. Top: dense ParT uses a feed-forward network after attention. Bottom: MoEParT replaces this FFN with E expert networks of the same architecture and routes each token to the top-K selected experts. The replacement is applied in all eight particle-attention and two class-attention blocks. are weighted. We also use an auxiliary load-balancing loss, weighted by α, to discourage highly imbalanced routing. The load-balancing term for each particle-attention MoE block is 
+
+Lbal = E
+
+> E
+
+X
+
+> e=1
+
+¯pefe,
+
+where ¯pe is the mean router probability for expert e and fe is the fraction of requested assignments to that expert before capacity filtering. For K > 1, assignment fractions are normalized by K. The training loss is 
+
+L = LCE + α
+
+> 8
+
+X
+
+> ℓ=1
+
+L(ℓ)bal ,
+
+where the sum runs over the eight particle-attention blocks. Router jitter of 0.01 is applied only during training. 
+
+Task and samples. We study 188-class jet classification on the Pythia JetClass-II dataset. The labels consist of two-prong resonances (0–14), three- and four-prong resonances (15–160), and QCD backgrounds (161–187). Each jet is represented by up to 128 particles using kinematic, 3particle-identity, charge, and displacement features, with preprocessing defined by the JetClass-II configuration. Final predictive performance is evaluated on a held-out test subset containing 456,822 selected jets, of which 353,206 are signal and 103,616 are QCD. Checkpoints are selected using validation accuracy, while routing and representation analyses are performed on validation data to avoid using the held-out test set for model interpretation. All reported test metrics use the frozen selected checkpoint for each configuration. 
+
+Training setup. All dense and MoE configurations were trained using the same JetClass-II training and validation subsets and matched optimization budgets. The training subset consisted of 30 Parquet files: 10 each from the Res2P, Res34P, and QCD samples, corresponding to 3.0 million raw jets before the JetClass-II event selection. The validation subset consisted of six files, two from each sample group, corresponding to 600,000 raw jets before selection. Models were trained for 20 epochs with 1,000,000 sampled training examples per epoch and 600,000 validation examples per epoch, using a batch size of 512. Optimization used Ranger with an initial learning rate of 5 × 10 −4. All model configurations used the same training files, validation files, samples per epoch, epoch count, batch size, and optimization settings, so comparisons between dense and MoE configurations use matched data exposure and training budgets. Checkpoints were selected according to validation accuracy. Each reported configuration corresponds to a single training run; variation across random seeds was not evaluated. 
+
+Experimental configurations. We compare dense ParT with four MoE studies: (i) capacity-limited top-1 models with E ∈ { 2, 4, 8} and c = 1 .5; (ii) no-drop top-1 models with c = E; (iii) top-K
+
+models (E, K, c ) = (4 , 2, 2) , (8 , 2, 4) , (8 , 4, 2) ; and (iv) an auxiliary-loss sweep at (E, K, c ) = (4 , 1, 4) with α ∈ { 0, 0.01 , 0.05 }. Unless stated otherwise, α = 0 .01 ; this checkpoint is shared with the no-drop E4/K1 model. 
+
+Evaluation metrics. We report 188-class classification accuracy together with signal-versus-QCD discrimination metrics. The signal score is defined as s = P160  
+
+> j=0
+
+pj , where classes 0 − 160 are treated as signal and classes 161 −187 as QCD background. From this score we compute the binary AUROC and the QCD rejection RQCD = 1 
+
+> ϵQCD
+
+, evaluated at target signal efficiencies of 50% and 80%. Operating points are taken from the ROC point nearest the requested signal efficiency. 
+
+Computation and routing diagnostics. Table 1 reports parameter counts and standardized forward-pass FLOPs measured for a single jet with 128 particles using torch.profiler . Fused scaled-dot-product attention is disabled only during profiling to expose the relevant operations. These FLOP counts measure arithmetic cost and should not be interpreted as wall-clock latency or throughput. To quantify routing structure, we compute normalized mutual information 
+
+NMI( X, Y ) = I(X; Y )
+
+pH(X)H(Y ) ,
+
+with natural-log entropies between the primary selected expert and particle-level properties such as particle type, relative pT , and pT rank. Higher NMI indicates a stronger association between a particle property and the router’s expert choice. We compare these aggregate associations across models rather than matching individual expert identities, since expert labels are arbitrary across independently trained runs. Padded particle tokens are excluded from the interpretability sample. 
+
+# 4 Results 
+
+Sparse conditional capacity improves over dense at nearly fixed compute. The no-drop top-1 MoE models outperform the dense baseline while using nearly identical standardized forward FLOPs (Fig. 3(b)). Across E = 2 , 4, 8, test accuracy is 42 .73 –42 .82% , compared with 41 .69% for dense ParT, corresponding to an improvement of roughly one percentage point. Because only one expert is active per token, increasing E primarily increases stored parameter capacity rather than active computation. This suggests that sparse conditional capacity can improve predictive performance without requiring a comparable increase in nominal forward compute. 4Model E K c α P G Drop (%) Acc. (%) R50 R80                                                                                                                         
+
+> Dense ––––2.30 0.524 –41.694 75.74 7.99 Limited 211.5 .01 3.64 0.524 0.465 41.396 74.76 8.00 Limited 411.5 .01 6.30 0.525 9.370 41.276 75.91 8.00 Limited 811.5 .01 11.62 0.526 21.126 39.902 54.53 6.31 No drop 212.01 3.64 0.524 042.824 83.03 8.28 No drop 414.01 6.30 0.525 042.819 87.88 8.50 No drop 818.01 11.62 0.526 042.730 88.71 8.45 Top-K422.01 6.30 0.794 043.311 94.11 8.70 Top-K824.01 11.62 0.795 043.311 95.85 8.91 Top-K842.01 11.62 1.333 043.419 95.41 9.06 Auxiliary 41406.30 0.524 042.966 88.33 8.51 Auxiliary 414.05 6.30 0.524 042.867 94.20 9.03
+
+Table 1: Model configurations and held-out test performance. E: number of experts; K: active experts per token; c: capacity factor; α: auxiliary-loss coefficient; P : total parameters in millions; G:standardized forward GFLOPs per jet at 128 particles; Drop: validation valid-assignment drop rate. 
+
+R50 and R80 denote QCD rejection at 50% and 80% signal efficiency, respectively. 
+
+Figure 3: Performance under changes in routing capacity and active computation. (a) Capacity-limited and no-drop top-1 expert scaling; annotations give valid-assignment drop rates. (b) Test accuracy versus standardized forward GFLOPs. (c) R50 versus active experts. 
+
+Additional stored experts show diminishing accuracy gains. Within the no-drop K = 1 sweep, increasing E from 2 to 8 raises the parameter count from 3.64M to 11.62M while leaving active FLOPs essentially unchanged, yet accuracy remains nearly flat. Thus, the gain from sparse conditional capacity appears to saturate quickly in accuracy: E4 and E8 do not improve on E2 despite substantially greater stored capacity. The picture is more nuanced for background rejection, where R50 increases from 83.03 to 88.71, indicating that additional experts can still alter discrimination behavior even when top-line multiclass accuracy has saturated. 
+
+Routing capacity confounds expert-count scaling. The behavior of the expert-count sweep changes substantially when routing capacity is constrained. With a fixed capacity factor c = 1 .5, the fraction of dropped valid assignments grows rapidly with expert count, reaching 21 .1% for E = 8 
+
+(Fig. 3(a)). Performance deteriorates in the same regime: the capacity-limited E8 model reaches 
+
+39 .90% accuracy, compared with 42 .73% when sufficient capacity eliminates dropping, while R50 
+
+increases from 54 .53 to 88 .71 . Similar, though smaller, recoveries occur for E2 and E4. Thus, comparisons across expert count can be strongly confounded by routing capacity; increasing E
+
+without sufficient capacity simultaneously changes the available parameter capacity and the fraction of assignments that are successfully processed. Because the capacity-limited and no-drop models are separately trained, these results establish an association between overflow and degradation rather than a causal effect of token dropping alone. 
+
+More active experts improve performance at higher compute. Increasing K from 1 to 2 improves accuracy for both E4 and E8, but requires roughly 51% more nominal forward FLOPs (Fig. 3(b)). This indicates that the gains from top-2 routing come from a higher-compute regime rather than from additional stored capacity alone. Increasing E8 from K = 2 to K = 4 yields only a further 0.11 
+
+5Figure 4: Layer-wise routing NMI on validation data. (a) Particle-type association for no-drop top-1 models. (b) Relative-pT association for E4 K1/K2. (c) Particle-type association for E8 K2/K4. percentage-point accuracy improvement despite approximately 68% more computation, suggesting diminishing returns from activating additional experts. The ranking also depends on the evaluation metric: E8/K4 slightly improves accuracy and R80 , while E8/K2 retains the best R50 (Fig. 3(c)). Thus, increasing active expert computation can improve predictive performance, but no single configuration dominates across all operating points. 
+
+Routing structure changes independently of predictive performance. Across the no-drop K = 1 
+
+sweep, accuracy is nearly unchanged while routing becomes more strongly associated with particle identity (Fig. 4(a)); first-block particle-type NMI rises from 0.118 at E = 2 to 0.272 at E = 8 . Thus, routing organization continues to change after accuracy has saturated, although these associations do not establish semantic expert specialization. At E = 4 , moving from K = 1 to K = 2 substantially strengthens late-layer relative-pT routing (Fig. 4(b)) and other kinematic and class-label associations. However, stronger routing association is not a monotonic predictor of performance: E8/K4 slightly improves accuracy over E8/K2 while first-block particle-type NMI falls from 0.378 to 0.205 (Fig. 4(c)). Routing therefore characterizes how representations are partitioned across experts, but does not by itself explain predictive quality. 
+
+Auxiliary loss has metric-dependent effects. At fixed E4/K1, varying α changes QCD rejection and routing association without a monotonic accuracy trend. In particular, α = 0 .05 improves rejection while producing lower first-block particle-type NMI, indicating that stronger load balancing does not consistently improve either accuracy or routing structure. 
+
+# 5 Discussion and conclusion 
+
+Our results show that mixture-of-experts Particle Transformers should not be characterized by expert count alone. Under top-1 routing, increasing the number of stored experts expands conditional parameter capacity while leaving active computation nearly unchanged, yet the corresponding predic-tive gains saturate quickly. In contrast, activating multiple experts per token improves performance while increasing active computation. These behaviors separate two distinct forms of MoE scaling: increasing the parameters available to the router and increasing the amount of expert computation applied to each token. Routing capacity is also essential to this comparison. Increasing expert count without sufficient assignment capacity can cause a growing fraction of routed tokens to be dropped, confounding the effect of additional model capacity with reduced effective computation. Meaningful comparisons between sparse expert models therefore require considering not only how many experts are available, but also whether the routing mechanism can make use of them. The routing analysis provides a complementary perspective. Expert assignments develop measurable associations with particle identity and kinematic properties, showing that the router learns structured partitions of particle representations. However, stronger routing structure does not monotonically correspond to higher classification performance. Routing organization is therefore informative about how the model allocates representations across experts, but should not be treated as a direct proxy for predictive quality or semantic expert specialization. 6Overall, the effectiveness of MoEParT depends on the interaction between stored parameter capacity, active computation, and routing capacity. Sparse conditional computation can improve over a dense Particle Transformer at comparable nominal forward compute, but simply adding more experts is not sufficient; how those experts are activated and whether routed assignments are successfully processed are equally important. 
+
+# 6 Limitations and Future Work 
+
+This study focuses on a single Particle Transformer backbone and JetClass-II training setup, so the observed trade-offs may not transfer unchanged to other architectures or jet-classification tasks. In addition, the reported configurations are currently represented by a single trained checkpoint, leaving variation across random seeds unmeasured. The current study also uses a restricted training subset relative to the full JetClass-II training sample, which limits conclusions about how sparse expert capacity behaves in a higher-data regime. Future work will therefore evaluate the principal dense and MoE configurations across multiple seeds and larger training subsets to determine the stability of the observed performance and routing trends. Beyond addressing these scope limitations, several extensions could help clarify when and why sparse expert routing is useful. One direction is to study data scaling explicitly, comparing dense and MoE models as the available training sample increases to determine whether additional expert capacity becomes more valuable when data is less limiting. Another is to investigate routing dynamics during training rather than only at the selected checkpoint, which could reveal when expert specialization emerges and whether routing structure stabilizes, collapses, or reorganizes over time. 
+
+Code and reproducibility. Code, model configurations, and training scripts used in this study are available at https://github.com/kpendiyala/MPT . The corresponding repository revision is df27f8e912a08ea887f77c7940e3932e2a47fc11 . The repository includes the dense and MoE Particle Transformer implementations, JetClass-II training configuration, and experiment settings used for the reported results. 7References 
+
+William Fedus, Barret Zoph, and Noam Shazeer. Switch transformers: Scaling to trillion parameter models with simple and efficient sparsity. CoRR , abs/2101.03961, 2021. URL https://arxiv. org/abs/2101.03961 .Donatella Genovese, Alessandro Sgroi, Alessio Devoto, Samuel Valentine, Lennox Wood, Cristiano Sebastiani, Simone Scardapane, Monica D’Onofrio, and Stefano Giagu. Mixture-of-experts graph transformers for interpretable particle collision detection. Scientific Reports , 15(1), 2025. ISSN 2045-2322. doi: 10.1038/s41598-025-12003-9. URL http://dx.doi.org/10.1038/ s41598-025-12003-9 .Dmitry Lepikhin, HyoukJoong Lee, Yuanzhong Xu, Dehao Chen, Orhan Firat, Yanping Huang, Maxim Krikun, Noam Shazeer, and Zhifeng Chen. {GS}hard: Scaling giant models with condi-tional computation and automatic sharding. In International Conference on Learning Representa-tions , 2021. URL https://openreview.net/forum?id=qrwe7XHTmYb .Congqiao Li, Antonios Agapitos, Jovin Drews, Javier Duarte, Dawei Fu, Leyun Gao, Raghav Kansal, Gregor Kasieczka, Louis Moureaux, Huilin Qu, Cristina Mantilla Suarez, and Qiang Li. Accelerating Resonance Searches via Signature-Oriented Pre-training. Technical report, 2024. URL https://cds.cern.ch/record/2898352 . 14 pages, 5 figures. Huilin Qu and Loukas Gouskos. Jet tagging via particle clouds. Phys. Rev. D , 101:056019, Mar 2020. doi: 10.1103/PhysRevD.101.056019. URL https://link.aps.org/doi/10.1103/PhysRevD. 101.056019 .Huilin Qu, Congqiao Li, and Sitian Qian. Particle transformer for jet tagging. In Kamalika Chaudhuri, Stefanie Jegelka, Le Song, Csaba Szepesvari, Gang Niu, and Sivan Sabato, editors, Proceedings of the 39th International Conference on Machine Learning , volume 162 of Proceedings of Machine Learning Research , pages 18281–18292. PMLR, 17–23 Jul 2022. URL https://proceedings. mlr.press/v162/qu22b.html .Noam Shazeer, Azalia Mirhoseini, Krzysztof Maziarz, Andy Davis, Quoc V. Le, Geoffrey E. Hinton, and Jeff Dean. Outrageously large neural networks: The sparsely-gated mixture-of-experts layer. 
+
+CoRR , abs/1701.06538, 2017. URL http://arxiv.org/abs/1701.06538 .Barret Zoph, Irwan Bello, Sameer Kumar, Nan Du, Yanping Huang, Jeff Dean, Noam Shazeer, and William Fedus. St-moe: Designing stable and transferable sparse expert models, 2022. URL 
+
+https://arxiv.org/abs/2202.08906 .8
