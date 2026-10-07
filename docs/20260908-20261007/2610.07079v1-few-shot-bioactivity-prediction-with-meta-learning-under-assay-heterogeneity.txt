@@ -1,0 +1,936 @@
+Title: Few-Shot Bioactivity Prediction with Meta-Learning under Assay Heterogeneity
+
+URL Source: https://arxiv.org/pdf/2610.07079v1
+
+Published Time: Wed, 07 Oct 2026 00:08:16 GMT
+
+Number of Pages: 27
+
+Markdown Content:
+Preprint 
+
+# FEW -S HOT BIOACTIVITY PREDICTION WITH 
+
+# META -L EARNING UNDER ASSAY HETEROGENEITY 
+
+Michal Kmicikiewicz 1,2,4 , Tommy Rochussen 2,3,4 , Vincent Fortuin 3,4,6 , Ewa Szczurek 1,5,7 
+
+> 1
+
+Institute of AI for Health, Helmholtz Munich 
+
+> 2
+
+School of Computation, Information and Technology, Technical University of Munich 
+
+> 3
+
+Helmholtz AI, 4Munich Center for Machine Learning 
+
+> 5
+
+Faculty of Mathematics, Informatics and Mechanics, University of Warsaw 
+
+> 6
+
+Department of Computer Science & Artificial Intelligence, University of Technology Nuremberg 
+
+> 7
+
+Faculty of Mathematics, Informatics and Statistics, LMU Munich 
+
+{michal.kmicikiewicz,ewa.szczurek }@helmholtz-munich.de 
+
+## ABSTRACT 
+
+Accurate bioactivity prediction is a central challenge in early-stage drug discovery, as individual assays often contain too few measurements to train reliable models independently. Meta-learning offers a principled approach to this few-shot setting, but assay heterogeneity may limit its effectiveness. Here, we test this hypothesis and show that meta-learning performance degrades as meta-training tasks become more heterogeneous. To address this, we introduce MetaHeta , a meta-learning framework that accounts for assay heterogeneity by conditioning predictions on auxiliary data from related assays, with relatedness defined flexibly from available assay information. The architecture of MetaHeta combines linear attention over large auxiliary datasets with exact attention over scarce task-specific context, en-abling efficient scaling to the former without compromising exact attention over the latter. We demonstrate the benefits of our approach on assays from ChEMBL and BindingDB, improving few-shot bioactivity prediction and downstream com-pound prioritization in retrospective Bayesian optimization. 
+
+## 1 INTRODUCTION 
+
+Accurately predicting compound activity in biological assays is a central challenge in early-stage drug discovery. Reliable in silico predictors can guide candidate selection and therefore reduce the time and resources required for experimental evaluation (Jim´ enez-Luna et al., 2021; Scalia et al., 2026). Machine learning models have been widely employed for this task, but their performance typically relies on the availability of large amounts of high-quality data (Tian et al., 2024; Mayr et al., 2018). However, since bioactivity measurements are expensive to acquire, individual assays often contain too little data to train accurate models in isolation, placing assay-specific bioactivity prediction in a few-shot learning regime (Vella & Ebejer, 2022; Altae-Tran et al., 2017). A natural way to alleviate this data scarcity is to share information across assays, but naively pooling their measurements risks conflating distinct assay-specific relationships. A particularly promising approach to this problem is meta-learning (Schmidhuber, 1987; Hochreiter et al., 2001), which aims to learn shared structure across a collection of related tasks to facilitate adaptation to new ones, but without directly pooling their measurements. This collection of tasks is commonly referred to as the meta-dataset . In bioactivity prediction, each such task can natu-rally correspond to an individual assay, with a small number of observed compound–activity pairs forming a context set from which activities are predicted for new compounds ( target inputs ). A variety of meta-learning approaches have been developed to enable information sharing across tasks. Finn et al. (2017) introduced MAML, a gradient-based algorithm that learns a shared parameter initialization from which the model can adapt to new tasks in a few gradient steps. With a similar bi-level optimization objective, Chen et al. (2023) learn a shared feature representation on top of which task-specific Gaussian Processes (GPs) are fit. 1arXiv:2610.07079v1 [cs.LG] 5 Oct 2026 Preprint PKinase (f )           
+
+> PGPCR (f)PIon Channel (f)
+> P(f)
+> Function space Kinase assay
+> |D C|= 4
+> PKinase (f| D C)
+> P(f| D C)
+> Function space
+
+Figure 1: Failure mode of meta-learning under as-say heterogeneity. A heterogeneous meta-dataset can induce a broad prior, such that limited task-specific data are insufficient to concentrate the posterior around functions relevant to a new assay. Neural Processes (NPs) (Garnelo et al., 2018b;a) instead amortize task adaptation by learning a mapping from a set of con-text points to predictive distributions at tar-get locations, offering a scalable alterna-tive to GPs. Transformer Neural Processes (TNPs) (Nguyen & Grover, 2022) param-eterize this mapping using attention mech-anisms, making them well suited to mod-eling sets while capturing rich interactions between context and target points. This ar-chitecture also underpins Prior-Data Fitted Networks (PFNs), which pre-train TNPs on massive synthetic datasets for off-the-shelf prediction on new tasks (M¨ uller et al., 2022). A key assumption underlying meta-learning is that tasks in the meta-dataset are sufficiently related to induce a shared prior that supports efficient adaptation to new tasks from limited data (Baxter, 2000). However, the heterogeneity of assays in large-scale bioactivity datasets, arising from differences in experimental conditions, endpoints, and measurement protocols (Landrum & Riniker, 2024), can render this assumption questionable, potentially limiting the effectiveness of meta-learning. We il-lustrate the intuition behind this potential failure mode in Figure 1. Indeed, prior work suggests that meta-learning methods struggle to adapt to task-specific bioactivity data (Stanley et al., 2021), with Schimunek et al. (2023) reporting that even a naive baseline that ignores the context set can outper-form several established meta-learning approaches. Here, we hypothesize that assay heterogeneity is a key factor limiting the effectiveness of meta-learning for bioactivity prediction, and explicitly account for it in a dedicated modeling framework. 
+
+Our contributions are as follows: (i) we systematically study the effect of meta-training task heterogeneity on few-shot bioactivity prediction, demonstrating in a controlled setting that increasing heterogeneity can degrade meta-learning performance across a range of methods and context sizes; 
+
+(ii) motivated by these findings, we introduce MetaHeta , a meta-learning framework in which predictions are additionally conditioned on data from related assays. This allows the model to approximate the posterior predictive under a more informative prior relevant to the target task, rather than under that induced by the entire heterogeneous meta-training distribution. Assay relatedness can be defined flexibly based on target homology or known experimental conditions; 
+
+(iii) to make conditioning on such auxiliary data computationally practical, we develop a TNP-based architecture that combines exact attention over scarce task-specific context with linear attention over potentially large auxiliary datasets, enabling efficient conditioning at scale. We further demonstrate that findings from our controlled heterogeneity study translate into practical gains on assays from real-world bioactivity databases, improving few-shot bioactivity prediction and retrospective Bayesian optimization. 
+
+## 2 RELATED WORK 
+
+Early meta-learning approaches include metric-based methods (Vinyals et al., 2016; Snell et al., 2017), developed primarily for few-shot classification, and adaptation-based methods that learn shared structure across tasks to enable rapid task-specific adaptation from limited data (Finn et al., 2017; Nichol et al., 2018). These ideas have also been applied to few-shot molecular property predic-tion (Nguyen et al., 2020; Altae-Tran et al., 2017; Schimunek et al., 2023; Wang et al., 2021; 2024), with much of this work focusing on classification. More directly relevant to our probabilistic regres-sion setting, deep kernel-based methods meta-learn shared feature representations while retaining task-specific Gaussian process inference (Chen et al., 2023; Patacchiola et al., 2020). A comple-mentary line of work instead amortizes task adaptation by directly learning a mapping from task-specific context and target inputs to predictive distributions, with Neural Processes (NPs) forming a canonical family of such methods (Garnelo et al., 2018b;a; Kim et al., 2019; Rochussen & Fortuin, 2026). In recent years, NPs equipped with transformer architectures (Vaswani et al., 2017) (TNPs) 2Preprint have emerged as a prominent variant (Nguyen & Grover, 2022; Feng et al., 2023; Ashman, 2024), with Prior-Data Fitted Networks (PFNs) further extending this paradigm by pre-training TNPs on broad synthetic task distributions (M¨ uller et al., 2022). This line of work has been particularly influ-ential in tabular learning (Hollmann et al., 2025; Grinsztajn et al., 2026; Qu et al., 2026), with recent studies showing that tabular foundation models can exhibit capabilities beyond conventional tabular settings (Nakerst et al., 2026), including molecular property prediction (Hicham et al., 2026). We also discuss methods that explicitly account for task heterogeneity in Appendix D. 
+
+## 3 SETUP 
+
+Let X ⊆ Rd denote the space of d-dimensional molecular representations and Y ⊆ R the space of assay outcomes. We model each assay τ as a task, corresponding to an unknown function fτ :
+
+X → Y , where fτ ∼ P (f ), and P (f ) denotes an underlying stochastic process on X . For each τ ,we observe a finite dataset D = {(xn, y n)}Nn=1 ∈ D generated according to yn = fτ (xn) + ϵn,with ϵn ∼ N (0 , σ 2 
+
+> τ
+
+). Here, D := S 
+
+> N∈N
+
+(X × Y )N denotes the collection of all such datasets. Each dataset can be partitioned into a context set DC and a target set DT of sizes Nc := |D C |
+
+and Nt := |D T |, respectively. We denote the corresponding inputs and outputs by (XC , Y C ) ∈
+
+RNc×d × RNc and (XT , Y T ) ∈ RNt×d × RNt . We assume access to a meta-dataset Dmeta := 
+
+{D τ }Mτ =1 consisting of M assay-specific datasets, each containing a potentially small number of observations. Our goal is to meta-learn a predictor that maps an assay-specific context set and target inputs to a predictive distribution over target outcomes. Formally, we seek to learn the posterior predictive map π : D × X Nt → P (YNt ), which we parameterize by pθ (Y T | XT , DC ).
+
+## 4 ME T A HE T A 
+
+4.1 BEYOND A SINGLE SHARED PRIOR 
+
+Failure mode of meta-learning under assay heterogeneity Consider a probabilistic meta-learner 
+
+pθ trained by maximizing the expected log-likelihood: 
+
+L(θ) = EXT ,Y T ,DC
+
+log pθ
+
+ Y T | XT , DC  (1) 
+
+= −EXT ,DC
+
+KL p  Y T | XT , DC  ∥ pθ
+
+ Y T | XT , DC  + const , (2) where the expectations over meta-training tasks and their context-target splits are estimated using 
+
+Dmeta , and p(Y T | XT , DC ) denotes the posterior predictive distribution (PPD) that pθ (Y T |
+
+XT , DC ) is trained to approximate (Nagler, 2023). The PPD can be written as: 
+
+p(Y T | XT , DC ) = 
+
+Z
+
+p(Y T | XT , f )P (df | D C ), (3) where the prior P (f ) underlying the posterior P (· | D C ) reflects the distribution of assay functions represented in Dmeta . Consequently, the composition of tasks in Dmeta shapes the shared prior 
+
+P (f ) and, in turn, influences the ability of the meta-learner to adapt to new tasks given limited task-specific context DC . Since bioactivity assays are often highly heterogeneous (Landrum & Riniker, 2024), the prior induced by Dmeta may be too broad for the task-specific context to sufficiently concentrate the posterior on the relevant assay regime, limiting the effectiveness of meta-learning. 
+
+Accounting for heterogeneity through assay relatedness Motivated by this, we propose to model tasks as arising from a mixture of latent assay regimes ξk ∼ p(ξ), reflecting their shared characteristics such as the biological target or assay conditions. Each such component ξk induces its own prior Pξk (f ), giving rise to a corresponding component-specific PPD pξk (Y T | XT , DC ). The prior induced by the heterogeneous Dmeta can then be viewed as a mixture of these component pri-ors, with the corresponding PPD being a mixture of the component-specific PPDs. Since learning a separate posterior predictive map for each of potentially many latent components is impractical, we follow Ashman et al. (2024) and instead use a single meta-learner pθ (Y T | XT , DC , Daux ) to amor-tize prediction across different latent components. Here, Daux = {D τ ′ } denotes a set of auxiliary datasets generated from the same latent component ξk as the target task τ :
+
+ξk ∼ p(ξ), fτ , {fτ ′ } ∼ Pξk (f ),  XT , Y T  , DC ∼ fτ , Dτ ′ ∼ fτ ′ . (4) 3Preprint For a single target input-output pair (x, y ), Ashman et al. (2024) show that: 
+
+Eξk , DC , Daux 
+
+h
+
+KL  pξk (y | x, DC ) ∥ p(y | x, DC , Daux )i
+
+≤ Eξk , DC
+
+h
+
+KL  pξk (y | x, DC ) ∥ p(y | x, DC )i
+
+.
+
+(5) Intuitively, conditioning on auxiliary data provides additional evidence about the underlying assay regime ξk and can yield a closer approximation to the corresponding PPD pξk than conditioning on task-specific context alone. Such additional evidence can be particularly valuable when DC is small and may not be sufficiently informative on its own. This raises two practical challenges: identifying related assays to construct Daux , and efficiently conditioning a meta-learner on both DC and Daux .4.2 DEFINING ASSAY RELATEDNESS 
+
+Depending on the modeling problem and available information, it might be useful to define assay relatedness at different levels. We consider two classes of settings. 
+
+Target-based relatedness Consider a setting where ξk is determined by target identity, such that assays sharing the same target are drawn from Pξk (f ). Then, Eq. 5 directly suggests constructing 
+
+Daux by collecting tasks with the same biological target as τ . However, this construction can be overly restrictive with, for example, understudied protein targets, which are particularly relevant from a few-shot modeling perspective precisely because their assay data are often scarce (Sharma et al., 2023). In such settings, known biological relationships between targets can be leveraged to construct Daux instead, as formalised in Proposition 1: 
+
+Proposition 1. Consider an extension of the data-generating process in Eq. 4 in which the latent components are structured hierarchically as ξfamily ∼ p(ξ) and ξprot , {ξprot ′ } ∼ p(· | ξfamily ), with 
+
+fτ ∼ Pξprot (f ) and {fτ ′ } ∼ Pξprot ′ (f ). Under this generative structure, assume that auxiliary data from target homologs provide no additional information for predicting y once the target’s protein-specific component is known. Then: 
+
+Eξfamily , ξ prot , DC , Daux 
+
+"
+
+KL 
+
+
+
+pξprot (y | x, DC ) ∥ p(y | x, DC , Daux )
+
+ #
+
+≤ Eξfamily , ξ prot , DC
+
+"
+
+KL 
+
+
+
+pξprot (y | x, DC ) ∥ p(y | x, DC )
+
+ #
+
+.
+
+Intuitively, assays of distinct but homologous proteins can still inform predictions for the target through their shared family-level component. The proof is in Appendix G. 
+
+Description-based relatedness Target identities or known biological relationships may not al-ways be available to practitioners. In such cases, we instead define relatedness based on broadly available information about assay protocols or experimental conditions. Specifically, for each τ , we assume access to its natural-language description aτ , which may be noisy or incomplete. Prior to training, we map each aτ to a d-dimensional dense representation hτ = ϕ(aτ ) ∈ Rd, where ϕ de-notes an embedding model; in our experiments ϕ is instantiated as PubMedBERT (Gu et al., 2021). We then quantify relatedness between assays τ and τ ′ by cosine similarity between their description embeddings, sτ,τ ′ = ⟨hτ , h τ ′ ⟩(∥hτ ∥ ∥ hτ ′ ∥. Since sτ,τ ′ provides only a heuristic for identifying useful auxiliary assays, we control retrieval selectivity using a threshold γ and include Dτ ′ in Daux 
+
+if sτ,τ ′ ≥ γ. Meta-training with description-based relatedness is shown in Algorithm 1. 4.3 MODEL 
+
+The architecture is shaped by two competing design constraints arising from the variable availability of auxiliary data. First, because Daux may frequently be empty, parameters dedicated exclusively to auxiliary data would often receive no learning signal, motivating parameter sharing between the processing of DC and Daux . Second, Daux may instead contain many observations across multiple related datasets, making quadratic attention prohibitively expensive, while DC is typically small. Parameter sharing between DC and Daux is therefore necessary, but their different scales call for 4Preprint DT =                               
+
+> 0
+> e0
+> , . . . ,
+> 0
+> e0
+> 
+> DC=
+> y1
+> e0
+> , . . . ,
+> yNc
+> e0
+> 
+> Daux =
+> y1,1
+> e1
+> , . . . ,
+> y1,N 1
+> e1
+> 
+> ...yK, 1
+> eK
+> , . . . ,
+> yK,N K
+> eK
+> 
+> MLP MLP MLP
+> Z(0) aux
+> Z(0) C
+> Z(0) T
+> FAVOR+ (l)
+> (
+> Z(l)aux
+> )
+> linear self-attention
+> MHSA (l)
+> (
+> Z(l)C
+> )
+> exact self-attention
+> MHCA (l)
+> (
+> Z(l)C,Z(l)aux
+> )
+> MHCA (l)
+> (
+> Z(l)T,Z(l)C
+> )
+> shared Q, K, V
+> projections shared Q, K, V
+> projections
+> Encoder layer l= 0 , . . . , L −1
+> output MLP
+> pθ
+> (YT|XT,DC,Daux )
+> =N(μ,diag( σ2))
+> Z(L)T
+> Decoder
+> Bioactivity
+
+Figure 2: Architecture overview of MetaHeta . A shared input MLP embeds context, target, and concatenated auxiliary observations, augmented with task-of-origin indicators, with target activities masked to 0. Encoder layers use exact self-attention for the context and FAVOR+ for auxiliary data, followed by context-to-auxiliary and target-to-context cross-attention. When Daux = ∅, the auxiliary branch is skipped. Finally, an output MLP parameterizes a mean-field Gaussian predictive distribution. Formal definitions of the attention operators are given in Appendix F. different computational treatment. Our architecture, shown in Figure 2, addresses this using two coupled TNP-like branches that share attention parameters while employing different self-attention mechanisms. For both branches, each observation [x, y, e j ] is first embedded with an MLP, with target observations having their activities masked to 0. Here, ej is a one-hot indicator of the task of origin, allowing observations from all auxiliary datasets to be concatenated into a single sequence without ambiguity. To preserve invariance to permutations of auxiliary datasets, the indicators are assigned using a canonical ordering of Daux , for example by task relatedness (Proposition 2 in Ap-pendix G). Within each encoder layer, context representations attend to the auxiliary representations, before target representations attend to the augmented context. For the context branch, we employ standard softmax self-attention, whereas the auxiliary branch uses FAVOR+ (Choromanski et al., 2021), a linear-time approximation based on positive orthogonal random features. Since FAVOR+ provides an unbiased estimator of the softmax kernel, the same parameters can be used under both attention schemes while still targeting the same underlying operation. This allows us to scale ef-ficiently to large Daux without sacrificing exact attention over the task-specific context. The use of coupled TNP-like branches builds on ICICL-TNP (Ashman et al., 2024); we provide a detailed comparison of the two architectures in Appendix D. 
+
+## 5 EXPERIMENTS 
+
+We structure the experiments as follows. In Section 5.1, we investigate the effect of meta-training task heterogeneity on meta-learning performance in a controlled environment. In Section 5.2, we show the few-shot bioactivity prediction capabilities of MetaHeta on real-world bioactivity assays from ChEMBL (Gaulton et al., 2012). In Section 5.3, we demonstrate its effectiveness for down-stream compound prioritization through retrospective Bayesian optimization. Finally, in Section 5.4, we ablate the auxiliary-conditioning mechanism and examine its computational cost. All results are averaged over five random seeds and reported with standard errors. 5.1 META -LEARNING UNDER CONTROLLED ASSAY HETEROGENEITY 
+
+To study the effect of task heterogeneity in isolation, we construct a semi-synthetic benchmark based on kinase activity screening data from Drewry et al. (2017). Kinases provide a well-suited testbed: their common ATP-binding function is reflected in a highly conserved catalytic domain, while in-hibitor response depends largely on variation at a small subset of active-site residues (Sheridan et al., 2009; Born et al., 2022). Coupled with the well-defined phylogenetic organization of the kinome, these properties provide a natural, biologically meaningful hierarchy of task relatedness. 
+
+Benchmark construction We first fit a separate GP to each kinase’s activity measurements and sample synthetic tasks from the resulting posteriors. We consider four meta-training regimes sharing 5Preprint 0 0.4 0.8 
+
+FR2OS ↑ 
+
+> MetaHeta (Ours) TNP CNP MAML ANP ADKF-IFT DKT
+
+|D C | = 4   
+
+> 00.4 0.8
+
+FR2OS ↑|D C | = 8   
+
+> 0.2 0.45 0.7
+
+FR2OS ↑|D C | = 16   
+
+> 0.3 0.5 0.7
+
+FR2OS ↑|D C | = 32    
+
+> Core EPHA + same subfamily (EPHA) + same group + outside group
+
+Figure 3: Effect of meta-training task heterogeneity on few-shot bioactivity prediction. Performance of all the considered methods generally deteriorates as Dcore meta is augmented with progressively less related tasks. MetaHeta remains the best-performing approach regardless of the training regime. a common meta-dataset Dcore meta of 5000 tasks sampled from GPs corresponding to EPHA kinases, with the unaugmented Dcore meta serving as a baseline. The three additional regimes extend this common core, each with another 5000 tasks sampled from GPs corresponding to: (i) EPHA kinases, (ii) non-EPHA tyrosine kinases (TK), and (iii) non-tyrosine kinases (non-TK), yielding progressively more heterogeneous task distributions, as reflected by relatedness measures reported in Table 3 in Appendix A.1. Crucially, the 5000 tasks added per regime differ only in the kinase-specific GP from which activities are sampled, so heterogeneity is induced solely through differences in the task-generating functions. Evaluation is likewise fixed across regimes and performed on held-out validation and test sets, each comprising 250 tasks sampled from GPs corresponding to EPHA kinases. A full description of the synthetic task-generation procedure is provided in Appendix A.1. 
+
+Experimental setup We evaluate all methods in the few-shot regime at context sizes |D C | ∈ {4, 8, 16 , 32 }. We compare our approach against a set of strong probabilistic meta-learning methods, including members of the NP family, CNP, ANP, and TNP (Garnelo et al., 2018a; Kim et al., 2019; Nguyen & Grover, 2022), as well as deep kernel-based methods, ADKF-IFT and DKT (Chen et al., 2023; Patacchiola et al., 2020). We additionally include MAML (Finn et al., 2017) as a widely used gradient-based baseline. Since the benchmark tasks are sampled from fitted GP posteriors, we can evaluate predictions relative to the corresponding true data-generating functions. We therefore report the fraction of oracle performance in terms of R2 
+
+> os
+
+and NLL, denoted by FR2 
+
+> os
+
+and FNLL ,respectively. For our method, Daux contains at most five same-target datasets, ordered by decreasing average 5-nearest-neighbor Tanimoto similarity to the current task. Auxiliary datasets exceeding 512 
+
+observations are randomly subsampled to that size. Full details are provided in Appendix A.4. 
+
+Assay heterogeneity can hurt meta-learning performance The effect of increasing task hetero-geneity is remarkably consistent across the considered methods and context sizes, as shown for FR2os 
+
+in Figure 3. Across all 28 method–context combinations, augmenting Dcore meta with additional tasks from the same kinase subfamily improves FR2os in 25 cases, whereas augmentation with tasks from other tyrosine and non-tyrosine kinases decreases it in 24 and 26 cases, respectively. Moreover, the latter leads to a larger performance deterioration than the former in 23 comparisons. The ef-fects on FNLL are smaller in magnitude but follow the same overall pattern, as shown in Figure 6 of Appendix B. Same-subfamily augmentation improves performance in 20 of 24 method–context combinations; within-group and outside-group augmentations decrease it in 15 and 18 cases, re-Table 1: Few-shot prediction on EPHB test tasks after meta-training on Dcore meta . MetaHeta matches or exceeds all baselines across both metrics and all context sizes. Context size = 4 Context size = 8 Context size = 16 Context size = 32 Method FNLL ↑ FR2                                                                                                                                                                             
+
+> os ↑FNLL ↑FR2
+> os ↑FNLL ↑FR2
+> os ↑FNLL ↑FR2
+> os ↑
+> TNP 0.611 ±0.019 −0.077 ±0.029 0.827 ±0.004 0.110 ±0.025 0.900 ±0.002 0.226 ±0.020 0.931 ±0.001 0.309 ±0.015
+> ANP 0.601 ±0.014 −0.001 ±0.002 0.812 ±0.004 0.025 ±0.035 0.899 ±0.001 0.228 ±0.011 0.931 ±0.001 0.321 ±0.007
+> CNP 0.609 ±0.014 0.124 ±0.010 0.827 ±0.004 0.156 ±0.004 0.901 ±0.002 0.252 ±0.016 0.930 ±0.001 0.313 ±0.006
+> ADKF-IFT 0.262 ±0.027 0.028 ±0.003 0.760 ±0.007 0.079 ±0.013 0.882 ±0.002 0.174 ±0.013 0.925 ±0.002 0.282 ±0.019
+> DKT 0.121 ±0.018 0.021 ±0.002 0.646 ±0.011 0.071 ±0.002 0.806 ±0.006 0.158 ±0.012 0.874 ±0.003 0.285 ±0.010
+> MAML −−0.101 ±0.119 −0.108 ±0.045 −0.257 ±0.013 −0.314 ±0.023
+> MetaHeta 0.829 ±0.015 0.501 ±0.018 0.882 ±0.004 0.346 ±0.053 0.901 ±0.004 0.327 ±0.084 0.934 ±0.003 0.333 ±0.041
+
+6Preprint Table 2: Performance comparison on FS-Mol. MetaHeta ranks best across seven of eight metric– context-size combinations, and ranks second on the remaining one. Context size = 4 Context size = 8 Context size = 16 Context size = 32 Method NLL ↓ R2                                                                                                                                                                                                                                                                                                                                                                                                           
+
+> os ↑NLL ↓R2
+> os ↑NLL ↓R2
+> os ↑NLL ↓R2
+> os ↑
+> TNP 7.406 ±2.519 -0.070 ±0.070 2.381 ±0.216 -0.048 ±0.037 1.537 ±0.026 0.153 ±0.010 1.303 ±0.028 0.199 ±0.017 ICICL-TNP 2.291 ±0.112 0.069 ±0.038 1.786 ±0.022 0.117 ±0.020 1.485 ±0.007 0.155 ±0.020 1.362 ±0.044 0.131 ±0.026 ANP 8.020 ±4.795 -0.048 ±0.047 2.718 ±0.265 -0.071 ±0.045 1.697 ±0.075 0.056 ±0.044 1.418 ±0.098 0.131 ±0.057 CNP 5.945 ±2.766 -0.176 ±0.043 2.399 ±0.229 -0.013 ±0.010 1.715 ±0.028 0.063 ±0.003 1.472 ±0.029 0.120 ±0.008 ADKF-IFT 22.605 ±9.400 0.060 ±0.001 4.509 ±0.374 0.110 ±0.005 2.235 ±0.029 0.173 ±0.003 1.582 ±0.052 0.265 ±0.009
+> DKT 37.880 ±18.236 0.022 ±0.007 6.682 ±0.564 0.068 ±0.024 3.075 ±0.066 0.148 ±0.016 2.059 ±0.070 0.224 ±0.025 TabICLv2 --0.011 ±0.006 --0.008 ±0.003 --0.018 ±0.003 -0.010 ±0.005 TabPFNv3 -0.026 ±0.003 -0.037 ±0.003 -0.073 ±0.003 -0.111 ±0.001 MAML --0.214 ±0.054 --0.022 ±0.025 -0.050 ±0.013 -0.065 ±0.007 ST-MAML --0.048 ±0.005 -0.043 ±0.005 -0.061 ±0.003 -0.062 ±0.006 Frequent Hitters -0.086 ±0.007 -0.095 ±0.014 -0.123 ±0.010 -0.131 ±0.008 Similarity Search -0.012 ±0.001 -0.029 ±0.001 -0.041 ±0.000 -0.050 ±0.000 RF-Daux --0.228 ±0.009 --0.196 ±0.006 --0.194 ±0.009 --0.213 ±0.023
+> MetaHeta 2.216 ±0.050 0.129 ±0.028 1.765 ±0.037 0.140 ±0.029 1.466 ±0.020 0.187 ±0.018 1.277 ±0.010 0.228 ±0.011
+> MetaHeta (γ= 0 .7)2.325 ±0.091 0.127 ±0.026 1.778 ±0.039 0.129 ±0.026 1.476 ±0.024 0.179 ±0.016 1.277 ±0.012 0.223 ±0.010
+> MetaHeta (γ= 0 .8)2.469 ±0.124 0.119 ±0.024 1.808 ±0.036 0.112 ±0.025 1.497 ±0.029 0.170 ±0.016 1.295 ±0.025 0.218 ±0.009
+> MetaHeta (γ= 0 .9)4.423 ±1.938 0.098 ±0.032 2.090 ±0.163 0.074 ±0.025 1.585 ±0.051 0.151 ±0.019 1.422 ±0.076 0.204 ±0.013
+> MetaHeta -R 2.438 ±0.112 -0.256 ±0.164 1.959 ±0.030 -0.089 ±0.076 1.606 ±0.084 0.099 ±0.045 1.363 ±0.048 0.185 ±0.013
+
+spectively, and outside-group augmentation performs worse than within-group augmentation in 18 comparisons. For both metrics, differences between regimes become more pronounced with in-creasing context size, as generally weaker performance at small context sizes can partially mask the effect of task heterogeneity. Overall, these results demonstrate that increasing meta-training task heterogeneity can impair meta-learning performance, despite the increase in available training data. 
+
+Accounting for assay relatedness benefits few-shot meta-learning Across all heterogeneity regimes, MetaHeta , which explicitly accounts for task relatedness, achieves the best performance on both metrics at every context size. Notably, it retains this advantage even in a deliberately unfa-vorable cross-regime comparison: when trained under the most heterogeneous regime ( Dcore meta aug-mented with non-TK tasks), it still outperforms baselines trained under the most favorable regime (Dcore meta augmented with additional EPHA tasks). Even at the smallest context size |D C | = 4 ,
+
+MetaHeta already approaches oracle performance in terms of FNLL . This suggests that condition-ing on data from related assays provides a valuable signal beyond the task-specific context, yielding informative predictive distributions even with very few observations from the target assay. 
+
+Auxiliary information transfers across homologous targets To examine cross-target transfer of auxiliary information, we retain the preceding setup with meta-training on Dcore meta , but perform vali-dation and testing on tasks from the EPHB kinase subfamily. Since these targets are not represented in Dcore meta , no same-target assays are available. However, because the EPHA and EPHB subfamilies both belong to the EPH kinase family, we can use Proposition 1 to construct Daux from the homol-ogous EPHA tasks present in Dcore meta (see Appendix A.4.1 for full details). The results in Table 1 demonstrate that MetaHeta matches or exceeds all baselines across both metrics and all context sizes, with particularly large gains in the lowest-context regime. This suggests that information from homologous targets can support prediction, particularly when task-specific data are limited. 5.2 META -LEARNING EVALUATION ON REAL -WORLD BIOACTIVITY ASSAYS 
+
+To assess whether the findings from the controlled assay-heterogeneity setting extend beyond the semi-synthetic benchmark, we evaluate MetaHeta on FS-Mol (Stanley et al., 2021), a few-shot learning benchmark built from ChEMBL (Gaulton et al., 2012) bioactivity assays. 
+
+Experimental setup As in Section 5.1, we consider a highly data-scarce regime with |D C | ∈ {4, 8, 16 , 32 }. We construct Daux based on assay-description similarity with threshold γ = 0 .5,selecting at most 5 auxiliary datasets per task and subsampling each to at most 512 observations. We compare MetaHeta against previously introduced meta-learning baselines, together with ST-MAML (Wang et al., 2022), a MAML variant designed to account for task heterogeneity, and ICICL-TNP (Ashman et al., 2024), evaluated with the same Daux as our method. We additionally include two state-of-the-art tabular foundation models, TabICLv2 (Qu et al., 2026) and TabPFNv3 (Grinsz-tajn et al., 2026), as well as three non-meta-learning sanity checks: Frequent Hitters and Similarity Search (Schimunek et al., 2023), and RF-Daux , a random forest fitted per target assay after com-7Preprint 6.7 7.9 9.1 7.2 8.3 9.3 7.0 8.1 9.2 7.2 8.1 8.9                           
+
+> 246810
+> 5.6 7.6 9.6
+> 246810
+> 7.3 8.2 9.1
+> 246810
+> 7.3 8.2 9.0
+> 246810
+> 7.0 8.4 9.7
+> Number of queries Highest activity
+> MetaHeta (Ours) ADKF-IFT DKT TNP Random GP ANP CNP TabPFN ICICL-TNP
+
+Figure 4: Retrospective Bayesian optimization trajectories on eight BindingDB assays. Dashed horizontal lines ( ) mark the activity threshold for the top 5% of compounds in each assay; 
+
+MetaHeta is the only method to identify such compounds in every assay. bining its context with the observations in Daux . Since the underlying data-generating functions are unavailable, we report the standard R2 
+
+> os
+
+and NLL where applicable. Details are in Appendix A.4. 
+
+Results Across the four context sizes and both metrics, our method achieves the best performance in 7 out of 8 comparisons. The gains are the largest in the most data-scarce regime and diminish as more task-specific context becomes available. Consistent with the observations of Schimunek et al. (2023), Frequent Hitters, which ignores the task context and instead learns from observations naively pooled across all assays in Dmeta , outperforms several meta-learning approaches. This suggests that standard meta-learners may struggle to exploit highly heterogeneous assay collections, particularly when only limited context data are available. In contrast, our approach is the only method that out-performs Frequent Hitters across all context sizes. Both tabular foundation models perform poorly, particularly at the smallest context sizes, providing further evidence that broad generic priors can be insufficient when limited context is available to identify the relevant task regime. MetaHeta 
+
+consistently outperforms ICICL-TNP, whose R2 
+
+> os
+
+declines as the context size increases from 16 
+
+to 32 while ours improves, potentially reflecting the benefit of retaining exact self-attention over the context rather than processing it through pseudo-tokens. Additionally, the poor performance of RF-Daux suggests that access to related auxiliary data alone is insufficient for effective prediction. 5.3 RETROSPECTIVE BAYESIAN OPTIMIZATION 
+
+To assess the practical utility of MetaHeta , we investigate whether its improved predictive perfor-mance in low-data settings translates into more effective compound prioritization when used as a surrogate model in retrospective Bayesian optimization on BindingDB assays (Liu et al., 2025). 
+
+Experimental setup We conduct the evaluation with initial conditions designed to resemble an early-stage compound-optimization scenario, in which activity measurements are available only for compounds belonging to a single, weakly active chemical series. Specifically, for each of the eight considered assays and each random seed, we initialize optimization with four randomly selected compounds sharing a Bemis–Murcko scaffold (Bemis & Murcko, 1996) with median activity be-low the assay-specific 25th percentile. We then perform 10 optimization rounds using the LogEI acquisition function (Ament et al., 2023). We compare MetaHeta against most of the probabilistic baselines introduced in Section 5.2, a task-specific GP with a Tanimoto kernel, and random selection. Further details on assay selection and candidate-pool construction are provided in Appendix A.2. 
+
+Results As shown in Figure 4, MetaHeta finds the most active compounds among the compared methods in three of the eight assays and ranks second in three others. It is also the only approach to retrieve compounds that rank among the 5% most active in each of the eight assays. Table 4 in Appendix B.2 further demonstrates the strong and consistent performance of MetaHeta across all the considered assays: our approach achieves an average rank of 1.875 , leaving a substantial gap to 8Preprint -0.125 00.125 0.25                                  
+
+> R2OS  ↑|D C|= 4 |D C|= 8 |D C|= 16 |D C|= 32
+> 012345
+> 30 60 90 120 Time (s)
+> 012345012345012345
+> MetaHeta
+> ICICL-TNP
+> Number of auxiliary datasets ( |D aux |)
+
+Figure 5: R2 
+
+> os
+
+and inference time of MetaHeta and ICICL-TNP with varying cardinality of Daux .Auxiliary conditioning improves predictive performance with modest incremental cost. Our archi-tecture processes five auxiliary datasets faster than ICICL-TNP processes a single one. the second-ranked method, TabPFN, with an average rank of 4.0. Notably, the task-specific GP ranks last in four of the eight assays, suggesting that fitting a surrogate independently from assay-specific observations alone can be unreliable in such a low-data regime. 5.4 ABLATION 
+
+In this section, we examine: (i) how the trade-off between predictive performance and inference time of MetaHeta depends on the number of auxiliary datasets and the choice of architecture; (ii) its sensitivity to the similarity threshold γ; and (iii) whether assay-description similarity provides a useful proxy for task relatedness. 
+
+Experimental setup We use the models trained on FS-Mol (Section 5.2). To answer (i), we com-pare predictive performance and inference time of MetaHeta and ICICL-TNP as we vary |D aux | at inference time, keeping γ = 0 and using the same auxiliary datasets for both methods. For (ii), we evaluate stricter similarity thresholds by increasing γ while retaining a maximum of five auxiliary datasets. Lastly, to address (iii), we evaluate MetaHeta with the default γ = 0 .5 and a maximum of five auxiliary datasets, but shuffle the assignment of retrieved auxiliary assays to target assays. We denote this variant as MetaHeta -R. 
+
+Results Figure 5 shows that conditioning on a single auxiliary dataset suffices to substantially im-prove R2
+
+> os
+
+, with little further change as more datasets are added. Figure 7 in Appendix B.3 shows continued reductions in NLL, suggesting that additional datasets mainly refine uncertainty estimates rather than improve point predictions. Although conditioning on a single auxiliary dataset increases inference time by approximately 2.3 − 2.5 times, each additional dataset adds only around three seconds, resulting in 20% overhead when expanding Daux from 1 to 5. We attribute this modest incremental cost to FAVOR+ attention, which allows our architecture to condition on five auxil-iary datasets faster than ICICL-TNP does on a single one. It also makes more effective use of the auxiliary signal, achieving higher mean R2 
+
+> os
+
+across all context sizes and nonzero auxiliary-dataset counts. Table 2 shows that increasing γ degrades performance, with the largest deterioration at 
+
+γ = 0 .9, where many target assays lack even a single auxiliary assay satisfying the similarity crite-rion. Notably, shuffling auxiliary-assay assignments in MetaHeta -R leads to comparatively modest increases in NLL but substantially degrades R2
+
+> os
+
+, with the sharpest drops at small context sizes. This provides strong evidence that assay-description similarity offers a useful basis for constructing Daux 
+
+by capturing relatedness relevant to prediction, particularly when task-specific data are scarce. 
+
+## 6 CONCLUSION 
+
+In this work, we first investigate the effect of meta-training task heterogeneity on few-shot bioac-tivity prediction in a controlled setting, and show that increasing heterogeneity can systematically 9Preprint degrade meta-learning performance across methods and context sizes. To address this, we intro-duce MetaHeta , a meta-learning framework which explicitly accounts for assay heterogeneity by conditioning predictions on auxiliary data from related assays. Its architecture enables this auxil-iary conditioning to scale efficiently to large datasets while preserving exact attention over scarce task-specific context. We further demonstrate the effectiveness of our method under three notions of assay relatedness: shared target identity, phylogenetic relationships between targets, and assay-description similarity. Finally, we demonstrate the effectiveness of MetaHeta on bioactivity assays from ChEMBL and BindingDB, improving both few-shot prediction and downstream compound pri-oritization through retrospective Bayesian optimization. We discuss the limitations of our approach and directions for future work in Appendix E. Taken together, our results identify assay heterogene-ity as an important challenge for few-shot bioactivity meta-learning and show that conditioning on related assays provides an effective and scalable way to address it. ACKNOWLEDGMENTS 
+
+MK thanks Max from HPC for his invaluable contributions to maintaining the author’s caloric intake and, consequently, productivity. VF was sup-ported by the Branco Weiss Fellowship. This project has received funding from the European Research Council (ERC) under the European Funding Union’s Horizon 2020 research and innovation programme (grant agreement No 101125506–DOG-AMP). 
+
+## REFERENCES 
+
+Han Altae-Tran, Bharath Ramsundar, Aneesh S Pappu, and Vijay Pande. Low data drug discovery with One-Shot learning. ACS Cent Sci , 3(4):283–293, April 2017. Sebastian Ament, Sam Daulton, David Eriksson, Maximilian Balandat, and Eytan Bakshy. Un-expected improvements to expected improvement for bayesian optimization. In Thirty-seventh Conference on Neural Information Processing Systems , 2023. URL https://openreview. net/forum?id=1vyAG6j9PE .Matthew Ashman. On Transformer Neural Processes . PhD thesis, Apollo - University of Cambridge Repository, 2024. URL https://www.repository.cam.ac.uk/handle/ 1810/399768 .Matthew Ashman, Cristiana Diaconu, Adrian Weller, and Richard E. Turner. In-context in-context learning with transformer neural processes. In Javier Antor´ an and Christian A. Naesseth (eds.), 
+
+Proceedings of the 6th Symposium on Advances in Approximate Bayesian Inference , volume 253 of Proceedings of Machine Learning Research , pp. 1–29. PMLR, 21 Jul 2024. URL https: //proceedings.mlr.press/v253/ashman24a.html .J. Baxter. A model of inductive bias learning. Journal of Artificial Intelligence Research , 12: 149–198, March 2000. ISSN 1076-9757. doi: 10.1613/jair.731. URL http://dx.doi.org/ 10.1613/jair.731 .Guy W. Bemis and Mark A. Murcko. The properties of known drugs. 1. molecular frameworks. 
+
+Journal of Medicinal Chemistry , 39(15):2887–2893, 07 1996. ISSN 0022-2623. doi: 10.1021/ jm9602928. URL https://doi.org/10.1021/jm9602928 .Jannis Born, Tien Huynh, Astrid Stroobants, Wendy D Cornell, and Matteo Manica. Active site sequence representations of human kinases outperform full sequence representations for affinity prediction and inhibitor generation: 3D effects in a 1D model. J. Chem. Inf. Model. , 62(2):240– 257, January 2022. Lucian Chan, Marcel Verdonk, and Carl Poelking. Embracing assay heterogeneity with neural processes for markedly improved bioactivity predictions, 2023. URL https://arxiv.org/ abs/2308.09086 .10 Preprint Wenlin Chen, Austin Tripp, and Jos´ e Miguel Hern´ andez-Lobato. Meta-learning adaptive deep ker-nel gaussian processes for molecular property prediction. In The Eleventh International Confer-ence on Learning Representations , 2023. URL https://openreview.net/forum?id= KXRSh0sdVTP .Krzysztof Marcin Choromanski, Valerii Likhosherstov, David Dohan, Xingyou Song, Andreea Gane, Tamas Sarlos, Peter Hawkins, Jared Quincy Davis, Afroz Mohiuddin, Lukasz Kaiser, David Benjamin Belanger, Lucy J Colwell, and Adrian Weller. Rethinking attention with per-formers. In International Conference on Learning Representations , 2021. URL https: //openreview.net/forum?id=Ua6zuk0WRH .The UniProt Consortium. Uniprot: the universal protein knowledgebase in 2025. Nucleic Acids Research , 53(D1):D609–D617, 01 2025. ISSN 1362-4962. doi: 10.1093/nar/gkae1010. URL 
+
+https://doi.org/10.1093/nar/gkae1010 .David H Drewry, Carrow I Wells, David M Andrews, Richard Angell, Hassan Al-Ali, Alison D Axtman, Stephen J Capuzzi, Jonathan M Elkins, Peter Ettmayer, Mathias Frederiksen, Opher Gileadi, Nathanael Gray, Alice Hooper, Stefan Knapp, Stefan Laufer, Ulrich Luecking, Michael Michaelides, Susanne M¨ uller, Eugene Muratov, R Aldrin Denny, Kumar S Saikatendu, Daniel K Treiber, William J Zuercher, and Timothy M Willson. Progress towards a public chemogenomic set for protein kinases and a call for contributions. PLoS One , 12(8):e0181585, August 2017. Leo Feng, Hossein Hajimirsadeghi, Yoshua Bengio, and Mohamed Osama Ahmed. Latent bot-tlenecked attentive neural processes. In International Conference on Learning Representations ,2023. URL https://openreview.net/forum?id=yIxtevizEA .Chelsea Finn, Pieter Abbeel, and Sergey Levine. Model-agnostic meta-learning for fast adaptation of deep networks. In Doina Precup and Yee Whye Teh (eds.), Proceedings of the 34th International Conference on Machine Learning , volume 70 of Proceedings of Machine Learning Research , pp. 1126–1135. PMLR, 06–11 Aug 2017. URL https://proceedings.mlr.press/v70/ finn17a.html .Marta Garnelo, Dan Rosenbaum, Christopher Maddison, Tiago Ramalho, David Saxton, Murray Shanahan, Yee Whye Teh, Danilo Rezende, and S. M. Ali Eslami. Conditional neural pro-cesses. In Jennifer Dy and Andreas Krause (eds.), Proceedings of the 35th International Con-ference on Machine Learning , volume 80 of Proceedings of Machine Learning Research , pp. 1704–1713. PMLR, 10–15 Jul 2018a. URL https://proceedings.mlr.press/v80/ garnelo18a.html .Marta Garnelo, Jonathan Schwarz, Dan Rosenbaum, Fabio Viola, Danilo J. Rezende, S. M. Ali Eslami, and Yee Whye Teh. Neural processes, 2018b. URL https://arxiv.org/abs/ 1807.01622 .Anna Gaulton, Louisa J Bellis, A Patricia Bento, Jon Chambers, Mark Davies, Anne Hersey, Yvonne Light, Shaun McGlinchey, David Michalovich, Bissan Al-Lazikani, and John P Over-ington. ChEMBL: a large-scale bioactivity database for drug discovery. Nucleic Acids Res. , 40 (Database issue):D1100–7, January 2012. L´ eo Grinsztajn, Klemens Fl¨ oge, Oscar Key, Felix Birkel, Philipp Jund, Brendan Roof, Mihir Ma-nium, Shi Bin Hoo, Magnus B¨ uhler, Anurag Garg, Dominik Safaric, Jake Robertson, Benjamin J¨ ager, Simone Alessi, Adrian Hayler, Vladyslav Moroshan, Lennart Purucker, Philipp Singer, Alan Arazi, Julien Siems, Jan Hendrik Metzen, Georg Grab, Nick Erickson, Siyuan Guo, Eliott Kalfon, Simon Bing, David Salinas, Clara Cornu, Lilly Charlotte Wehrhahn, Diana Kriuchkova, Kursat Kaya, Lydia Sidhoum, Marie Salmon, Jerry Chen, Madelon Hulsebos, Yann LeCun, Samuel M¨ uller, Bernhard Sch¨ olkopf, Sauraj Gambhir, Noah Hollmann, and Frank Hutter. Tabpfn-3: Technical report, 2026. URL https://arxiv.org/abs/2605.13986 .Yu Gu, Robert Tinn, Hao Cheng, Michael Lucas, Naoto Usuyama, Xiaodong Liu, Tristan Naumann, Jianfeng Gao, and Hoifung Poon. Domain-specific language model pretraining for biomedical natural language processing. ACM Trans. Comput. Healthcare , 3(1), October 2021. doi: 10. 1145/3458754. URL https://doi.org/10.1145/3458754 .11 Preprint Karim K. Ben Hicham, Jan G. Rittig, Martin Grohe, and Alexander Mitsos. Tabular foundation models for in-context prediction of molecular properties, 2026. URL https://arxiv.org/ abs/2604.16123 .Sepp Hochreiter, A. Steven Younger, and Peter R. Conwell. Learning to learn using gradient descent. In Georg Dorffner, Horst Bischof, and Kurt Hornik (eds.), Artificial Neural Networks — ICANN 2001 , pp. 87–94, Berlin, Heidelberg, 2001. Springer Berlin Heidelberg. ISBN 978-3-540-44668-2. Noah Hollmann, Samuel M¨ uller, Lennart Purucker, Arjun Krishnakumar, Max K¨ orfer, Shi Bin Hoo, Robin Tibor Schirrmeister, and Frank Hutter. Accurate predictions on small data with a tabular foundation model. Nature , 637(8045):319–326, Jan 2025. ISSN 1476-4687. doi: 10.1038/ s41586-024-08328-6. URL https://doi.org/10.1038/s41586-024-08328-6 .Adam Izdebski, Jan Olszewski, Pankhil Gawade, Krzysztof Koras, Serra Korkmaz, Valentin Rauscher, Jakub M. Tomczak, and Ewa Szczurek. Synergistic benefits of joint molecule gen-eration and property prediction. Transactions on Machine Learning Research , 2026. ISSN 2835-8856. URL https://openreview.net/forum?id=jnzCOLyGOA . J2C Certification. Andrew Jaegle, Felix Gimeno, Andy Brock, Oriol Vinyals, Andrew Zisserman, and Joao Car-reira. Perceiver: General perception with iterative attention. In Marina Meila and Tong Zhang (eds.), Proceedings of the 38th International Conference on Machine Learning , volume 139 of 
+
+Proceedings of Machine Learning Research , pp. 4651–4664. PMLR, 18–24 Jul 2021. URL 
+
+https://proceedings.mlr.press/v139/jaegle21a.html .Ghassen Jerfel, Erin Grant, Tom Griffiths, and Katherine Heller. Reconciling meta-learning and continual learning with online mixtures of tasks. In H. Wallach, H. Larochelle, A. Beygelzimer, F. d'Alch´ e-Buc, E. Fox, and R. Garnett (eds.), Ad-vances in Neural Information Processing Systems , volume 32. Curran Associates, Inc., 2019. URL https://proceedings.neurips.cc/paper_files/paper/2019/ file/7a9a322cbe0d06a98667fdc5160dc6f8-Paper.pdf .Jos´ e Jim´ enez-Luna, Francesca Grisoni, Nils Weskamp, and Gisbert Schneider. Artificial intelligence in drug discovery: recent advances and future perspectives. Expert Opinion on Drug Discovery ,16(9):949–959, 2021. doi: 10.1080/17460441.2021.1909567. URL https://doi.org/10. 1080/17460441.2021.1909567 . PMID: 33779453. Hyunjik Kim, Andriy Mnih, Jonathan Schwarz, Marta Garnelo, Ali Eslami, Dan Rosenbaum, Oriol Vinyals, and Yee Whye Teh. Attentive neural processes. In International Conference on Learning Representations , 2019. URL https://openreview.net/forum?id=SkE6PjC9KX .Greg Landrum, Paolo Tosco, Ricardo Rodriguez, Brian Kelley, David Cosgrove, Riccardo Vianello, sriniker, Peter Gedeck, Gareth Jones, Dan Nealschneider, Eisuke Kawashima, NadineSchneider, tadhurst cdd, Andrew Dalke, Niels Maeder, Matt Swain, Yakov Pechersky, Brian Cole, Kevin Boyd, Samo Turk, Aleksandr Savelev, Rachel Walker, Alain Vaucher, Maciej W´ ojcikowski, Hus-sein Faara, Ichiru Take, Vincent F. Scalfani, Steven Kearnes, Kazuya Ujihara, and Daniel Probst. rdkit/rdkit: 2026 03 6 (q1 2026) release, August 2026. URL https://doi.org/10.5281/ zenodo.22140358 .Gregory A. Landrum and Sereina Riniker. Combining ic50 or ki values from different sources is a source of significant noise. Journal of Chemical Information and Modeling , 64(5):1560–1567, Mar 2024. ISSN 1549-9596. doi: 10.1021/acs.jcim.4c00049. URL https://doi.org/10. 1021/acs.jcim.4c00049 .Juho Lee, Yoonho Lee, Jungtaek Kim, Adam Kosiorek, Seungjin Choi, and Yee Whye Teh. Set transformer: A framework for attention-based permutation-invariant neural networks. In Ka-malika Chaudhuri and Ruslan Salakhutdinov (eds.), Proceedings of the 36th International Con-ference on Machine Learning , volume 97 of Proceedings of Machine Learning Research , pp. 3744–3753. PMLR, 09–15 Jun 2019. URL https://proceedings.mlr.press/v97/ lee19d.html .12 Preprint Tiqing Liu, Linda Hwang, Stephen K Burley, Carmen I Nitsche, Christopher Southan, W Patrick Walters, and Michael K Gilson. Bindingdb in 2024: a fair knowledgebase of protein-small molecule binding data. Nucleic Acids Research , 53(D1):D1633–D1644, 01 2025. ISSN 1362-4962. doi: 10.1093/nar/gkae1075. URL https://doi.org/10.1093/nar/gkae1075 .Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. In International Confer-ence on Learning Representations , 2019. URL https://openreview.net/forum?id= Bkg6RiCqY7 .Andreas Mayr, G¨ unter Klambauer, Thomas Unterthiner, Marvin Steijaert, J¨ org K. Wegner, Hugo Ceulemans, Djork-Arn´ e Clevert, and Sepp Hochreiter. Large-scale comparison of machine learn-ing methods for drug target prediction on chembl. Chemical Science , 9(24):5441–5451, 06 2018. ISSN 2041-6520. doi: 10.1039/c8sc00148k. URL https://doi.org/10.1039/ c8sc00148k .Samuel M¨ uller, Noah Hollmann, Sebastian Pineda Arango, Josif Grabocka, and Frank Hutter. Trans-formers can do bayesian inference. In International Conference on Learning Representations ,2022. URL https://openreview.net/forum?id=KSugKcbNf9 .Thomas Nagler. Statistical foundations of prior-data fitted networks. In Andreas Krause, Emma Brunskill, Kyunghyun Cho, Barbara Engelhardt, Sivan Sabato, and Jonathan Scarlett (eds.), 
+
+Proceedings of the 40th International Conference on Machine Learning , volume 202 of Pro-ceedings of Machine Learning Research , pp. 25660–25676. PMLR, 23–29 Jul 2023. URL 
+
+https://proceedings.mlr.press/v202/nagler23a.html .Goran Nakerst, John Brennan, Wouter Beugeling, and Masudul Haque. Tabular foundation models for non-tabular tasks, 2026. URL https://arxiv.org/abs/2608.22594 .Cuong Q. Nguyen, Constantine Kreatsoulas, and Kim M. Branson. Meta-learning gnn initializations for low-resource molecular property prediction, 2020. URL https://arxiv.org/abs/ 2003.05996 .Tung Nguyen and Aditya Grover. Transformer neural processes: Uncertainty-aware meta learning via sequence modeling. In Kamalika Chaudhuri, Stefanie Jegelka, Le Song, Csaba Szepesvari, Gang Niu, and Sivan Sabato (eds.), Proceedings of the 39th International Conference on Machine Learning , volume 162 of Proceedings of Machine Learning Research , pp. 16569–16594. PMLR, 17–23 Jul 2022. URL https://proceedings.mlr.press/v162/nguyen22b.html .Alex Nichol, Joshua Achiam, and John Schulman. On first-order meta-learning algorithms, 2018. URL https://arxiv.org/abs/1803.02999 .OpenAI. GPT-5.6: Frontier intelligence that scales with your ambition. https://openai.com/ index/gpt-5-6/ , July 2026. Massimiliano Patacchiola, Jack Turner, Elliot J. Crowley, Michael O' Boyle, and Amos Storkey. Bayesian meta-learning for the few-shot setting via deep kernels. In H. Larochelle, M. Ranzato, R. Hadsell, M.F. Balcan, and H. Lin (eds.), Advances in Neural In-formation Processing Systems , volume 33, pp. 16108–16118. Curran Associates, Inc., 2020. URL https://proceedings.neurips.cc/paper_files/paper/2020/ file/b9cfe8b6042cf759dc4c0cccb27a6737-Paper.pdf .Pavel Polishchuk. Crem: chemically reasonable mutations framework for structure genera-tion. Journal of Cheminformatics , 12(1):28, Apr 2020. ISSN 1758-2946. doi: 10.1186/ s13321-020-00431-w. URL https://doi.org/10.1186/s13321-020-00431-w .Jingang Qu, David Holzm¨ uller, Ga¨ el Varoquaux, and Marine Le Morvan. TabICLv2: A better, faster, scalable, and open tabular foundation model. In Forty-third International Conference on Machine Learning , 2026. URL https://openreview.net/forum?id=SxsyLjIfWB .Tommy Rochussen and Vincent Fortuin. Amortising inference and meta-learning priors in neural networks. In The Fourteenth International Conference on Learning Representations , 2026. URL 
+
+https://openreview.net/forum?id=KG6SSTz2GJ .13 Preprint Gabriele Scalia, Steven T. Rutherford, Ziqing Lu, Kerry R. Buchholz, Nicholas Skelton, Kang-way Chuang, Nathaniel Diamant, Jan-Christian H¨ utter, Jerome-Maxim Luescher, Anh Miu, Jeff Blaney, Leo Gendelev, Elizabeth Skippington, Greg Zynda, Nia Dickson, Michał Koziarski, Yoshua Bengio, Aviv Regev, Man-Wah Tan, and Tommaso Biancalani. Deep-learning-based virtual screening of antibacterial compounds. Nature Biotechnology , 44(7):1154–1167, Jul 2026. ISSN 1546-1696. doi: 10.1038/s41587-025-02814-6. URL https://doi.org/10.1038/ s41587-025-02814-6 .Johannes Schimunek, Philipp Seidl, Lukas Friedrich, Daniel Kuhn, Friedrich Rippmann, Sepp Hochreiter, and G¨ unter Klambauer. Context-enriched molecule representations improve few-shot drug discovery. In The Eleventh International Conference on Learning Representations , 2023. URL https://openreview.net/forum?id=XrMWUuEevr .Jurgen Schmidhuber. Evolutionary principles in self-referential learning, or on learning how to learn: The meta-meta-... hook. Diploma thesis, Technische Universitat Munchen, Germany, 14 May 1987. URL http://www.idsia.ch/˜juergen/diploma.html .Karlie R Sharma, Christine M Colvis, Griffin P Rodgers, and Douglas M Sheeley. Illuminating the druggable genome: Pathways to progress. Drug Discov Today , 29(3):103805, October 2023. Robert P Sheridan, Kiyean Nam, Vladimir N Maiorov, Daniel R McMasters, and Wendy D Cornell. QSAR models for predicting the similarity in binding profiles for pairs of protein kinases and the variation of models between experimental data sets. J. Chem. Inf. Model. , 49(8):1974–1985, August 2009. Jake Snell, Kevin Swersky, and Richard Zemel. Prototypical networks for few-shot learning. In Proceedings of the 31st International Conference on Neural Information Processing Sys-tems , NIPS’17, pp. 4080–4090, Red Hook, NY, USA, 2017. Curran Associates Inc. ISBN 9781510860964. Megan Stanley, John F Bronskill, Krzysztof Maziarz, Hubert Misztela, Jessica Lanini, Marwin Segler, Nadine Schneider, and Marc Brockschmidt. FS-mol: A few-shot learning dataset of molecules. In Thirty-fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track (Round 2) , 2021. URL https://openreview.net/forum?id= 701FtuyLlAd .Tingzhong Tian, Shuya Li, Ziting Zhang, Lin Chen, Ziheng Zou, Dan Zhao, and Jianyang Zeng. Benchmarking compound activity prediction for real-world drug discovery applications. Commu-nications Chemistry , 7(1):127, Jun 2024. ISSN 2399-3669. doi: 10.1038/s42004-024-01204-4. URL https://doi.org/10.1038/s42004-024-01204-4 .Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Ł ukasz Kaiser, and Illia Polosukhin. Attention is all you need. In I. Guyon, U. Von Luxburg, S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and R. Garnett (eds.), Ad-vances in Neural Information Processing Systems , volume 30. Curran Associates, Inc., 2017. URL https://proceedings.neurips.cc/paper_files/paper/2017/ file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf .Daniel Vella and Jean-Paul Ebejer. Few-Shot learning for Low-Data drug discovery. J Chem Inf Model , 63(1):27–42, November 2022. Anna Vettoruzzo, Mohamed-Rafik Bouguelia, and Thorsteinn R¨ ognvaldsson. Multimodal meta-learning through meta-learned task representations. Neural Computing and Applications , 36(15): 8519–8529, May 2024. ISSN 1433-3058. doi: 10.1007/s00521-024-09540-1. URL https: //doi.org/10.1007/s00521-024-09540-1 .Oriol Vinyals, Charles Blundell, Timothy Lillicrap, Koray Kavukcuoglu, and Daan Wierstra. Match-ing networks for one shot learning. In Proceedings of the 30th International Conference on Neural Information Processing Systems , NIPS’16, pp. 3637–3645, Red Hook, NY, USA, 2016. Curran Associates Inc. ISBN 9781510838819. 14 Preprint Risto Vuorio, Shao-Hua Sun, Hexiang Hu, and Joseph J Lim. Multimodal model-agnostic meta-learning via task-aware modulation. In H. Wallach, H. Larochelle, A. Beygelzimer, F. d'Alch´ e-Buc, E. Fox, and R. Garnett (eds.), Advances in Neu-ral Information Processing Systems , volume 32. Curran Associates, Inc., 2019. URL 
+
+https://proceedings.neurips.cc/paper_files/paper/2019/file/ e4da3b7fbbce2345d7772b0674a318d5-Paper.pdf .Liang Wang, Qiang Liu, Shaozhen Liu, Xin Sun, Shu Wu, and Liang Wang. Pin-tuning: Parameter-efficient in-context tuning for few-shot molecular property prediction. In The Thirty-eighth Annual Conference on Neural Information Processing Systems , 2024. URL https: //openreview.net/forum?id=859DtlwnAD .Qi Wang and Herke van Hoof. Learning expressive meta-representations with mixture of expert neural processes. In Alice H. Oh, Alekh Agarwal, Danielle Belgrave, and Kyunghyun Cho (eds.), 
+
+Advances in Neural Information Processing Systems , 2022. URL https://openreview. net/forum?id=ju38DG3sbg6 .Yaqing Wang, Abulikemu Abuduweili, Quanming Yao, and Dejing Dou. Property-aware re-lation networks for few-shot molecular property prediction. In M. Ranzato, A. Beygelz-imer, Y. Dauphin, P.S. Liang, and J. Wortman Vaughan (eds.), Advances in Neural In-formation Processing Systems , volume 34, pp. 17441–17454. Curran Associates, Inc., 2021. URL https://proceedings.neurips.cc/paper_files/paper/2021/ file/91bc333f6967019ac47b49ca0f2fa757-Paper.pdf .Zhe Wang, Jake Grigsby, Arshdeep Sekhon, and Yanjun Qi. St-maml : A stochastic-task based method for task-heterogeneous meta-learning. In James Cussens and Kun Zhang (eds.), Pro-ceedings of the Thirty-Eighth Conference on Uncertainty in Artificial Intelligence , volume 180 of Proceedings of Machine Learning Research , pp. 2066–2074. PMLR, 01–05 Aug 2022. URL 
+
+https://proceedings.mlr.press/v180/wang22c.html .Huaxiu Yao, Ying Wei, Junzhou Huang, and Zhenhui Li. Hierarchically structured meta-learning. In Kamalika Chaudhuri and Ruslan Salakhutdinov (eds.), Proceedings of the 36th International Conference on Machine Learning , volume 97 of Proceedings of Machine Learning Research , pp. 7045–7054. PMLR, 09–15 Jun 2019. URL https://proceedings.mlr.press/v97/ yao19b.html .Pan Zhou, Yingtian Zou, Xiao-Tong Yuan, Jiashi Feng, Caiming Xiong, and Steven Hoi. Task similarity aware meta learning: theory-inspired improvement on MAML. In Cassio de Campos and Marloes H. Maathuis (eds.), Proceedings of the Thirty-Seventh Conference on Uncertainty in Artificial Intelligence , volume 161 of Proceedings of Machine Learning Research , pp. 23–33. PMLR, 27–30 Jul 2021. URL https://proceedings.mlr.press/v161/zhou21a. html .15 Preprint 
+
+## A EXPERIMENTAL DETAILS 
+
+A.1 CONTROLLED -HETEROGENEITY BENCHMARK CONSTRUCTION 
+
+Data preparation We construct the semi-synthetic kinase benchmark from the PKIS2 profiling data of Drewry et al. (2017), comprising 645 compounds from 86 chemotypes screened against 392 wild-type human kinases. We first restrict the panel to the kinases considered in our benchmark and preprocess the molecular structures with RDKit (Landrum et al., 2026) by selecting the parent fragment, neutralizing charges, and canonicalizing tautomers. Activity values are transformed from the unit interval to logit space after clipping extreme values. Molecules are represented using 1024-bit Morgan fingerprints with radius 2. 
+
+Kinase-specific GP fitting For each kinase, we standardize the transformed activity values and fit an exact Gaussian process with a constant mean and a scaled Tanimoto kernel over Morgan fingerprints. This yields a separate posterior distribution over activity functions for each kinase. We assess each kinase-specific GP using leave-one-chemotype-out cross-validation. In each fold, one chemotype is held out, the GP is refitted on the remaining compounds, and predictive performance is compared against a baseline that predicts the mean activity of the training fold. We retain only kinases with positive balanced leave-one-chemotype-out. 
+
+Molecule generation To obtain a sufficiently large molecular domain for synthetic task genera-tion, we expand the original kinase-panel chemistry using CReM (Polishchuk, 2020) mutation and growth operations. Generated molecules are filtered to satisfy basic drug-like property constraints, requiring molecular weight between 150 and 650 , log P between −1 and 7, topological polar sur-face area below 180 , at most 6 hydrogen-bond donors, 12 hydrogen-bond acceptors, and 15 rotatable bonds. We further retain only molecules whose maximum Tanimoto similarity to any molecule in the original panel lies between 0.40 and 0.60 , yielding approximately 10 6 candidate molecules. These molecules are then partitioned into training, validation, and test molecular domains using an 
+
+80 /10 /10 Bemis–Murcko scaffold split, with scaffolds kept disjoint across the three partitions. 
+
+Task construction Each synthetic assay is generated by first sampling its size from a PERT dis-tribution with minimum 40 , mode 100 , maximum 1024 , and concentration 20 . We then sample the corresponding number of molecules from the relevant molecular split and select a kinase-specific GP. Activities are generated by drawing jointly from the GP posterior over the selected molecules and adding Gaussian observation noise, with the fitted observation-noise standard deviation scaled by 0.5. Using this procedure, we first generate a core meta-dataset of 5000 tasks from GPs cor-responding to EPHA kinases. We then generate an additional 5000 tasks for each heterogeneity regime while keeping the sampled task sizes and molecular inputs fixed across regimes. Only the kinase-specific GP used to generate the activity values is varied, with source GPs corresponding to (i) EPHA kinases, (ii) non-EPHA tyrosine kinases, or (iii) non-tyrosine kinases. We additionally generate 250 validation and 250 test assays from EPHA kinase GPs. For the homologous-target transfer experiment, we generate 250 validation and 250 test assays from EPHB kinase GPs, while keeping training restricted to EPHA tasks. 
+
+Kinase relatedness across regimes To quantify the increasing relatedness gap across the three kinase regimes, we consider two measures: similarity of kinase activity profiles across the PKIS2 compound panel and sequence divergence at the 29 active-site residues identified by Sheridan et al. (2009), with the resulting values reported in Table 3. 16 Preprint Table 3: Quantitative characterization of kinase relatedness across heterogeneity regimes. ρact : av-erage pairwise Pearson correlation between kinase activity profiles over the PKIS2 compound panel; 
+
+dsite : average pairwise normalized Hamming distance across the 29 active-site residues identified by Sheridan et al. (2009). Regime ρact dsite 
+
+EPHA 0.466 0.149 TK 0.316 0.367 EPHA + non-TK 0.181 0.512 A.2 RETROSPECTIVE BAYESIAN OPTIMIZATION 
+
+Data preparation We curate assays from BindingDB (Liu et al., 2025) for retrospective Bayesian optimization experiments. Molecular structures are first processed with RDKit (Landrum et al., 2026) using the same procedure as described in Appendix A.1. We restrict the data to measure-ments against human, single-chain protein targets and remove target names associated with more than one UniProt (Consortium, 2025) identifier or more than one target-chain sequence, ensuring an unambiguous mapping between target name and protein identity. We further retain only BindingDB entries for which all measurements associated with a given DOI correspond to a single target. We consider affinity measurements reported as Ki, IC 50 , or Kd, and retain only observations for which exactly one of these three endpoints is available, discarding observations with either no usable mea-surement or multiple reported endpoints. The remaining measurements are converted to a common 
+
+p-activity scale as Y = 9 − log 10 (x), where x is the reported affinity in nM. Finally, compounds with molecular weight above 900 Da are removed. 
+
+Assay selection We select assays that are sufficiently large and chemically diverse to sup-port retrospective compound optimization while retaining a non-degenerate activity landscape. Specifically, we require each assay to contain between 500 and 2000 compounds and at least 30 Bemis–Murcko scaffolds (Bemis & Murcko, 1996) represented by at least five compounds each. We further exclude assays for which any single activity value accounts for more than 
+
+25% of the measurements. Finally, since the optimization experiments are commonly initial-ized from a single weakly active chemical series, we require each assay to contain at least five eligible starting scaffolds, defined as Bemis–Murcko scaffolds represented by at least five compounds whose median activity lies at or below the assay-specific 25th percentile. This ensures that each retained assay admits multiple chemically distinct low-activity starting series from which to simulate early-stage compound optimization. Since BindingDB contains records originating from both ChEMBL and the patent literature, we restrict assay selection to those derived from the latter to avoid potential overlap with the ChEMBL-based FS-Mol training data. We conduct the experiments on eight assays satisfying all the above criteria with the fol-lowing identifiers: 10.7270/Q2348QXR , 10.7270/Q2N018M8 , 10.7270/Q2S46W6V ,
+
+10.7270/Q2FN152J , 10.7270/Q2BZ68G7 , 10.7270/Q2B27XNR ,
+
+10.7270/Q2TB1B01 , and 10.7270/Q2PV6PFT .
+
+Assay descriptions Assay descriptions were generated using GPT-5.6 Sol (OpenAI, 2026) by parsing the patent document corresponding to each of the eight BindingDB entries with the following prompt: Given the provided patent, write a single concise paragraph describing the experi-mental assay used to measure compound bioactivity. Include, when stated, the bi-ological target and relevant construct or species, assay type and biological context (e.g., biochemical, cellular, binding, functional), key reagents or substrates, exper-imental conditions such as concentrations, incubation times, temperature, buffer or medium, the measurement technology or equipment, and the measured end-point or readout. Describe only information explicitly supported by the source and do not infer missing experimental details. Do not report or summarize compound-specific activity values, potency measurements, active/inactive classifications, hit rates, structure–activity relationships, rankings, or conclusions about which com-17 Preprint pounds performed well or poorly. The description should characterize how the assay was performed and what it measured, independently of the observed com-pound outcomes. Keep the output to one short paragraph. The resulting descriptions used in the experiment were: • 10.7270/Q2348QXR : A biochemical ATPase assay measured ATP hydrolysis by re-combinant human DHX9 in the presence of an annealed double-stranded RNA substrate. The 10-μL reactions used DHX9 delivered at 1.25 nM in 40 mM HEPES, pH 7.5, 0.01% Tween-20, 0.01% BSA, 1 mM DTT, 5 mM MgCl 2, and RNase inhibitor and were initiated with 30 nM double-stranded RNA and 10 μM ATP. After one hour at room temperature, ADP-Glo reagent was added for 40 minutes, followed by kinase-detection reagent for an-other 40 minutes. Luminescence was recorded on an EnVision plate reader, providing an ADP-production readout of DHX9 ATPase activity. • 10.7270/Q2N018M8 : Endothelial and hepatic lipase activity was measured biochemi-cally using the fluorescent FRET substrate A10070 incorporated into DMPG vesicles. En-dothelial lipase was supplied in conditioned medium from HT-1080 cells engineered to overexpress endogenous EL, while hepatic lipase was partially purified from conditioned medium of HL-expressing COS cells. Enzyme was preincubated with compound for 30 minutes at 37 ◦C in 50 mM HEPES, pH 8.0, 50 mM NaCl, and 1 mM CaCl 2, after which diluted substrate vesicles initiated the reaction. Fluorescence was recorded for 60 minutes on a Gemini plate reader at 490-nm excitation and 530-nm emission, and the slope between 300 and 900 seconds represented the reaction rate. • 10.7270/Q2S46W6V : A fluorescence-polarization competition assay measured binding of recombinant eIF4E to the fluorescent cap analogue EDA-m 7GDP-ATTO-550. Final re-actions contained 75 nM eIF4E, 20 nM fluorescent ligand, and 1% DMSO in 20 mM Tris, pH 7.5, 100 mM NaCl, 1 mM DTT, and 0.02% Tween-20. Protein and ligand were preincu-bated for five minutes before compound addition, and 100-μL reactions in black half-area 96-well plates were equilibrated for 30 minutes at room temperature while protected from light. A PerkinElmer Victor 2 multi-label counter measured fluorescence polarization as the competitive-binding readout. • 10.7270/Q2FN152J : An isolated-enzyme HTRF kinase assay measured phosphoryla-tion by the recombinant His-tagged cytoplasmic domain of TrkA/NTRK1, residues 441– 796, using the Cisbio KinEASE-TK kit. The assay used 4 nM TrkA, 40 μM ATP, and kit buffer supplemented with 10 mM MgCl 2 and 2 mM DTT; enzyme and ATP were preacti-vated for 20 minutes at room temperature, exposed to compound for 20 minutes, and then incubated with 1 μM biotinylated tyrosine-kinase substrate for 35 minutes. Detection buffer containing streptavidin-XL665 and a cryptate-labelled phosphotyrosine antibody stopped the reaction, followed by 60 minutes at room temperature and EnVision measurement of the 665/620-nm emission ratio. • 10.7270/Q2BZ68G7 : A biochemical radiometric methyltransferase assay measured in-corporation of tritium from 3H-SAM into GST-tagged MEKK2 by purified full-length hu-man SMYD3. Compounds and 0.4 nM SMYD3 were preincubated for 30 minutes at room temperature in 25 mM Tris-Cl, pH 8.0, 1 mM TCEP, 0.005% bovine skin gelatin, and 0.005% Tween-20; 8 nM 3H-SAM and 12 nM MEKK2 then initiated the reaction in 2% DMSO. Non-radiolabelled SAM stopped incorporation, and radiolabelled MEKK2 was precipitated onto scintillation-proximity beads in 0.5 M citric acid. A PerkinElmer Top-Count reader measured incorporated radioactivity as disintegrations or counts per minute. • 10.7270/Q2B27XNR : A biochemical time-resolved fluorescence assay measured ERK2-catalysed phosphorylation of a truncated ATF2 substrate fused to GFP. Reactions contained 0.25 nM ERK2, 0.4 mM ATF2-GFP, 20 μM ATP, 50 mM Tris at pH 7.5, 10 mM MgCl 2,1 mM EGTA, 0.01% Triton X-100, 1 mM DTT, and 2.5% DMSO and proceeded for 30 minutes at room temperature. Reactions were stopped with TR-FRET dilution buffer con-taining 25 mM EDTA and 2 nM terbium-labelled anti-phospho-ATF2 (Thr71), incubated for at least another 30 minutes, and read on a Pherastar at 340-nm excitation and 520/495-nm emission; the emission ratio was the phosphorylation readout. • 10.7270/Q2TB1B01 : A biochemical time-resolved fluorescence assay measured ERK2 phosphorylation of truncated ATF2-GFP. Reactions contained 0.25 nM ERK2, 0.4 μM18 Preprint ATF2-GFP, 20 μM ATP, 50 mM Tris at pH 7.5, 10 mM “MgC 2” as printed in the patent, 1 mM EGTA, 0.01% Triton X-100, 1 mM DTT, and 2.5% DMSO and were incubated for 30 minutes at room temperature. TR-FRET dilution buffer, 25 mM EDTA, and 2 nM terbium-labelled anti-phospho-ATF2 (Thr71) stopped the reaction; after at least 30 addi-tional minutes, a Pherastar measured fluorescence at 520 and 495 nm following 340-nm excitation, and the emission ratio represented phosphorylation. • 10.7270/Q2PV6PFT : A low-ATP biochemical kinase assay used recombinant full-length N-terminally His-tagged human TBK1 expressed in insect cells and a biotinylated peptide substrate, biotin-Ahx-GDEDFSSFAEPG-amide. TBK1 and compound were prein-cubated for 15 minutes at 22 ◦C in HEPES buffer containing MgCl 2, DTT, BSA, Nonidet-P40, and protease inhibitors; phosphorylation then proceeded for 30 minutes at 22 ◦C with 10 μM ATP and 1 μM peptide. EDTA stopped the reaction, and streptavidin-XL665, an anti-phosphoserine antibody, and europium-labelled anti-mouse IgG were added for one hour. A Pherastar or Viewlux TR-FRET reader measured 620- and 665-nm emissions after 350-nm excitation, with their ratio representing phosphorylated substrate. A.3 METRICS 
+
+We evaluate all methods using negative log-likelihood (NLL), where applicable, and the out-of-sample coefficient of determination R2os , following Chen et al. (2023). For a task with context set 
+
+DC = ( XC , Y C ) and target set DT = ( XT , Y T ), we compute 
+
+R2os = 1 −
+
+PNt
+
+> n=1
+
+ yTn − ˆyTn
+
+2
+
+PNt 
+
+> n=1
+
+(yTn − ¯yC )2 , ¯yC = 1
+
+NcNcX
+
+> n=1
+
+yCn ,
+
+where ˆyTn denotes the predictive mean at target input xTn .Since the synthetic assays in Section 5.1 are sampled from known kinase-specific GP posteriors, we have access to their corresponding data-generating functions. This allows us to compute an exact GP oracle by conditioning the generating GP on the same context set DC available to each method. The oracle uses the same observation-noise model as the synthetic data-generation process. We report performance relative to this oracle. We further define: 
+
+FR2os = R2os 
+
+R2,oracle os 
+
+. (6) For NLL, we instead compare the corresponding average predictive densities: 
+
+FNLL = exp( −NLL) exp( −NLL oracle ) = exp(NLL oracle − NLL) . (7) Since exp( −NLL) is the geometric mean predictive density, FNLL has a direct interpretation as the ratio between the geometric mean predictive density of a method and that of the oracle. In both cases, a value of 1 corresponds to oracle-level performance. A.4 IMPLEMENTATION DETAILS 
+
+We evaluate all methods at context sizes |D C | ∈ { 4, 8, 16 , 32 }. We largely follow Stanley et al. (2021), but deviate in how context size is handled during training and validation. Specifically, for each context size, we train and validate a separate model using that same fixed context size, and evaluate it only at the corresponding context size. Given the highly data-scarce regime considered here, this ensures that every method is optimized for the same task-specific data budget on which it is evaluated, and avoids conflating few-shot performance with generalization across context sizes. This also places amortized methods, which can naturally accommodate varying context sizes, on the same footing as prior FS-Mol evaluations in which methods are trained using a fixed support-set size (Stanley et al., 2021; Chen et al., 2023). For each evaluation assay, we sample 10 context– target splits and average evaluation metrics across splits before averaging across assays. For the controlled-heterogeneity experiments, all methods are given the same molecular representation used by the task-generating GPs, namely 1024-bit radius-2 Morgan fingerprints. This ensures that dif-ferences in performance relative to the GP oracle cannot be attributed to a mismatch in molecular 19 Preprint representation. For the experiments on FS-Mol, we do not enforce a single representation across methods: we align representations where appropriate, while retaining method-specific feature ex-tractors when they are part of the original approach or using alternative representations when these perform better. This is because imposing a single shared representation may disadvantage partic-ular baselines whose performance is strongly tied to the choice of molecular representation. For the retrospective Bayesian optimization experiments, we train models with the context size sampled uniformly from {4, . . . , 32 }. During validation, we evaluate each model on three independently sampled context–target splits at each context size |D C | ∈ { 4, 8, 16 , 32 }, and average performance across all splits and context sizes. A.4.1 ME T A HE T A 
+
+Controlled-heterogeneity experiment Our model is trained with meta-batch size 32 for 10 
+
+epochs using AdamW (Loshchilov & Hutter, 2019) with learning rate 10 −4, weight decay 0.01 
+
+and a cosine learning-rate schedule with 10% warm-up. We evaluate on the validation set after each epoch and retain the checkpoint with the lowest validation NLL. We use at most 5 auxiliary datasets per task and subsample each auxiliary dataset to 512 observations. The input embedder consists of 2
+
+layers with hidden dimension 128 , and the output decoder consists of a single layer with dimension 
+
+64 . The main network contains 6 attention layers with embedding dimension 128 , using 8 attention heads with head dimension 16 , and a dropout rate of 0.25 .
+
+FS-Mol experiment For FS-Mol, we use a meta-batch size of 16 and train for 100 epochs with learning rate 3 × 10 −4. We evaluate on the validation set after each epoch and retain the checkpoint with the lowest validation NLL. The architecture is increased to an embedding and feed-forward dimension of 256 , decoder dimension 128 , 8 attention layers, and head dimension 32 , while retaining 
+
+8 attention heads, a 2-layer input embedder, and a 1-layer decoder. We use at most 5 auxiliary datasets per task and subsample each to at most 512 observations, with cosine-similarity threshold 
+
+γ = 0 .5. For molecular representations, we use Hyformer embeddings (Izdebski et al., 2026). 
+
+Auxiliary dataset construction The construction of Daux in MetaHeta is adapted to the notion of assay relatedness available in each experimental setting: • Controlled-heterogeneity experiment. We construct Daux according to Eq. 5, selecting at most five same-target datasets, ordered by decreasing average 5-nearest-neighbor Tanimoto similarity to the current task. The similarity is computed exclusively from molecular inputs; target outputs are never used in auxiliary-dataset selection. Auxiliary datasets containing more than 512 observations are randomly subsampled to that size. • Homologous-target transfer experiment. For the EPHB evaluation, where same-target aux-iliary assays are unavailable, we instead construct Daux according to Proposition 1. For each such EPHB assay, we sample five auxiliary tasks from the pool of assays targeting any member of the EPHA subfamily and order them by decreasing activity variance. Each auxiliary dataset is again subsampled to at most 512 observations. • FS-Mol & retrospective Bayesian optimization. We construct Daux using assay-description similarity, as described in Algorithm 1, retaining at most five auxiliary datasets per task and subsampling each to at most 512 observations. A.4.2 BASELINES 
+
+Implementations of the baseline methods were based primarily on the code released by Chen et al. (2023), Stanley et al. (2021), and implementations of several Neural Process variants available at 
+
+https://github.com/cambridge-mlg/tnp , released under the MIT License. • Transformer Neural Process (TNP) (Nguyen & Grover, 2022). We use the same archi-tecture and training setup as for our model. In particular, setting the number of auxiliary datasets to zero reduces our model to the standard TNP-D (using the efficient implementa-tion described by Feng et al. (2023)). • Conditional Neural Process (CNP) (Garnelo et al., 2018a). For FS-Mol, we use mean ag-gregation and a 256 -dimensional context representation, with a decoder hidden dimension 20 Preprint of 256 and with Hyformer embeddings as molecular representations. For the controlled-heterogeneity experiment we reduce both the context representation and decoder hidden dimensions to 128 .• Attentive Neural Process (ANP) (Kim et al., 2019). We match the TNP baseline in ar-chitectural parameters, including the embedding, feed-forward, decoder, and attention di-mensions, as well as the number of attention heads and layers, while omitting the latent path. • Adaptive Deep Kernel Fitting with Implicit Function Theorem (ADKF-IFT) (Chen et al., 2023). For FS-Mol, we retain the feature extractor used in the original implementa-tion, combining ECFP fingerprints with a GNN-MT from Stanley et al. (2021). For the controlled-heterogeneity experiment, we replace the GNN with a two-layer MLP with hid-den and output dimensions of 1024 , operating on the same 1024 -bit fingerprints used by the GP oracle. • Deep Kernel Transfer (DKT) (Patacchiola et al., 2020). We use the implementation pro-vided by Chen et al. (2023) and follow the same experimental setup and feature-extractor choices as for ADKF-IFT. • Model-Agnostic Meta-Learning (MAML) (Finn et al., 2017). We use the implementation from Stanley et al. (2021) based on GNN-ST. For the controlled-heterogeneity experiment, we replace the GNN with the same two-layer MLP used for ADKF-IFT and DKT. The regression head for the kinase experiments is an MLP with hidden dimensions 256 and 64 .• ST-MAML (Wang et al., 2022). We preserve the MAML setup, adding a stochastic task encoder with hidden dimension 128, a 32-dimensional latent representation, and a 32-dimensional task feature. We weight the KL regularization term by 0.1 and average predic-tions over five context-conditioned latent samples at evaluation. • Frequent Hitters (Schimunek et al., 2023). Frequent Hitters is simply an MLP trained on data pooled across all training assays, without using the support set of the target assay. Following a hyperparameter sweep, we use four hidden layers of width 16 , batch size 
+
+256 , learning rate 10 −3, no dropout or weight decay, and train for up to 100 epochs with an early-stopping patience of 10 epochs. Molecular inputs are represented using ECFP fingerprints. • Similarity Search. As an additional sanity-check baseline proposed by Schimunek et al. (2023), we use Morgan fingerprints with radius 2 and 1024 bits, and predict each target as the Tanimoto-similarity-weighted average of the context labels. • TabPFNv3 (Grinsztajn et al., 2026). We use Morgan fingerprints with radius 2 and 1024 
+
+bits as molecular representations, which we found to perform better than Hyformer embed-dings. • TabICLv2 (Qu et al., 2026). We use the same molecular representation as for TabPFNv3. • ICICL-TNP (Ashman et al., 2024). Across all settings, we always construct Daux in the same way as for MetaHeta , such that both models condition on exactly the same auxiliary data. As in MetaHeta , we share the projection parameters between the corresponding MHSA and MHCA blocks of the context and auxiliary branches. We do not include dataset-of-origin one-hot indicators, as auxiliary datasets are represented separately through their pseudo-token sets. We use 64 pseudo-tokens for each auxiliary dataset and set the number of context pseudo-tokens equal to the context size, |D C |.• RF-Daux . We construct Daux in the same way as for MetaHeta and then concatenate its datasets with the task-specific context set. A random forest with 250 trees is then fit to that combined dataset. A.5 COMPUTATIONAL RESOURCES 
+
+A single training run of MetaHeta was performed on an NVIDIA H100 GPU and required approx-imately 24 hours. The runtime ablation in Section 5.4 was performed on an NVIDIA Tesla V100S 32 GB GPU with an Intel Xeon Gold 6226R CPU @ 2.90 GHz. 21 Preprint 
+
+## B EXTENDED RESULTS 
+
+B.1 CONTROLLED -HETEROGENEITY EXPERIMENT 0 0.5 1
+
+FNLL ↑ 
+
+> MetaHeta (Ours) TNP CNP ANP ADKF-IFT DKT
+
+|D C | = 4   
+
+> 0.6 0.8 1
+
+FNLL ↑|D C | = 8   
+
+> 0.8 0.9 1
+
+FNLL ↑|D C | = 16   
+
+> 0.85 0.9 0.95
+
+FNLL ↑|D C | = 32    
+
+> Core EPHA + same subfamily (EPHA) + same group + outside group
+
+Figure 6: Effect of meta-training task heterogeneity on few-shot bioactivity prediction. Performance of all the considered methods generally deteriorates as Dcore meta is augmented with progressively less related tasks. MetaHeta remains the best-performing approach regardless of the training regime. B.2 RETROSPECTIVE BAYESIAN OPTIMIZATION 
+
+Table 4: Average rank across retrospective Bayesian optimization tasks. For each assay, methods are ranked according to their final best-observed activity averaged over five random seeds; ranks are then averaged across the eight assays. Method Average rank TNP 4.375 ANP 5.375 CNP 5.375 ADKF-IFT 7.250 DKT 6.625 TabPFN 4.000 ICICL-TNP 5.000 Random 6.375 GP 7.750 
+
+MetaHeta 1.875 
+
+B.3 ABLATION 0 1 2 3 4 5
+
+0510 15 NLL  ↓|D C | = 4 
+
+0 1 2 3 4 5
+
+|D C | = 8 
+
+0 1 2 3 4 5
+
+|D C | = 16 
+
+0 1 2 3 4 5
+
+|D C | = 32 
+
+> MetaHeta
+> ICICL-TNP
+
+Number of auxiliary datasets ( |D aux |)
+
+Figure 7: NLL of MetaHeta and ICICL-TNP with varying cardinality of Daux .22 Preprint 
+
+## C ALGORITHMS 
+
+Algorithm 1 outlines the core meta-training procedure, with Daux constructed based on assay-description similarity. For clarity, auxiliary-dataset limits, ordering, and subsampling are omitted; full experimental details are provided in Appendix A. 
+
+Algorithm 1: Description-based auxiliary dataset selection and meta-training 
+
+Input: Meta-dataset Dmeta = {D τ }Mτ =1 , assay descriptions {aτ }Mτ =1 , meta-learner pθ ,embedding model ϕ, similarity threshold γ 
+
+> 1
+
+Compute assay-description embeddings: 
+
+hτ ← ϕ(aτ ) ∀τ ∈ { 1, . . . , M } 
+
+> 2
+
+Compute pairwise assay similarities: 
+
+sτ,τ ′ ← ⟨hτ ,h τ ′ ⟩∥hτ ∥ ∥ hτ ′ ∥ ∀τ, τ ′ ∈ { 1, . . . , M } 
+
+> 3
+
+repeat  
+
+> 4
+
+Sample a task τ from Dmeta : (XT , Y T ), DC  ∼ D meta  
+
+> 5
+
+Initialize auxiliary data: 
+
+Daux ← ∅  
+
+> 6
+
+foreach τ ′ ∈ { 1, . . . , M } \ { τ } do  
+
+> 7
+
+if sτ,τ ′ ≥ γ then  
+
+> 8
+
+Daux ← D aux ∪ {D τ ′ } 
+
+> 9
+
+Compute the negative log-likelihood: 
+
+LNLL ← − log pθ
+
+ Y T | XT , DC , Daux  
+
+> 10
+
+Update θ:
+
+θ ← θ − α∇θ LNLL  
+
+> 11
+
+until convergence 
+
+## D EXTENDED RELATED WORK 
+
+Task heterogeneity in meta-learning Task heterogeneity in meta-learning has been addressed by prior work through two broad strategies. One line of work explicitly models multiple task regimes using mixtures of meta-learners or hierarchical task structures, with individual components spe-cializing to subsets of related tasks (Wang & van Hoof, 2022; Yao et al., 2019; Jerfel et al., 2019; Zhou et al., 2021; Chan et al., 2023). These approaches typically rely on a prespecified number of task clusters or mixture components, thereby imposing some prior structure on the task distribution. This is difficult to justify for bioactivity prediction, where assay heterogeneity arises from multiple interacting factors and may not admit a small, disjoint set of task regimes. In large assay collec-tions the relevant regimes may be numerous and overlapping, making a global mixture cardinality difficult to specify. Among these approaches, Jerfel et al. (2019) is an exception, using a Dirichlet process mixture that can introduce additional components as it encounters new task regimes, but still assumes a discrete mixture structure over tasks. A complementary line of work, more directly com-parable to our setting, instead infers task-specific representations from the available context set and uses them to condition or modulate the meta-learner, thereby adapting to heterogeneous task distri-butions without explicitly enumerating the underlying task regimes (Wang et al., 2022; Vettoruzzo et al., 2024; Vuorio et al., 2019). Notably, Wang et al. (2022) explicitly address the difficulty of inferring task identity from scarce context by representing it as a stochastic latent variable, which captures uncertainty over the underlying task regime. 
+
+Comparison with ICICL-TNP (Ashman et al., 2024) The architecture of MetaHeta is re-lated to ICICL-TNP, but differs primarily in how information from multiple auxiliary datasets is represented and exchanged. Both architectures use coupled TNP-style processing paths for the task-specific context and auxiliary data, while avoiding quadratic attention over the potentially large auxiliary datasets. ICICL-TNP achieves this using a Perceiver-style (Jaegle et al., 2021) pseudo-token architecture: (i) the task-specific context set and each auxiliary dataset are separately en-23 Preprint coded into their own sets of pseudo-tokens; (ii) the auxiliary pseudo-tokens attend to the context pseudo-tokens; (iii) self-attention is applied separately within each set of pseudo-tokens; and (iv) the context pseudo-tokens attend back to the auxiliary pseudo-tokens before conditioning the target representations. Consequently, observations from different auxiliary datasets exchange information only indirectly. MetaHeta concatenates auxiliary observations into a single sequence and applies linear self-attention across them, enabling direct information exchange between observations from different auxiliary datasets. This is made possible by augmenting each observation with a one-hot indicator of its task of origin, which preserves task identity after concatenation, while the use of FAVOR+ (Choromanski et al., 2021) in the auxiliary branch keeps self-attention computationally efficient even for large auxiliary sets. This removes the pseudo-token bottleneck and, in our setting, enables substantially more efficient conditioning on large auxiliary collections. However, as a result of representing task identity explicitly through one-hot indicators, the input embedding dimension fixes the maximum number of auxiliary datasets that can be accommodated without modifying the architecture. ICICL-TNP does not have this restriction, since task identity is represented structurally through separate pseudo-token sets. 
+
+## E DISCUSSION 
+
+E.1 LIMITATIONS 
+
+Scope of the theoretical guarantees Both the result of Ashman et al. (2024) in Eq. 5 and Propo-sition 1, which motivate our selection of auxiliary datasets, are derived for exact Bayesian posterior predictive distributions under their respective generative assumptions. They therefore do not di-rectly guarantee improvements for finite-capacity models trained on a finite meta-dataset. Likewise, description-based relatedness is only a heuristic for identifying useful auxiliary assays. However, we demonstrate that auxiliary conditioning remains effective across all three settings considered in this work: when relatedness is defined by shared target identity, by homology between distinct targets, and heuristically from assay descriptions. In the latter setting, randomly shuffling the re-trieved auxiliary assays (Section 5.4) substantially degrades predictive performance, indicating that the observed gains depend on meaningful assay relatedness. 
+
+Fixed auxiliary-dataset capacity Because MetaHeta encodes dataset identity using one-hot indicators, the maximum number of auxiliary datasets is fixed by the input dimensionality and cannot be increased after training without modifying the model, as elaborated in Appendix D. In practice, however, we found this limitation to be mild: the model can simply be trained with a conservative upper bound and evaluated with fewer auxiliary datasets. Our ablation in Section 5.4 demonstrates that performance remains strong across varying inference-time auxiliary-set cardinalities. E.2 FUTURE WORK 
+
+Proposition 1 considers a two-level hierarchy in which protein-specific components share a common family-level component. In practice, biological relatedness can exhibit richer structure. A natural extension would therefore be to incorporate multiple levels of relatedness, allowing auxiliary in-formation to be shared across increasingly broad groups of related targets. Beyond hierarchical structure, future work could also incorporate additional data modalities, such as protein sequence or structure and richer assay metadata, to define relatedness more comprehensively. 
+
+## F ATTENTION OPERATORS 
+
+MHSA and MHCA (Vaswani et al., 2017) Let Z ∈ RN ×dz and Z′ ∈ RM ×dz denote query and conditioning representations, respectively, where dz is the embedding dimension. Let H denote the number of attention heads, and let dk and dv denote the query/key and value dimensions within each head. Layer indices are omitted for clarity. For each head h = 1 , . . . , H , the query, key, and value matrices are defined as 
+
+Qh = ZW Q,h , Kh = Z′WK,h , Vh = Z′WV,h , (8) 24 Preprint where WQ,h , W K,h ∈ Rdz ×dk and WV,h ∈ Rdz ×dv . Multi-head cross-attention is defined as 
+
+Ah(Z, Z ′) = softmax 
+
+ QhK⊤
+
+> h
+
+√dk
+
+
+
+Vh, (9) 
+
+MHCA( Z, Z ′) = Concat  A1(Z, Z ′), . . . , A H (Z, Z ′)WO , (10) where softmax is applied rowwise, concatenation is along the feature dimension, and WO ∈
+
+RHd v ×dz . Multi-head self-attention is defined as 
+
+MHSA( Z) = MHCA( Z, Z ). (11) 
+
+FAVOR+ (Choromanski et al., 2021) The positive random feature map ϕ : Rdk → Rr>0, where 
+
+r is the number of random features, is defined as 
+
+ϕ(u) = exp( −∥ u∥2/2) 
+
+√r
+
+
+
+exp( ω⊤ 
+
+> 1
+
+u)
+
+...
+
+exp( ω⊤ 
+
+> r
+
+u)
+
+ , (12) where the projection vectors have marginal distribution ωi ∼ N (0 , I dk ) and are sampled using orthogonal random features, in independent blocks when r > d k. This yields 
+
+Eϕ(u)⊤ϕ(v) = exp( u⊤v). (13) Writing Φ for the rowwise application of ϕ, the feature matrices are defined as 
+
+Q′ 
+
+> h
+
+= Φ( d−1/4 
+
+> k
+
+Qh) ∈ RN ×r , K′ 
+
+> h
+
+= Φ( d−1/4 
+
+> k
+
+Kh) ∈ RM ×r . (14) Bidirectional FAVOR+ approximates each attention head by 
+
+bAh(Z, Z ′) = D−1 
+
+> h
+
+Q′
+
+> h
+
+ (K′
+
+> h
+
+)⊤Vh
+
+, Dh = diag  Q′
+
+> h
+
+ (K′
+
+> h
+
+)⊤1M
+
+ , (15) where 1M is the length-M vector of ones. By FAVOR+( Z), we denote the corresponding multi-head self-attention operation: 
+
+FAVOR+( Z) = Concat   bA1(Z, Z ), . . . , bAH (Z, Z )WO . (16) 
+
+## G PROOFS 
+
+G.1 PERMUTATION INVARIANCE 
+
+Proposition 2 (Permutation invariance) . Let Daux = {D j }Kj=1 , and let S : DK → D K be a map satisfying 
+
+S(Dρ(1) , . . . , Dρ(K)) = S(D1, . . . , DK ) for every permutation ρ. (17) 
+
+With the dataset indicator ej attached to each observation in the j-th dataset after sorting, predic-tions are invariant to permutations of datapoints within each Dj ∈ D aux and to permutations of datasets in Daux , at inference with fixed FAVOR+ features. 
+
+Proof. For fixed random features, Φ( P Q ) = P Φ( Q) for any permutation matrix P , and 
+
+(P K ′)⊤(P V ) = K′⊤ V, (P K ′)⊤1 = K′⊤ 1. (18) Thus bidirectional FAVOR+ is permutation equivariant. Permutation-equivariant self-attention and cross-attention invariant to key/value ordering yield predictions invariant to observation order for fixed dataset indicators (Lee et al., 2019). It therefore remains to consider dataset order in Daux .By assumption, S produces the same canonical ordering under any dataset permutation, preserving each dataset’s indicator and hence the predictive distribution. □
+
+25 Preprint G.2 PROPOSITION 1For convenience, we restate the proposition here. 
+
+Proposition 1. Consider an extension of the data-generating process in Eq. 4 in which: 
+
+ξfamily ∼ p(ξ), ξprot , {ξprot ′ } ∼ p(· | ξfamily ),
+
+with fτ ∼ Pξprot (f ) and fτ ′ ∼ Pξprot ′ (f ). Assume that auxiliary data from target homologs provide no additional information for predicting y once the target’s protein-specific component is known: 
+
+pξprot (y | x, DC , Daux ) = pξprot (y | x, DC ).
+
+Then: 
+
+Eξfamily ,ξ prot ,DC ,Daux 
+
+h
+
+KL 
+
+
+
+pξprot (y | x, DC ) ∥ p(y | x, DC , Daux )
+
+i 
+
+≤ Eξfamily ,ξ prot ,DC
+
+h
+
+KL 
+
+
+
+pξprot (y | x, DC ) ∥ p(y | x, DC )
+
+i 
+
+.
+
+Proof. The integrands on both sides do not depend explicitly on ξfamily , so this variable can be integrated out: 
+
+Eξprot ,DC ,Daux 
+
+h
+
+KL 
+
+
+
+pξprot (y | x, DC ) ∥ p(y | x, DC , Daux )
+
+i 
+
+≤ Eξprot ,DC
+
+h
+
+KL 
+
+
+
+pξprot (y | x, DC ) ∥ p(y | x, DC )
+
+i 
+
+.
+
+(19) The rest of the argument follows the proof of Ashman et al. (2024), with all expectations taken under the marginal distributions induced by the hierarchical generative process. 
+
+LHS. Expanding the KL divergence gives 
+
+LHS = − Eξprot ,DC ,Daux H[pξprot (y | x, DC )] 
+
+− Eξprot ,DC ,Daux 
+
+Z
+
+pξprot (y | x, DC ) log p(y | x, DC , Daux ) dy. (20) The first integrand does not depend on Daux , so this variable also can be integrated out. For the second term, conditional independence and marginalization yield 
+
+− Eξprot ,DC ,Daux 
+
+Z
+
+pξprot (y | x, DC ) log p(y | x, DC , Daux ) dy 
+
+= −EDC ,Daux 
+
+Z
+
+Eξprot |D C ,Daux 
+
+h
+
+pξprot (y | x, DC , Daux )
+
+i
+
+log p(y | x, DC , Daux ) dy 
+
+= −EDC ,Daux 
+
+Z
+
+p(y | x, DC , Daux ) log p(y | x, DC , Daux ) dy 
+
+= EDC ,Daux H[p(y | x, DC , Daux )] .
+
+(21) Hence 
+
+LHS = − Eξprot ,DC H[pξprot (y | x, DC )] + EDC ,Daux H[p(y | x, DC , Daux )] . (22) 
+
+RHS. Similarly, 
+
+RHS = − Eξprot ,DC H[pξprot (y | x, DC )] 
+
+− Eξprot ,DC
+
+Z
+
+pξprot (y | x, DC ) log p(y | x, DC ) dy. (23) Marginalizing ξprot in the second term gives 
+
+− Eξprot ,DC
+
+Z
+
+pξprot (y | x, DC ) log p(y | x, DC ) dy 
+
+= −EDC
+
+Z
+
+Eξprot |D C
+
+h
+
+pξprot (y | x, DC )
+
+i
+
+log p(y | x, DC ) dy 
+
+= −EDC
+
+Z
+
+p(y | x, DC ) log p(y | x, DC ) dy 
+
+= EDC H[p(y | x, DC )] .
+
+(24) 26 Preprint Thus 
+
+RHS = − Eξprot ,DC H[pξprot (y | x, DC )] + EDC H[p(y | x, DC )] . (25) Finally, conditioning does not increase entropy in expectation: 
+
+EDC ,Daux H[p(y | x, DC , Daux )] ≤ EDC H[p(y | x, DC )] . (26) The remaining terms are identical, so LHS ≤ RHS . □
+
+27

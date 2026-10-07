@@ -1,0 +1,587 @@
+Title: SPEAR: A Spectral-Disentangled MoE Neural Operator with Knowledge-Guided Expert Aggregation for Large-Scale PDE Pretraining
+
+URL Source: https://arxiv.org/pdf/2610.03265v1
+
+Published Time: Mon, 05 Oct 2026 01:12:42 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+## SPEAR: A Spectral-Disentangled MoE Neural Operator with Knowledge-Guided Expert Aggregation for Large-Scale PDE Pretraining 
+
+Dengdi Sun 1, Xiaoya Zhou 1, Xiao Wang 2*, Wanli Lyu 2, Jin Tang 2, Bin Luo 2
+
+1. School of Artificial Intelligence, Anhui University, Hefei 230601, China 2. School of Computer Science and Technology, Anhui University, Hefei 230601, China 
+
+Abstract 
+
+Large-scale pre-training has improved the generalization of neural operators across diverse PDEs. However, existing PDE foundation models still struggle with heterogeneous dynamics, where shared representations may cause knowl-edge interference, while mixture-of-experts (MoE) architec-tures suffer from increasing expert redundancy. We propose SPEAR, a spectral-disentangled MoE neural operator with knowledge-guided expert aggregation for large-scale PDE pre-training. SPEAR decouples latent features into low- and high-frequency components, enabling shared modeling of transfer-able dynamics and specialized learning of PDE-specific pat-terns. To address expert redundancy, we design a knowledge-guided expert aggregation strategy that measures expert sim-ilarity from dataset-specific learned knowledge and routing preferences, enabling the identification and consolidation of similar experts. Experiments on twelve PDE datasets and multiple downstream benchmarks demonstrate superior per-formance in pre-training, fine-tuning, and transfer learning. Furthermore, our aggregation strategy reduces the number of experts by 50% while maintaining or improving prediction accuracy, achieving a balance between model efficiency and generalization for PDE foundation models. 
+
+Introduction 
+
+Neural operators have emerged as a compelling alternative for solving PDEs by learning mappings between infinite-dimensional function spaces, achieving orders-of-magnitude speedups at inference time. However, existing neural opera-tors are typically trained under single-task settings—specific PDE families with fixed parameter ranges—resulting in limited generalization to unseen equation types, parameter regimes, or boundary conditions. Inspired by large language models (Vaswani et al. 2017) and vision foundation models (Radford et al. 2021), recent efforts have introduced large-scale pre-training into the PDE domain to learn transfer-able physical representations. While pre-training enhances generalization, different PDEs exhibit substantially different underlying dynamics, and modeling multiple physical pro-cesses within a single shared parameter space may lead to knowledge conflicts and negative transfer. To scale up modeling capacity while maintaining inference efficiency, recent work has introduced Mixture-of-Experts 
+
+Copyright © 2027, Association for the Advancement of Artificial Intelligence (www.aaai.org). All rights reserved. 
+
+(MoE) architectures (Shazeer et al. 2017) into neural op-erator design (Wang et al. 2026; Sun et al. 2026). MoEs employ dynamic routing mechanisms that activate only a subset of expert subnetworks for each input, enabling mas-sive parameter scaling without proportionally increasing per-sample computation. This paradigm shows promise in han-dling PDE heterogeneity: different experts can specialize in different equation types, physical regimes, or numerical pat-terns. However, MoE-based neural operators still face the following two critical challenges. As shown in Figure 1, we summarize the motivation and overview of SPEAR. 
+
+Challenge 1: Spectral Coupling of PDEs . Different PDE families differ drastically in their physical behaviors. For ex-ample, elliptic equations describe steady-state equilibrium, with high-frequency features manifesting as smooth local extrema; hyperbolic equations describe wave propagation, with high-frequency features manifesting as sharp discon-tinuities; parabolic equations describe dissipative processes, with high-frequency features manifesting as decaying spikes. These differences are most pronounced in high-frequency lo-cal patterns, while low-frequency dynamics exhibit broad similarity across equation types. However, Fourier-based neural operators such as AFNO (Guibas et al. 2021) couple all frequency components within shared parameters, forcing morphologically distinct high-frequency patterns to coexist and causing severe gradient interference. Existing remedies, including multi-scale operators (Liu et al. 2024) and fre-quency enhancement modules (Chen et al. 2025), have yet to break this spectral coupling constraint. Therefore, a mecha-nism that can separate shared dynamics from specific patterns according to frequency characteristics is urgently needed. 
+
+Challenge 2: Expert Redundancy of MoE . While MoE architectures enhance model capacity through specialization, this comes at a cost: as model scale grows, parameter redun-dancy proliferates, with many experts learning functionally similar representations while inference overhead increases significantly. Existing expert merging methods (Zhang et al. 2026; Li et al. 2026, 2024; Chen et al. 2024a) primarily con-solidate similar experts based on routing statistics or expert outputs, rather than the task-specific knowledge semantics that experts truly acquire. This "behavior-based" rather than "knowledge-based" merging strategy lacks physical ground-ing. In PDE learning, this is particularly problematic: two experts that handle similar physical patterns may never be arXiv:2610.03265v1 [cs.LG] 2 Oct 2026 Different PDEs   
+
+> NS FNO SWE  DR
+> Low Frequency
+> High Frequency
+> Neural Operator
+> Shared Parameters
+> Shared Expert  Specific Experts
+> Challenge  ① Spectral Coupling of PDEs Challenge  ② Expert Redundancy of MoE
+> Shared parameters force different high-frequency patterns to coexist !!Shared parameters force different high-frequency patterns to coexist !Shared Expert for common low-frequency features Specific ExpertS For diverse high-frequency details
+
+✓ Shared Expert for common low-frequency features Specific ExpertS For diverse high-frequency details ✓       
+
+> Existing Models Our Approach
+> Router
+> Different PDEs
+> NS FNO SWE  DR
+> Mixture of Experts
+> Router Activation
+> Router Activation
+> Router Activation
+> Router Activation
+> Merging
+> Merging
+> Merging
+> Merging
+> Router
+> Simularity
+> Simularity
+> Knowledge of
+> specific PDE
+> Knowledge of
+> specific PDE
+> Knowledge of
+> specific PDE
+> Knowledge of
+> specific PDE
+> Bilinear projection
+> Dataset-Expert Preference Matrix
+> Expert  Merging
+> Current Solution Our Strategy
+> Routing -based merging ignores
+> expert capability disparity across
+> PDE types.
+> !!
+
+✓ Knowledge -based merging captures experts' PDE -
+
+> specific capabilities and preferences, enabling
+> semantically similar experts to be aggregated
+
+Figure 1: Motivation of SPEAR. The upper shows the ad-vantage of frequency decoupling for separating shared and PDE-specific dynamics. The lower highlights knowledge-guided expert merging over routing-based merging. activated together due to different data distributions, and would thus be judged as "dissimilar" and left unmerged. It is worth noting that these two challenges are not inde-pendent. A key fact connects them: low-frequency dynamics are broadly transferable across PDE types and can be effec-tively captured by a shared backbone, while high-frequency patterns are PDE-specific and demand expert specialization. This observation naturally suggests a two-stage strategy: first, decouple frequencies to separate sharable low-frequency knowledge from PDE-specific high-frequency patterns, as-signing the latter to a dedicated MoE module for expert-level specialization; then, consolidate the high-frequency experts to eliminate redundancy, ensuring that each preserved expert captures truly distinct physical knowledge. In other words: decouple to specialize, then aggregate to refine. Building on this insight, in this paper, we present a 
+
+SP ectral-disentangled MoE neural operator with knowledge-guided Expert Agg Regation ( SPEAR ). Our framework in-troduces two tightly coupled innovations. For challenge 1 ,we propose a spectral-disentangled architecture that explic-itly partitions the frequency spectrum. The low-frequency branch employs AFNO to capture global evolution patterns, while the high-frequency branch extracts fine-grained local structures via high-pass filtering and models them through an MoE module composed of shared convolutional back-bones and LoRA adapters. Dynamic routing based on high-frequency statistics activates a part of experts to efficiently learn local dynamics across PDEs. For challenge 2 , we de-sign a knowledge-guided expert aggregation strategy that compresses and reorganizes functionally similar experts by incorporating physical correlations among PDE tasks and expert preference information. Rather than routing statistics, expert similarity is measured by the learned parameters for each PDE dataset. Then, a dataset-level knowledge matrix is constructed and fused via bilinear projection, yielding se-mantic similarities for expert merging. Our main contribu-tions are summarized as follows: 1) We design a spectral-disentangled architecture that ex-plicitly partitions the frequency spectrum: a shared back-bone captures low-frequency dynamics across all PDE types, while a dedicated MoE module handles PDE-specific high-frequency patterns. 2) We propose a knowledge-guided expert aggregation strategy that computes similarities among experts based on their acquired physical knowledge during training and rout-ing preference information, and merges them via bilinear projection and hierarchical clustering. 3) Extensive experiments on large-scale PDE pretraining datasets show that our method learns transferable represen-tations, achieving strong performance across cross-equation pretraining, fine-tuning, and generalization to unseen PDEs with superior parameter efficiency. 
+
+Related Work 
+
+Neural Operators for PDE Solving 
+
+Neural operators learn mappings between infinite-dimensional function spaces (Lu et al. 2021; Li et al. 2020). Various neural operators have been developed for PDE mod-eling. For example, DeepONet (Lu et al. 2021) adopts a branch–trunk architecture, while the Fourier Neural Oper-ator (FNO) (Li et al. 2020) models global dependencies in the Fourier domain. More recently, methods such as MPP (McCabe et al. 2023), DPOT (Hao et al. 2024), Po-seidon (Herde et al. 2024), OmniArch (Chen et al. 2024b), and UniSolver (Zhou et al. 2025) have explored pre-training on diverse PDE datasets, advancing PDE foundation models. However, most existing methods adopt a unified architecture. As PDE datasets become larger and more diverse, differences in physical laws and dynamics may cause knowledge inter-ference across heterogeneous tasks. Therefore, modeling di-verse physical knowledge remains an important challenge in large-scale PDE pre-training. 
+
+Mixture-of-Experts Models 
+
+Mixture-of-Experts (MoE) expands model capacity through sparse expert activation and has been widely adopted in language and vision models. Representative works include Sparsely-Gated MoE (Shazeer et al. 2017), Switch Trans-former (Fedus, Zoph, and Shazeer 2022), and Mixtral (Jiang et al. 2024). By activating only a small subset of experts for each input, MoE increases model capacity with limited additional computation. Recently, MoE has also been intro-duced into neural operator models. Methods such as MoE-POT (Wang et al. 2026) and NESTOR (Sun et al. 2026) use specialized experts to capture diverse physical knowledge and alleviate interference across heterogeneous PDE tasks. However, some experts may learn similar physical repre-sentations, leading to knowledge redundancy and inefficient parameter utilization. Therefore, reducing redundant experts while preserving model performance remains an important challenge in MoE-based PDE modeling. Xt+1 Xt+1           
+
+> FreqMix Block
+> × N
+> FreqMix Block × N
+> IFFT
+> Exp 1 Exp 1
+> ...
+> MoE
+> Base
+> Expert
+> ...
+> Router
+> Shared
+> base A2
+> B2 B2
+> A2B2
+> A1
+> B1 B1
+> A1B1
+> An
+> Bn Bn
+> AnBn
+> Expert
+> Higher Efficiency
+> Physically Interpretability
+> Enchanced Generalization
+> Expert*
+> Physics Knowledge Physics Knowledge
+> FreqMix Block
+> Overview Architecture
+> IFFT
+> XXk Xk Wk Wk )
+> )σXXk Wk ))σ
+> High-frequency MoE with Low-rank Experts
+> Exp 2 Exp N
+> Specific Experts
+> Shared Network
+
+Figure 2: Overview architecture. The left panel shows the overall pipeline, the upper-right panel presents the FreqMix block, and the lower-right panel illustrates the high-frequency MoE module with low-rank experts. 
+
+Expert Merging 
+
+Expert merging is an emerging compression technique that identifies experts with similar functions or representations and integrates them through parameter fusion. Represen-tative methods include SMoE (Li et al. 2024) and HC-SMoE (Chen et al. 2024a), which construct expert relation-ships from routing patterns or output features and then merge redundant experts. However, most existing methods lack ex-plicit modeling of task semantics and domain knowledge, making it difficult to accurately characterize the knowledge learned by different experts. In PDE modeling, MoE encourages functional specializa-tion, while knowledge overlap may still exist among some experts. Incorporating physical knowledge into expert rela-tionship modeling can therefore improve the identification of truly redundant experts and enable effective compres-sion while preserving expert diversity, which is important for building efficient and scalable PDE foundation models. 
+
+The Proposed Approach 
+
+We propose SPEAR, a spectral-disentangled MoE neural op-erator with knowledge-guided expert aggregation, as shown in Fig. 2. SPEAR decouples shared low-frequency dynam-ics from PDE-specific high-frequency patterns, where the MoE module enables expert specialization for local dynam-ics. Parameter-efficient design and knowledge-guided expert aggregation further reduce expert redundancy. 
+
+Preliminaries 
+
+We consider parameterized PDEs over a spatial domain Ω ⊂
+
+Rn and a time interval [0 , T ]:
+
+∂u
+
+∂t − H (u, ∇u, ∇2u, . . . ; θ) = 0 , (1) subject to 
+
+u(x, 0) = u0(x), x ∈ Ω,
+
+B[u]( x, t ) = g(x, t ), (x, t ) ∈ ∂Ω × [0 , T ], (2) where u is the system state, H is the governing operator, 
+
+θ denotes the physical parameters, and B is the boundary operator. In the data-driven setting, a neural operator Tw
+
+approximates the temporal evolution: 
+
+ut+1 = Tw (ut−K+1 , . . . , u t) , (3) where w denotes the learnable parameters. Following DPOT (Hao et al. 2024), small random perturbations are added to the input sequence during training to reduce error accumulation and improve long-term prediction robustness. 
+
+Input Encoding and Time Aggregation 
+
+Given an input PDE sequence x ∈ RB×H×W ×T ×C , we concatenate it with the coordinate grid and reshape it into 
+
+ex ∈ R(BT )×(C+3) ×H×W . Following the patch embedding of ViT (Dosovitskiy et al. 2020), the input is encoded as 
+
+X = PatchEmbed( ex) + Epos ∈ R(BT )×D×H′×W ′
+
+, (4) where H′ = H/P H , W ′ = W/P W , and Epos denotes the learnable positional embedding. Then we reshape X into 
+
+B × H′ × W ′ × T × D and employ a time aggregation layer (Hao et al. 2024) to integrate temporal information: 
+
+Yb,h,w =
+
+> T
+
+X
+
+> t=1
+
+Xb,h,w,t Wt, (5) where Wt ∈ RD×D is the learnable projection matrix for the 
+
+t-th time step. The aggregated output is Y ∈ RB×H′×W ′×D .
+
+Spectral-Disentangled Neural Operator 
+
+Spatiotemporal physical fields contain smooth global struc-tures and sharp local variations. Therefore, we introduce a spectral-disentangled dual-branch architecture that trans-forms features into the frequency domain and separates low-and high-frequency components. The low-frequency branch captures shared dynamics, while the high-frequency branch models PDE-specific patterns with MoE. 
+
+Low-Frequency Global Branch After Fourier transfor-mation of Y to extract low-frequency feature xl ∈
+
+RB×C×H×W , We employ AFNO (Guibas et al. 2021) as the shared expert for low-frequency modeling. The input is first transformed into the frequency domain as ˆxl = F(xl).The channel dimension is divided into N blocks, and only the first K low-frequency modes are processed using a two-layer complex-valued MLP: 
+
+z:K, :K = W2σ  W1 ˆx1:K, :K + b1
+
+ + b2, (6) where W1 and W2 are block-wise complex-valued weights, and σ denotes the activation function. The remaining fre-quency modes are set to zero, and the transformed features are mapped back to the spatial domain with a residual con-nection (He et al. 2016), yielding xlf = F−1(z) + xl.
+
+High-Frequency Local Branch To capture sharp local variations, such as small-scale vortices and shock bound-aries, we apply a hard high-pass filter in the frequency do-main. Given high-frequency feature xh, ˆxh = F(xh), a binary mask M ∈ { 0, 1}Hf ×Wf is defined as 
+
+M(i, j ) = 
+
+0, i < K and j < K, 
+
+1, otherwise . (7) The high-frequency component is then obtained as xhf =
+
+F−1(ˆ x ⊙ M) and fed into the MoE module to model fine-grained local structures and complex dynamics. 
+
+Low-Rank Adapter-based Mixture of Experts High-frequency components, such as small-scale vortices and shock boundaries, are difficult to model with a single ar-chitecture. We therefore introduce a low-rank adapter-based MoE module that uses dynamic routing to enhance local high-frequency modeling. It contains 12 non-shared experts and one base expert, with the gate activating the Top-2 non-shared experts for each input. 
+
+(1) Routing Strategy. Since the MoE module processes high-frequency features, the router captures local variations by removing the spatial mean: xhf = x − Mean H,W (x).A texture-aware routing representation is then constructed by combining channel activation and spatial variation: 
+
+gb = [Mean H,W (xb); Std H,W (xhf ,b )] ∈ R2C . (8) This representation captures both channel responses and lo-cal fluctuations. The routing probabilities are computed as pb =Softmax( Wg b + b), where W ∈ RN ×2C and b ∈ RN
+
+are learnable parameters. Following Top-2 routing (Shazeer et al. 2017), the two experts with the highest probabilities are selected. Let Ib denote their index set. Their normalized routing weights are 
+
+ˆp(i) 
+
+> b
+
+= α p(i)
+
+> b
+
+P 
+
+> j∈I b
+
+p(j)
+
+> b
+
+, i ∈ I b, (9) where α is the routing scale factor. 
+
+(2) Depthwise Separable Convolution. To capture local details in high-frequency PDE features, we adopt depthwise separable convolution (DSC) (Howard et al. 2017) as the shared backbone of all experts. Given x ∈ RB×C×H×W ,DSC applies depthwise convolution for spatial modeling and pointwise convolution for channel fusion, formulated as zc = Wdw  
+
+> c
+
+∗ xc and u = Wpw ∗ z. Each convolution is followed by Group Normalization (Wu and He 2018) and GELU (Hendrycks and Gimpel 2016). With the residual con-nection, the DSC backbone is defined as 
+
+FDSC (x) = x + PW(DW( x)) . (10) 
+
+(3) Base Expert. Although PDEs exhibit distinct dynam-ics, their high-frequency components may share structures. We introduce a shared expert to learn transferable high-frequency representations across PDEs via parameter shar-ing (Caruana 1997). The base expert adopts a residual depthwise separable con-volutional block, formulated as yshared = x + Fshared (x).It provides stable shared representations while reducing re-dundant learning among experts. 
+
+(4) Specific Experts. The specific experts capture PDE-specific high-frequency patterns using a shared depthwise separable convolutional backbone and expert-specific low-rank adapters (Hu et al. 2022). For the i-th expert, the adapter consists of a down-projection Bi : C → r and an up-projection Ai : r → C, formulated as 
+
+yi = Fbase (x) + Ai(Bi(x)) . (11) The low-rank residual introduces expert-specific transfor-mations with limited parameter overhead. The up-projection 
+
+Ai is initialized to zero, making each non-shared expert initially equivalent to the shared backbone and improving training stability. 
+
+(5) Routing and Feature Fusion. The shared expert pro-vides general high-frequency representations across PDE systems, while the selected non-shared experts capture PDE-specific local patterns. For each input sample, the gating net-work selects the Top-2 non-shared experts. Let Ib denote the selected expert set for the b-th sample. The selected expert outputs are combined as 
+
+ymoe ,b = X
+
+> i∈I b
+
+ˆp(i) 
+
+> b
+
+yi,b , (12) where ˆp(i) 
+
+> b
+
+is the normalized routing weight. The specialized and shared representations are fused using a learnable coefficient: 
+
+yfusion = λymoe +(1 −λ)yshared , λ = Sigmoid( β). (13) Finally, a global residual connection preserves the input feature information as y = x+yfusion . This design combines shared and expert-specific representations for effective high-frequency PDE modeling. 
+
+Knowledge-Guided Expert Aggregation 
+
+Then, we propose a knowledge-guided expert aggregation strategy that groups experts learning similar high-frequency representations, reducing parameter and memory overhead while preserving expert specialization, as shown in Fig. 3. 
+
+Expert Similarity To measure expert similarity, we com-bine dataset-specific knowledge with expert activation pref-erences. Suppose the model is trained on D datasets with N
+
+non-shared experts. The average routing probabilities form a dataset–expert preference matrix R ∈ RD×N .Let v0 denote the pretrained parameters and vd the param-eters fine-tuned on dataset d. The dataset-specific physical knowledge is represented by ∆vd = vd − v0. Their pairwise cosine similarities define 
+
+SD (d1, d 2) = ∆v⊤ 
+
+> d1
+
+∆vd2
+
+∥∆vd1 ∥2∥∆vd2 ∥2
+
+. (14) We then project the dataset-level similarities into the ex-pert space: 
+
+Sraw  
+
+> E
+
+= R⊤SD R ∈ RN ×N . (15) To reduce the effect of activation scale, we normalize it as 
+
+SE (i, j ) = Sraw  
+
+> E
+
+(i, j )
+
+pSraw  
+
+> E
+
+(i, i )Sraw  
+
+> E
+
+(j, j ) + ε , (16) where ε ensures stability. Larger SE (i, j ) indicates stronger knowledge similarity between experts i and j.E0                                                       
+
+> 4/5 4/5
+> Merge E4, E5
+> E1 E2 E3 E4 E5 E6 E0 4/5 Merge E4, E5 E1 E2 E3 E4 E5 E6
+> E6 E6 E4 E4
+> E5 E5
+> E4 E5
+> E6 E4 E5
+> Hierarchical Clustering
+> ③Aggregation strategy
+> Average Linkage
+> ①Physics Knowledge Extraction
+> Knowledge Vector Vi -V0
+> V0
+> V1
+> V3
+> Vn
+> FineTuning
+> FineTuning
+> FineTuning
+> FineTuning V2
+> V0 V1 V3 Vn FineTuning FineTuning FineTuning FineTuning V2
+> V0
+> V1
+> Vn
+> V1-V0
+> V0 V1 Vn V1-V0
+> ②Knowledge Projection
+> Knowledge-guided Dataset Similarity Matrix SD (n*n)
+> E1
+> E2
+> En ...
+> E3
+> E1 E2 En ... E3
+> E1 E2 En E3 E1 E2 En E3 ... E1 E2 En E3 ...
+> E1 E2 En ... E3 E1 E2 En E3 ...
+> D1
+> D2
+> Dn
+> ...
+> D3
+> D1 D2 Dn ... D3
+> ... D1 D2 Dn D3 D1 D2 Dn D3
+> D1 D2 Dn ... D3 ... D1 D2 Dn D3
+> E1
+> E2
+> En ...
+> E3
+> E1 E2 En ... E3
+> E1 E2 En E3 E1 E2 En E3 ... E1 E2 En E3 ...
+> E1 E2 En ... E3 E1 E2 En E3 ...
+> Expert Similarity Matrix SE (n*n)
+> Dataset-Expert Preference Matrix R (n*n)
+> RT SD R
+> E2 En ... E0 E2 En ... E0
+> E0 E1 E2 En ... E0 E1 E2 En ...
+> Logical Index Physical Index
+> Mapping
+> E2 En ... E0 E0 E1 E2 En ... Logical Index Physical Index
+> Mapping
+> ④Merge & Routing Mapping
+> Router
+> Expert 0
+> Expert 1
+> Expert 2
+> Expert n
+> ...
+> Router Expert 0 Expert 1 Expert 2 Expert n ...
+> Router Expert 2
+> Expert n
+> ...
+> Expert 1
+> Expert 0
+> Expert 0
+> Expert 1 Expert 0 Expert 0
+> Router Expert 2 Expert n ... Expert 1 Expert 0 Expert 0
+
+Figure 3: Knowledge-guided expert merging based on bilin-ear projection and hierarchical clustering. 
+
+Expert Aggregation Strategy Based on SE , we apply threshold-constrained average-linkage hierarchical cluster-ing (Murtagh and Contreras 2012). Each expert is initially treated as an individual cluster, and the similarity between clusters Ca and Cb is 
+
+Sim( Ca, Cb) = 1
+
+|C a||C b|
+
+X
+
+i∈C a
+
+X
+
+j∈C b
+
+SE (i, j ). (17) The most similar clusters are iteratively merged until their maximum similarity falls below a threshold τ .Experts within each cluster are aggregated according to their global routing frequencies. For expert i ∈ C k, the nor-malized weight is ωi = fi/ P
+
+j∈C k fj , where fi denotes its global activation frequency. The aggregated adapter param-eters are obtained as 
+
+¯θk = X
+
+i∈C k
+
+ωiθi. (18) The resulting aggregated experts replace the original experts, and the routing mapping is updated accordingly for inference. 
+
+Loss Functions 
+
+Load Balancing Loss To promote balanced expert utiliza-tion, we adopt the load balancing loss (Shazeer et al. 2017): 
+
+Laux = E
+
+EX
+
+i=1 
+
+pifi, (19) where pi and fi denote the routing probability and activation frequency of expert i, respectively. 
+
+Main Task Loss We use the relative L2 reconstruction error (L2RE) (Li et al. 2020) as the main objective: 
+
+LL2RE =
+
+ˆu(c)
+
+i − u(c)
+
+i 2
+
+u(c)
+
+i 2
+
+. (20) 
+
+Orthogonality Loss To encourage expert diversity, we minimize the cosine similarity between the up-projection parameters of different non-shared experts: 
+
+Lorth = 1
+
+|Ω|
+
+X
+
+(i,j )∈Ω
+
+ A⊤
+
+i Aj
+
+∥Ai∥2∥Aj ∥2
+
+2
+
+, (21) where Ω = {(i, j ) | i < j }.
+
+Overall Loss The overall objective is 
+
+Ltotal = LL2RE + λ1Laux + λ2Lorth . (22) We set λ1 = 0 .001 . The coefficient λ2 decays from 0.1 to 
+
+0.01 over the first 400 epochs and reaches 0 at epoch 450. 
+
+Experiments 
+
+Datasets and Baselines 
+
+We evaluate our method on pre-training, fine-tuning, alterna-tive data splits, unseen PDE transfer, model scaling, ablation studies, and expert merging. 
+
+Datasets. We construct a mixed pre-training set of 12 PDE datasets with diverse equation types and parameter set-tings from FNO (Li et al. 2020), PDEBench (Takamoto et al. 2022), PDEArena (Gupta and Brandstetter 2022), and CFD-Bench (Luo, Chen, and Zhang 2023). 
+
+Baselines. We compare against representative neural op-erators and PDE foundation models, including FNO (Li et al. 2020), UNet (Ronneberger, Fischer, and Brox 2015), GK-T (Cao 2021), GNOT (Hao et al. 2023), OFormer (Li, Meidani, and Farimani 2022), MPP (McCabe et al. 2023), DPOT (Hao et al. 2024), UniSolver (Zhou et al. 2025), MoE-POT (Wang et al. 2026), NESTOR (Sun et al. 2026), and Po-seidon (Herde et al. 2024). UNet, GK-T, GNOT, and OFormer are trained separately on each dataset, while the others follow their original pre-training and transfer settings. 
+
+Main Results 
+
+Table 1 compares our method across pre-training, fine-tuning, and expert merging. Overall, our method achieves the best performance on 8 of the 12 tasks. 
+
+Pre-training Stage. Our method achieves the best per-formance on 7 tasks, including 5 of the 6 PDEBench tasks, while maintaining low L2RE on most others. This demon-strates that the proposed MoE architecture effectively learns shared physical knowledge across heterogeneous PDEs with high parameter efficiency. 
+
+Fine-tuning Stage. We fine-tune the pre-trained model for 500 epochs on each downstream dataset. The resulting model achieves the best performance on 6 tasks. Compared with training from scratch, pre-training enables faster adaptation and higher prediction accuracy, indicating strong transfer-ability across PDE tasks. 
+
+Expert Merging. We further compress the fine-tuned model by aggregating 12 non-shared experts into 6 accord-ing to their knowledge-guided similarities. Despite a 50% reduction in expert count, Ours-Merge maintains or im-proves performance on most tasks. For example, L2RE on PDEArena NS-cond decreases from 0.291 to 0.281, demon-strating nearly lossless compression. In contrast, OPCM (Tang et al. 2026) suffers substantial degradation as the number of merged experts increases, with L2RE increasing by tens or even hundreds of times on some tasks. This suggests that generic merging methods struggle to preserve functional differences among experts. Our method instead identifies redundant experts using cross-task knowl-edge and routing preferences, reducing redundancy while preserving expert diversity and critical PDE knowledge. Table 1: The experiments are divided into four parts: standard small models, pre-training performance of foundation models, fine-tuning results, and model merging results. The evaluation metric is L2RE. The best result within each part is highlighted in bold , while the overall best result is emphasized in blue bold. L2RE Activated FNO-ν PDEBench CNS-( η, ζ ), DR, SWE PDEArena CFDBench Model Params 1e-5 1e-4 1e-3 1,0.1 1,0.01 Avg.(1) 0.1,0.1 0.1,0.01 Avg.(0.1) DR SWE NS NS-cond -
+
+> Small model
+
+FNO 0.5M 0.116 0.0922 0.0156 0.151 0.108 0.130 0.230 0.076 0.153 0.0321 0.0091 0.210 0.384 0.0274 UNet 25M 0.198 0.119 0.0245 0.334 0.291 0.313 0.569 0.357 0.463 0.0971 0.0521 0.102 0.337 0.209 FFNO 1.3M 0.121 0.0503 0.0099 0.0212 0.0520 0.0366 0.162 0.0452 0.104 0.0571 0.0116 0.0839 0.602 0.0071 GK-T 1.6M 0.134 0.0792 0.0098 0.0341 0.0377 0.0359 0.0274 0.0366 0.0320 0.0359 0.0069 0.0952 0.423 0.0105 GNOT 1.8M 0.157 0.0443 0.0125 0.0325 0.0420 0.0373 0.0228 0.0341 0.0285 0.0311 0.0068 0.172 0.325 0.0088 
+
+OFormer 1.9M 0.171 0.0645 0.0104 0.0417 0.0625 0.0521 0.0254 0.0205 0.0229 0.0192 0.0072 0.135 0.332 0.0102 
+
+> Pre-trained
+
+MPP 7M - - - - - 0.0442 - - 0.0312 0.0168 0.0066 - - -DPOT 7M 0.0976 0.0606 0.0095 0.0173 0.0397 0.0285 0.0132 0.0220 0.0176 0.0321 0.0056 0.125 0.384 0.0095 
+
+NESTOR 13M 0.1195 0.0951 0.0093 0.0167 0.0373 0.0270 0.0120 0.0202 0.0161 0.0308 0.0052 0.132 0.409 0.0112 Unisolver 12M 0.0600 0.0626 0.0148 0.0464 0.1172 0.0818 0.2510 0.1170 0.1840 0.7276 2.6851 0.1306 0.5649 0.0627 
+
+Ours 11M 0.0960 0.0770 0.0087 0.0120 0.0372 0.0246 0.0116 0.0184 0.0150 0.0403 0.0048 0.127 0.361 0.0115 
+
+> Fine-tune
+
+DPOT-FT500 7M 0.0520 0.0367 0.0058 0.0112 0.0195 0.0153 0.0174 0.0138 0.0156 0.0148 0.0024 0.0910 0.280 0.0039 NESTOR-FT500 13M 0.0505 0.0217 0.0043 0.0094 0.0134 0.01140 0.0123 0.0083 0.0103 0.0117 0.0026 0.0683 0.285 0.0038 
+
+Ours-FT500 11M 0.0543 0.0197 0.0040 0.0090 0.0137 0.01135 0.0132 0.0082 0.0107 0.0213 0.0045 0.0637 0.291 0.0038 Merge  Ours-merge 11M 0.0541 0.0192 0.0040 0.0090 0.0137 0.01135 0.0127 0.0079 0.0102 0.0197 0.0040 0.0637 0.279 0.0037 
+
+Ours-OPCM 11M 1.5940 1.2863 1.4523 5.0913 1.4027 3.2470 35.4204 4.1313 19.7657 0.8393 0.8393 1.4812 1.3098 0.7957 Ours-SMOE 11M 0.0550 0.0200 0.0044 0.0094 0.0141 0.0118 0.0123 0.0084 0.0104 0.0120 0.0045 0.0640 0.2930 0.0037 Table 2: Performance comparison of different methods under the new dataset split. The evaluation metric is L2RE. The best result within each column is highlighted in bold .Model Activated FNO-ν PDEBench CFDBench L2RE Params 1e-5 1e-3 0.1,0.01 SWE DR -FNO 10M 0.1910 0.0245 0.0859 11.0000 0.5300 0.0060 DPOT 7M 0.1070 0.0155 0.0168 0.0063 0.0577 0.0067 MoE-POT 17M 0.0682 0.0077 0.0105 0.0064 0.0411 0.0053 
+
+NESTOR 13M 0.0674 0.0076 0.0159 0.0045 0.0184 0.0091 Ours 10M 0.0582 0.0051 0.0165 0.0024 0.0145 0.0056 Table 3: Comparison of generalization and transfer ability. Model Activated Params Wave-Layer Wave-Gauss Turbulence FNO 0.5M - - 0.193 MPP 7M - - 0.152 DPOT 7M 0.0095 0.0075 0.135 Poseidon 21M 0.29 0.29 -MoE-POT 17M 0.05 0.06 0.0621 Ours 10M 0.0085 0.0066 0.0662 Overall, the pre-training and fine-tuning paradigm im-proves performance and adaptation across PDE tasks, while knowledge-guided expert aggregation enables efficient com-pression with minimal performance degradation, demon-strating cross-task generalization and parameter efficiency. 
+
+Experiments on New PDE Dataset Splits 
+
+To evaluate our model under different pre-training data con-figurations, we select six subsets from the original 12 PDE datasets and compare our method with state-of-the-art pre-trained models. The results are shown in Table 2. Our method achieves the best performance on four of the six datasets and remains competitive on the others, consis-tently outperforming pre-trained models on FNO-ν, SWE, and DR. Even with the pre-training data size reduced by half, our method learns transferable physical representations Vx Vx 
+
+> Vy Vy
+> Pressure Pressure
+> Density Density
+> Wave-Gauss Wave-Gauss
+> Wave-Layer Wave-Layer
+
+Figure 4: Visualization of the predicted physical field at the final time step for Wave-Gauss. Vx Vx 
+
+> Vy Vy
+> Pressure Pressure
+> Density Density
+> Wave-Gauss Wave-Gauss
+> Wave-Layer Wave-Layer
+
+Figure 5: Visualization of the predicted physical field at the final time step for Wave-Layer. from limited and heterogeneous PDE data, demonstrating strong downstream generalization. 
+
+Downstream Task Experiments 
+
+To evaluate generalization and transferability, we evaluate our model on a high-resolution 2D turbulence dataset and two unseen PDEs, Wave-Gauss and Wave-Layer. The results are reported in Table 3 and Figures 4–6. Our method achieves the best performance on both un-seen PDEs. It obtains L2RE values of 0.0085 on Wave-Layer and 0.0066 on Wave-Gauss, achieving relative improvements of approximately 10.5% and 12.0% over the best baselines, respectively. It also achieves the second-best result on high-resolution turbulence and outperforms most baselines. Vx Vx 
+
+> Vy Vy
+> Pressure Pressure
+> Density Density
+> Wave-Gauss Wave-Gauss
+> Wave-Layer Wave-Layer
+
+Figure 6: Visualization of the predicted physical variables at the final time step for 2D high-resolution turbulence. Vx Vx     
+
+> Vy Vy
+> Pressure Pressure
+> Density Density
+> Wave-Gauss Wave-Gauss
+> Wave-Layer Wave-Layer
+> （1）SD（2）SR（3）SE（1）SD（2）SR（3）SE
+
+Figure 7: Visualization of the key matrices used in Knowledge-Guided expert merging: (1) dataset similarity matrix SD , (2) dataset–expert preference matrix R, and (3) expert similarity matrix SE .These results demonstrate that large-scale pre-training en-ables transferable representations and improves adaptation to unseen PDEs and complex downstream dynamics. 
+
+Effectiveness Analysis of Expert Aggregation 
+
+To evaluate the proposed aggregation strategy, we visualize the key matrices involved and compare downstream perfor-mance before and after aggregation. Figure 7(1) shows the dataset similarity matrix SD ,computed from ∆vi = vi − v0. Clear block structure is observed: datasets with similar physical mechanisms ex-hibit higher similarity, while different equation types show weaker correlations, indicating that the learned knowledge captures dataset-specific characteristics. Figure 7(2) presents the dataset–expert preference matrix R. The sparse and lo-cally concentrated pattern indicates that different datasets activate distinct experts, confirming that routing promotes expert specialization. The knowledge-guided expert similar-ity matrix SE , obtained by combining SD and R, is shown in Figure 7(3). High-similarity regions reflect knowledge over-lap among experts, guiding the aggregation of redundant experts while preserving essential knowledge. As shown in Table 1, reducing the number of experts from 12 to 6 achieves 50% compression with negligible performance loss, and even improves performance on certain tasks (e.g., PDEArena NS-cond L2RE decreases from 0.291 to 0.281). Overall, the strategy reduces parameter redundancy and improves representation consistency by merging experts with similar learned knowledge, balancing efficiency and gener-alization. 
+
+Scaling Experiments 
+
+We pre-train on six subsets of the 12 PDE datasets and vary the number of non-shared experts while fixing the number Table 4: The impact of the number of non-shared experts. Num. of experts 1e-5 1e-3 0.1, 0.01 SWE DR CFDBench Avg. L2                                          
+
+> 40.0666 0.0054 0.0162 0.0029 0.0193 0.0079 0.0197 80.0679 0.0049 0.0170 0.0029 0.0187 0.0083 0.0200 12 0.0690 0.0050 0.0146 0.0026 0.0190 0.0076 0.0196
+> 16 0.0689 0.0048 0.0165 0.0040 0.0192 0.0077 0.0202 20 0.0700 0.0049 0.0170 0.0028 0.0197 0.0092 0.0206 24 0.0693 0.0049 0.0162 0.0031 0.0187 0.0082 0.0201
+
+Table 5: Ablation experiments of our proposed model. “w/o” denotes the removal of the corresponding component.                                                  
+
+> Method 1e-5 1e-3 0.1, 0.01 SWE DR CFDBench Avg. L2Promotion Ours 0.0690 0.0050 0.0148 0.0027 0.0196 0.0077 0.0198 -w/o MoE 0.0709 0.0054 0.0165 0.0031 0.0196 0.0079 0.0206 0.0008 w/o High-Freq 0.1070 0.0155 0.0168 0.0063 0.0577 0.0067 0.0350 0.0152
+> w/o Aux Loss 0.0694 0.0055 0.0154 0.0027 0.0185 0.0098 0.0202 0.0004 w/o Orth Loss 0.0692 0.0051 0.0168 0.0026 0.0189 0.0083 0.0202 0.0004
+
+of activated experts. As shown in Table 4, 12 non-shared experts achieve the best performance. Increasing the expert scale does not always improve per-formance, as excessive experts complicate routing and may weaken expert collaboration. Therefore, an appropriate ex-pert scale is essential for MoE modeling. 
+
+Ablation Studies 
+
+We conduct ablation studies on six PDEBench subtasks to evaluate the contribution of each key component in the pro-posed framework. The results are reported in Table 5. 
+
+High-Frequency Branch. Removing the high-frequency branch increases the average L2RE by 0.0152, causing the largest performance degradation among all variants. This confirms its critical importance in capturing fine-grained structures and sharp local variations. 
+
+Mixture-of-Experts Architecture. Removing the MoE module increases the average L2RE by 0.0008, demonstrat-ing that dynamic expert routing effectively improves the mod-eling of heterogeneous PDE patterns. 
+
+Load-Balancing Loss. Removing the auxiliary load-balancing loss increases the average L2RE by 0.0004. Al-though the impact is relatively modest, it promotes balanced expert utilization and stabilizes training. 
+
+Orthogonality Loss. Removing the orthogonality loss in-creases the average L2RE by 0.0004, indicating that it en-courages diverse expert representations, reduces redundant feature learning, and promotes specialization among experts. 
+
+Conclusion 
+
+We presented SPEAR, a spectral-disentangled MoE neu-ral operator with knowledge-guided expert aggregation for large-scale PDE pre-training. SPEAR separates shared low-frequency dynamics from PDE-specific high-frequency pat-terns and reduces expert redundancy through knowledge-guided aggregation while preserving performance. Extensive experiments demonstrate that SPEAR achieves strong pre-training, transferability, and generalization to unseen PDE systems, providing an efficient and scalable solution for PDE foundation models. References 
+
+Cao, S. 2021. Choose a transformer: Fourier or Galerkin. 
+
+Advances in Neural Information Processing Systems , 34: 24924–24940. Caruana, R. 1997. Multitask learning. Machine learning ,28(1): 41–75. Chen, I.; Liu, H.-S.; Sun, W.-F.; Chao, C.-H.; Hsu, Y.-C.; Lee, C.-Y.; et al. 2024a. Retraining-free merging of sparse moe via hierarchical clustering. arXiv preprint arXiv:2410.08589 .Chen, T.; Zhou, H.; Li, Y.; Wang, H.; Gao, C.; Shi, R.; Zhang, S.; and Li, J. 2024b. Omniarch: Building foundation model for scientific computing. arXiv preprint arXiv:2402.16014 .Chen, T.; Zhou, H.; Li, Y.; Wang, H.; Zhang, Z.; Zhu, T.; Zhang, S.; and Li, J. 2025. FreqMoE: dynamic frequency enhancement for neural PDE solvers. In Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence .Dosovitskiy, A.; Beyer, L.; Kolesnikov, A.; Weissenborn, D.; Zhai, X.; Unterthiner, T.; Dehghani, M.; Minderer, M.; Heigold, G.; Gelly, S.; et al. 2020. An image is worth 16x16 words: Transformers for image recognition at scale. arXiv preprint arXiv:2010.11929 .Fedus, W.; Zoph, B.; and Shazeer, N. 2022. Switch trans-formers: Scaling to trillion parameter models with simple and efficient sparsity. Journal of Machine Learning Research ,23(120): 1–39. Guibas, J.; Mardani, M.; Li, Z.; Tao, A.; Anandkumar, A.; and Catanzaro, B. 2021. Adaptive fourier neural opera-tors: Efficient token mixers for transformers. arXiv preprint arXiv:2111.13587 .Gupta, J. K.; and Brandstetter, J. 2022. Towards multi-spatiotemporal-scale generalized pde modeling. arXiv preprint arXiv:2209.15616 .Hao, Z.; Su, C.; Liu, S.; Berner, J.; Ying, C.; Su, H.; Anandkumar, A.; Song, J.; and Zhu, J. 2024. Dpot: Auto-regressive denoising operator transformer for large-scale pde pre-training. arXiv preprint arXiv:2403.03542 .Hao, Z.; Wang, Z.; Su, H.; Ying, C.; Dong, Y.; Liu, S.; Cheng, Z.; Song, J.; and Zhu, J. 2023. Gnot: A general neural operator transformer for operator learning. In International conference on machine learning , 12556–12569. PMLR. He, K.; Zhang, X.; Ren, S.; and Sun, J. 2016. Deep residual learning for image recognition. In Proceedings of the IEEE conference on computer vision and pattern recognition , 770– 778. Hendrycks, D.; and Gimpel, K. 2016. Gaussian error linear units (gelus). arXiv preprint arXiv:1606.08415 .Herde, M.; Raonić, B.; Rohner, T.; Käppeli, R.; Molinaro, R.; De Bezenac, E.; and Mishra, S. 2024. Poseidon: Efficient foundation models for pdes. Advances in Neural Information Processing Systems , 37: 72525–72624. Howard, A. G.; Zhu, M.; Chen, B.; Kalenichenko, D.; Wang, W.; Weyand, T.; Andreetto, M.; and Adam, H. 2017. Mo-bilenets: Efficient convolutional neural networks for mobile vision applications. arXiv preprint arXiv:1704.04861 .Hu, E. J.; Shen, Y.; Wallis, P.; Allen-Zhu, Z.; Li, Y.; Wang, S.; Wang, L.; Chen, W.; et al. 2022. Lora: Low-rank adaptation of large language models. Iclr , 1(2): 3. Jiang, A. Q.; Sablayrolles, A.; Roux, A.; Mensch, A.; Savary, B.; Bamford, C.; Chaplot, D. S.; Casas, D. d. l.; Hanna, E. B.; Bressand, F.; et al. 2024. Mixtral of experts. arXiv preprint arXiv:2401.04088 .Li, L.; Qiyuan, Z.; Wang, J.; Li, W.; Gu, H.; Han, S.; and Guo, Y. 2026. Sub-MoE: Efficient Mixture-of-Expert LLMs Compression via Subspace Expert Merging. In AAAI 2026 .Li, P.; Zhang, Z.; Yadav, P.; Sung, Y.-L.; Cheng, Y.; Bansal, M.; and Chen, T. 2024. Merge, then compress: Demystify efficient smoe with hints from its routing policy. In Inter-national Conference on Learning Representations , volume 2024, 14234–14256. Li, Z.; Kovachki, N.; Azizzadenesheli, K.; Liu, B.; Bhat-tacharya, K.; Stuart, A.; and Anandkumar, A. 2020. Fourier neural operator for parametric partial differential equations. 
+
+arXiv preprint arXiv:2010.08895 .Li, Z.; Meidani, K.; and Farimani, A. B. 2022. Transformer for partial differential equations’ operator learning. arXiv preprint arXiv:2205.13671 .Liu, X.; Xu, B.; Cao, S.; and Zhang, L. 2024. Mitigating spectral bias for the multiscale operator learning. Journal of Computational Physics , 506: 112944. Lu, L.; Jin, P.; Pang, G.; Zhang, Z.; and Karniadakis, G. E. 2021. Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators. Nature machine intelligence , 3(3): 218–229. Luo, Y.; Chen, Y.; and Zhang, Z. 2023. CFDBench: A large-Scale benchmark for machine learning methods in fluid dy-namics. arXiv preprint arXiv:2310.05963 .McCabe, M.; Blancard, B. R.-S.; Parker, L. H.; Ohana, R.; Cranmer, M.; Bietti, A.; Eickenberg, M.; Golkar, S.; Krawezik, G.; Lanusse, F.; et al. 2023. Multiple physics pretraining for physical surrogate models. arXiv preprint arXiv:2310.02994 .Murtagh, F.; and Contreras, P. 2012. Algorithms for hi-erarchical clustering: an overview. Wiley interdisciplinary reviews: data mining and knowledge discovery , 2(1): 86–97. Radford, A.; Kim, J. W.; Hallacy, C.; Ramesh, A.; Goh, G.; Agarwal, S.; Sastry, G.; Askell, A.; Mishkin, P.; Clark, J.; et al. 2021. Learning transferable visual models from natural language supervision. In International conference on machine learning , 8748–8763. PmLR. Ronneberger, O.; Fischer, P.; and Brox, T. 2015. U-net: Convolutional networks for biomedical image segmentation. In International Conference on Medical image computing and computer-assisted intervention , 234–241. Springer. Shazeer, N.; Mirhoseini, A.; Maziarz, K.; Davis, A.; Le, Q.; Hinton, G.; and Dean, J. 2017. Outrageously large neural networks: The sparsely-gated mixture-of-experts layer. arXiv preprint arXiv:1701.06538 .Sun, D.; Zhou, X.; Wang, X.; Si, H.; Lyu, W.; Tang, J.; and Luo, B. 2026. NESTOR: A Nested MOE-based Neural Op-erator for Large-Scale PDE Pre-Training. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , 6147–6156. Takamoto, M.; Praditia, T.; Leiteritz, R.; MacKinlay, D.; Ale-siani, F.; Pflüger, D.; and Niepert, M. 2022. Pdebench: An ex-tensive benchmark for scientific machine learning. Advances in neural information processing systems , 35: 1596–1611. Tang, A.; Yang, E.; Shen, L.; Luo, Y.; Hu, H.; Zhang, L.; Du, B.; and Tao, D. 2026. Merging on the fly without retraining: A sequential approach to scalable continual model merg-ing. Advances in Neural Information Processing Systems ,38: 82081–82118. Vaswani, A.; Shazeer, N.; Parmar, N.; Uszkoreit, J.; Jones, L.; Gomez, A. N.; Kaiser, Ł.; and Polosukhin, I. 2017. Attention is all you need. Advances in neural information processing systems , 30. Wang, H.; Xin, H.; Wang, J.; Yang, X.; Zha, F.; Jiang, Y.; et al. 2026. Mixture-of-experts operator transformer for large-scale pde pre-training. Advances in Neural Informa-tion Processing Systems , 38: 31498–31527. Wu, Y.; and He, K. 2018. Group normalization. In Proceed-ings of the European conference on computer vision (ECCV) ,3–19. Zhang, D.; Ma, X.; Ni, Z.-L.; Wu, Z.; Shu, H.; Jiang, X.; and Chen, X. 2026. Expert Merging: Model Merging with Un-supervised Expert Alignment and Importance-Guided Layer Chunking. In The Fourteenth International Conference on Learning Representations .Zhou, H.; Ma, Y.; Wu, H.; Wang, H.; and Long, M. 2025. Unisolver: PDE-Conditional transformers towards universal neural PDE solvers. In Proceedings of the International Conference on Machine Learning .

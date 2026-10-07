@@ -1,0 +1,501 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-07T13:41:11.949351+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 13,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2610.05590v1",
+      "source": "arxiv",
+      "title": "ColdDDI: Evaluating Knowledge Utilization in Cold-Start Drug-Drug Interaction Prediction",
+      "abstract": "Cold-start drug-drug interaction (DDI) prediction tests whether models can identify clinically significant interactions for drugs without training-time interaction history. Existing benchmarks mostly report aggregate edge-prediction scores, leaving a key evaluation question unanswered: when models receive molecular, textual, or knowledge-graph (KG) evidence, do they actually use the evidence that pharmacologically supports the interaction? We introduce ColdDDI, a reconstructible diagnostic benchmark built from DrugBank 5.1.13, with 1,900 approved small-molecule drugs and 565,731 positive DDI pairs. ColdDDI evaluates pairs with zero, one, or two unseen drugs. It also annotates each interaction by whether it changes drug exposure or drug effect, and by whether the biomedical knowledge graph contains shared enzymes, transporters, or targets that can plausibly mediate the interaction. These annotations separate evidence availability from predictive dependence. We evaluate eight conventional DDI methods and 13 LLMs; for open-weight LLMs, we test five prompt patterns and use masking, drug replacement, and channel-sensitivity metrics to probe knowledge utilization. ColdDDI exposes that, in the hardest split where both drugs are unseen, the main performance divide is mediator availability. A fine-tuned 1B LLM recovers 89-93% of interactions with a shared enzyme, transporter, or target, but only 40-62% without such a mediator. More importantly, KG-provided evidence is not always used; several KG-augmented baselines change little when the shared mediator is masked or disrupted, whereas fine-tuned LLMs respond strongly to this intervention. Thus, ColdDDI evaluates knowledge utilization rather than knowledge access alone, showing where cold-start DDI models rely on mechanistic evidence and where they fail despite receiving it. Code is available at https://github.com/0217ljh/ColdDDI-NeurIPS2026.",
+      "authors": [
+        "Jiheng Liang",
+        "Chen Zhao",
+        "Di Wu",
+        "Chenyang Bu",
+        "Yunpeng Hong",
+        "Xingquan Zhu",
+        "Yi He"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CL"
+      ],
+      "published": "2026-10-04T22:54:19+00:00",
+      "link": "https://arxiv.org/pdf/2610.05590v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "cold-start DDI benchmark evaluating knowledge utilization for unseen drugs",
+      "llm_evidence_cn": "冷启动药物相互作用基准，评估未见过药物的知识利用",
+      "llm_evidence": "冷启动药物相互作用基准，评估未见过药物的知识利用",
+      "canonical_evidence": "冷启动药物相互作用基准，评估未见过药物的知识利用",
+      "llm_tldr_en": "ColdDDI is a diagnostic benchmark for cold-start DDI prediction that tests whether models actually use molecular, textual, or KG evidence for unseen drugs, covering pairs with zero, one, or two unseen drugs.",
+      "llm_tldr_cn": "针对现有冷启动药物相互作用预测仅报告聚合边预测分数、无法判断模型是否真正利用药理学证据的问题，本文提出ColdDDI诊断基准，基于DrugBank构建含1900个药物与565731个正样本对的数据集，覆盖零个、一个或两个未见过药物的情形，并按相互作用是否改变药物暴露等进行标注，为评估多源知识实际效用提供可复现评测框架。",
+      "llm_tldr": "针对现有冷启动药物相互作用预测仅报告聚合边预测分数、无法判断模型是否真正利用药理学证据的问题，本文提出ColdDDI诊断基准，基于DrugBank构建含1900个药物与565731个正样本对的数据集，覆盖零个、一个或两个未见过药物的情形，并按相互作用是否改变药物暴露等进行标注，为评估多源知识实际效用提供可复现评测框架。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "cold-start drug-drug interaction prediction for unseen drugs",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2610.04499v1",
+      "source": "arxiv",
+      "title": "Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation",
+      "abstract": "Radiology report generation (RRG) aims to convert medical images into diagnostic texts to assist in clinical decision-making and alleviate the workload of physicians. Although existing methods have made extensive progress in cross-modal interaction and the incorporation of external priors, the distribution shift of underlying representations and the undifferentiated rigid coupling of heterogeneous information cause weak visual abnormality cues to be easily diluted by massive text priors and generation inertia during decoding. To overcome this bottleneck, inspired by cognitive science, we propose a novel two-stage Homogeneous Semantic Alignment and Hierarchical Expert Routing (HSA-HER) framework. First, the model introduces an explicit homogeneous distribution constraint in the underlying latent space to effectively eliminate the cross-modal distribution shift between visual and textual features, thereby extracting purified visual features as semantic anchors that accurately align with diseases. Second, for heterogeneous clinical evidence composed of visual features, local entities, and global retrievals, we design a hierarchical expert routing mechanism guided by these disease semantic anchors. This mechanism abandons the undifferentiated rigid coupling paradigm. Specifically, it dynamically activates expert networks to perform targeted mining and semantic reconstruction on multi-source evidence, and adaptively allocates fusion weights. Extensive experiments on three mainstream benchmark datasets demonstrate that HSA-HER achieves state-of-the-art performance, accurately depicting complex imaging details and key diagnostic information.",
+      "authors": [
+        "Erjian Zhang",
+        "Jiayuan Ma",
+        "Liejun Wang",
+        "Yikemaiti Sataer",
+        "Xiaoming Tao",
+        "Zhiqing Guo"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-10-03T12:57:35+00:00",
+      "link": "https://arxiv.org/pdf/2610.04499v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "handles representation distribution shift and heterogeneous info via hierarchical expert routing",
+      "llm_evidence_cn": "通过分层专家路由应对表示分布偏移与异构信息",
+      "llm_evidence": "通过分层专家路由应对表示分布偏移与异构信息",
+      "canonical_evidence": "通过分层专家路由应对表示分布偏移与异构信息",
+      "llm_tldr_en": "Proposes HSA-HER, a two-stage framework aligning homogeneous semantics and hierarchically routing experts to mitigate distribution shift in radiology report generation.",
+      "llm_tldr_cn": "针对放射报告生成中底层表示分布偏移与异构信息刚性耦合导致弱视觉异常被文本先验淹没的问题，论文提出两阶段同质语义对齐与分层专家路由框架HSA-HER，先对齐语义再分层路由专家，以缓解分布偏移并差异化整合异构信息，提升临床文本生成质量。",
+      "llm_tldr": "针对放射报告生成中底层表示分布偏移与异构信息刚性耦合导致弱视觉异常被文本先验淹没的问题，论文提出两阶段同质语义对齐与分层专家路由框架HSA-HER，先对齐语义再分层路由专家，以缓解分布偏移并差异化整合异构信息，提升临床文本生成质量。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "invariant representation learning for stable drug generalization",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2609.14045v1",
+      "source": "arxiv",
+      "title": "Data-Efficient Agentic Graph Domain Adaptation via Reliability-Aware Prototype Learning",
+      "abstract": "Agentic learning systems are often required to adapt after deployment by observing new data and reusing prior knowledge under limited supervision or feedback. For graph-structured prediction, Graph Domain Adaptation (GDA) naturally instantiates this setting by transferring knowledge from labeled source graphs to unlabeled target graphs under distribution shifts. However, most GDA methods assume sufficient labeled source graphs, which becomes restrictive in data-efficient agentic settings where only limited source evidence can be retained. Under such constraints, source semantics become unreliable, leading to unstable source anchoring, uncertain target association, and fragile targetmarginal calibration. To address these challenges, we propose DEAG, a reliability-aware prototype learning framework for data-efficient agentic GDA. DEAG estimates class reliability from retained source support and embedding compactness, and constructs stable reusable source anchors by blending empirical prototypes with classifier directions. Guided by these anchors, DEAG performs prototype-aware soft target association and aligns confidence-weighted target centers with source semantics. A source-prior regularizer further sharpens target predictions while keeping the target marginal consistent with retained source evidence. Experiments on graph benchmarks with diverse domain shifts show that DEAG improves average adaptation performance over competitive GDA baselines under the same source-data budget.",
+      "authors": [
+        "Yingxu Wang",
+        "Kunyu Zhang",
+        "Siyang Gao"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-09-12T16:54:53+00:00",
+      "link": "https://arxiv.org/pdf/2609.14045v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Graph domain adaptation transferring knowledge under distribution shift with limited source labels",
+      "llm_evidence_cn": "面向分布偏移的图域自适应与知识迁移",
+      "llm_evidence": "面向分布偏移的图域自适应与知识迁移",
+      "canonical_evidence": "面向分布偏移的图域自适应与知识迁移",
+      "llm_tldr_en": "Graph domain adaptation usually assumes abundant labeled source graphs, which fails in data-efficient agentic settings; this work proposes reliability-aware prototype learning to stabilize source anchoring and target calibration under distribution shift.",
+      "llm_tldr_cn": "针对图域自适应通常假设源图标注充足、在数据高效的智能体场景下失效的问题，本文提出可靠性感知的原型学习方法。该方法通过构建可靠原型缓解源语义不可靠带来的源锚定不稳定、目标关联不确定与目标边际校准脆弱等问题。在分布偏移下的图结构预测任务中，方法提升了迁移稳定性与性能。该工作为标注受限、分布偏移下的跨域泛化提供了可迁移思路。",
+      "llm_tldr": "针对图域自适应通常假设源图标注充足、在数据高效的智能体场景下失效的问题，本文提出可靠性感知的原型学习方法。该方法通过构建可靠原型缓解源语义不可靠带来的源锚定不稳定、目标关联不确定与目标边际校准脆弱等问题。在分布偏移下的图结构预测任务中，方法提升了迁移稳定性与性能。该工作为标注受限、分布偏移下的跨域泛化提供了可迁移思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "drug-level out-of-distribution generalization under distribution shift",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.05111v1",
+      "source": "arxiv",
+      "title": "InstMoE: Adaptive Multimodal Routing with Specialized Experts",
+      "abstract": "Multimodal inputs are inherently heterogeneous, not only across modalities but also in the information pathways required for effective prediction. To address this limitation, we propose InstMoE, an adaptive expert routing framework for multimodal learning. InstMoE dynamically routes each input to specialized unimodal and cross-modal experts, allowing the model to adapt its information pathways to the characteristics of the input. However, routing can be misled when modality-specific variations obscure task-relevant semantics. Such irrelevant variations may distort routing decisions, causing inputs to be assigned to inappropriate experts. We therefore introduce a Contrastive Semantic Alignment module, which encourages semantically similar inputs to share task-relevant representations while suppressing irrelevant modality-specific variations. Experiments on multimodal sentiment analysis benchmarks demonstrate that InstMoE achieves state-of-the-art performance on CMU-MOSEI and CH-SIMS v2 while using substantially fewer parameters than competitive baselines. Further analysis shows that different inputs exhibit distinct expert preferences, demonstrating that InstMoE moves beyond fixed fusion toward adaptive multimodal computation.",
+      "authors": [
+        "Guimin Hu",
+        "Xiang He",
+        "Yingjian Li",
+        "Zheng Lian",
+        "Boyan Xu",
+        "Ruichu Cai"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-10-04T10:40:07+00:00",
+      "link": "https://arxiv.org/pdf/2610.05111v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "dynamic per-input expert routing with specialized experts",
+      "llm_evidence_cn": "输入级动态专家路由",
+      "llm_evidence": "输入级动态专家路由",
+      "canonical_evidence": "输入级动态专家路由",
+      "llm_tldr_en": "InstMoE routes each input dynamically to specialized unimodal and cross-modal experts so information pathways adapt to input characteristics. A Contrastive Semantic Alignment module prevents modality-specific variations from misleading routing, improving adaptive multimodal prediction.",
+      "llm_tldr_cn": "多模态输入在模态与信息通路上高度异构，固定通路难以有效预测。本文提出InstMoE自适应专家路由框架，将每个输入动态分配给专门的单模态与跨模态专家，并引入对比语义对齐模块，促使语义相似输入共享任务相关表示，缓解无关变化误导路由。实验表明该框架能按输入特性调整信息通路并提升预测效果。该工作为输入级动态专家路由与自适应知识整合提供了可迁移的方法，可启发药物对级路由设计。",
+      "llm_tldr": "多模态输入在模态与信息通路上高度异构，固定通路难以有效预测。本文提出InstMoE自适应专家路由框架，将每个输入动态分配给专门的单模态与跨模态专家，并引入对比语义对齐模块，促使语义相似输入共享任务相关表示，缓解无关变化误导路由。实验表明该框架能按输入特性调整信息通路并提升预测效果。该工作为输入级动态专家路由与自适应知识整合提供了可迁移的方法，可启发药物对级路由设计。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2610.02951v1",
+      "source": "arxiv",
+      "title": "Dynamic Expert Pruning for Multi-Agent Systems",
+      "abstract": "Mixture-of-Experts (MoE) architectures scale language models efficiently by activating only a few experts per token, but the saving is confined to computation: every expert must stay resident on the accelerator, so memory bounds where these models can be deployed. Expert pruning reduces this footprint, yet existing methods are static --- a single mask, calibrated offline, is applied to the model for every subsequent request. This assumption can fail when the workload is heterogeneous, most prominently in multi-agent systems, where one backbone serves many tasks and roles at once: our analysis shows that different tasks and roles recruit different experts, while static methods assign one fixed subset to all of them. We therefore propose Dynamic Expert Pruning (DEP), which rests on a finding we establish here: an agent's system and task prompts are by themselves sufficient to identify the experts that agent and its task require, since that text already describes what the agent will do. A lightweight predictor, trained once on workflow transcripts, turns those prompts into a specialized per-request mask in a single forward pass, with no per-configuration calibration. Across diverse tasks and roles, model scales, and MoE architectures, DEP achieves better overall accuracy than static pruning and merging baselines, and generalizes to workflows unseen in training without retraining. Its margin over those baselines is largest when few experts are retained, suggesting that the role specialization inherent to multi-agent systems permits sparser serving than static pruning allows.",
+      "authors": [
+        "Jabin Koo",
+        "Soheil Abbasloo",
+        "Sungjae Lee",
+        "Jungseul Ok"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.MA"
+      ],
+      "published": "2026-10-02T07:45:30+00:00",
+      "link": "https://arxiv.org/pdf/2610.02951v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "dynamic expert selection under heterogeneous tasks, akin to dynamic expert routing",
+      "llm_evidence_cn": "异构任务下的动态专家选择，类似动态专家路由",
+      "llm_evidence": "异构任务下的动态专家选择，类似动态专家路由",
+      "canonical_evidence": "异构任务下的动态专家选择，类似动态专家路由",
+      "llm_tldr_en": "MoE pruning typically uses a single static mask that fails under heterogeneous workloads; DEP dynamically prunes experts per task and role, showing different tasks recruit different experts and improving multi-agent deployment efficiency.",
+      "llm_tldr_cn": "针对现有MoE专家剪枝采用单一静态掩码、无法适应异构工作负载的问题，本文提出动态专家剪枝DEP。该方法根据任务与角色动态选择专家子集，而非离线固定掩码。分析表明不同任务与角色调用不同专家，DEP在多智能体等异构场景下优于静态方法。这一工作为内存受限下MoE的灵活部署提供了新思路。",
+      "llm_tldr": "针对现有MoE专家剪枝采用单一静态掩码、无法适应异构工作负载的问题，本文提出动态专家剪枝DEP。该方法根据任务与角色动态选择专家子集，而非离线固定掩码。分析表明不同任务与角色调用不同专家，DEP在多智能体等异构场景下优于静态方法。这一工作为内存受限下MoE的灵活部署提供了新思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.07207v1",
+      "source": "arxiv",
+      "title": "Distributionally Robust Mixture-of-Experts Training",
+      "abstract": "Mixture-of-Experts (MoE) transformers scale capacity by activating only a few experts per token, but this sparsity creates a hidden reliability problem: when routing is imperfect, load-balanced models may send tokens to experts that are insufficiently trained for the assigned inputs. We propose Distributionally Robust MoE Training (DRMoET), a drop-in objective that treats layer-wise experts as endogenous robustness groups and optimizes high-loss routing outcomes rather than merely equalizing traffic. DRMoET updates a per-layer expert distribution by an entropy-regularized softmax rule on EMA-smoothed, activation-weighted expert losses, strengthening plausible non-top routing paths while preserving standard MoE computation. Under the FLAME-MoE recipe at 746M-total and 10.3B-total scales, DRMoET improves downstream averages over both standard FLAME-MoE and auxiliary-loss-free balancing. At 10.3B total parameters and 67B training tokens, DRMoET improves the seven-task average from 0.6625 to 0.6767, while the auxiliary-loss-free baseline achieves 0.6431. Mechanistic analyses show lower expert-loss variance with nearly unchanged mean loss, 4.3% lower excess loss under forced mid-$k$ misrouting, and improved domain-expert specialization. These results position routing robustness-not only utilization balance-as a practical objective for reliable sparse MoE scaling. Project page and code are available at: https://drmoet.github.io/.",
+      "authors": [
+        "Xin Teng",
+        "Muxiao Li",
+        "Hongyi Wen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-10-05T18:20:02+00:00",
+      "link": "https://arxiv.org/pdf/2610.07207v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Distributionally robust MoE training strengthens non-top routing paths for reliable expert assignment",
+      "llm_evidence_cn": "分布鲁棒MoE训练强化非最优路由路径以提升专家分配可靠性",
+      "llm_evidence": "分布鲁棒MoE训练强化非最优路由路径以提升专家分配可靠性",
+      "canonical_evidence": "分布鲁棒MoE训练强化非最优路由路径以提升专家分配可靠性",
+      "llm_tldr_en": "DRMoET is a drop-in MoE objective treating experts as robustness groups and optimizing high-loss routing outcomes, improving reliability of imperfect routing without changing MoE computation.",
+      "llm_tldr_cn": "MoE通过稀疏激活专家扩展容量，但当路由不完美时，负载均衡模型可能把样本送到训练不足的专家，造成可靠性隐患。作者提出分布鲁棒MoE训练DRMoET，把每层专家视为内生鲁棒组，按EMA平滑的专家损失用熵正则softmax更新专家分布，强化合理的非最优路由路径。实验在FLAME-MoE设定下验证其可保持标准计算并提升鲁棒性。该工作为动态专家路由的可靠性提供了新目标函数。",
+      "llm_tldr": "MoE通过稀疏激活专家扩展容量，但当路由不完美时，负载均衡模型可能把样本送到训练不足的专家，造成可靠性隐患。作者提出分布鲁棒MoE训练DRMoET，把每层专家视为内生鲁棒组，按EMA平滑的专家损失用熵正则softmax更新专家分布，强化合理的非最优路由路径。实验在FLAME-MoE设定下验证其可保持标准计算并提升鲁棒性。该工作为动态专家路由的可靠性提供了新目标函数。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2610.03265v1",
+      "source": "arxiv",
+      "title": "SPEAR: A Spectral-Disentangled MoE Neural Operator with Knowledge-Guided Expert Aggregation for Large-Scale PDE Pretraining",
+      "abstract": "Large-scale pre-training has improved the generalization of neural operators across diverse PDEs. However, existing PDE foundation models still struggle with heterogeneous dynamics, where shared representations may cause knowledge interference, while mixture-of-experts (MoE) architectures suffer from increasing expert redundancy. We propose SPEAR, a spectral-disentangled MoE neural operator with knowledge-guided expert aggregation for large-scale PDE pre-training. SPEAR decouples latent features into low- and high-frequency components, enabling shared modeling of transferable dynamics and specialized learning of PDE-specific patterns. To address expert redundancy, we design a knowledge-guided expert aggregation strategy that measures expert similarity from dataset-specific learned knowledge and routing preferences, enabling the identification and consolidation of similar experts. Experiments on twelve PDE datasets and multiple downstream benchmarks demonstrate superior performance in pre-training, fine-tuning, and transfer learning. Furthermore, our aggregation strategy reduces the number of experts by 50\\% while maintaining or improving prediction accuracy, achieving a balance between model efficiency and generalization for PDE foundation models.",
+      "authors": [
+        "Dengdi Sun",
+        "Xiaoya Zhou",
+        "Xiao Wang",
+        "Wanli Lyu",
+        "Jin Tang",
+        "Bin Luo"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-10-02T13:10:09+00:00",
+      "link": "https://arxiv.org/pdf/2610.03265v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "knowledge-guided expert aggregation for heterogeneous regimes without manual semantics",
+      "llm_evidence_cn": "面向异构动力学的知识引导专家聚合",
+      "llm_evidence": "面向异构动力学的知识引导专家聚合",
+      "canonical_evidence": "面向异构动力学的知识引导专家聚合",
+      "llm_tldr_en": "PDE foundation models struggle with heterogeneous dynamics where shared representations cause interference and MoE experts become redundant; SPEAR decouples latent features into low/high frequency components and uses knowledge-guided expert aggregation for specialization.",
+      "llm_tldr_cn": "针对PDE基础模型面对异构动力学时共享表示易产生知识干扰、MoE存在专家冗余的问题，本文提出SPEAR。该方法将潜特征解耦为低高频分量，实现可迁移动力学的共享建模与PDE特化模式学习，并设计知识引导的专家聚合机制。实验表明其能缓解专家冗余并提升泛化。这一工作为异构动力学下的MoE专家专门化提供了新思路。",
+      "llm_tldr": "针对PDE基础模型面对异构动力学时共享表示易产生知识干扰、MoE存在专家冗余的问题，本文提出SPEAR。该方法将潜特征解耦为低高频分量，实现可迁移动力学的共享建模与PDE特化模式学习，并设计知识引导的专家聚合机制。实验表明其能缓解专家冗余并提升泛化。这一工作为异构动力学下的MoE专家专门化提供了新思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.03456v1",
+      "source": "arxiv",
+      "title": "Beyond Random Splits: Evaluating Drug-Target Affinity Models Under Chemically and Biologically Motivated Distribution Shifts Copy",
+      "abstract": "Drug-target affinity (DTA) prediction is widely used to prioritize candidate compounds before costly experimental screening. DTA models are often compared under a single data split, even though deployment may require extrapolation to new chemical series, new protein targets, or both. We ask whether the distribution shift used for evaluation changes which architecture appears best. We curate 718,800 unique drug-protein pairs from the ChEMBL and BindingDB datasets. We compare a Morgan-fingerprint + protein-CNN baseline with 12 controlled architectures that combine four drug representations with three ESM-2 interaction modes. Mean validation RMSE increases from 0.950 and 0.945 under scaffold and fingerprint-cluster OOD to 1.299 and 1.321 under protein-cluster and dual OOD. Model rankings are similar across the two chemical shifts (tau = 0.79), but agreement with scaffold OOD falls under protein OOD (tau = 0.39) and reverses under dual OOD (tau = -0.55). Held-out evaluation, repeated seeds, group-aware bootstrap analysis, and a size-matched control support the same conclusion: architecture selection depends on the form of extrapolation, not only on average error or training-set size. DTA benchmarks should therefore match the chemical and target shifts expected at deployment.",
+      "authors": [
+        "Minjae Chung",
+        "Clara Li",
+        "Malar Paavai Muthukumaran",
+        "Shaunna Wang",
+        "Aniket Ramkrishnan Iyer",
+        "Shaun Qien Yeau Tan",
+        "Harinishree Sathu",
+        "Micky C. Nnamdi",
+        "J. Ben Tamo",
+        "Benoit Louis Marteau",
+        "May Dongmei Wang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-10-02T15:33:20+00:00",
+      "link": "https://arxiv.org/pdf/2610.03456v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Evaluates drug models under chemically and biologically motivated distribution shifts to new chemical series and targets",
+      "llm_evidence_cn": "在化学与生物驱动的分布偏移下评估药物模型对新化学系列与新靶点的泛化",
+      "llm_evidence": "在化学与生物驱动的分布偏移下评估药物模型对新化学系列与新靶点的泛化",
+      "canonical_evidence": "在化学与生物驱动的分布偏移下评估药物模型对新化学系列与新靶点的泛化",
+      "llm_tldr_en": "Curates 718,800 drug-protein pairs and compares 12 architectures under scaffold, protein and other distribution shifts, showing which evaluation split changes the best model.",
+      "llm_tldr_cn": "该文指出药物-靶点亲和力模型常仅在单一数据划分下比较，难以反映部署时对新化学系列或新靶点的外推需求。作者整理71万余药物-蛋白对，系统比较12种结合不同药物表征与ESM-2交互方式的受控架构在脚手架与蛋白等分布偏移下的表现。结果显示不同偏移会改变最优架构的排序，说明评估协议本身影响结论。该工作为药物级分布外泛化评测提供了可复用的基准与警示。",
+      "llm_tldr": "该文指出药物-靶点亲和力模型常仅在单一数据划分下比较，难以反映部署时对新化学系列或新靶点的外推需求。作者整理71万余药物-蛋白对，系统比较12种结合不同药物表征与ESM-2交互方式的受控架构在脚手架与蛋白等分布偏移下的表现。结果显示不同偏移会改变最优架构的排序，说明评估协议本身影响结论。该工作为药物级分布外泛化评测提供了可复用的基准与警示。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "drug-level out-of-distribution generalization under distribution shift",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.05131v1",
+      "source": "arxiv",
+      "title": "RoMod: Temporal Routing Modulation via Mixture-of-Experts for Video Anomaly Detection",
+      "abstract": "Intermediate-layer features from multimodal large language models have shown strong potential for video anomaly detection (VAD), yet the origin of their discriminative power remains unclear. We study this question using sparse mixture-of-experts (MoE) models, whose explicit expert structure and sparse activation make their internal computation easier to inspect. With a fully frozen backbone and no additional training, we find that anomaly-related evidence is concentrated in a small set of experts. These experts recur across layers, spontaneously specialize in different anomaly types, and together form a dynamic routing subnetwork. We further show that the output channels most strongly influenced by these experts are also the hidden dimensions that contain the most anomaly-relevant information. Routing statistics can therefore serve as an internal anomaly cue that complements semantic features.Based on these findings, we propose RoMod, an efficient VAD framework trained with only \\(5\\%\\) of weakly labeled videos. RoMod includes a Routing-Modulated Fusion module, RoMF, and a Routing-aware Temporal Network, RoTN. RoMF uses routing signals to adaptively recalibrate hidden semantic channels. Its design also prevents the routing branch from bypassing semantic features and making predictions on its own. RoTN captures the temporal evolution of anomalies from onset to persistence and termination. Experiments on three benchmarks show that RoMod achieves state-of-the-art performance while running substantially faster than dense backbones of comparable size.",
+      "authors": [
+        "Chao Huang",
+        "Pengfei Wei",
+        "Benfeng Wang",
+        "Chengliang Liu",
+        "Wei Wang",
+        "Li Shen",
+        "Wenqi Ren",
+        "Xiaochun Cao"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-10-04T11:23:14+00:00",
+      "link": "https://arxiv.org/pdf/2610.05131v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "dynamic routing subnetwork with spontaneous expert specialization in MoE",
+      "llm_evidence_cn": "MoE中自发专家专门化的动态路由子网络",
+      "llm_evidence": "MoE中自发专家专门化的动态路由子网络",
+      "canonical_evidence": "MoE中自发专家专门化的动态路由子网络",
+      "llm_tldr_en": "RoMod studies sparse MoE routing for video anomaly detection, showing anomaly evidence concentrates in recurring experts that spontaneously specialize and form a dynamic routing subnetwork.",
+      "llm_tldr_cn": "多模态大模型中间层特征在视频异常检测中表现优异，但其判别力来源不明。本文借助稀疏混合专家模型显式的专家结构与稀疏激活进行内部机制剖析，发现在完全冻结骨干、无额外训练条件下，异常证据集中于少数专家。这些专家跨层复现、自发专门化于不同异常类型并构成动态路由子网络，为动态路由与专家专门化提供了可迁移的证据。",
+      "llm_tldr": "多模态大模型中间层特征在视频异常检测中表现优异，但其判别力来源不明。本文借助稀疏混合专家模型显式的专家结构与稀疏激活进行内部机制剖析，发现在完全冻结骨干、无额外训练条件下，异常证据集中于少数专家。这些专家跨层复现、自发专门化于不同异常类型并构成动态路由子网络，为动态路由与专家专门化提供了可迁移的证据。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.06677v1",
+      "source": "arxiv",
+      "title": "How Sparse Probability Maps Shape Mixture-of-Experts Routing",
+      "abstract": "Mixture-of-experts (MoE) routers typically apply softmax to the router scores and keep the top-K experts, making every token use exactly K experts. Sparsity-inducing probability maps such as sparsemax, alpha-entmax and normmax can adaptively assign exact zeros to selected experts, and therefore appear to offer token-dependent expert participation, even when using the same top-K machinery. In this work, we study whether and how this sparsity survives training. We train matched 300M and 1B top-2 MoE language models with softmax, 1.5-entmax, sparsemax and 2-normmax, and find that the maps behave very differently once trained: at 1B, entmax discards 30% less probability mass than softmax while almost never dropping a selected expert, sparsemax retains the most mass, and normmax routes 21% of tokens to a single expert. These outcomes are not properties of the maps alone. Each map drops a selected expert only when the gap between the two largest scores reaches a fixed threshold, and the trained routers differ in the score distribution they learn: the entmax router learns scores with roughly half the spread of softmax's, which keeps its top-2 gaps below its threshold, while sparsemax and normmax, which share the same threshold, learn different gap distributions and hence different participation. Routers thus co-adapt their scores to the map, and a map's capacity to produce zeros does not by itself determine expert participation. While none of the sparse maps improves validation loss over softmax, they make the trained models far less sensitive to selecting more experts at inference: sparsemax trained with K=2 loses 0.02 nats when run with K=8, where softmax loses 0.58. Our results indicate that adaptive MoE routing has to be designed around the joint behavior of the probability map and the learned scores, rather than around the map alone.",
+      "authors": [
+        "Tomás Brogueira",
+        "Marcos Treviso",
+        "Miguel Couceiro"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CL"
+      ],
+      "published": "2026-10-05T16:47:20+00:00",
+      "link": "https://arxiv.org/pdf/2610.06677v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "token-dependent expert participation via sparsity-inducing routing maps",
+      "llm_evidence_cn": "通过稀疏概率映射实现随token变化的专家参与",
+      "llm_evidence": "通过稀疏概率映射实现随token变化的专家参与",
+      "canonical_evidence": "通过稀疏概率映射实现随token变化的专家参与",
+      "llm_tldr_en": "Studies whether sparsity-inducing probability maps like entmax and sparsemax give token-dependent expert participation in top-K MoE routers once trained.",
+      "llm_tldr_cn": "MoE路由通常对分数做softmax并保留top-K，使每个token固定使用K个专家。论文训练300M与1B规模的top-2 MoE语言模型，比较softmax、entmax、sparsemax与normmax等稀疏概率映射在训练后的行为，发现这些映射差异显著，entmax丢弃的概率质量更少且几乎不剔除已选专家，揭示了稀疏性在训练中的真实表现。",
+      "llm_tldr": "MoE路由通常对分数做softmax并保留top-K，使每个token固定使用K个专家。论文训练300M与1B规模的top-2 MoE语言模型，比较softmax、entmax、sparsemax与normmax等稀疏概率映射在训练后的行为，发现这些映射差异显著，entmax丢弃的概率质量更少且几乎不剔除已选专家，揭示了稀疏性在训练中的真实表现。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.07079v1",
+      "source": "arxiv",
+      "title": "Few-Shot Bioactivity Prediction with Meta-Learning under Assay Heterogeneity",
+      "abstract": "Accurate bioactivity prediction is a central challenge in early-stage drug discovery, as individual assays often contain too few measurements to train reliable models independently. Meta-learning offers a principled approach to this few-shot setting, but assay heterogeneity may limit its effectiveness. Here, we test this hypothesis and show that meta-learning performance degrades as meta-training tasks become more heterogeneous. To address this, we introduce MetaHeta, a meta-learning framework that accounts for assay heterogeneity by conditioning predictions on auxiliary data from related assays, with relatedness defined flexibly from available assay information. The architecture of MetaHeta combines linear attention over large auxiliary datasets with exact attention over scarce task-specific context, enabling efficient scaling to the former without compromising exact attention over the latter. We demonstrate the benefits of our approach on assays from ChEMBL and BindingDB, improving few-shot bioactivity prediction and downstream compound prioritization in retrospective Bayesian optimization.",
+      "authors": [
+        "Michal Kmicikiewicz",
+        "Tommy Rochussen",
+        "Vincent Fortuin",
+        "Ewa Szczurek"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-10-05T11:01:11+00:00",
+      "link": "https://arxiv.org/pdf/2610.07079v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "few-shot drug prediction under assay heterogeneity",
+      "llm_evidence_cn": "测定异质性下的少样本药物预测",
+      "llm_evidence": "测定异质性下的少样本药物预测",
+      "canonical_evidence": "测定异质性下的少样本药物预测",
+      "llm_tldr_en": "Individual assays often have too few measurements for reliable bioactivity models, and meta-learning degrades as tasks become heterogeneous. MetaHeta conditions predictions on related assays with flexibly defined relatedness, combining linear attention over auxiliary data to improve few-shot drug prediction.",
+      "llm_tldr_cn": "早期药物发现中单个测定数据过少，难以独立训练可靠模型，而元学习在测定异质性下性能会下降。本文提出MetaHeta框架，通过条件化于相关测定的辅助数据来应对异质性，并灵活定义测定相关性，架构结合大规模辅助数据上的线性注意力。实验验证了异质性对元学习的负面影响并显示该框架的改善。该工作为少样本、异构分布下的药物活性预测提供了可迁移思路，与冷启动药物预测相关。",
+      "llm_tldr": "早期药物发现中单个测定数据过少，难以独立训练可靠模型，而元学习在测定异质性下性能会下降。本文提出MetaHeta框架，通过条件化于相关测定的辅助数据来应对异质性，并灵活定义测定相关性，架构结合大规模辅助数据上的线性注意力。实验验证了异质性对元学习的负面影响并显示该框架的改善。该工作为少样本、异构分布下的药物活性预测提供了可迁移思路，与冷启动药物预测相关。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "cold-start drug-drug interaction prediction for unseen drugs",
+      "matched_requirement_id": "req-1",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.07332v1",
+      "source": "arxiv",
+      "title": "Structuring MoE Expert Selection for Agentic Reinforcement Learning",
+      "abstract": "Long-horizon LLM agents are frequently implemented using sparse mixture-of-experts (MoE) models, yet the co-design of agentic behavior and MoE structures remains underexplored. In this work, we comprehensively study the connections between agentic post-training and MoE expert selection. In off-the-shelf MoE models, we observe expert selection exhibits a specialized structure that naturally aligns with agentic trajectories. Specifically, expert routing overlaps more between turns where the agent performs semantically similar operations (e.g., READ, UPDATE) than between turns with differing operations. However, standard RL algorithms ignore this specialization, allowing the MoE routing to go uncontrolled during training, which empirically limit task performance and inference efficiency. To address this, we introduce a hierarchical routing control framework for agentic tasks. We explicitly encourage turn-level expert selections to align with agentic operations while regularizing token-level expert selections to maintain local consistency. To resolve stability issues that arise during post-training with the proposed methods, we further introduce an entropy-gated control mechanism. Overall, our routing control framework achieves over 10-point improvements in success rate on all evaluated benchmarks. These results demonstrate that agentic trajectory structure provides an effective signal for optimizing MoE capacity during RL post-training.",
+      "authors": [
+        "Bolian Li",
+        "Ting-Yao Hu",
+        "Cheng-Yu Hsieh",
+        "Sanjoy Chowdhury",
+        "Oncel Tuzel",
+        "Raviteja Vemulapalli"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CL"
+      ],
+      "published": "2026-10-05T20:06:47+00:00",
+      "link": "https://arxiv.org/pdf/2610.07332v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Structuring MoE expert selection and expert specialization aligned with semantic operations",
+      "llm_evidence_cn": "MoE专家选择的专门化结构与语义操作对齐",
+      "llm_evidence": "MoE专家选择的专门化结构与语义操作对齐",
+      "canonical_evidence": "MoE专家选择的专门化结构与语义操作对齐",
+      "llm_tldr_en": "Sparse MoE agents exhibit expert routing specialization aligned with semantically similar operations, but standard RL ignores it, leaving routing uncontrolled; this work structures expert selection during agentic post-training to improve task performance.",
+      "llm_tldr_cn": "针对长程智能体中稀疏混合专家模型的专家选择与智能体行为协同设计不足的问题，本文系统研究智能体后训练与MoE专家选择的关系。作者发现现成MoE的专家路由呈现专门化结构，在语义相似操作（如读取、更新）之间重叠更多，而标准强化学习忽视这种专门化，导致训练中路由失控、限制性能。为此提出结构化专家选择方法，使专家专门化与任务语义对齐。该工作为无需人工定义专家语义的专门化路由提供了依据。",
+      "llm_tldr": "针对长程智能体中稀疏混合专家模型的专家选择与智能体行为协同设计不足的问题，本文系统研究智能体后训练与MoE专家选择的关系。作者发现现成MoE的专家路由呈现专门化结构，在语义相似操作（如读取、更新）之间重叠更多，而标准强化学习忽视这种专门化，导致训练中路由失控、限制性能。为此提出结构化专家选择方法，使专家专门化与任务语义对齐。该工作为无需人工定义专家语义的专门化路由提供了依据。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

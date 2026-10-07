@@ -1,0 +1,601 @@
+Title: Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation
+
+URL Source: https://arxiv.org/pdf/2610.04499v1
+
+Published Time: Tue, 06 Oct 2026 00:52:14 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+# Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation 
+
+## Erjian Zhang a,1 , Jiayuan Ma a,1 , Liejun Wang a,b ,∗, Yikemaiti Sataer a, Xiaoming Tao a,c and Zhiqing Guo a,b ,∗
+
+> a
+
+School of Computer Science and Technology, Xinjiang University, Urumqi, 830017, Xinjiang, China 
+
+> b
+
+Xinjiang Multimodal Intelligent Processing and Information Security Engineering Technology Research Center, Urumqi, 830017, Xinjiang, China 
+
+> c
+
+Department of Electronic Engineering, Tsinghua University, Beijing, 100084, China 
+
+A R T I C L E I N F O 
+
+Keywords :Radiology report generation Cross-modal alignment Expert routing Chest X-ray 
+
+A B S T R A C T 
+
+Radiology report generation (RRG) aims to convert medical images into diagnostic texts to assist in clinical decision-making and alleviate the workload of physicians. Although existing methods have made extensive progress in cross-modal interaction and the incorporation of external priors, the distribution shift of underlying representations and the undifferentiated rigid coupling of het-erogeneous information cause weak visual abnormality cues to be easily diluted by massive text priors and generation inertia during decoding. To overcome this bottleneck, inspired by cognitive science, we propose a novel two-stage Homogeneous Semantic Alignment and Hierarchical Expert 
+
+Routing (HSA-HER) framework. First, the model introduces an explicit homogeneous distribution constraint in the underlying latent space to effectively eliminate the cross-modal distribution shift between visual and textual features, thereby extracting purified visual features as semantic anchors that accurately align with diseases. Second, for heterogeneous clinical evidence composed of visual features, local entities, and global retrievals, we design a hierarchical expert routing mechanism guided by these disease semantic anchors. This mechanism abandons the undifferentiated rigid coupling paradigm. Specifically, it dynamically activates expert networks to perform targeted mining and semantic reconstruction on multi-source evidence, and adaptively allocates fusion weights. Extensive experiments on three mainstream benchmark datasets demonstrate that HSA-HER achieves state-of-the-art performance, accurately depicting complex imaging details and key diagnostic information. 
+
+## 1. Introduction 
+
+Radiology report generation (RRG) is a critical task in medical artificial intelligence. It aims to automatically convert medical images into diagnostic texts, addressing the growing demand for image interpretation and alleviating radiologists’ workload. Efficient RRG frameworks optimize routine clinical workflows, accelerate patient screening, and assist in clinical decision-making. To achieve this goal, existing studies primarily adopt the encoder-decoder paradigm. Early works focused on se-quence fitting for long texts, but these methods are con-strained by surface-level vision-text mappings and lack deep pathological semantic understanding [8, 19]. To address this, recent studies introduce large language models [18], large-scale vision-language pre-training [40], and retrieval-augmented mechanisms [39], expanding feature representa-tions and prior contexts. Although improving report quality, they still face bottlenecks in cross-modal feature alignment and heterogeneous information scheduling. First, existing cross-modal interactions mostly rely on attention fusion or instance-level contrastive learning [3, 38]. This shal-low alignment fails to eliminate the inherent modality gap, leading to feature distribution shifts and hindering the ex-traction of pure visual features as disease-aligned semantic anchors. Second, incorporating multi-source medical priors 
+
+> ∗
+
+Corresponding authors.  
+
+> wljxju@xju.edu.cn
+
+(L. Wang); guozhiqing@xju.edu.cn (Z. Guo) 
+
+> 1
+
+These authors contributed equally to this work. 
+
+and retrieval-augmented mechanisms [41, 42, 46] makes the input highly heterogeneous at the semantic granularity level. Without reliable semantic anchor guidance, exist-ing methods typically adopt undifferentiated rigid coupling strategies, lack targeted reconstruction of abnormal seman-tics, and indiscriminately fuse these heterogeneous inputs into a single text generation path. Ultimately, weak visual abnormality cues are easily diluted during autoregressive decoding by massive text priors and generation inertia. This yields templated reports that struggle to accurately depict complex imaging details and key diagnostic information. Inspired by dual coding theory [25] in cognitive science, we re-examine these limitations. This theory posits that visual and verbal cognition operate as independent represen-tational systems, with high-level cognition relying on precise cross-system mappings between them. In clinical diagnosis, physicians bridge visual representations and textual knowl-edge to establish reliable disease anchors. Furthermore, to process complex cues, they avoid simple information stack-ing, instead invoking semantic qualification mechanisms to abstract and organize multidimensional cues into struc-tured diagnostic evidence [2]. This cognitive mechanism highlights two key dimensions to overcome existing RRG bottlenecks in feature alignment and information scheduling. Initially, to achieve substantial cross-system isomorphism, the model needs to introduce distribution constraints in the underlying latent space to eliminate cross-modal heterogene-ity, thereby establishing disease-aligned semantic anchors. Subsequently, guided by these anchors, the model needs to 
+
+E. Zhang et al.: Preprint submitted to Elsevier Page 1 of 14 arXiv:2610.04499v1 [cs.CV] 3 Oct 2026 Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation Input Image   
+
+> Input Report Inherent Modality Gap Cross -Modal Distribution Shift
+> Unreliable
+> Semantic Anchor
+> Report
+> Faint left basal
+> opacity obscuring the
+> costophrenic angle.
+> Suspicious for early
+> pneumonia.
+> (Details & Diagnosis
+> Captured!)
+
+Successful Case 
+
+> Report
+> No focal
+> consolidation or
+> effusion.
+> The lungs are
+> clear.
+> (Textual
+> Templating!)
+> (Diagnostic Info Lost)
+
+Failure Case      
+
+> Massive
+> Text Priors
+> Generation Inertia
+> Heterogeneous
+> Clinical Evidence
+> Undifferentiated
+> Rigid Coupling
+> Without Reliable
+> Anchor Guidance
+> (a) Shallow Alignment & Rigid Coupling Paradigm
+> Input Image
+> Input Report Homogenized Semantic Distribution Precise
+> Semantic Anchor
+> (b) HSA -HER Paradigm (Ours)
+> Explicit Homogeneity Constraint
+> Latent
+> Space
+> Semantic Anchor Guidance
+> Micro Intra -Group Routing Macro Cross -Source Routing
+
+Figure 1: Comparison between the conventional paradigm and our HSA-HER framework. (a) The distribution shift of underlying representations and the undifferentiated rigid coupling of heterogeneous information cause weak visual abnormality cues to be easily diluted by massive text priors and generation inertia during decoding. (b) HSA-HER accurately depicts imaging details and diagnostic information through homogeneous semantic alignment and a hierarchical expert routing mechanism. 
+
+discard existing undifferentiated rigid coupling methods to perform targeted semantic reconstruction on the heteroge-neous clinical evidence (composed of visual features, local entities, and global retrievals) and reorganize the weights of different types of evidence. Motivated by these observations, we propose a novel two-stage homogeneous semantic alignment and hierarchi-cal expert routing framework, as illustrated in Figure 1. In the first stage, we introduce an explicit homogeneous distribution constraint in the latent space. This forces hetero-geneous visual and textual features into a strictly consistent distribution, eliminating cross-modal distribution shifts and extracting pure visual features as disease-aligned semantic anchors. In the second stage, we design a hierarchical expert routing mechanism to schedule multi-source information before decoding. This mechanism decouples the schedul-ing of this heterogeneous clinical evidence into micro and macro routing actions. At the micro intra-group routing level, guided by these disease semantic anchors, the model dynamically activates expert sub-networks for targeted min-ing and semantic reconstruction on each heterogeneous fea-ture space, yielding highly specialized clinical representa-tions. Subsequently, at the macro cross-source routing level, a top-level gating module uses these anchors to adaptively assign fusion weights to the purified multi-source evidence, discarding the undifferentiated rigid coupling paradigm. Ul-timately, our framework prevents weak visual abnormality cues from being diluted by text priors and generation inertia, enabling the generated reports to accurately depict complex imaging details and key diagnostic information. In summary, our main contributions are as follows: • We propose a novel RRG paradigm inspired by cogni-tive science, providing a fresh perspective of low-level representation homogeneity alignment and high-level structured evidence scheduling for this task. • We introduce explicit homogeneous distribution con-straints into the latent space. This eliminates cross-modal distribution shifts and extracts pure visual fea-tures to establish disease semantic anchors for subse-quent multi-source information scheduling. • We design a hierarchical expert routing mechanism guided by disease semantic anchors. It leverages mi-cro intra-group routing to dynamically activate ex-pert sub-networks for targeted mining and semantic reconstruction across heterogeneous feature spaces, and employs macro cross-source routing to adaptively allocate weights for multi-source clinical evidence. • Our framework achieves superior performance across three mainstream benchmark datasets, successfully overcoming the bottleneck where weak visual abnor-mality cues are easily diluted by massive text priors and generation inertia. 
+
+## 2. Related Work 
+
+2.1. Cross-modal feature alignment in RRG 
+
+Radiology report generation (RRG) aims to translate medical images into accurate and coherent clinical texts. Unlike natural image captioning [36], RRG requires ex-tracting weak pathological features, generating lengthy clin-ical reports, and maintaining strict medical logic. Early works primarily addressed these challenges by improving the long-sequence modeling capability for medical texts. For instance, R2Gen [8] and CMCL [19] utilized relational 
+
+E. Zhang et al.: Preprint submitted to Elsevier Page 2 of 14 Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation 
+
+memory matrices and multimodal curriculum learning, re-spectively. However, these purely data-driven methods relied on surface-level image-text mappings, lacking an under-standing of deep pathological semantics. To deepen pathological semantic alignment, recent stud-ies have explored various cross-modal interaction strate-gies. Early methods optimized image-text mappings via weakly supervised contrastive learning [50] and reinforce-ment learning [27]. Subsequent works explicitly guided visual-textual alignment using class activation maps for attention supervision [38] or concept-level matching via up-datable medical knowledge bases [52]. With the emergence of large language models (LLMs) and causal inference, cross-modal correspondence is now steered by diagnostic prompts [13] or decoupled from confounding factors via causal interventions [6]. To further refine this alignment, recent models employ large-scale contrastive pre-training [40], collaborative fusion networks for fine-grained lesion matching [11], and hybrid contrastive strategies to capture temporal semantics in longitudinal data [3]. Although the aforementioned works have significantly enriched cross-modal alignment methods, they mostly focus on reducing the relative distance between instance samples or rely on attention-based feature fusion. These strategies fail to effectively eliminate the inherent modality gap, resulting in a persistent distribution shift within the image-text latent space. Therefore, these methods struggle to extract purified features as semantic anchors accurately aligned with dis-eases, leaving the model without a solid diagnostic foun-dation when subsequently processing heterogeneous clinical evidence. 
+
+2.2. Heterogeneous Evidence Scheduling 
+
+To enrich diagnostic details in reports, recent studies have extensively introduced multi-source prior knowledge and heterogeneous clinical evidence. Early methods, such as PPKED [20] and GSKET [53], provided global guid-ance using medical knowledge graphs. To enhance semantic support and feature interactions, MSAT [44] incorporated an external medical concept network, while XProNet [37] learned cross-modal prototypes. To further improve evi-dence aggregation, recent architectures utilize tree-graph reasoning [10], expert token mechanisms [42], and dual-modality multi-scale visual feature flows [32]. To directly guide the decoding process, BootstrappingLLM [18] and DDaTR [31] employ retrieved instances and longitudinal information, respectively. To inject richer contextual infor-mation into LLMs, recent approaches introduce contextual residuals [39], construct associative memory modules via Hopfield networks [41], and utilize dual-modality similarity retrieval mechanisms [46]. Additionally, FedMRG [5] em-ploys dual adapters to handle heterogeneous reporting styles within a federated learning framework. Although these works have significantly expanded the prior contexts of models, they often lack dynamic and tar-geted semantic reconstruction for each type of heteroge-neous information when processing highly heterogeneous clinical evidence composed of visual features, local entities, and global retrievals. Furthermore, during the subsequent scheduling of multi-source evidence, these methods typ-ically adopt predefined aggregation paradigms, failing to adaptively allocate fusion weights based on the weakness of specific pathological features. This undifferentiated rigid coupling mechanism allows massive text priors and the inherent generation inertia of LLMs to dominate the autore-gressive decoding process. As a result, weak visual abnor-mality cues are diluted, which ultimately leads to templated report expressions and makes it difficult to accurately depict complex imaging details. 
+
+## 3. Method 
+
+In this section, we detail the proposed two-stage homo-geneous semantic alignment and hierarchical expert routing (HSA-HER) framework for radiology report generation. 
+
+3.1. Task Definition and Overall Architecture 
+
+Radiology report generation (RRG) is fundamentally a cross-modal conditional sequence generation problem. Given a patient’s chest radiograph 𝑰 ∈ ℝ𝐶 ×𝐻 ×𝑊 , the model aims to generate a clinical diagnostic report 𝑹 ={𝑦 1, 𝑦 2, … , 𝑦 𝐿 } comprising 𝐿 tokens. Under the autore-gressive generation paradigm, given the parameters 𝜃 , the probability of generating the report 𝑹 can be factored into the product of conditional probabilities at each time step: 
+
+𝑝 (𝑹 |𝑰 ; 𝜃 ) = 
+
+> 𝐿
+
+∏
+
+> 𝑡 =1
+
+𝑝 (𝑦 𝑡 |𝑦 <𝑡 , 𝑰 ; 𝜃 ) (1) where 𝑦 <𝑡 denotes the historical tokens generated before time step 𝑡 . To maximize this probability and accurately de-pict weak pathological details, we propose a computational pipeline that completely decouples feature alignment and information scheduling. As illustrated in Figure 2, HSA-HER is physically decou-pled into two core stages. First, the model eliminates cross-modal distribution shifts through an explicit homogeneous distribution constraint, establishing global and dense disease semantic anchors (detailed in Section 3.2). Subsequently, guided by these anchors, the model deploys a hierarchical expert routing mechanism to perform targeted reconstruc-tion and adaptive aggregation on heterogeneous clinical evidence, ultimately driving the large language model to complete decoding (detailed in Sections 3.3 and 3.4). 
+
+3.2. Stage 1: Homogeneous Semantic Alignment 
+
+3.2.1. Multi-Modal Feature Initialization 
+
+Given a chest radiograph 𝑰 ∈ ℝ𝐶 ×𝐻 ×𝑊 and the corre-sponding expert reference diagnostic report 𝑹 , we employ a dual-stream encoder to extract initial multi-modal represen-tations. In the visual branch, we adopt VMamba to capture long-range dependencies and local textures. The visual encoder processes 𝑰 into spatial grid features. Global average pooling (GAP) and a visual projection layer then map these features   
+
+> E. Zhang et al.: Preprint submitted to Elsevier Page 3 of 14
+
+Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation 𝝁 𝑣 ≈ 𝝁 𝑡 , 𝝈 𝑣 2 ≈ 𝝈 𝑡 2
+
+> Visual
+> Encoder
+> Text
+> Encoder
+
+Stage 1: Homogeneous Semantic Alignment 
+
+> GAP
+> ℒ𝐼𝑇𝐶
+> ℒ𝐶𝐿𝑆
+> Input Image  𝑰  Input Report  𝑹
+> Grid Features
+> Text Features
+> 𝒗 𝑖𝑛𝑖𝑡
+> 𝒕 𝑖𝑛𝑖𝑡
+> Probability  𝒑
+> Homogeneity Constraint
+> ℒ𝐻𝑜𝑚𝑜
+> 𝑽 𝑎𝑛𝑐
+> 𝒗 𝑎𝑛𝑐
+> Unified Latent Space
+> Disease Semantic Anchor
+> Direct Inheritance
+> Gradient Flow
+
+Stage 2: Hierarchical Expert Routing    
+
+> Expert Sub -networks ⊕Element -wise Addition
+> 𝑬 𝑣𝑖𝑠 ƿ𝑬 𝑣𝑖𝑠
+> 𝑬 𝑙𝑜𝑐
+> ƿ𝑬 𝑙𝑜𝑐
+> 𝑬 𝑔𝑙𝑜𝑏
+> ƿ𝑬 𝑔𝑙𝑜𝑏
+> Micro Intra -Group Routing
+
+⊕   
+
+> 𝑽 𝑎𝑛𝑐
+> Expand
+> GAP
+> 𝑬 𝑙𝑜𝑐  𝑬 𝑔𝑙𝑜𝑏 𝑪 𝑐𝑟𝑜𝑠𝑠
+> 𝜷 𝑣𝑖𝑠
+> 𝜷 𝑙𝑜𝑐
+> 𝜷 𝑔𝑙𝑜𝑏
+> 𝑭 𝑓𝑢𝑠𝑒𝑑
+> Offline Retrieval Index
+> 𝒢 𝑐𝑟𝑜𝑠𝑠
+> Classifier
+> Probability 𝒑 Diagnostic Prompts 𝑷 𝑐𝑙𝑠
+> ℒ𝐶𝐿𝑆
+> Large Language
+> Model
+> Macro Cross -Source Routing
+> Generated
+> Report
+> ℒ𝐿𝑀
+
+⊙
+
+⊙
+
+⊙ 
+
+> ⊙Element -wise Multiplication
+> Intra -Gating  Intra -Gating  Intra -Gating
+
+Figure 2: Overall architecture of the proposed HSA-HER framework. (Stage 1) The model eliminates distribution shifts in a unified latent space via an explicit homogeneous distribution constraint to establish precise disease semantic anchors. (Stage 2) Guided by these anchors, micro intra-group routing activates expert sub-networks to perform targeted reconstruction on heterogeneous evidence. Macro cross-source routing adaptively allocates fusion weights and outputs the final diagnostic evidence to drive the large language model for decoding. 
+
+into a unified 𝑑 -dimensional space, yielding the initial visual feature 𝒗 𝑖𝑛𝑖𝑡 ∈ ℝ𝑑 .In the text branch, we employ Bio_ClinicalBERT to parse medical terminology and clinical logic. The text encoder processes the tokenized report 𝑹 , extracting the global aggregation token feature. An independent text pro-jection layer then maps this representation into the same 𝑑 -dimensional space, yielding the initial text feature 𝒕 𝑖𝑛𝑖𝑡 ∈ ℝ𝑑 .Despite sharing the same dimensionality, 𝒗 𝑖𝑛𝑖𝑡 and 𝒕 𝑖𝑛𝑖𝑡 
+
+reside in different distribution manifolds due to the inherent modality gap between low-level visual pixels and high-level textual semantics. This necessitates the subsequent deep homogeneous alignment. 
+
+3.2.2. Explicit Homogeneous Distribution Constraint 
+
+To break the inherent heterogeneity barrier between visual and textual features, we introduce an explicit homo-geneous distribution constraint mechanism after feature ini-tialization. This mechanism aims to force the image and text representations to follow a consistent statistical distribution in a unified latent space, thereby eliminating cross-modal distribution shifts. Given a batch of initial visual features 𝒗 𝑖𝑛𝑖𝑡 and text features 𝒕 𝑖𝑛𝑖𝑡 with a batch size of 𝐵 , the model first performs normalization along the feature dimension. Specifically, it projects them onto a unit hypersphere to obtain the normal-ized features ̂ 𝒗 and ̂ 𝒕 . Subsequently, the model calculates the first-order and second-order statistical moments of the visual and text features along the batch dimension, namely the mean vectors 𝝁 𝑣 , 𝝁 𝑡 and the uncorrected variance vectors 
+
+𝝈 2
+
+𝑣 , 𝝈 2
+
+𝑡 . These complementary statistics jointly characterize the central tendency and dispersion of each modality in the normalized latent space, providing a compact distribution-level description for subsequent alignment. The mathemati-cal calculations are as follows: 
+
+𝝁 𝑣 = 1
+
+𝐵 
+
+𝐵 ∑
+
+𝑖 =1 ̂
+
+𝒗 𝑖 , 𝝁 𝑡 = 1
+
+𝐵 
+
+𝐵 ∑
+
+𝑖 =1 ̂
+
+𝒕 𝑖 (2) 
+
+𝝈 2
+
+𝑣 = 1
+
+𝐵 
+
+𝐵 ∑
+
+𝑖 =1 
+
+(̂ 𝒗 𝑖 − 𝝁 𝑣 )2, 𝝈 2
+
+𝑡 = 1
+
+𝐵 
+
+𝐵 ∑
+
+𝑖 =1 
+
+(̂𝒕 𝑖 − 𝝁 𝑡 )2 (3) To achieve deep semantic homogenization, the model constructs the homogeneous distribution constraint loss 
+
+𝐻𝑜𝑚𝑜 by minimizing the squared Euclidean distances be-tween the corresponding cross-modal statistical moments: 
+
+𝐻𝑜𝑚𝑜 = || 𝝁 𝑣 − 𝝁 𝑡 || 22 + || 𝝈 2
+
+𝑣 − 𝝈 2
+
+𝑡 || 22 (4) Through the aforementioned distribution-level constraint, the model effectively reduces the distance between the overall distribution manifolds of different modalities in the low-level feature space. Consequently, this establishes a mathematical foundation for subsequently establishing precise disease semantic anchors. 
+
+3.2.3. Establishment of Disease Semantic Anchors 
+
+The homogeneous distribution constraint establishes a solid global statistical foundation for cross-modal alignment. Building upon this, to further capture fine-grained patho-logical semantics and explicitly inject clinical priors, we in-troduce image-text contrastive learning and a logit-adjusted 
+
+E. Zhang et al.: Preprint submitted to Elsevier Page 4 of 14 Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation 
+
+multi-label disease classifier, ultimately establishing precise disease semantic anchors. First, to align positive image-text pairs and separate negative samples, we apply the standard InfoNCE loss 𝐼𝑇 𝐶 
+
+[28] to the global visual and textual features. Second, medi-cal imaging datasets inherently suffer from long-tailed label distributions. Relying solely on contrastive learning can bias the representation space of rare lesions toward ma-jority classes. Therefore, we append a multi-label disease classifier to the visual branch and compute a logit-adjusted binary cross-entropy loss 𝐶𝐿𝑆 [22]. By applying a prior frequency penalty − log 𝜋 𝑐 to the original prediction logits, this adjustment explicitly suppresses the confidence of high-frequency classes. Consequently, it forces the model to retain sensitivity to subtle minority pathological features in its low-level representations. The total first-stage optimization objective 𝑠𝑡𝑎𝑔𝑒 1 is de-tailed in Section 3.4. Jointly optimized by 𝐻𝑜𝑚𝑜 , 𝐼𝑇 𝐶 , and 
+
+𝐶𝐿𝑆 , the visual features eliminate modality heterogeneity and integrate fine-grained pathological semantics with bal-anced decision boundaries. We define this optimized visual space as the disease semantic anchor. To accommodate multi-dimensional decoding, it is physically decoupled into two forms. The globally pooled global semantic anchor 𝒗 𝑎𝑛𝑐 
+
+interfaces with external memory retrieval and diagnostic prompt generation. Meanwhile, the dense semantic anchor 
+
+𝑽 𝑎𝑛𝑐 completely retains 2D spatial topology, serving directly as the query for subsequent hierarchical expert routing. This provides foundational support for the targeted reconstruction and dynamic weighting of heterogeneous evidence. 
+
+3.3. Stage 2: Hierarchical Expert Routing 
+
+3.3.1. Heterogeneous Clinical Evidence Construction 
+
+The established semantic anchors provide precise dis-ease guidance. Guided by these anchors, the model further integrates fine-grained anatomical morphology and clinical contexts for report generation. Before decoding, the frame-work injects priors and constructs evidence via two parallel branches. First, the global semantic anchor 𝒗 𝑎𝑛𝑐 is fed into the Stage 1 multi-label classifier. The resulting prediction prob-ability 𝒑 ∈ ℝ𝐶 is discretized into a structured diagnostic prompt sequence 𝑷 𝑐𝑙𝑠 . Bypassing low-level routing, this prompt is directly injected into the large language model’s conditional context as an explicit prior to establish a macro diagnostic tone. Second, the model constructs a heterogeneous clinical evidence set comprising three components. The visual fea-ture 𝑬 𝑣𝑖𝑠 ∈ ℝ𝑁 ×𝑑 is inherited directly from the dense se-mantic anchor ( 𝑬 𝑣𝑖𝑠 = 𝑽 𝑎𝑛𝑐 ). It retains the 2D spatial topol-ogy and local pathological textures of the original radio-graph, serving as the foundational morphological evidence for self-reconstruction. The local entity cue 𝑬 𝑙𝑜𝑐 ∈ ℝ𝐿 𝑙𝑜𝑐 ×𝑑 
+
+is constructed from entity-level representations extracted by MedKLIP [45]. For each radiograph, MedKLIP provides representations of the spatial locations and presence states of 75 predefined medical entities, which are precomputed and stored as .npy files. These static embeddings provide lesion-level and anatomy-level cues. The global retrieval prior 
+
+𝑬 𝑔𝑙𝑜𝑏 ∈ ℝ𝐿 𝑔𝑙𝑜𝑏 ×𝑑 provides a reference for global diagnostic semantics and report expression patterns with zero online search overhead. It is formed by directly loading the static text representations of the top-𝐾 (𝐾 = 5 ) reference reports from the training set, which are retrieved offline using 𝒗 𝑎𝑛𝑐 as the query vector. Decoupled in information granularity and modality, these three features ( 𝑬 𝑣𝑖𝑠 , 𝑬 𝑙𝑜𝑐 , 𝑬 𝑔𝑙𝑜𝑏 ) constitute the heterogeneous evidence space for subsequent hierarchi-cal expert routing. 
+
+3.3.2. Micro Intra-Group Targeted Reconstruction 
+
+After obtaining the heterogeneous clinical evidence set composed of 𝑬 𝑣𝑖𝑠 , 𝑬 𝑙𝑜𝑐 , and 𝑬 𝑔𝑙𝑜𝑏 , directly applying simple feature concatenation or channel addition triggers spatial misalignment and the dilution of visual cues. To address this, we deploy a micro intra-group routing mechanism within each heterogeneous evidence branch. Using the dense semantic anchor 𝑽 𝑎𝑛𝑐 established in Stage 1 as the query condition, this mechanism performs targeted mining and semantic reconstruction on the feature space of each branch. For any evidence branch 𝑥 ∈ {𝑣𝑖𝑠, 𝑙𝑜𝑐, 𝑔𝑙𝑜𝑏 }, let its internal preset expert sub-network cluster be Φ𝑥 ={𝜙 𝑥, 1, … , 𝜙 𝑥,𝑀 }, where 𝑀 is the number of experts in this branch (set to 𝑀 = 4 in the experiments). Physically, each expert sub-network 𝜙 𝑥,𝑚 (⋅) is a Transformer cross-attention module. The model forcibly assigns the dense semantic anchor 𝑽 𝑎𝑛𝑐 as the query vector, and assigns the clinical evidence 𝑬 𝑥 of the corresponding branch as the key and value. Note that for the visual branch ( 𝑥 = 𝑣𝑖𝑠 ), since the sources of the query and the key-value are physically identical ( 𝑽 𝑎𝑛𝑐 = 𝑬 𝑣𝑖𝑠 ), this operation naturally degenerates into a self-attention mechanism. Specifically, the targeted mining process of the 𝑚 -th expert network can be strictly defined as: ̂
+
+𝑯 𝑥,𝑚 = 𝑽 𝑎𝑛𝑐 +MHA 𝑥,𝑚 
+
+(LN (𝑽 𝑎𝑛𝑐 ), LN (𝑬 𝑥 ), LN (𝑬 𝑥 )) (5) 
+
+𝑯 𝑥,𝑚 =̂ 𝑯 𝑥,𝑚 + MLP 𝑥,𝑚 
+
+(LN (̂ 𝑯 𝑥,𝑚 )) (6) where LN (⋅) denotes layer normalization, while MHA 𝑥,𝑚 (⋅)
+
+and MLP 𝑥,𝑚 (⋅) denote the expert-specific multi-head atten-tion and feed-forward modules of the 𝑚 -th expert in branch 
+
+𝑥 , respectively. The resulting 𝑯 𝑥,𝑚 ∈ ℝ𝑁 ×𝑑 is the special-ized clinical representation output by this expert after recon-struction. This design ensures that the information extracted from the heterogeneous clinical evidence can be strictly reconstructed under the guidance of the spatial topology encoded in 𝑽 𝑎𝑛𝑐 .After obtaining the independent outputs of all experts, we introduce an intra-group gating network 𝑥 (⋅) to deter-mine the contribution ratio of each expert, as illustrated in Figure 3. To endow the gating decision with fine-grained spatial awareness, the feature context 𝑪 𝑥 input to the gate adopts a differentiated construction strategy. For the visual branch ( 𝑥 = 𝑣𝑖𝑠 ), the dense semantic anchor 𝑽 𝑎𝑛𝑐 directly   
+
+> E. Zhang et al.: Preprint submitted to Elsevier Page 5 of 14
+
+Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation External Context  
+
+> 𝑥 ∈ 𝑙𝑜𝑐, 𝑔𝑙𝑜𝑏
+> Expand
+> GAP
+> 𝒢 𝑥
+
+⊕
+
+⊙
+
+𝑽 𝑎𝑛𝑐 
+
+𝑪 𝑥 
+
+𝑬 𝑥 
+
+⊙⊙⊙
+
+> 𝑯 𝑥,1
+> 𝑯 𝑥,2
+> 𝑯 𝑥,3
+> 𝑯 𝑥,4
+> 𝜶 𝑥 ,1
+> 𝜶 𝑥 ,2
+> 𝜶 𝑥 ,3
+> 𝜶 𝑥 ,4
+
+ƿ𝑬 𝑥 
+
+> Expert
+> Sub -networks
+
+⊕
+
+> Element -wise
+> Addition
+
+⊙
+
+> Element -wise
+> Multiplication
+
+Figure 3: Detailed architecture of intra-group gating. Guided by the context 𝑪 𝑥 , the gating network dynamically allocates weights to aggregate expert outputs 𝑯 𝑥,𝑚 , yielding the recon-structed representation ̃ 𝑬 𝑥 .
+
+serves as the gating input. However, for the local and global external evidence branches ( 𝑥 ∈ { 𝑙𝑜𝑐, 𝑔𝑙𝑜𝑏 }), it is formed by concatenating 𝑽 𝑎𝑛𝑐 and the spatially expanded GAP context feature of the current evidence branch along the channel dimension. Subsequently, the gating network calculates the dynamic activation weight 𝜶 𝑥 ∈ ℝ𝑁 ×𝑀 for each expert: 
+
+𝜶 𝑥 = Softmax (𝑥 (𝑪 𝑥 )) (7) Finally, the features extracted by each expert are dynam-ically weighted and aggregated within the group to generate the targeted output ̃ 𝑬 𝑥 reconstructed at the micro level for this branch: ̃
+
+𝑬 𝑥 =
+
+> 𝑀
+
+∑
+
+> 𝑚 =1
+
+𝜶 𝑥,𝑚 ⊙ 𝑯 𝑥,𝑚 (8) Through the aforementioned micro intra-group recon-struction operation, the originally loose and noisy heteroge-neous features are uniformly projected into the diagnostic space centered on the dense visual semantic distribution. Consequently, this forms three highly specialized purified representations ̃ 𝑬 𝑣𝑖𝑠 ,̃ 𝑬 𝑙𝑜𝑐 , and ̃ 𝑬 𝑔𝑙𝑜𝑏 , thereby effectively eliminating interference for the top-level cross-source fu-sion. 
+
+3.3.3. Macro Cross-Source Adaptive Fusion 
+
+Through micro intra-group reconstruction, the model ob-tains three highly specialized feature representations: ̃ 𝑬 𝑣𝑖𝑠 ,̃
+
+𝑬 𝑙𝑜𝑐 , and ̃ 𝑬 𝑔𝑙𝑜𝑏 . Considering the dynamic variations in the reliance on different types of evidence during complex imag-ing diagnosis, we introduce a macro cross-source routing mechanism at the top level to achieve the adaptive and structured fusion of multi-source clinical evidence. First, the model constructs a cross-source feature context 
+
+𝑪 𝑐𝑟𝑜𝑠𝑠 to guide the top-level routing decision. To ensure that the decision accounts for both the fine-grained spa-tial topology at the low level and the global context of external evidence, 𝑪 𝑐𝑟𝑜𝑠𝑠 is formed by concatenating the dense semantic anchor 𝑽 𝑎𝑛𝑐 and the spatially expanded GAP contexts of the two external evidence branches along the channel dimension: 
+
+𝑪 𝑐𝑟𝑜𝑠𝑠 = [ 𝑽 𝑎𝑛𝑐 ,̄ 𝑬 𝑙𝑜𝑐 ,̄ 𝑬 𝑔𝑙𝑜𝑏 ] ∈ ℝ𝑁 ×3 𝑑 (9) where ̄ 𝑬 𝑙𝑜𝑐 and ̄ 𝑬 𝑔𝑙𝑜𝑏 represent the context features after masked GAP and expansion along the spatial dimension 𝑁 .Subsequently, the model deploys a top-level gating net-work 𝑐𝑟𝑜𝑠𝑠 (⋅) to calculate the cross-source fusion weights. Considering that external heterogeneous evidence may be missing or invalid in extreme cases, we introduce an allo-cation function with a validity mask mechanism to ensure the numerical stability of the network. Let 𝑴 𝑣𝑎𝑙𝑖𝑑 ∈ {0 , 1} 3
+
+be a boolean mask indicating whether the evidence of each branch is valid. The allocation weights 𝜷 (𝑛 ) ∈ ℝ3 for the three branches at the 𝑛 -th spatial position are calculated as follows: 
+
+𝜷 (𝑛 ) = MaskedSoftmax (𝑐𝑟𝑜𝑠𝑠 (𝑪 (𝑛 )
+
+> 𝑐𝑟𝑜𝑠𝑠
+
+), 𝑴 𝑣𝑎𝑙𝑖𝑑 ) (10) This mask mechanism forcibly blocks the gradient and weight allocation for invalid evidence branches. Therefore, it ensures that the model safely falls back to relying on its own visual evidence when external priors are missing. Finally, at the token level of the dense semantic anchor, the model adaptively weights and fuses the three features to generate the final structured multi-modal diagnostic ev-idence 𝑭 𝑓 𝑢𝑠𝑒𝑑 ∈ ℝ𝑁 ×𝑑 :
+
+𝑭 𝑓 𝑢𝑠𝑒𝑑 = 𝜷 𝑣𝑖𝑠 ⊙̃ 𝑬 𝑣𝑖𝑠 + 𝜷 𝑙𝑜𝑐 ⊙̃ 𝑬 𝑙𝑜𝑐 + 𝜷 𝑔𝑙𝑜𝑏 ⊙̃ 𝑬 𝑔𝑙𝑜𝑏 (11) Through the complete computational pipeline of ho-mogeneous semantic alignment, micro intra-group recon-struction, and macro cross-source fusion, 𝑭 𝑓 𝑢𝑠𝑒𝑑 effectively eliminates the interference of modality heterogeneity and deeply integrates visual morphology with cross-source clin-ical priors. Thereafter, this feature, together with the explicit diagnostic prompts 𝑷 𝑐𝑙𝑠 constructed in Section 3.3.1, is fed into the large language model to drive the subsequent high-precision autoregressive text decoding. 
+
+3.4. Training Objectives 
+
+The training process is decoupled into two stages. In the first stage, to achieve homogeneous alignment of low-level representations, we pre-train the dual-stream encoder by jointly optimizing the homogeneous distribution constraint loss 𝐻𝑜𝑚𝑜 , the contrastive loss 𝐼𝑇 𝐶 , and the classification loss 𝐶𝐿𝑆 :
+
+𝑠𝑡𝑎𝑔𝑒 1 = 𝐻𝑜𝑚𝑜 + 𝐼𝑇 𝐶 + 𝐶𝐿𝑆 (12) In the second stage, the encoder is initialized with the pre-trained weights. The fused feature 𝑭 𝑓 𝑢𝑠𝑒𝑑 and the dis-cretized explicit diagnostic prompts 𝑷 𝑐𝑙𝑠 are fed into the large language model for autoregressive decoding. Given a ground-truth expert report 𝑹 = { 𝑦 1, 𝑦 2, … , 𝑦 𝐿 } consisting 
+
+E. Zhang et al.: Preprint submitted to Elsevier Page 6 of 14 Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation 
+
+Table 1 
+
+Performance comparison on the CheXpert Plus test set. The best results are highlighted in bold. Method Publication NLG Metrics CE Metrics BLEU-1 BLEU-2 BLEU-3 BLEU-4 ROUGE-L CIDEr Precision Recall F1 R2Gen [8] EMNLP’20 0.301 0.179 0.118 0.081 0.246 0.077 0.318 0.200 0.181 WCL [50] EMNLP’21 – – – 0.084 0.253 0.103 0.335 0.259 0.256 R2GenCMN [7] ACL’21 0.321 0.195 0.128 0.087 0.256 0.102 0.329 0.241 0.231 XProNet [37] ECCV’22 0.364 0.225 0.148 0.100 0.265 0.121 0.314 0.247 0.259 MSAT [44] MICCAI’22 – – – 0.036 0.156 0.018 0.044 0.142 0.057 R2GenRL [27] ACL’22 – – – 0.035 0.186 0.012 0.193 0.229 0.196 TIMER [47] CHIL’23 – – – 0.083 0.254 0.104 0.345 0.238 0.234 CAMANet [38] JBHI’23 – – – 0.083 0.249 0.090 0.328 0.224 0.216 M2KT [52] MedIA’23 – – – 0.078 0.247 0.077 0.044 0.142 0.058 R2GenGPT [43] Meta-Rad’23 0.361 0.224 0.149 0.101 0.266 0.123 0.315 0.244 0.260 ORGan [10] ACL’23 0.320 0.196 0.128 0.086 0.261 0.107 0.288 0.287 0.277 ASGMD [49] ESWA’24 0.267 0.149 0.094 0.063 0.220 0.044 – – –Token-Mixer [54] TMI’24 0.378 0.231 0.153 0.091 0.262 0.098 0.309 0.270 0.288 PromptMRG [13] AAAI’24 0.326 0.174 – 0.095 0.222 0.044 0.258 0.265 0.281 VLCI [6] TIP’25 – – – 0.080 0.247 0.072 0.341 0.175 0.163 MambaXray [40] CVPR’25 – – – 0.112 0.276 0.139 0.377 0.319 0.335 MCA-RG [48] MICCAI’25 0.367 0.218 0.149 0.102 0.266 – – – –R2GenCSR [39] JBHI’26 0.364 0.225 0.148 0.100 0.265 0.121 – – –AM-MRG [41] TMI’26 0.381 0.238 0.159 0.109 0.282 0.221 0.396 0.318 0.336           
+
+> HSA-HER Ours 0.383 0.240 0.161 0.111 0.283 0.212 0.378 0.325 0.338
+
+of 𝐿 tokens, text generation is optimized using the negative log-likelihood loss 𝐿𝑀 :
+
+𝐿𝑀 = − 
+
+> 𝐿
+
+∑
+
+> 𝑡 =1
+
+log 𝑝 (𝑦 𝑡 |𝑦 <𝑡 , 𝑭 𝑓 𝑢𝑠𝑒𝑑 , 𝑷 𝑐𝑙𝑠 ; 𝜃 𝐿𝐿𝑀 ) (13) where 𝜃 𝐿𝐿𝑀 represents the LLM parameters, and 𝑦 <𝑡 de-notes the tokens generated before time step 𝑡 .To continuously impose low-level pathological con-straints during the decoding phase, we combine the disease classification loss 𝐶𝐿𝑆 from the first stage with 𝐿𝑀 to form the second-stage objective 𝑠𝑡𝑎𝑔𝑒 2:
+
+𝑠𝑡𝑎𝑔𝑒 2 = 𝐿𝑀 + 𝜆 𝑐𝑙𝑠 𝐶𝐿𝑆 (14) where 𝜆 𝑐𝑙𝑠 is a hyperparameter balancing textual fluency and pathological discrimination. Driven by this joint optimization strategy, HSA-HER effectively prevents the dilution of weak visual cues caused by autoregressive generation inertia and dominant text pri-ors, ensuring the accurate depiction of complex pathological details in the generated reports. 
+
+## 4. Experiments 
+
+4.1. Datasets 
+
+We evaluate HSA-HER on three widely used public chest X-ray datasets, namely CheXpert Plus [4], IU X-Ray [9], and MIMIC-CXR [14]. The CheXpert Plus dataset comprises 223,228 chest ra-diographs paired with 187,711 anonymized clinical reports from 64,725 patients, featuring 14 chest pathology labels and RadGraph annotations [12]. The IU X-Ray dataset, provided by Indiana University, includes 7,470 frontal and lateral chest X-ray images associated with 3,955 diagnostic reports. The MIMIC-CXR dataset is the most extensive public dataset containing paired chest X-ray images and radiology reports, consisting of 377,110 images and 227,835 diag-nostic reports from 65,379 patients. For MIMIC-CXR, we strictly follow the standard split and preprocessing pipeline established by Chen et al. [8], resulting in 270,790 training, 2,130 validation, and 3,858 testing samples. 
+
+4.2. Evaluation metrics 
+
+To comprehensively evaluate the performance of our model, we employ natural language generation (NLG) met-rics, clinical efficacy (CE) metrics, and the GREEN diagnos-tic safety metric. For the NLG metrics, we report BLEU-1 to BLEU-4 [26], ROUGE-L [17], and CIDEr [35]. These metrics characterize the consistency between the generated texts and the ground-truth reports from complementary perspectives: BLEU measures modified 𝑛 -gram precision, ROUGE-L cap-tures sequence-level similarity based on the longest common subsequence, and CIDEr measures consensus using TF-IDF-weighted 𝑛 -grams. For the CE metrics, we follow the evaluation protocol adopted by Wang et al. [41]. We use CheXbert [30] to ex-tract clinical observation labels from both the predicted and ground-truth reports and compare their presence to assess diagnostic accuracy. Specifically, we report macro-averaged Precision, Recall, and F1 scores across the evaluated clinical observation categories. Finally, considering the unique characteristics of radiol-ogy reports, we further adopt the GREEN [24] metric to evaluate diagnostic safety. This framework utilizes a lan-guage model to conduct a fine-grained evaluation of clinical 
+
+E. Zhang et al.: Preprint submitted to Elsevier Page 7 of 14 Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation 
+
+> Table 2
+> Performance comparison on the IU X-Ray and MIMIC-CXR test sets. The best results are highlighted in bold.
+
+Method Publication BLEU-1 BLEU-2 BLEU-3 BLEU-4 ROUGE-L CIDEr 
+
+IU X-Ray 
+
+R2Gen [8] EMNLP’20 0.470 0.304 0.219 0.165 0.371 –PPKED [20] CVPR’21 0.483 0.315 0.224 0.168 0.376 0.351 CMCL [19] ACL’21 0.473 0.305 0.217 0.162 0.378 –Clinical-BERT [51] AAAI’22 0.495 0.330 0.231 0.170 0.376 0.432 GSKET [53] MedIA’22 0.496 0.327 0.238 0.178 0.381 0.382 METransformer [42] CVPR’23 0.483 0.322 0.228 0.172 0.380 0.435 DCL [16] CVPR’23 – – – 0.163 0.383 0.586 R2GenGPT [43] Meta-Rad’23 0.465 0.299 0.214 0.161 0.376 0.542 PromptMRG [13] AAAI’24 0.401 – – 0.098 0.160 –DDaTR [31] TMI’25 0.421 – – 0.103 0.307 –MambaXray [40] CVPR’25 0.491 0.330 0.241 0.185 0.371 0.524 DADS [46] AAAI’26 0.495 0.328 0.242 0.187 0.384 0.634 
+
+FedMRG [5] TMI’26 0.436 0.264 0.173 0.120 0.297 –
+
+HSA-HER Ours 0.502 0.337 0.245 0.186 0.385 0.490 
+
+MIMIC-CXR 
+
+R2Gen [8] EMNLP’20 0.353 0.218 0.145 0.103 0.277 –PPKED [20] CVPR’21 0.360 0.224 0.149 0.106 0.284 0.237 CMCL [19] ACL’21 0.344 0.217 0.140 0.097 0.281 –Clinical-BERT [51] AAAI’22 0.383 0.230 0.151 0.106 0.275 0.151 GSKET [53] MedIA’22 0.363 0.228 0.156 0.115 0.284 0.203 M2KT [52] MedIA’23 0.386 0.237 0.157 0.111 0.274 0.111 BootstrappingLLM [18] AAAI’24 0.402 0.262 0.180 0.128 0.291 –PromptMRG [13] AAAI’24 0.398 – – 0.112 0.268 –DACG [15] MedIA’24 0.398 0.249 0.167 0.117 0.290 –DMVF [32] MedIA’24 0.396 0.245 0.162 0.116 0.289 0.116 VLCI [6] TIP’25 0.400 0.245 0.165 0.119 0.280 –DDaTR [31] TMI’25 0.401 – – 0.113 0.272 –MambaXray [40] CVPR’25 0.422 0.268 0.184 0.133 0.289 0.241 FedMRG [5] TMI’26 0.402 0.255 0.176 0.127 0.276 –TSMRG [3] TMM’26 0.403 0.244 0.161 0.113 0.272 –
+
+HSA-HER Ours 0.422 0.269 0.185 0.135 0.288 0.248 
+
+consistency between the generated and reference reports, explicitly distinguishing between clinically significant and insignificant errors. The GREEN score strictly penalizes six categories of clinically significant errors that may influence clinical decisions (specific error categories are defined in Table 3). For the 𝑖 -th sample, its GREEN score is defined as the ratio of the number of matched clinical findings to the sum of this number and the total count of the six clin-ically significant errors. If no matched findings are present (#Matched Findings 𝑖 = 0 ), the score is explicitly set to 0.The calculation is formulated as: GREEN 𝑖 = #Matched Findings 𝑖 
+
+#Matched Findings 𝑖 + ∑(𝑓 ) 
+
+> 𝑗 =( 𝑎 )
+
+#Error sig ,𝑖,𝑗 
+
+(15) 
+
+4.3. Implementation details 
+
+The visual encoder is instantiated as VMamba [21], and the input images are resized to a resolution of 224×224 . The model training was divided into two stages. In the first stage, Bio_ClinicalBERT [1] was employed as the text encoder. This stage was trained on four NVIDIA A40 GPUs with a batch size of 128 per GPU. In the second stage, the decoder backbone utilized Llama-2-7B-Chat [34] for the CheXpert Plus and MIMIC-CXR datasets, and Qwen1.5-1.8B-Chat [33] for the IU X-Ray dataset. Constrained by the memory overhead of the large language models, the second stage was conducted on a single A40 GPU, and the batch size was adjusted to 8. During this stage, the visual backbone was initialized with the weights from the first stage and updated via full-parameter fine-tuning, while the newly introduced hierarchical expert routing was trained jointly. Meanwhile, the parameters of the language model were strictly frozen to preserve its pre-trained language generation priors. Both training stages utilized the AdamW optimizer with an initial learning rate of 1 × 10 −4 , which was decayed                                                               
+
+> E. Zhang et al.: Preprint submitted to Elsevier Page 8 of 14 Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation
+> Table 3
+> GREEN performance comparison on the MIMIC-CXR and CheXpert Plus test sets. The six clinically significant error categories are defined as follows: (a) False report of a finding, (b) Missing a finding, (c) Misidentification of anatomic location, (d) Misassessment of severity, (e) Mentioning a comparison not in the reference, and (f) Omitting a comparison detailing a change from a prior study. For clinically significant errors (a)–(f) and their total count, lower values are better ( ↓). For matched findings and GREEN score, higher values are better ( ↑). Dataset Method # Clinically Significant Errors ↓∑𝑓 𝑗 =𝑎 #Error 𝑗 ↓# Matched Findings ↑GREEN ↑
+> (a) (b) (c) (d) (e) (f) MIMIC-CXR R2Gen [8] 1.310 3.089 0.103 0.201 0.082 0.142 4.926 1.803 0.283 R2GenCMN [7] 1.383 2.963 0.127 0.228 0.081 0.161 4.942 1.935 0.297 CvT2DistilGPT2 [23] 1.150 2.881 0.146 0.234 0.103 0.153 4.666 1.967 0.313
+> HSA-HER (Ours) 1.539 2.317 0.161 0.288 0.150 0.102 4.557 2.066 0.323
+> CheXpert Plus R2Gen [8] 1.235 3.638 0.150 0.122 0.021 0.103 5.269 0.938 0.168 R2GenCMN [7] 1.512 3.336 0.218 0.165 0.043 0.126 5.399 1.179 0.197 CvT2DistilGPT2 [23] 1.815 3.289 0.252 0.182 0.091 0.132 5.760 1.166 0.185
+> HSA-HER (Ours) 1.960 2.099 0.295 0.269 0.137 0.073 4.832 1.789 0.283
+
+to 1 × 10 −6 following a cosine annealing schedule. To improve memory efficiency, the DeepSpeed [29] framework and BF16 mixed precision were enabled throughout the training process. During the inference phase, text generation was performed using beam search. For both the primary and ablation experiments, the checkpoint achieving the highest combined score of 0.5 × BLEU-4 + 0 .5 × CIDEr on the validation set was selected for final testing. 
+
+4.4. Comparison with state-of-the-art methods 
+
+We comprehensively compare the proposed HSA-HER method with state-of-the-art (SOTA) methods for RRG. The comparative evaluations are conducted on the CheXpert Plus, IU X-Ray, and MIMIC-CXR datasets. The reported re-sults of the compared methods are collected either from their original publications or from two recent studies reporting comprehensive comparative results [41, 46], and all values are used as reported without any modification. 
+
+Performance on CheXpert Plus. As shown in Table 1, HSA-HER demonstrates superior performance across both NLG and CE metrics. Regarding the NLG metrics, our model achieves SOTA results in BLEU-1 to BLEU-3 and ROUGE-L, reaching 0.383, 0.240, 0.161, and 0.283, re-spectively. More importantly, concerning the CE metrics that measure diagnostic accuracy, HSA-HER achieves the highest Recall (0.325) and F1 score (0.338). Furthermore, in the GREEN diagnostic safety evaluation shown in Table 3, HSA-HER obtains the highest average matched find-ings (1.789) and the optimal overall GREEN score (0.283). Specifically, HSA-HER effectively controls Type b and Type f errors, with their average counts reduced to the lowest levels of 2.099 and 0.073, respectively. These results indi-cate that while generating high-quality reports, HSA-HER effectively improves the coverage of key clinical findings and overall clinical accuracy. 
+
+Performance on IU X-Ray and MIMIC-CXR. Table 2 reports the performance of the model on the IU X-Ray and MIMIC-CXR datasets. On IU X-Ray, HSA-HER achieves the best results in BLEU-1 to BLEU-3 and ROUGE-L. On the largest-scale MIMIC-CXR dataset, HSA-HER achieves SOTA results across all NLG metrics except ROUGE-L. Particularly for the CIDEr metric, which measures con-sensus using TF-IDF-weighted 𝑛 -grams, HSA-HER obtains the highest score of 0.248, while BLEU-4 reaches 0.135. Furthermore, in the GREEN diagnostic safety evaluation shown in Table 3, HSA-HER obtains the highest average matched findings (2.066) and the optimal overall GREEN score (0.323) on MIMIC-CXR, with the average counts of Type b and Type f errors reduced to the lowest levels of 2.317 and 0.102, respectively. Notably, Table 3 shows that HSA-HER has limitations in Type a, c, d, and e er-rors on CheXpert Plus and MIMIC-CXR. This may reflect the trade-off between improving abnormal finding cover-age and calibrating false positives, fine-grained localization, severity, and comparative descriptions, as well as noise and uncertainty propagation from multi-source priors. Overall, this advantage in language generation and clinical safety metrics further demonstrates the capability of HSA-HER to accurately characterize complex imaging details and key diagnostic information. 
+
+4.5. Ablation study 
+
+To validate the effectiveness of each core component in the proposed HSA-HER framework, we conduct extensive ablation studies on the CheXpert Plus dataset. 
+
+Effectiveness of the Explicit Homogeneous Distribu-tion Constraint. As shown in Table 4, while keeping the Stage 2 modules fixed, the sequential addition of conven-tional image-text contrastive learning 𝐼𝑇 𝐶 (Variant #3) and the disease classification constraint 𝐶𝐿𝑆 (Variant #4) im-proves the overall model performance. Specifically, Variant #4 achieves a Recall of 0.332 and an F1 of 0.345, indicating that these fundamental constraints provide effective cross-modal semantic alignment and disease discrimination capa-bilities. More importantly, introducing the explicit homoge-neous distribution constraint 𝐻𝑜𝑚𝑜 to form the complete model (Variant #7) yields the highest diagnostic Precision (0.378) and optimal results across most NLG metrics (e.g.,   
+
+> E. Zhang et al.: Preprint submitted to Elsevier Page 9 of 14
+
+Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation 
+
+Table 4 
+
+Ablation study of Stage 1 and Stage 2 on the CheXpert Plus dataset. Variant #1 serves as the vanilla baseline. Variants #2, #3, #4, and #7 progressively validate the Stage 1 constraints ( 𝐼𝑇 𝐶 , 𝐶𝐿𝑆 , 𝐻𝑜𝑚𝑜 ). Conversely, Variants #5, #6, and #7 progressively evaluate the Stage 2 modules, namely explicit diagnostic prompts ( 𝑷 𝑐𝑙𝑠 ) and hierarchical expert routing (HER), built upon the full Stage 1 setting. Variant 𝐼𝑇 𝐶 𝐶𝐿𝑆 𝐻𝑜𝑚𝑜 𝑷 𝑐𝑙𝑠 HER NLG Metrics CE Metrics BLEU-1 BLEU-2 BLEU-3 BLEU-4 ROUGE-L CIDEr Precision Recall F1 #1 0.378 0.234 0.155 0.106 0.276 0.214 0.354 0.296 0.312 #2 ✓ ✓ 0.379 0.232 0.153 0.103 0.273 0.206 0.377 0.301 0.323 #3 ✓ ✓ ✓ 0.380 0.238 0.159 0.110 0.279 0.213 0.375 0.301 0.316 #4 ✓ ✓ ✓ ✓ 0.379 0.236 0.157 0.108 0.281 0.207 0.373 0.332 0.345 
+
+#5 ✓ ✓ ✓ 0.383 0.237 0.157 0.107 0.279 0.224 0.357 0.337 0.341 #6 ✓ ✓ ✓ ✓ 0.381 0.237 0.158 0.108 0.281 0.218 0.378 0.329 0.344 #7 ✓ ✓ ✓ ✓ ✓ 0.383 0.240 0.161 0.111 0.283 0.212 0.378 0.325 0.338 
+
+Table 5 
+
+Ablation study of Stage 2 heterogeneous evidence scheduling on the CheXpert Plus dataset. All variants are built upon the full Stage 1 setting. Variant #1 adopts an undifferentiated rigid coupling paradigm. Variants #2 and #3 evaluate the individual external evidence branches ( 𝑬 𝑔𝑙𝑜𝑏 and 𝑬 𝑙𝑜𝑐 , respectively). Variants #4 and #5 progressively validate the micro intra-group routing and macro cross-source routing mechanisms. Variant 𝑬 𝑙𝑜𝑐 𝑬 𝑔𝑙𝑜𝑏 
+
+Rigid Coupling Micro Routing Macro Routing NLG Metrics CE Metrics BLEU-1 BLEU-2 BLEU-3 BLEU-4 ROUGE-L CIDEr Precision Recall F1 #1 ✓ ✓ ✓ 0.379 0.237 0.158 0.109 0.280 0.213 0.381 0.300 0.316 #2 ✓ ✓ ✓ 0.383 0.237 0.157 0.107 0.277 0.218 0.379 0.316 0.336 #3 ✓ ✓ ✓ 0.381 0.235 0.156 0.107 0.277 0.216 0.377 0.317 0.335 #4 ✓ ✓ ✓ 0.383 0.240 0.160 0.110 0.279 0.220 0.389 0.300 0.320 #5 ✓ ✓ ✓ ✓ 0.383 0.240 0.161 0.111 0.283 0.212 0.378 0.325 0.338 
+
+a BLEU-4 of 0.111 and a ROUGE-L of 0.283). However, the Recall and F1 scores experience a decline. This result demonstrates that the homogeneous distribution constraint does not primarily improve performance by expanding the recall scope for abnormal findings. Instead, it minimizes the distribution shift between the underlying visual and textual representations, thereby enhancing the semantic consistency and discriminative precision of disease-related visual fea-tures. The resulting purified visual features establish pre-cise disease semantic anchors, providing reliable semantic guidance for the targeted reconstruction and adaptive weight allocation of heterogeneous clinical evidence in the second stage. 
+
+Effectiveness of the Hierarchical Expert Routing Mechanism. Table 4 further evaluates the performance gains of the modules in the second stage. Using Variant #5, which solely contains the complete Stage 1 configuration, as the baseline, the introduction of explicit diagnostic prompts 
+
+𝑷 𝑐𝑙𝑠 (Variant #6) increases the Precision from 0.357 to 0.378, indicating that these prompts can provide a certain disease discriminative prior for subsequent report genera-tion. Building upon this, Variant #7, which fully integrates the hierarchical expert routing, improves the NLG quality while maintaining stable comprehensive clinical efficacy (achieving an F1 of 0.338). This enables sequence matching metrics, such as BLEU-1 to BLEU-4 and ROUGE-L, to reach the highest levels across all variants. These results demonstrate that the hierarchical expert routing enables more effective structured scheduling of heterogeneous clini-cal evidence, improving the overall quality of the generated reports while maintaining clinical diagnostic performance. 
+
+Analysis of the Heterogeneous Evidence Schedul-ing Mechanism. To evaluate the heterogeneous evidence scheduling strategy within the hierarchical expert routing, we conducted a targeted ablation study in Table 5. Variant #1 adopts an undifferentiated rigid coupling paradigm to process multi-source features, which causes the Recall to drop to 0.300 and F1 to reach the lowest value of 0.316. This result indicates that without targeted reconstruction and adaptive weight allocation, the undifferentiated rigid coupling strategy fails to utilize the disease semantic an-chors established in the first stage. Instead, it dilutes these weak visual abnormality cues during multi-source feature concatenation, thereby weakening the recall capability of the model for abnormal findings. Subsequently, Variants #2 and #3 retain only 𝑬 𝑔𝑙𝑜𝑏 or 𝑬 𝑙𝑜𝑐 from the heterogeneous evidence to participate in the routing, increasing their F1 scores to 0.336 and 0.335, respectively. This suggests that even with partial heterogeneous evidence, the routing mechanism can mitigate feature dilution, while maintaining superior com-prehensive clinical efficacy compared with the undifferenti-ated rigid coupling paradigm. Variant #4 solely employs the 
+
+E. Zhang et al.: Preprint submitted to Elsevier Page 10 of 14 Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation Ground Truth  Baseline  HSA-HER (Ours)                                                             
+
+> the cardiomediastinal silhouette is within normal limits . there is mild blunting of the left costophrenic angle which may represent a small pleural effusion . there
+> are no focal consolidations or
+> pneumothorax . degenerative changes are seen in the thoracic spine .no acute osseous abnormalities are identified .
+> the cardiomediastinal silhouette is within normal limits .atherosclerotic calcifications are seen at the aortic arch . there is no focal consolidation pleural effusion or pneumothorax . degenerative
+> changes are seen at the right
+> acromioclavicular joint and left acromioclavicular joint . mild degenerative changes are seen at the bilateral glenohumeral joints .
+> no evidence of focal consolidations . mild blunting of the left lateral costophrenic angle may represent asmall pleural effusion .interval increase in aortic atherosclerosis otherwise normal cardiomediastinal silhouette and pulmonary
+> circulation . apparent opacities projecting
+> over the anterior right third through fifth ribs likely represents costochondral calcifications .redemonstration of old healed left dorsal rib
+
+Case A                                                
+
+> the cardiomediastinal silhouette is normal . low lung volumes . left retrocardiac opacity may reflect atelectasis or consolidation . no pleural effusions . no pneumothorax . no acute osseous abnormalities .mild degenerative changes of the thoracic spine . visualized soft tissues are otherwise unremarkable . pulmonary vascularity is within normal limits .
+> the cardiomediastinal silhouette is within normal limits .linear opacities in the bilateral lung bases which may represent atelectasis or consolidation .no pleural effusions . no pneumothorax . degenerative changes of the thoracic spine .mild degenerative changes of the glenohumeral joints . surgical clips project over the right upper quadrant .
+> left retrocardiac opacity may reflect atelectasis or consolidation .low lung volumes . the lung fields are clear without focal consolidation effusion or pneumothorax .cardiomediastinal silhouette and pulmonary vasculature are within normal limits . a nasogastric tube is seen with the tip in the fundus of the stomach . no acute osseous abnormality .
+
+Case B                                                                             
+
+> ap upright view of the chest demonstrates a right upper extremity picc line with its tip in the superior vena cava .there is cardiomegaly and bilateral pleural effusions .there are bibasilar opacities which may represent compressive atelectasis or consolidation . there is mild pulmonary edema . no pneumothorax .
+> single frontal view of the chest
+> demonstrates a right upper extremity picc line with its tip at the cavoatrial junction . there is moderate bilateral pleural effusions left greater than right and bibasilar opacities likely atelectasis or consolidation . no pneumothorax is seen .the cardiomediastinal silhouette is within normal limits .osseous structures are unremarkable .
+> portable ap seated view of the chest demonstrates a right upper extremity picc with distal tip at the level of the carina . bilateral layering pleural effusion are appreciated as well as left lung base consolidationatelectasis .possible cardiomegaly through this is an ap technique .mild pulmonary edema .visualized osseous structures appear unremarkable .follow-up ap portable upright view of the chest
+
+Case C 
+
+Figure 4: Qualitative comparison on the CheXpert Plus test set. Blue indicates the core evidence in the ground truth. Green represents accurate generations that are semantically consistent. Orange denotes partial matches with deviations in location, severity, certainty, or granularity. Red highlights contradictory statements, such as erroneous negations or unsupported expansions. Dark gray indicates non-core, templated, or unverifiable content. 
+
+micro intra-group routing, achieving the highest Precision and CIDEr (0.389 and 0.220, respectively). This occurs because the micro routing enhances the representation qual-ity of the heterogeneous evidence in each branch through feature reconstruction, yielding excellent performance in diagnostic precision and text consensus. However, due to the lack of dynamic weight balancing at the macro cross-source level, Recall and F1 of the model are only 0.300 and 0.320. Finally, Variant #5 completely discards the undifferentiated rigid coupling paradigm and introduces the macro cross-source routing for adaptive weighting in coordination with the micro routing. This complete mechanism increases the Recall to 0.325, achieving the overall optimum in compre-hensive clinical diagnostic efficacy (an F1 of 0.338). 
+
+4.6. Qualitative Results 
+
+To intuitively evaluate the capability of the models in delineating complex imaging features, we conducted a qual-itative comparison between the Baseline and HSA-HER on the CheXpert Plus test set, as shown in Figure 4. In Case A, faced with the subtle clue of “mild blunting of the left lateral costophrenic angle”, the Baseline is dominated by high-frequency normal templates and yields an erroneous negative statement. Benefiting from homogeneous semantic alignment, HSA-HER successfully purifies and retains the semantic anchors representing subtle lesions, along with their diagnostic uncertainty. In Case B, the Baseline incor-rectly generalizes the opacities to “bilateral lung bases”, resulting in an unsupported anatomical expansion. Guided by micro intra-group routing, HSA-HER accurately binds the pathological attributes with the “left retrocardiac” re-gion, thereby reducing spatial localization hallucinations. In the complex multi-finding scenario of Case C, the Baseline completely misses “mild pulmonary edema” and generates factual contradictions, whereas HSA-HER captures more comprehensive clinical findings. Although HSA-HER still exhibits minor deviations in descriptive granularity or cer-tainty under highly complex pathological superpositions, such as outputting the conservative “possible cardiomegaly” as a definite diagnosis, its macro cross-source routing mech-anism effectively coordinates the adaptive fusion of het-erogeneous features. This closely approximates the actual diagnostic logic of clinicians while avoiding severe missed diagnoses. Overall, HSA-HER effectively prevents subtle visual clues from being diluted by text priors and generation inertia, enabling the generated reports to depict complex imaging details more accurately. 
+
+E. Zhang et al.: Preprint submitted to Elsevier Page 11 of 14 Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation 
+
+## 5. Discussion 
+
+This study shows that, compared with methods such as WCL [50] and CAMANet [38], which mainly improved models through cross-modal alignment, and AM-MRG [41] and DADS [46], which expanded diagnostic context through memory or retrieval mechanisms, performance gains in RRG do not depend solely on attention fusion, instance-level con-trastive learning, or the introduction of clinical priors. More importantly, they depend on whether precise disease seman-tic anchors can be established and whether heterogeneous clinical evidence can be effectively scheduled under their guidance. Meanwhile, HSA-HER still shows limitations in Type a, c, d, and e errors under the GREEN evaluation, indicating that improved coverage of key clinical findings is not accompanied by simultaneous improvements in false-positive control, fine-grained localization, severity assess-ment, and comparative descriptions. Specifically, the current framework is more effective in controlling certain clinically significant errors, while limitations remain in the precise control of diagnostic attributes such as location, severity, and comparative relations. In addition, HSA-HER has mainly been evaluated on two-dimensional chest radiographs, and its fine-grained spatial reasoning for extremely rare lesions requires further investigation. Future work could extend the framework to three-dimensional medical images, such as CT and MRI, as well as longitudinal scans, to further evaluate its applicability to more complex medical imaging scenarios and model the dynamic evolution of diseases. 
+
+## 6. Conclusion 
+
+In this paper, we propose and evaluate a two-stage homo-geneous semantic alignment and hierarchical expert routing framework for RRG. By imposing an explicit homogeneous distribution constraint in the latent space to extract purified visual features as disease semantic anchors, and further using these anchors to guide a hierarchical expert rout-ing mechanism for the targeted reconstruction and adaptive weighting of heterogeneous clinical evidence, our frame-work effectively overcomes the limitation of traditional RRG paradigms in which weak visual abnormality cues are easily diluted by massive text priors and generation inertia. Experi-mental results demonstrate that our model achieves excellent performance across three mainstream benchmark datasets. This confirms the effectiveness of the proposed framework in mitigating report templating and accurately depicting complex imaging details and key diagnostic information. 
+
+## CRediT authorship contribution statement 
+
+Erjian Zhang : Conceptualization, Software, Validation, Formal analysis, Investigation, Data curation, Writing – original draft, Writing – review & editing, Visualization. Ji-ayuan Ma : Conceptualization, Methodology, Software, Val-idation, Investigation, Writing – review & editing. Liejun Wang : Resources, Writing – review & editing, Supervi-sion, Project administration, Funding acquisition. Yikemaiti Sataer : Writing – review & editing, Funding acquisition. 
+
+Xiaoming Tao : Writing – review & editing, Supervision, Project administration. Zhiqing Guo : Resources, Writing – review & editing, Supervision, Project administration, Funding acquisition. 
+
+## Declaration of competing interest 
+
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper. 
+
+## Declaration of generative AI use 
+
+During the preparation of this work, the authors used ChatGPT (OpenAI) and Gemini (Google) to assist with lan-guage polishing and the identification of potentially relevant literature. All identified literature was verified against the original sources, and all AI-assisted outputs were reviewed and edited by the authors as needed. All scientific decisions, experimental results, analyses, and conclusions were inde-pendently made and validated by the authors. The authors take full responsibility for the final content of this work. 
+
+## Data availability 
+
+All datasets used in this study are publicly accessible, and their sources are described and cited in the manuscript. Part of the source code has already been made publicly avail-able at https://github.com/yyYuyao/HSA-HER , and the com-plete source code will be made publicly available upon publication. 
+
+## Acknowledgements 
+
+This work was supported in part by the Xinjiang Talent Development Fund under Grant XJRC-2025-KJ-YJ-CXPT-073, in part by the National Natural Science Foundation of China under Grant 62472368, and Grant 62462060. 
+
+## References          
+
+> [1] Alsentzer, E., Murphy, J.R., Boag, W., Weng, W.H., Jin, D., Naumann, T., McDermott, M.B.A., 2019. Publicly available clinical bert embed-dings, in: Proceedings of the 2nd clinical natural language processing workshop, pp. 72–78. [2] Bordage, G., 1994. Elaborated knowledge: a key to successful diagnostic thinking. Academic medicine 69, 883–5. [3] Cao, L., Wu, H., Xu, B., 2026. Tsmrg: Temporal semantic enhance-ment for medical report generation with longitudinal data. IEEE Transactions on Multimedia . [4] Chambon, P., Delbrouck, J.B., Sounack, T., Huang, S.C., Chen, Z., Varma, M., Truong, S.Q., Chuong, C.T., Langlotz, C.P., 2024. Chex-pert plus: Augmenting a large chest x-ray dataset with text radiology reports, patient demographics and additional image formats. arXiv preprint arXiv:2405.19538 . [5] Che, H., Jin, H., Guo, Z., Lin, Y., Jin, C., Chen, H., 2026. Llm-driven medical report generation via communication-efficient heterogeneous federated learning. IEEE Transactions on Medical Imaging 45, 28–39. [6] Chen, W., Liu, Y., Wang, C., Zhu, J., Li, G., Liu, C.L., Lin, L., 2025. Cross-modal causal representation learning for radiology report generation. IEEE Transactions on Image Processing 34, 2970–2985.
+
+E. Zhang et al.: Preprint submitted to Elsevier Page 12 of 14 Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation 
+
+[7] Chen, Z., Shen, Y., Song, Y., Wan, X., 2021. Cross-modal memory networks for radiology report generation, in: Proceedings of the 59th annual meeting of the association for computational linguistics and the 11th international joint conference on natural language processing (volume 1: long papers), pp. 5904–5914. [8] Chen, Z., Song, Y., Chang, T.H., Wan, X., 2020. Generating radiology reports via memory-driven transformer, in: Proceedings of the 2020 conference on empirical methods in natural language processing (EMNLP), pp. 1439–1449. [9] Demner-Fushman, D., Kohli, M.D., Rosenman, M.B., Shooshan, S.E., Rodriguez, L., Antani, S., Thoma, G.R., McDonald, C.J., 2016. Preparing a collection of radiology examinations for distribution and retrieval. Journal of the American Medical Informatics Association 23, 304–310. [10] Hou, W., Xu, K., Cheng, Y., Li, W., Liu, J., 2023. Organ: Observation-guided radiology report generation via tree reasoning, in: Proceedings of the 61st annual meeting of the association for computational linguistics (volume 1: Long papers), pp. 8108–8122. [11] Hou, X., Li, X., Lu, M., Cui, H., Lin, H., Zhang, Y., 2026. Col-laborative cross-modal fusion network for medical report generation. Information Fusion , 104576. [12] Jain, S., Agrawal, A., Saporta, A., Truong, S.Q., Duong, D.N., Bui, T., Chambon, P., Zhang, Y., Lungren, M.P., Ng, A.Y., et al., 2021. Radgraph: Extracting clinical entities and relations from radiology reports. arXiv preprint arXiv:2106.14463 . [13] Jin, H., Che, H., Lin, Y., Chen, H., 2024. Promptmrg: Diagnosis-driven prompts for medical report generation, in: Proceedings of the AAAI conference on artificial intelligence, pp. 2607–2615. [14] Johnson, A.E.W., Pollard, T.J., Berkowitz, S.J., Greenbaum, N.R., Lungren, M.P., Deng, C.Y., Mark, R.G., Horng, S., 2019. Mimic-cxr, a de-identified publicly available database of chest radiographs with free-text reports. Scientific Data 6, 317. [15] Lang, W., Liu, Z., Zhang, Y., 2025. Dacg: Dual attention and context guidance model for radiology report generation. Medical Image Analysis 99, 103377. [16] Li, M., Lin, B., Chen, Z., Lin, H., Liang, X., Chang, X., 2023. Dynamic graph enhanced contrastive learning for chest x-ray report generation, in: 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), IEEE. pp. 3334–3343. [17] Lin, C.Y., 2004. ROUGE: A package for automatic evaluation of summaries, in: Proceedings of the Workshop on Text Summarization Branches Out, pp. 74–81. [18] Liu, C., Tian, Y., Chen, W., Song, Y., Zhang, Y., 2024a. Bootstrapping large language models for radiology report generation, in: Proceed-ings of the AAAI conference on artificial intelligence, pp. 18635– 18643. [19] Liu, F., Ge, S., Wu, X., 2021a. Competence-based multimodal curriculum learning for medical report generation, in: Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (Volume 1: Long Papers), pp. 3001–3012. [20] Liu, F., Wu, X., Ge, S., Fan, W., Zou, Y., 2021b. Exploring and distilling posterior and prior knowledge for radiology report genera-tion, in: 2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), IEEE. pp. 13748–13757. [21] Liu, Y., Tian, Y., Zhao, Y., Yu, H., Xie, L., Wang, Y., Ye, Q., Jiao, J., Liu, Y., 2024b. Vmamba: Visual state space model. Advances in neural information processing systems 37, 103031–103063. [22] Menon, A.K., Jayasumana, S., Rawat, A.S., Jain, H., Veit, A., Kumar, S., 2021. Long-tail learning via logit adjustment, in: International Conference on Learning Representations. [23] Nicolson, A., Dowling, J., Koopman, B., 2023. Improving chest x-ray report generation by leveraging warm starting. Artificial intelligence in medicine 144, 102633. [24] Ostmeier, S., Xu, J., Chen, Z., Varma, M., Blankemeier, L., Bluethgen, C., Md, A.E.M., Moseley, M., Langlotz, C., Chaudhari, A.S., et al., 2024. Green: Generative radiology report evaluation and error notation, in: Findings of the association for computational linguistics: EMNLP 2024, pp. 374–390. [25] Paivio, A., 1991. Dual coding theory: Retrospect and current status. Canadian Journal of Psychology/Revue canadienne de psychologie 45, 255. [26] Papineni, K., Roukos, S., Ward, T., Zhu, W.J., 2002. BLEU: A method for automatic evaluation of machine translation, in: Proceedings of the 40th Annual Meeting of the Association for Computational Linguis-tics (ACL), pp. 311–318. [27] Qin, H., Song, Y., 2022. Reinforced cross-modal alignment for radiology report generation, in: Findings of the Association for Com-putational Linguistics: ACL 2022, pp. 448–458. [28] Radford, A., Kim, J.W., Hallacy, C., Ramesh, A., Goh, G., Agarwal, S., Sastry, G., Askell, A., Mishkin, P., Clark, J., et al., 2021. Learning transferable visual models from natural language supervision, in: International conference on machine learning, PmLR. pp. 8748–8763. [29] Rasley, J., Rajbhandari, S., Ruwase, O., He, Y., 2020. Deepspeed: System optimizations enable training deep learning models with over 100 billion parameters, in: Proceedings of the 26th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining, pp. 3505–3506. [30] Smit, A., Jain, S., Rajpurkar, P., Pareek, A., Ng, A.Y., Lungren, M.P., 2020. Chexbert: Combining automatic labelers and expert annotations for accurate radiology report labeling using BERT. arXiv preprint arXiv:2004.09167 . [31] Song, S., Tang, H., Yang, H., Li, X., 2025. Ddatr: Dynamic difference-aware temporal residual network for longitudinal radiology report generation. IEEE Transactions on Medical Imaging 44, 5345–5357. [32] Tang, Q., Xu, L., Wang, Y., Zheng, B., Lv, J., Zeng, X., Li, W., 2025. Dual-modality visual feature flow for medical report generation. Medical Image Analysis 101, 103413. [33] Team, Q., 2024. Introducing qwen1.5. URL: https://qwenlm.github. io/blog/qwen1.5/ .[34] Touvron, H., Martin, L., Stone, K., Albert, P., Almahairi, A., Babaei, Y., Bashlykov, N., Batra, S., Bhargava, P., Bhosale, S., et al., 2023. Llama 2: Open foundation and fine-tuned chat models. arXiv preprint arXiv:2307.09288 . [35] Vedantam, R., Lawrence Zitnick, C., Parikh, D., 2015. Cider: Consensus-based image description evaluation, in: Proceedings of the IEEE conference on computer vision and pattern recognition, pp. 4566–4575. [36] Vinyals, O., Toshev, A., Bengio, S., Erhan, D., 2015. Show and tell: A neural image caption generator, in: Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR), pp. 3156–3164. [37] Wang, J., Bhalerao, A., He, Y., 2022a. Cross-modal prototype driven network for radiology report generation, in: European conference on computer vision, Springer. pp. 563–579. [38] Wang, J., Bhalerao, A., Yin, T., See, S., He, Y., 2024. Camanet: class activation map guided attention network for radiology report generation. IEEE Journal of Biomedical and Health Informatics 28, 2199–2210. [39] Wang, X., Li, Y., Wang, F., Wang, S., Li, C., Jiang, B., 2026a. R2gencsr: Mining contextual and residual information for llms-based radiology report generation. IEEE Journal of Biomedical and Health Informatics . [40] Wang, X., Wang, F., Li, Y., Ma, Q., Wang, S., Jiang, B., Tang, J., 2025. Cxpmrg-bench: Pre-training and benchmarking for x-ray med-ical report generation on chexpert plus dataset, in: 2025 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), IEEE. pp. 5123–5133. [41] Wang, X., Wang, F., Wang, H., Jiang, B., Li, C., Wang, Y., Tian, Y., Tang, J., 2026b. Activating associative disease-aware vision token memory for llm-based x-ray report generation. IEEE Transactions on Medical Imaging . [42] Wang, Z., Liu, L., Wang, L., Zhou, L., 2023a. Metransformer: Radiology report generation by transformer with multiple learnable expert tokens, in: 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), IEEE. pp. 11558–11567. 
+
+E. Zhang et al.: Preprint submitted to Elsevier Page 13 of 14 Homogeneous Semantic Alignment and Hierarchical Expert Routing for Radiology Report Generation 
+
+[43] Wang, Z., Liu, L., Wang, L., Zhou, L., 2023b. R2gengpt: Radiology report generation with frozen llms. Meta-Radiology 1, 100033. [44] Wang, Z., Tang, M., Wang, L., Li, X., Zhou, L., 2022b. A med-ical semantic-assisted transformer for radiographic report genera-tion, in: International Conference on Medical Image Computing and Computer-Assisted Intervention, Springer. pp. 655–664. [45] Wu, C., Zhang, X., Zhang, Y., Wang, Y., Xie, W., 2023a. Medklip: Medical knowledge enhanced language-image pre-training for x-ray diagnosis, in: 2023 IEEE/CVF international conference on computer vision (ICCV), IEEE. pp. 21315–21326. [46] Wu, P., Dong, H., Lin, Y., Ding, Y., Peng, Y., 2026. A disease-aware dual-stage framework for chest x-ray report generation, in: Proceedings of the AAAI conference on artificial intelligence, pp. 33953–33961. [47] Wu, Y., Huang, I.C., Huang, X., 2023b. Token imbalance adaptation for radiology report generation, in: Conference on Health, Inference, and Learning, PMLR. pp. 72–85. [48] Xing, Q., Song, Z., Zhang, Y., Feng, N., Yu, J., Yang, W., 2025. Mca-rg: Enhancing llms with medical concept alignment for radiology report generation, in: International Conference on Medical Image Computing and Computer-Assisted Intervention, Springer. pp. 380– 390. [49] Xue, Y., Tan, Y., Tan, L., Qin, J., Xiang, X., 2024. Generating radiology reports via auxiliary signal guidance and a memory-driven network. Expert Systems with Applications 237, 121260. [50] Yan, A., He, Z., Lu, X., Du, J., Chang, E., Gentili, A., McAuley, J., Hsu, C.N., 2021. Weakly supervised contrastive learning for chest x-ray report generation, in: Findings of the association for computational linguistics: EMNLP 2021, pp. 4009–4015. [51] Yan, B., Pei, M., 2022. Clinical-bert: Vision-language pre-training for radiograph diagnosis and reports generation, in: Proceedings of the AAAI conference on artificial intelligence, pp. 2982–2990. [52] Yang, S., Wu, X., Ge, S., Zheng, Z., Zhou, S.K., Xiao, L., 2023. Radiology report generation with a learned knowledge base and multi-modal alignment. Medical Image Analysis 86, 102798. [53] Yang, S., Wu, X., Ge, S., Zhou, S.K., Xiao, L., 2022. Knowledge matters: Chest radiology report generation with general and specific knowledge. Medical image analysis 80, 102510. [54] Yang, Y., Yu, J., Fu, Z., Zhang, K., Yu, T., Wang, X., Jiang, H., Lv, J., Huang, Q., Han, W., 2024. Token-mixer: Bind image and text in one embedding space for medical image reporting. IEEE Transactions on Medical Imaging 43, 4017–4028. 
+
+E. Zhang et al.: Preprint submitted to Elsevier Page 14 of 14

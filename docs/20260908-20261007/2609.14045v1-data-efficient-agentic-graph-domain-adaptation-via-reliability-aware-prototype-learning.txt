@@ -1,0 +1,651 @@
+Title: Data-Efficient Agentic Graph Domain Adaptation via Reliability-Aware Prototype Learning
+
+URL Source: https://arxiv.org/pdf/2609.14045v1
+
+Published Time: Tue, 15 Sep 2026 00:51:10 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# Data-Efficient Agentic Graph Domain Adaptation via Reliability-Aware Prototype Learning 
+
+Yingxu Wang 1†, Kunyu Zhang 2†, and Siyang Gao 3⋆ 
+
+> 1
+
+Mohamed bin Zayed University of Artificial Intelligence, Abu Dhabi, UAE 
+
+yingxv.wang@gmail.com  
+
+> 2
+
+Zhengzhou University, Zhengzhou, China 
+
+kunyu.zky@gmail.com  
+
+> 3
+
+City University of Hong Kong, Hong Kong SAR, China 
+
+siyangao@cityu.edu.hk 
+
+Abstract. Agentic learning systems are often required to adapt after deployment by observing new data and reusing prior knowledge under limited supervision or feedback. For graph-structured prediction, Graph Domain Adaptation (GDA) naturally instantiates this setting by trans-ferring knowledge from labeled source graphs to unlabeled target graphs under distribution shifts. However, most GDA methods assume sufficient labeled source graphs, which becomes restrictive in data-efficient agen-tic settings where only limited source evidence can be retained. Under such constraints, source semantics become unreliable, leading to unsta-ble source anchoring, uncertain target association, and fragile target-marginal calibration. To address these challenges, we propose DEAG , a reliability-aware prototype learning framework for data-efficient agentic GDA. DEAG estimates class reliability from retained source support and embedding compactness, and constructs stable reusable source an-chors by blending empirical prototypes with classifier directions. Guided by these anchors, DEAG performs prototype-aware soft target associ-ation and aligns confidence-weighted target centers with source seman-tics. A source-prior regularizer further sharpens target predictions while keeping the target marginal consistent with retained source evidence. Experiments on graph benchmarks with diverse domain shifts show that 
+
+DEAG improves average adaptation performance over competitive GDA baselines under the same source-data budget. 
+
+Keywords: Data-Efficient Agentic Learning · Graph Neural Networks · Graph Domain Adaptation. 
+
+1 Introduction 
+
+Agentic learning systems are increasingly expected to adapt after deployment by observing new data and reusing prior knowledge under limited supervision  
+
+> ⋆
+
+Corresponding author.  
+
+> †
+
+Yingxu Wang and Kunyu Zhang contributed equally to this work. arXiv:2609.14045v1 [cs.LG] 12 Sep 2026 2 Y. Wang et al. 
+
+or feedback [14, 5, 34]. For graph-structured prediction, Graph Domain Adapta-tion (GDA) provides a natural formulation of this setting: it transfers predictive knowledge from labeled source graphs to unlabeled target graphs under distri-bution shifts [43, 44, 12], which enables graph neural networks (GNNs) to gener-alize beyond the environments where annotations are originally collected [18, 41, 19, 42]. Such transferability is valuable in molecular property prediction across chemical libraries and social network mining across platforms [41, 36, 8, 39]. Existing GDA methods mainly improve transferability by reducing source-target discrepancy in graph representation space [9, 25, 51]. Representative ap-proaches adopt adversarial or discrepancy-based alignment, contrastive cross-domain learning, and graph-specific regularization [27, 48, 45]. Other studies fur-ther exploit graph-structured inductive biases through topology-aware constraints, graph reweighting, propagation calibration, or target self-training with structural consistency [23, 22, 28]. Despite these advances, most methods are developed in a source-sufficient regime, where the labeled source collection is assumed to be fully accessible during training [31, 4, 35]. This assumption is restrictive for data-efficient agentic adaptation, where a learner may need to update its predictor after deployment using only limited retained source evidence and unlabeled tar-get observations. In practical graph learning pipelines, source graphs may also be constrained by storage budgets, preprocessing overhead, sampling restrictions, or repeated deployment costs [21, 38, 33]. This raises an important question: how can an adaptive graph learner reliably reuse limited source evidence to adapt to unlabeled target graphs under distribution shift? 
+
+Reducing the source-data budget improves practical efficiency, but it also weakens the transfer signals on which GDA relies. In the limited-source regime, directly applying existing GDA objectives leaves three challenges unresolved. 
+
+(1) Unreliable source anchoring. Alignment-based GDA requires source su-pervision to provide stable class semantics [43–45]. With limited source graphs, empirical class prototypes can be sensitive to sampling noise, while classifier directions learned from the same reduced data may also be biased [21, 28]. An adaptive learner should therefore assess the reliability of retained source evidence and combine instance-level prototype information with classifier-level decision information accordingly. (2) Uncertain target association. Since target la-bels are unavailable, target graphs must be associated with source semantics through model predictions and cross-domain similarity [43, 28, 22]. Under weak-ened source supervision, early predictions are unstable, and hard pseudo-label training can amplify incorrect assignments [28, 21, 37]. Target association should therefore remain soft, incorporate source-anchor compatibility, and downweight ambiguous target graphs, so that target observations can be cautiously grounded in reusable source semantics. (3) Fragile target-marginal calibration. Con-fidence regularization sharpens target predictions, but a weak source model may over-concentrate target samples into a few initially favored classes [21, 11]. Con-versely, enforcing a uniform target marginal can conflict with the class evidence retained from limited source data [11, 24]. A robust regularizer should calibrate the target marginal using the available source prior while preserving confident Data-Efficient Agentic Graph Domain Adaptation 3
+
+sample-level predictions, thereby reducing biased prediction updates before re-liable target feedback is available. In this paper, we propose DEAG , a reliability-aware prototype learning framework for data-efficient agentic GDA. Rather than directly adapting with weakened source supervision, DEAG stabilizes reusable source-side guidance and supports self-guided adaptation under limited source evidence. It estimates class reliability from retained source support and representation compactness, then constructs reliability-aware anchors by blending empirical source prototypes with classifier directions. Guided by these anchors, DEAG performs prototype-aware soft target association by combining model predictions and target-to-anchor similarities, allowing unlabeled target observations to be cautiously as-sociated with reusable source semantics. The resulting confidence-weighted tar-get centers are aligned with the corresponding source anchors, avoiding hard pseudo-label cross-entropy. Finally, DEAG introduces source-prior regulariza-tion to sharpen target predictions while preventing the target marginal from drifting away from the class distribution observed in the retained source data. Experiments on graph benchmarks with diverse domain shifts show that DEAG 
+
+improves average adaptation performance over competitive GDA baselines under the same source-data budget. Our contributions can be summarized as follows: (1) We investigate data-efficient agentic GDA under limited source evidence and identify three key challenges: unreliable source anchoring, uncertain target association, and fragile target-marginal calibration. (2) We propose DEAG , a compact reliability-aware prototype learning framework that stabilizes reusable source guidance, performs soft target alignment, and calibrates target predictions with the retained source prior. (3) Experiments on multiple graph benchmarks under diverse distribution shifts demonstrate that DEAG improves average adaptation performance over competitive baselines under the same source-data budget. 
+
+2 Related Work 
+
+Data-Efficient Agentic Graph Learning. Data-efficient agentic graph learn-ing aims to train or adapt effective graph learners with limited training data, supervision, feedback, or accessible graph evidence [16]. It is closely related to data-efficient graph learning, where existing studies broadly follow two di-rections [16, 13, 10]. The first direction improves label efficiency by leveraging unlabeled graphs, semi-supervised regularization, self-supervised objectives, or selective label acquisition, thereby reducing the dependence on dense annota-tions [16, 29, 15]. The second direction improves data efficiency by compressing the effective training set through coreset selection, dataset distillation, or graph condensation, where a compact set of real or synthetic graphs is used to approxi-mate the learning effect of the original dataset [13, 52, 40]. Despite their progress, these methods are mostly developed for single-domain graph learning and do not explicitly address agentic adaptation under source-target distribution shifts [44, 47, 27]. This distinction is important for GDA: when source evidence is limited, the retained source graphs not only provide supervised training signals but also 4 Y. Wang et al. Target Embeddings Model Predictions Anchor Similarity   
+
+> Prototype-Aware Soft Target Association
+> Soft Assignments Confidence Scores
+> Shared GNN Encoder Graph Embeddings Predictions
+> Graph Encoder and Classifier Reliability-Aware Source Anchors
+> Source (retained) Target (unlabeled)
+> Alignment + Source-Prior Calibration
+> Source Prototypes
+> Confidence-Weighted Target Class Centers Source Anchors Source Prior Target Marginal
+> Source Anchors
+> Calibration Loss
+
+Fig. 1: Overview of the proposed DEAG . DEAG estimates source-class reliabil-ity using support size and embedding compactness, constructs reusable source anchors by blending source prototypes with classifier directions, softly associates target graphs with these anchors, and jointly optimizes prototype alignment and source-prior target-marginal calibration. define the reusable class semantics used to guide target-domain adaptation. A reduced source set may therefore yield noisy source prototypes, unstable target association, and miscalibrated target predictions [21, 11, 45]. In contrast, DEAG 
+
+studies data-efficient agentic graph domain adaptation under limited retained source evidence. It supports self-guided adaptation by estimating source pro-totype reliability, associating unlabeled target graphs through prototype-aware soft alignment, and calibrating target predictions using the class prior observed from the retained source data. 
+
+Graph Domain Adaptation (GDA). GDA transfers predictive knowledge from labeled source graphs to unlabeled target graphs under distribution shifts [46, 3, 6]. Existing GDA methods mainly improve transferability by reducing source-target mismatch in the learned representation space [32, 25, 49]. Representative approaches employ adversarial objectives, distribution alignment, contrastive learning, or variational modeling to learn domain-adaptive graph representa-tions [50, 20]. Since graph data contain both node attributes and relational struc-tures, later studies further incorporate graph-specific inductive biases, including topology-aware regularization, structural reweighting, propagation calibration, and graph-constrained target self-training, to better handle attribute and struc-Data-Efficient Agentic Graph Domain Adaptation 5
+
+tural shifts during adaptation [23, 22, 4]. Despite their effectiveness, most existing GDA methods assume that sufficient labeled source graphs are available during training, so that source classifiers, class prototypes, and alignment signals can be estimated reliably [43, 45]. This source-sufficient assumption becomes frag-ile when the source-data budget is constrained, especially when an adaptive learner must rely on limited retained source evidence for post-deployment adap-tation [21]. With fewer source graphs, empirical class prototypes may be biased by sampling noise, target predictions become less reliable, and hard pseudo-labeling or unconstrained alignment can amplify early errors [28, 21, 11]. To ad-dress this limitation, DEAG learns reliability-aware source anchors by fusing source prototypes with classifier directions, and uses them for soft target asso-ciation and source-prior target-marginal calibration, enabling self-guided adap-tation under limited source evidence. 
+
+3 Methodology 
+
+3.1 Problem Formulation 
+
+We study data-efficient agentic Graph Domain Adaptation (GDA) under limited retained source evidence. Let DS = {(Gsi , y si )}NS 
+
+> i=1
+
+be the labeled source domain and DT = {G tj }NT 
+
+> j=1
+
+be the unlabeled target domain, where each graph is G =(V, E, X) and ysi ∈ Y = {1, . . . , C }. Given a source-data ratio ρ ∈ (0 , 1] , only a class-stratified retained subset SρS = SCc=1 SρS,c is accessible for training, where 
+
+SρS,c ⊆ D S,c , DS,c = {(Gsi , y si ) ∈ D S : ysi = c}, and |S ρS,c | = Kc. We denote the retained source budget by K = PCc=1 Kc ≪ NS .
+
+3.2 Overview of DEAG 
+
+Figure 1 illustrates the proposed framework of DEAG . It first extracts graph embeddings with a shared GNN encoder and estimates the reliability of each source class from the retained source subset. To obtain reusable source-side guid-ance, DEAG blends empirical prototypes with classifier directions according to this reliability, producing reliability-aware source anchors. These anchors then guide the association of unlabeled target observations by combining classifier predictions with target-to-anchor similarities. The resulting soft assignments are confidence-weighted to form target class centers, which are aligned with source anchors without hard pseudo-label training. Finally, a source-prior regularizer calibrates the target marginal using the class prior observed from the retained source evidence. 
+
+3.3 Reliability-Aware Source Anchors Encoder and classifier. We use a standard GNN encoder followed by a linear classifier. For a graph G, node representations are updated by 
+
+H(ℓ) 
+
+> G
+
+= GNN (ℓ) 
+
+> θ
+
+(G, H(ℓ−1)  
+
+> G
+
+), H(0)  
+
+> G
+
+= X. (1) 6 Y. Wang et al. 
+
+The graph representation is obtained as 
+
+zG = READOUT 
+
+
+
+H(L)
+
+> G
+
+
+
+∈ Rdz , (2) and its normalized version is ezG = zG /(∥zG ∥2 + ε), where ε > 0 is a numerical constant. The classifier predicts 
+
+pθ (y|G ) = softmax( Wz G + b). (3) Let wc be the classifier weight vector for class c, and define its normalized direction as ewc = wc/(∥wc∥2 + ε).
+
+Source prototype reliability. Under limited retained source evidence, empir-ical class prototypes may be noisy and may not provide stable reusable source semantics. For each class c, we compute the retained-source prototype as 
+
+¯μS,c = 1
+
+Kc
+
+X  
+
+> (Gsi,y si)∈S ρS,c
+
+ezGsi , μS,c = ¯μS,c 
+
+∥ ¯μS,c ∥2 + ε . (4) We measure prototype compactness by rc = ∥ ¯μS,c ∥2. Since each normalized embedding has unit norm, 0 ≤ rc ≤ 1; larger rc indicates more concentrated retained source embeddings. We combine compactness with source support size to define the reliability coefficient 
+
+αc = sg 
+
+ Kc − 1
+
+Kc
+
+rc
+
+
+
+, (5) where sg[ ·] denotes stop-gradient. Thus, a class with a single retained source graph obtains αc = 0 , while a class with sufficient and compact samples ob-tains a larger reliability score. This coefficient allows the learner to assess how trustworthy the retained source evidence is for each class. 
+
+Anchor construction. To balance instance-level source semantics and classifier-level decision geometry, we fuse the empirical prototype with the classifier direc-tion: 
+
+¯ac = αcμS,c + (1 − αc) ewc, ac = sg 
+
+ ¯ac
+
+∥¯ac∥2 + ε
+
+
+
+. (6) The anchor set is AS = {ac}Cc=1 . When the prototype is reliable, ac is domi-nated by μS,c ; otherwise, it falls back to the classifier direction. This prevents noisy prototypes from becoming misleading alignment targets and provides sta-ble reusable source guidance for target adaptation. 
+
+3.4 Prototype-Aware Target Association 
+
+Since target labels are unavailable, target graphs must be associated with source semantics through predictions and representation similarity. Hard pseudo-labeling Data-Efficient Agentic Graph Domain Adaptation 7
+
+is fragile under limited source evidence, so DEAG constructs soft and confidence-weighted target class centers. For target graph Gtj , let eztj = ezGtj and ptj,c =
+
+pθ (c|G tj ). We define the prototype-aware assignment logit as 
+
+ℓj,c = log( ptj,c + ε) + ( eztj )⊤ac. (7) The first term captures classifier confidence, and the second term measures target-to-anchor compatibility. The detached soft assignment is 
+
+qj,c = sg 
+
+"
+
+exp( ℓj,c )
+
+PCk=1 exp( ℓj,k )
+
+#
+
+. (8) Here, qj,c is not used as a target pseudo-label for cross-entropy training; it only provides weights for target center estimation. This design allows unlabeled target observations to be cautiously associated with reusable source anchors without committing to hard pseudo-labels. To suppress ambiguous target graphs, we compute the assignment entropy 
+
+H(qj ) = − PCc=1 qj,c log( qj,c + ε) and define 
+
+ωj = sg 
+
+
+
+1 − H(qj )log C
+
+
+
+. (9) For class c, the weighted target mass and detached class weight are 
+
+Mc =
+
+> NT
+
+X
+
+> j=1
+
+ωj qj,c , βc = sg 
+
+"
+
+Mc + ε
+
+PCk=1 Mk + Cε 
+
+#
+
+. (10) The normalized target center is 
+
+¯μT,c =
+
+PNT 
+
+> j=1
+
+ωj qj,c eztj
+
+Mc + ε , μT,c = ¯μT,c 
+
+∥ ¯μT,c ∥2 + ε . (11) We align target centers to source anchors by 
+
+Lpa =
+
+> C
+
+X
+
+> c=1
+
+βc μT,c − ac 
+
+> 22
+
+. (12) Gradients are propagated through μT,c to update target representations, while 
+
+ac, qj,c , ωj , and βc are detached. This avoids degenerate minimization by chang-ing anchors or assignments instead of learning target-aligned representations. 
+
+3.5 Source-Prior Target-Marginal Calibration 
+
+Prototype alignment transfers reusable class-level source semantics to the target domain, but it may over-concentrate target graphs around a few anchors. To calibrate target predictions before reliable target feedback is available, DEAG 8 Y. Wang et al. 
+
+introduces a source-prior regularizer. The retained source prior is πS,c = Kc/K ,and the target marginal prediction is ¯pT,c = N −1
+
+> T
+
+PNT 
+
+> j=1
+
+pθ (c|G tj ). The target conditional entropy is 
+
+Hcond = − 1
+
+NTNTX
+
+> j=1
+> C
+
+X
+
+> c=1
+
+pθ (c|G tj ) log  pθ (c|G tj ) + ε , (13) and the source-prior matching term is 
+
+Dprior = KL( πS ∥¯pT ) = 
+
+> C
+
+X
+
+> c=1
+
+πS,c log 
+
+ πS,c + ε
+
+¯pT,c + ε
+
+
+
+. (14) The source-prior target regularization loss is Lptr = Hcond + Dprior . The entropy term sharpens target predictions, while the prior matching term prevents the target marginal from drifting away from retained source evidence. Together, they reduce biased target-marginal updates under limited source evidence and unavailable target labels. 
+
+3.6 Overall Learning Objective 
+
+The supervised loss is computed only on SρS . To reduce class imbalance under limited retained source evidence, we use class-balanced cross-entropy: 
+
+Lsup = 1
+
+C
+
+> C
+
+X
+
+> c=1
+
+1
+
+Kc
+
+X  
+
+> (Gsi,y si)∈S ρS,c
+
+LCE (pθ (y|G si ), c ) . (15) The final objective is 
+
+L = Lsup + λ1Lpa + λ2Lptr , (16) where λ1, λ 2 ≥ 0 balance the two adaptation losses. 
+
+Theorem 1 (Target-Risk Bound). Let f be the graph encoder, h be the clas-sifier, and g = h ◦ f ∈ H be the learned predictor. Let RT (g) denote the expected target risk and bRSρS (g) denote the empirical risk on the retained source sub-set SρS with K samples. For each class c, let ac be the learned reliability-aware source anchor and a⋆c be the ideal class anchor estimated with sufficient source support. Define the retained-source prior πS,c = Kc/K , the anchor estimation error ϵanc = PCc=1 πS,c ∥ac − a⋆c ∥2, and the class-mass factor γβ = PCc=1 π2
+
+> S,c
+
+/β c,where βc > 0 is the detached target class-mass weight in Lpa . Assume the loss 
+
+ℓ is bounded in [0 , 1] and KLip -Lipschitz with respect to normalized graph repre-sentations. Then, with probability at least 1 − δ, the target risk is bounded by 
+
+RT (g) ≤ bRSρS (g) + KLip 
+
+pγβ Lpa + p2Dprior + KLip ϵanc 
+
++ 2 RK (H) + 3 
+
+r log(2 /δ )2K + λ⋆,
+
+(17) Data-Efficient Agentic Graph Domain Adaptation 9
+
+where RK (H) is the empirical Rademacher complexity of H under K retained source samples, and λ⋆ denotes the minimal joint risk and residual mismatch between the retained source and target domains. 
+
+Theorem 1 shows that DEAG controls target risk through three optimiz-able terms. The prototype alignment loss Lpa reduces class-wise representation discrepancy, the prior matching term Dprior controls target marginal mismatch, and the reliability-aware anchor construction reduces ϵanc by preventing noisy empirical prototypes from dominating target alignment. The proof of Theorem 1 can be found in Appendix A. 
+
+4 Experiments 
+
+4.1 Experimental Settings Datasets. We evaluate DEAG on two representative types of graph distribution shifts. (1) Structure-based domain shifts are constructed on Mutagenicity [17] and NCI1 [30]. Following standard GDA protocols [43, 44], we partition graphs by node-density and edge-density statistics to create source and target domains with different structural biases while preserving the original classification tasks. (2) 
+
+Feature-based domain shifts are evaluated on commonly used paired benchmarks, including DD, PROTEINS, BZR, BZR_MD, COX2, and COX2_MD, where source and target domains exhibit notable feature distribution discrepancies. The statistics of the above datasets are provided in Appendix B. 
+
+Baselines. We compare DEAG with three groups of baselines. The first group contains the graph kernel method PathNN [26]. The second group includes four general GNN backbones: GCN [18], GIN [41], CIN [2], and GMT [1]. The third group includes seven representative GDA methods: DEAL [43], SGDA [28], StruRW [23], A2GNN [22], PA-BOTH [24], GAA [7], and TDSS [4]. 
+
+Implementation Details. We implement DEAG in PyTorch. Unless otherwise specified, GIN [41] is used as the backbone encoder, with three GNN layers and a hidden dimension of 128. All neural methods are optimized with Adam using a learning rate of 3×10 −4 and a weight decay of 1×10 −12 . We use a class-stratified retained source subset with source-data ratio ρ = 0 .3 by default. For DEAG ,the loss coefficients are fixed to λ1 = 0 .7 and λ2 = 0 .5. We report classification accuracy as the evaluation metric, and present the mean and standard deviation over five independent runs. 
+
+4.2 Performance Comparison 
+
+Table 1, 5-8 report the performance comparison under different domain shifts. From these tables, we can make the following observations: (1) Standard GNNs such as GCN, GIN, and GMT generally perform poorly under domain shifts, in-dicating that directly transferring a predictor trained on the retained source sub-set is insufficient when target graphs exhibit shifted structures or features. Since these methods do not exploit unlabeled target observations, their predictions are 10 Y. Wang et al. 
+
+Table 1: Graph classification results (in %) under node and edge density domain shifts on the Mutagenicity dataset, and under feature shifts (source →target). P, D, C, CM, B, and BM denote PROTEINS, DD, COX2, COX2_MD, BZR, and BZR_MD, respectively. Bold indicates the best performance.                                                                            
+
+> Methods Node Shift Edge Shift Feature Shift M0 →M1 M0 →M2 M0 →M3 M0 →M1 M0 →M2 M0 →M3 P→DD→PC→CM CM →CB→BM BM →BGCN 53.2 ±4.1 49.5 ±3.6 50.1 ±4.5 61.5 ±5.4 53.2 ±4.8 47.3 ±3.2 52.3 ±4.1 48.7 ±5.2 41.2 ±3.8 45.6 ±2.9 44.3 ±6.2 43.8 ±4.7 GIN 51.4 ±5.2 47.8 ±4.4 49.6 ±3.8 59.8 ±6.1 51.6 ±5.2 46.5 ±4.1 50.7 ±5.3 47.2 ±4.6 40.8 ±4.1 44.9 ±3.2 43.6 ±5.8 42.1 ±4.9 GMT 55.1 ±3.8 51.2 ±3.2 51.5 ±2.9 62.4 ±4.5 54.5 ±3.9 48.2 ±2.8 54.2 ±3.7 49.6 ±3.4 42.4 ±3.6 46.8 ±2.8 45.4 ±5.1 44.7 ±4.2 CIN 54.3 ±4.5 50.6 ±3.7 50.9 ±3.4 61.9 ±5.0 53.8 ±4.2 47.8 ±3.1 53.6 ±4.2 48.9 ±4.1 41.7 ±3.9 45.2 ±3.1 44.8 ±5.4 43.9 ±4.5 PathNN 52.8 ±4.8 48.9 ±4.1 50.4 ±3.6 60.5 ±5.6 52.4 ±4.9 46.9 ±3.7 51.8 ±4.6 47.8 ±4.3 41.1 ±4.2 44.7 ±3.4 43.9 ±5.6 43.2 ±4.8 DEAL 72.1 ±2.1 64.8 ±2.4 56.1 ±1.2 72.8 ±0.7 62.5 ±2.1 54.2 ±1.4 59.8 ±0.9 50.2 ±9.8 42.1 ±6.1 49.3 ±3.5 48.9 ±7.6 47.7 ±5.0 SGDA 54.7 ±4.6 50.2 ±3.7 50.8 ±4.1 63.3 ±6.9 54.1 ±5.7 47.9 ±4.1 48.0 ±3.8 54.6 ±10.8 41.3 ±0.3 49.8 ±1.5 49.8 ±9.9 51.7 ±8.5 A2GNN 42.5 ±7.1 46.1 ±6.5 50.6 ±3.8 60.6 ±8.7 54.4 ±7.2 49.1 ±3.5 61.9 ±0.7 57.0 ±1.0 45.4 ±9.9 45.5 ±5.4 48.1 ±5.3 63.0 ±4.4 StruRW 74.3 ±1.7 66.8 ±1.1 53.2 ±1.8 73.1 ±0.9 63.7 ±1.6 50.8 ±2.1 54.0 ±6.9 47.6 ±11.4 40.7 ±0.2 49.5 ±2.8 48.8 ±8.0 52.3 ±4.8 PA-BOTH 72.9 ±0.8 65.4 ±2.3 52.1 ±0.9 72.4 ±1.1 53.9 ±6.2 52.5 ±1.4 54.1 ±6.4 47.1 ±10.0 40.7 ±0.2 49.8 ±2.6 49.9 ±7.0 51.4 ±4.9 GAA 75.8 ±1.4 68.9 ±0.9 55.5 ±1.1 72.9 ±1.2 65.7 ±1.1 55.5 ±2.3 47.0 ±3.7 58.0 ±1.8 53.0 ±12.8 50.1 ±3.3 52.0 ±6.8 49.4 ±9.7 TDSS 43.8 ±6.6 50.1 ±7.1 50.9 ±3.2 62.6 ±8.5 54.0 ±5.9 49.4 ±4.6 62.3 ±0.6 57.9 ±0.5 45.4 ±9.9 46.5 ±3.3 46.6 ±6.9 50.5 ±24.1
+> DEAG 76.9 ±2.2 69.7 ±1.2 63.4 ±2.3 74.8 ±1.2 67.1 ±1.6 65.6 ±2.3 64.1 ±1.5 62.5 ±3.1 54.2 ±11.8 51.3 ±4.5 53.1 ±9.5 68.3 ±8.8
+
+sensitive to reduced and potentially biased source evidence. (2) Existing GDA methods, including DEAL, GAA, and TDSS, usually improve over standard graph classifiers, confirming the benefit of adaptation objectives under source-target shifts. By leveraging representation alignment, propagation calibration, structural reweighting, target-side smoothing, or attribute-based adaptation, they can partially reduce domain discrepancy. However, their performance re-mains unstable across shift types and transfer directions, suggesting that existing GDA objectives still depend on reliable source semantics, which become fragile when only limited source graphs are retained. (3) DEAG achieves the best av-erage performance and the lowest average rank, demonstrating its effectiveness for data-efficient agentic GDA. The gains mainly come from reliability-aware source anchors, which combine empirical prototypes with classifier directions to stabilize reusable source guidance under limited retained evidence. Moreover, prototype-aware soft target association aligns confidence-weighted target centers with source anchors, enabling unlabeled target observations to be associated with source semantics without hard pseudo-labels. Source-prior regularization further calibrates the target marginal by encouraging confident predictions while pre-venting drift toward unreliable classes. More results on other datasets can be found in Appendix C. To summarize performance across all shift types, we report aggregate results in Table 2. Node Avg., Edge Avg., and Feature Avg. denote the mean accuracy over node-density, edge-density, and feature-shift tasks, respectively. Avg. Rank is computed over all 54 reported settings, where a smaller value indicates better overall performance. The p-value is obtained by a paired task-level t-test between 
+
+DEAG and each baseline, and W/T/L counts the number of wins, ties, and losses according to the reported mean ± standard-deviation intervals. As shown in Table 2, DEAG achieves the best average performance across all three shift categories and obtains the lowest Avg. Rank of 1.22 . Compared with the strongest baseline GAA, DEAG still achieves a clear advantage, with 48 wins over 54 Data-Efficient Agentic Graph Domain Adaptation 11 
+
+Table 2: Aggregate comparison across all reported tasks. Bold results indicate the best performance.                                                                                  
+
+> Methods Node Avg. Edge Avg. Feature Avg. Avg. Rank p-value W/T/L GCN 46.82 47.23 45.98 11.52 1.84 ×10 −23 54/0/0 GIN 46.25 46.87 44.88 12.34 1.23 ×10 −23 54/0/0 GMT 48.03 48.46 47.18 7.78 4.25 ×10 −22 54/0/0 CIN 47.50 47.89 46.35 9.91 8.96 ×10 −23 54/0/0 PathNN 47.08 47.52 45.42 10.13 4.90 ×10 −23 54/0/0 DEAL 57.10 56.87 49.67 3.75 3.38 ×10 −15 52/1/1 SGDA 48.30 49.45 49.20 6.88 4.71 ×10 −21 53/0/1 A2GNN 48.27 48.77 53.48 6.88 2.62 ×10 −19 54/0/0 StruRW 52.08 52.85 48.82 5.86 6.12 ×10 −16 53/0/1 PA-BOTH 52.63 52.54 48.83 5.69 1.37 ×10 −15 53/0/1 GAA 63.15 62.20 51.58 2.49 2.58 ×10 −848/1/5 TDSS 48.60 48.96 51.53 6.55 4.54 ×10 −19 52/0/2
+> DEAG 66.89 66.45 58.92 1.22 ––
+
+settings. These results indicate that the improvement of DEAG is consistent across different shift types rather than being driven by a few favorable tasks, suggesting higher information yield from the same retained source budget. 
+
+4.3 Information Yield under Source-Data Budgets 
+
+To evaluate how effectively each method exploits retained source evidence, we vary the source-data ratio ρ within {0.1, 0.3, 0.5, 0.7, 0.9} on Mutagenicity node shift and report the average accuracy in Figure 2(a). We compare DEAG with two strong GDA baselines, GAA and DEAL, as well as the average performance of all compared baselines. As shown in Figure 2(a), DEAG outperforms both strong baselines and the average baseline across all source ratios. The advantage is particularly evident when the retained source ratio is small, where existing GDA methods suffer from weaker source supervision and less reliable alignment signals. By estimat-ing reliability-aware anchors from the retained subset and using them to guide soft target association, DEAG extracts more useful adaptation signals from limited source evidence. As the source ratio increases, all methods benefit from additional source graphs, but DEAG maintains a clear margin, demonstrating that the proposed framework improves adaptation effectiveness under the same source-data budget. 
+
+4.4 Sensitivity Analysis 
+
+We analyze the sensitivity of DEAG to the two balancing coefficients λ1 and λ2.The coefficient λ1 controls the prototype alignment loss Lpa , while λ2 controls the source-prior target regularization loss Lptr . We vary each coefficient within 
+
+{0.1, 0.3, 0.5, 0.7, 0.9} and keep the other hyperparameters fixed. 12 Y. Wang et al. 
+
+(a) Source data ratio ρ0.1 0.3 0.5 0.7 0.9 60 65 70 75 80 85  
+
+> Accuracy (%)  M0->M1 M1->M0 M0->M2 M2->M0
+
+(b) λ10.1 0.3 0.5 0.7 0.9 60 65 70 75 80 85  
+
+> Accuracy (%)  M0->M1 M1->M0 M0->M2 M2->M0
+
+(c) λ2
+
+Fig. 2: Information yield under source-data budgets and sensitivity analysis on Mutagenicity. Table 3: The results of ablation studies on the Mutagenicity dataset. Bold results indicate the best performance.                                                                      
+
+> Method M0 →M1 M0 →M2 M0 →M3 M1 →M0 M1 →M2 M1 →M3 M2 →M0 M2 →M1 M2 →M3 M3 →M0 M3 →M1 M3 →M2
+> DEAG w/o Lpa 70.8 63.4 57.1 65.4 67.5 59.8 62.3 73.1 61.2 58.6 60.1 67.8
+> DEAG w/o Lptr 73.4 66.1 60.3 67.3 70.2 62.5 65.0 75.8 64.1 62.1 63.4 70.6
+> DEAG w/o Hcond 74.9 67.5 61.6 69.8 71.8 64.1 66.9 77.4 65.7 63.4 65.0 72.3
+> DEAG w/o Dprior 75.3 68.2 61.2 70.7 72.3 64.6 67.8 77.8 66.2 63.1 65.5 72.7
+> DEAG 76.9 69.7 63.4 71.8 73.7 65.9 69.1 79.2 67.5 65.0 66.8 74.0
+
+Figures 2(b)(c) show that DEAG is stable across a broad range of both co-efficients. A small λ1 provides insufficient guidance from reliability-aware source anchors, while a moderate value strengthens class-level semantic transfer. An overly large λ1 can slightly reduce flexibility by forcing uncertain target centers toward imperfect anchors. For λ2, a small value weakens target-marginal cali-bration and makes predictions more prone to drifting toward initially favored classes. A moderate value improves robustness by jointly sharpening target pre-dictions and matching the target marginal to the retained source prior, whereas an excessively large value may over-constrain the target distribution. The default setting λ1 = 0 .7 and λ2 = 0 .5 provides a good balance between source-semantic alignment and target-marginal calibration. 
+
+4.5 Ablation Study 
+
+We conduct ablation studies to examine the contribution of each component in 
+
+DEAG . DEAG w/o Lpa removes the prototype alignment loss, so target centers are no longer explicitly aligned with reliability-aware source anchors. DEAG w/o 
+
+Lptr removes the source-prior target regularization loss. To further disentangle 
+
+Lptr , DEAG w/o Hcond removes the conditional entropy term, while DEAG 
+
+w/o Dprior removes the source-prior matching term. Table 3 reports the ablation results. From the table, we make four observa-tions: (1) The full model achieves the best performance across the ablation set-tings, indicating that the three components of DEAG provide complementary benefits rather than redundant regularization. (2) Removing Lpa leads to the most consistent and pronounced degradation. This trend shows that reliability-aware prototype alignment is the primary mechanism for transferring reusable Data-Efficient Agentic Graph Domain Adaptation 13 
+
+class-level source semantics to the target domain. Without this loss, target repre-sentations are no longer explicitly guided toward source anchors, making adap-tation more vulnerable to weakened source evidence. (3) Removing Lptr also causes clear performance drops across transfer directions, suggesting that pro-totype alignment alone cannot fully stabilize target predictions. This confirms the necessity of source-prior target regularization, especially when early target associations may be biased under limited source evidence. (4) Removing either 
+
+Hcond or Dprior weakens the model, but the degradation is generally milder than removing the entire Lptr . This indicates that the two terms play complementary roles: Hcond improves sample-level prediction confidence, while Dprior constrains the target marginal using retained source evidence. Overall, the ablation trends verify that DEAG benefits from the joint effect of reliability-aware source an-choring, prototype-aware target association, and source-prior target-marginal calibration in the limited-source setting. 
+
+5 Conclusion 
+
+We propose DEAG , a reliability-aware prototype learning framework for data-efficient agentic graph domain adaptation. Using source support and embedding compactness, DEAG blends empirical prototypes with classifier directions into reusable anchors. Soft association aligns confidence-weighted target centers with these anchors without hard pseudo-label training, while source-prior marginal calibration stabilizes predictions using retained source evidence. Experiments across structural and feature shifts demonstrate average gains over competitive baselines under matched source-data budgets. 
+
+References 
+
+1. Baek, J., Kang, M., Hwang, S.J.: Accurate learning of graph representations with graph multiset pooling. arXiv preprint arXiv:2102.11533 (2021) 2. Bodnar, C., Frasca, F., Otter, N., Wang, Y., Lio, P., Montufar, G.F., Bronstein, M.: Weisfeiler and lehman go cellular: Cw networks. Proceedings of the Conference on Neural Information Processing Systems (2021) 3. Cai, R., Wu, F., Li, Z., Wei, P., Yi, L., Zhang, K.: Graph domain adaptation: A generative view. ACM Transactions on Knowledge Discovery from Data (2024) 4. Chen, W., Ye, G., Wang, Y., Zhang, Z., Zhang, L., Wang, D., Zhang, Z., Zhuang, F.: Smoothness really matters: A simple yet effective approach for unsupervised graph domain adaptation. In: Proceedings of the AAAI Conference on Artificial Intelligence (2025) 5. Collaco, B.G., Haider, S.A., Prabha, S., Gomez-Cabello, C.A., Genovese, A., Wood, N.G., Bagaria, S.P., Gopala, N., Tao, C., Forte, A.J.: The role of agentic artificial intelligence in healthcare: a scoping review. npj Digital Medicine (2026) 6. Dai, Q., Wu, X.M., Xiao, J., Shen, X., Wang, D.: Graph transfer learning via ad-versarial domain adaptation with graph convolution. IEEE Transactions on Knowl-edge and Data Engineering (2022) 7. Fang, R., Li, B., Zeng, Q., Hosseini Dashtbayaz, N., Pu, R., Ling, C., Wang, B., et al.: On the benefits of attribute-driven graph domain adaptation. In: Proceedings of the International Conference on Learning Representations (2025) 14 Y. Wang et al. 8. Fang, R., Li, B., Zhao, J., Pu, R., Zeng, Q., Xu, G., Ling, C., Wang, B.: Homophily enhanced graph domain adaptation. arXiv preprint arXiv:2505.20089 (2025) 9. Ganin, Y., Ustinova, E., Ajakan, H., Germain, P., Larochelle, H., Laviolette, F., March, M., Lempitsky, V.: Domain-adversarial training of neural networks. The Journal of Machine Learning Research. (2016) 10. Gao, X., Yu, J., Chen, T., Ye, G., Zhang, W., Yin, H.: Graph condensation: A survey. IEEE Transactions on Knowledge and Data Engineering (2025) 11. Garg, S., Erickson, N., Sharpnack, J., Smola, A., Balakrishnan, S., Lipton, Z.C.: Rlsbench: Domain adaptation under relaxed label shift. In: Proceedings of the International Conference on Machine Learning. PMLR (2023) 12. Hadipour, H., Li, Y.Y., Sun, Y., Deng, C., Lac, L., Davis, R., Cardona, S.T., Hu, P.: Graphban: An inductive graph-based approach for enhanced prediction of compound-protein interactions. Nature Communications (2025) 13. Hashemi, M., Gong, S., Ni, J., Fan, W., Prakash, B.A., Jin, W.: A comprehensive survey on graph reduction: Sparsification, coarsening, and condensation. arXiv preprint arXiv:2402.03358 (2024) 14. Hu, S., Lu, C., Clune, J.: Automated design of agentic systems. In: Proceedings of the International Conference on Learning Representations (2025) 15. Hu, S., Zou, G., Yang, S., Lin, S., Gan, Y., Zhang, B., Chen, Y.: Large language model meets graph neural network in knowledge distillation. In: Proceedings of the AAAI Conference on Artificial Intelligence (2025) 16. Ju, W., Yi, S., Wang, Y., Long, Q., Luo, J., Xiao, Z., Zhang, M.: A survey of data-efficient graph learning. arXiv preprint arXiv:2402.00447 (2024) 17. Kazius, J., McGuire, R., Bursi, R.: Derivation and validation of toxicophores for mutagenicity prediction. Journal of medicinal chemistry (2005) 18. Kipf, T.N., Welling, M.: Semi-supervised classification with graph convolutional networks. arXiv preprint arXiv:1609.02907 (2016) 19. Lei, P.I., Chen, X., Sheng, Y., Liu, Y., Gong, Z., Yang, Q.: Gradual domain adapta-tion for graph learning. ACM Transactions on Intelligent Systems and Technology (2025) 20. Li, W., Liu, X., Yuan, Y.: Sigma++: Improved semantic-complete graph matching for domain adaptive object detection. IEEE Transactions on Pattern Analysis and Machine Intelligence 45 (7), 9022–9040 (2023) 21. Liang, J., Hu, D., Feng, J.: Do we really need to access the source data? source hypothesis transfer for unsupervised domain adaptation. In: Proceedings of the International Conference on Machine Learning. PMLR (2020) 22. Liu, M., Fang, Z., Zhang, Z., Gu, M., Zhou, S., Wang, X., Bu, J.: Rethinking propagation for unsupervised graph domain adaptation. In: Proceedings of the AAAI Conference on Artificial Intelligence (2024) 23. Liu, S., Li, T., Feng, Y., Tran, N., Zhao, H., Qiu, Q., Li, P.: Structural re-weighting improves graph domain adaptation. In: Proceedings of the International Conference on Machine Learning. PMLR (2023) 24. Liu, S., Zou, D., Zhao, H., Li, P.: Pairwise alignment improves graph domain adaptation. arXiv preprint arXiv:2403.01092 (2024) 25. Long, M., Cao, Y., Wang, J., Jordan, M.: Learning transferable features with deep adaptation networks. In: Proceedings of the International Conference on Machine Learning. PMLR (2015) 26. Michel, G., Nikolentzos, G., Lutzeyer, J.F., Vazirgiannis, M.: Path neural networks: Expressive and accurate graph neural networks. In: Proceedings of the Interna-tional Conference on Machine Learning. PMLR (2023) Data-Efficient Agentic Graph Domain Adaptation 15 27. Ngo, B.H., Bui, D.C., Do-Tran, N.T., Choi, T.J.: Higda: Hierarchical graph of nodes to learn local-to-global topology for semi-supervised domain adaptation. In: Proceedings of the AAAI Conference on Artificial Intelligence (2025) 28. Qiao, Z., Luo, X., Xiao, M., Dong, H., Zhou, Y., Xiong, H.: Semi-supervised domain adaptation in graph transfer learning. arXiv preprint arXiv:2309.10773 (2023) 29. Tian, Y., Pei, S., Zhang, X., Zhang, C., Chawla, N.V.: Knowledge distillation on graphs: A survey. ACM Computing Surveys (2025) 30. Wale, N., Watson, I.A., Karypis, G.: Comparison of descriptor spaces for chemical compound retrieval and classification. Knowledge and Information Systems (2008) 31. Wang, J., Zheng, X., Li, Y., Guo, Y.: Correction to: Domain graph-structured multi-source domain adaptation with dual integration. In: International Conference on Advanced Data Mining and Applications. Springer (2025) 32. Wang, Y., Zhao, T., Wu, Z., Wang, S.: Bridging source and target domains via link prediction for unsupervised domain adaptation on graphs. In: Proceedings of the International ACM Conference on Web Search & Data Mining (2025) 33. Wang, Y., Huang, H., Zheng, Z., Liang, S.: Cross-resolution semantic learning for graph domain adaptation. arXiv preprint arXiv:2607.29365 (2026) 34. Wang, Y., Liang, V., Yin, N., Liu, S., Segal, E.: Sgac: a graph neural network frame-work for imbalanced and structure-aware amp classification. Briefings in Bioinfor-matics 27 (1), bbag038 (2026) 35. Wang, Y., Liu, X., Wang, M., Gao, S., Yin, N.: Disrfm: Polar riemannian flow matching for structure-preserving graph domain adaptation. arXiv preprint arXiv:2602.00656 (2026) 36. Wang, Y., Wang, M., Huang, Z., Liu, S., Yin, N.: Nested graph pseudo-label re-finement for noisy label domain adaptation learning. In: Proceedings of the AAAI Conference on Artificial Intelligence (2026) 37. Wang, Y., Wang, M., Su, H., Yin, N., Yao, Q., Kwok, J.: Degree-conscious spiking graph for cross-domain adaptation. arXiv preprint arXiv:2410.06883 (2024) 38. Wang, Y., Yin, N., Xiao, M., Yi, X., Liu, S., Liang, S.: Dusego: Dual second-order equivariant graph ordinary differential equation. ACM Transactions on Knowledge Discovery from Data 20 (1), 1–18 (2025) 39. Wang, Y., Zhang, K., Huang, J., Yin, N., Liu, S., Segal, E.: Protomol: enhancing molecular property prediction via prototype-guided multimodal learning. Briefings in Bioinformatics 26 (6), bbaf629 (2025) 40. Wang, Y., Zhang, K., Wang, M., Gao, S., Yin, N.: Usbd: Universal struc-tural basis distillation for source-free graph domain adaptation. arXiv preprint arXiv:2602.08431 (2026) 41. Xu, K., Hu, W., Leskovec, J., Jegelka, S.: How powerful are graph neural networks? arXiv preprint arXiv:1810.00826 (2018) 42. Yang, Z.R., Han, J., Wang, C.D., Liu, H.: Graphlora: Structure-aware contrastive low-rank adaptation for cross-graph transfer learning. In: Proceedings of the In-ternational ACM SIGKDD Conference on Knowledge Discovery & Data Mining (2025) 43. Yin, N., Shen, L., Li, B., Wang, M., Luo, X., Chen, C., Luo, Z., Hua, X.S.: Deal: An unsupervised domain adaptive framework for graph-level classification. In: Pro-ceedings of the ACM International Conference on Multimedia (2022) 44. Yin, N., Shen, L., Wang, M., Lan, L., Ma, Z., Chen, C., Hua, X.S., Luo, X.: Coco: A coupled contrastive framework for unsupervised domain adaptive graph classification. In: Proceedings of the International Conference on Machine Learning (2023) 16 Y. Wang et al. 45. Yin, N., Shen, L., Wang, M., Liu, X., Chen, C., Hua, X.S.: Dream: a dual varia-tional framework for unsupervised graph domain adaptation. IEEE Transactions on Pattern Analysis and Machine Intelligence (2025) 46. You, Y., Chen, T., Wang, Z., Shen, Y.: Graph domain adaptation via theory-grounded spectral regularization. In: Proceedings of the International Conference on Learning Representations (2023) 47. Yu, X., Gong, Z., Zhou, C., Fang, Y., Zhang, H.: Samgpt: Text-free graph foun-dation model for multi-domain pre-training and cross-domain adaptation. In: Pro-ceedings of the ACM Web Conference (2025) 48. Zeng, Z., Qiu, R., Bao, W., Wei, T., Lin, X., Yan, Y., Abdelzaher, T.F., Han, J., Tong, H.: Pave your own path: Graph gradual domain adaptation on fused gromov-wasserstein geodesics. arXiv preprint arXiv:2505.12709 (2025) 49. Zhang, C., Nie, F., Wang, R.: Anchor guided unsupervised domain adaptation. IEEE Transactions on Knowledge and Data Engineering (2024) 50. Zhang, K., Liu, S., Wang, S., Shi, W., Chen, C., Li, P., Li, S., Li, J., Ding, K.: A sur-vey of deep graph learning under distribution shifts: from graph out-of-distribution generalization to adaptation. ACM Transactions on Knowledge Discovery from Data (2026) 51. Zhang, K., Xu, T.: Brainriem: Riemannian prototype learning for source-free cross-site brain network diagnosis. arXiv preprint arXiv:2606.29200 (2026) 52. Zhang, Y., Zhang, T., Wang, K., Guo, Z., Liang, Y., Bresson, X., Jin, W., You, Y.: Navigating complexity: Toward lossless graph condensation via expanding window matching. arXiv preprint arXiv:2402.05011 (2024) Data-Efficient Agentic Graph Domain Adaptation 17 
+
+A Proof of Theorem 1 
+
+Theorem 1 (Target-Risk Bound) Let f be the graph encoder, h be the clas-sifier, and g = h ◦ f ∈ H be the learned predictor. Let RT (g) denote the expected target risk and bRSρS (g) denote the empirical risk on the retained source sub-set SρS with K samples. For each class c, let ac be the learned reliability-aware source anchor and a⋆c be the ideal class anchor estimated with sufficient source support. Define the retained-source prior πS,c = Kc/K , the anchor estimation error ϵanc = PCc=1 πS,c ∥ac − a⋆c ∥2, and the class-mass factor γβ = PCc=1 π2
+
+> S,c
+
+/β c,where βc > 0 is the detached target class-mass weight in Lpa . Assume the loss 
+
+ℓ is bounded in [0 , 1] and KLip -Lipschitz with respect to normalized graph repre-sentations. Then, with probability at least 1 − δ, the target risk is bounded by 
+
+RT (g) ≤ bRSρS (g) + KLip 
+
+pγβ Lpa + p2Dprior + KLip ϵanc 
+
++ 2 RK (H) + 3 
+
+r log(2 /δ )2K + λ⋆,
+
+(18) 
+
+where RK (H) is the empirical Rademacher complexity of H under K retained source samples, and λ⋆ denotes the minimal joint risk and residual mismatch between the retained source and target domains. Proof. Let g = h ◦ f denote the learned predictor. We use PρS to denote the retained-source distribution induced by SρS , and PT to denote the target dis-tribution. The expected risks on the retained-source and target domains are denoted by RρS (g) and RT (g), respectively. Since the loss ℓ is bounded in [0 , 1] , the standard Rademacher generalization inequality implies that, with probability at least 1 − δ,
+
+RρS (g) ≤ bRSρS (g) + 2 RK (H) + 3 
+
+r log(2 /δ )2K , (19) where RK (H) is the empirical Rademacher complexity of H under K retained source samples. We next relate the retained-source risk to the target risk. Following the stan-dard domain adaptation decomposition, the target risk can be upper bounded by the retained-source risk, a class-conditional representation discrepancy, a marginal-prior discrepancy, and an irreducible residual term: 
+
+RT (g) ≤ R ρS (g) + ∆cls (g) + ∆prior (g) + λ⋆, (20) where λ⋆ denotes the minimal joint risk and residual mismatch between the retained-source and target domains. We first bound the class-conditional discrepancy ∆cls (g). For each class c,let μT,c denote the confidence-weighted target center, ac denote the learned reliability-aware source anchor, and a⋆c denote the ideal source anchor obtained with sufficient source support. Since the loss is KLip -Lipschitz with respect to 18 Y. Wang et al. 
+
+normalized graph representations, the discrepancy between the target class cen-ter and the ideal source class anchor satisfies 
+
+∆cls (g) ≤ KLip 
+
+> C
+
+X
+
+> c=1
+
+πS,c μT,c − a⋆c 2 . (21) By the triangle inequality, for every class c,
+
+μT,c − a⋆c 2 ≤ μT,c − ac 2 + ∥ac − a⋆c ∥2 . (22) Substituting Eq. (22) into Eq. (21) yields 
+
+∆cls (g) ≤ KLip 
+
+> C
+
+X
+
+> c=1
+
+πS,c μT,c − ac 2
+
++ KLip 
+
+> C
+
+X
+
+> c=1
+
+πS,c ∥ac − a⋆c ∥2 .
+
+(23) By the definition of the weighted anchor estimation error, 
+
+ϵanc =
+
+> C
+
+X
+
+> c=1
+
+πS,c ∥ac − a⋆c ∥2 , (24) we have 
+
+∆cls (g) ≤ KLip 
+
+> C
+
+X
+
+> c=1
+
+πS,c μT,c − ac 2 + KLip ϵanc . (25) It remains to relate the first term in Eq. (25) to the prototype alignment loss. Let 
+
+dc = μT,c − ac 2 . (26) The prototype alignment loss is 
+
+Lpa =
+
+> C
+
+X
+
+> c=1
+
+βcd2 
+
+> c
+
+. (27) Assuming βc > 0 for all classes involved in alignment, we apply the Cauchy– Schwarz inequality: 
+
+> C
+
+X
+
+> c=1
+
+πS,c dc =
+
+> C
+
+X
+
+> c=1
+
+πS,c 
+
+√βc
+
+pβcdc
+
+≤
+
+> C
+
+X
+
+> c=1
+
+π2
+
+> S,c
+
+βc
+
+!1/2 CX
+
+> c=1
+
+βcd2
+
+> c
+
+!1/2
+
+= pγβ Lpa ,
+
+(28) Data-Efficient Agentic Graph Domain Adaptation 19 
+
+Table 4: Statistics of the experimental datasets. 
+
+Datasets Graphs Avg. Nodes Avg. Edges Classes NCI1 4,110 29.87 32.30 2Mutagenicity 4,337 30.32 30.77 2DD 1,178 284.32 715.66 2PROTEINS 1,113 39.1 72.8 2COX2 467 41.22 43.45 2COX2_MD 303 26.28 335.12 2BZR 405 35.75 38.36 2BZR_MD 306 21.30 225.06 2
+
+where 
+
+γβ =
+
+> C
+
+X
+
+> c=1
+
+π2
+
+> S,c
+
+βc
+
+. (29) Combining Eq. (25) and Eq. (28), we obtain 
+
+∆cls (g) ≤ KLip 
+
+pγβ Lpa + KLip ϵanc . (30) We then bound the marginal-prior discrepancy. Recall that the retained source prior is πS and the target marginal prediction is ¯pT . The prior matching term in DEAG is 
+
+Dprior = KL ( πS ∥¯pT ) . (31) By Pinsker’s inequality, 
+
+∥πS − ¯pT ∥1 ≤ p2KL ( πS ∥¯pT ) = p2Dprior . (32) Therefore, the prior discrepancy satisfies 
+
+∆prior (g) ≤ p2Dprior . (33) Substituting Eq. (19), Eq. (30), and Eq. (33) into Eq. (20), we obtain 
+
+RT (g) ≤ bRSρS (g) + KLip 
+
+pγβ Lpa + p2Dprior + KLip ϵanc 
+
++ 2 RK (H) + 3 
+
+r log(2 /δ )2K + λ⋆.
+
+(34) 
+
+B Datasets C More Results 20 Y. Wang et al. 
+
+Table 5: The classification results (in %) on the Mutagenicity dataset under node density domain shift (source → target). M0, M1, M2, and M3 denote the sub-datasets partitioned with node density. Bold results indicate the best performance. 
+
+Method M0 →M1 M0 →M2 M0 →M3 M1 →M0 M1 →M2 M1 →M3 M2 →M0 M2 →M1 M2 →M3 M3 →M0 M3 →M1 M3 →M2 GCN 53.2 ±4.1 49.5 ±3.6 50.1 ±4.5 46.5 ±2.4 58.2 ±2.1 45.7 ±1.6 46.1 ±1.8 65.3 ±2.5 45.1 ±1.9 48.6 ±2.8 41.2 ±6.2 43.5 ±5.1 GIN 51.4 ±5.2 47.8 ±4.4 49.6 ±3.8 45.1 ±2.9 56.8 ±2.5 44.3 ±1.9 44.8 ±2.1 63.9 ±3.1 43.7 ±2.2 47.1 ±3.1 39.5 ±5.8 41.8 ±6.5 GMT 55.1 ±3.8 51.2 ±3.2 51.5 ±2.9 47.8 ±2.1 59.4 ±1.8 46.8 ±1.4 47.3 ±1.5 66.8 ±2.2 46.3 ±1.6 49.5 ±2.4 42.6 ±5.5 44.7 ±4.8 CIN 54.3 ±4.5 50.6 ±3.7 50.9 ±3.4 47.2 ±2.3 58.9 ±2.0 46.2 ±1.5 46.7 ±1.7 66.1 ±2.4 45.8 ±1.8 48.9 ±2.9 41.9 ±6.0 43.9 ±5.6 PathNN 52.8 ±4.8 48.9 ±4.1 50.4 ±3.6 45.8 ±2.7 57.5 ±2.4 45.1 ±1.8 45.4 ±2.0 64.5 ±2.8 44.6 ±2.1 47.8 ±3.0 40.7 ±5.9 42.6 ±6.1 DEAL 72.1 ±2.1 64.8 ±2.4 56.1 ±1.2 67.8 ±2.2 68.0 ±3.1 58.5 ±2.8 69.1 ±2.9 72.4 ±1.3 61.2 ±2.2 59.4 ±3.9 52.5 ±2.3 65.4 ±4.1 SGDA 54.7 ±4.6 50.2 ±3.7 50.8 ±4.1 47.4 ±1.5 59.8 ±2.1 46.9 ±1.2 47.6 ±1.8 67.2 ±2.4 46.8 ±1.6 50.4 ±3.2 43.4 ±9.8 44.2 ±9.3 A2GNN 42.5 ±7.1 46.1 ±6.5 50.6 ±3.8 47.7 ±2.3 60.1 ±1.7 46.6 ±2.0 47.3 ±1.4 67.5 ±1.9 46.5 ±2.2 51.3 ±2.6 44.6 ±7.6 43.8 ±9.5 StruRW 74.3 ±1.7 66.8 ±1.1 53.2 ±1.8 49.6 ±4.1 62.2 ±3.9 49.5 ±2.7 59.4 ±6.2 72.1 ±3.5 50.6 ±2.0 50.2 ±5.6 40.8 ±7.3 49.3 ±9.1 PA-BOTH 72.9 ±0.8 65.4 ±2.3 52.1 ±0.9 52.8 ±9.2 62.5 ±3.1 48.8 ±1.4 64.7 ±4.6 71.2 ±2.8 54.1 ±3.8 53.5 ±2.2 39.6 ±8.4 49.7 ±11.8 GAA 75.8 ±1.4 68.9 ±0.9 55.5 ±1.1 69.8 ±1.2 73.2 ±1.5 59.4 ±1.3 69.3 ±2.2 79.5 ±1.8 62.1 ±2.7 54.7 ±4.3 50.9 ±5.1 63.9 ±2.5 TDSS 43.8 ±6.6 50.1 ±7.1 50.9 ±3.2 47.6 ±1.9 59.7 ±2.4 46.8 ±1.5 47.4 ±2.1 67.4 ±2.7 46.9 ±1.8 51.7 ±2.0 41.8 ±15.6 44.1 ±8.4 
+
+DEAG 76.9 ±2.2 69.7 ±1.2 63.4 ±2.3 71.8 ±2.1 73.7 ±1.8 65.9 ±1.4 69.1 ±1.7 79.2 ±2.4 67.5 ±3.5 65.0 ±5.1 66.8 ±10.8 74.0 ±4.1 
+
+Table 6: The classification results (in %) on the Mutagenicity dataset under edge density domain shift (source → target). M0, M1, M2, and M3 denote the sub-datasets partitioned with edge density. Bold results indicate the best per-formance. 
+
+Method M0 →M1 M0 →M2 M0 →M3 M1 →M0 M1 →M2 M1 →M3 M2 →M0 M2 →M1 M2 →M3 M3 →M0 M3 →M1 M3 →M2 GCN 61.5 ±5.4 53.2 ±4.8 47.3 ±3.2 50.1 ±2.5 55.4 ±2.8 45.3 ±1.9 50.5 ±2.2 64.2 ±3.5 45.0 ±1.7 47.9 ±2.5 33.8 ±2.7 42.1 ±4.6 GIN 59.8 ±6.1 51.6 ±5.2 46.5 ±4.1 48.7 ±3.1 54.1 ±3.4 44.2 ±2.1 49.3 ±2.5 62.8 ±4.1 43.8 ±2.0 46.2 ±3.3 32.6 ±3.5 41.5 ±5.2 GMT 62.4 ±4.5 54.5 ±3.9 48.2 ±2.8 51.5 ±2.2 56.6 ±2.4 46.4 ±1.5 51.8 ±1.8 65.5 ±3.0 46.1 ±1.4 48.7 ±2.1 34.5 ±2.9 43.8 ±3.7 CIN 61.9 ±5.0 53.8 ±4.2 47.8 ±3.1 50.8 ±2.4 55.9 ±2.7 45.8 ±1.7 51.1 ±2.1 64.8 ±3.3 45.5 ±1.6 48.1 ±2.4 34.1 ±3.1 42.7 ±4.1 PathNN 60.5 ±5.6 52.4 ±4.9 46.9 ±3.7 49.3 ±2.8 54.8 ±3.1 44.9 ±2.0 49.8 ±2.4 63.5 ±3.8 44.5 ±1.9 47.3 ±2.8 33.2 ±3.2 41.9 ±4.8 DEAL 72.8 ±0.7 62.5 ±2.1 54.2 ±1.4 67.5 ±2.8 64.2 ±4.9 58.6 ±2.1 68.9 ±1.8 66.4 ±3.5 60.1 ±4.1 57.8 ±1.7 55.7 ±6.2 66.1 ±2.5 SGDA 63.3 ±6.9 54.1 ±5.7 47.9 ±4.1 51.5 ±1.2 56.9 ±0.8 46.5 ±1.4 51.3 ±0.9 51.0 ±9.5 47.7 ±2.8 49.8 ±2.1 56.5 ±6.4 45.9 ±5.2 A2GNN 60.6 ±8.7 54.4 ±7.2 49.1 ±3.5 51.2 ±2.1 57.1 ±1.5 46.3 ±2.4 51.6 ±1.7 66.5 ±3.1 46.6 ±1.2 48.7 ±2.3 33.4 ±1.8 42.9 ±2.6 StruRW 73.1 ±0.9 63.7 ±1.6 50.8 ±2.1 51.8 ±1.1 58.9 ±3.4 48.2 ±2.8 69.9 ±1.2 72.8 ±1.4 52.5 ±0.8 48.8 ±5.4 47.9 ±9.8 52.6 ±3.7 PA-BOTH 72.4 ±1.1 53.9 ±6.2 52.5 ±1.4 53.3 ±3.1 59.2 ±3.8 47.8 ±2.0 70.6 ±0.7 71.4 ±0.9 56.1 ±1.6 48.6 ±2.2 38.3 ±6.3 51.8 ±8.7 GAA 72.9 ±1.2 65.7 ±1.1 55.5 ±2.3 70.9 ±1.8 72.3 ±1.4 61.2 ±1.7 71.6 ±0.9 76.8 ±1.3 60.4 ±2.1 51.4 ±1.6 52.1 ±5.3 64.9 ±2.4 TDSS 62.6 ±8.5 54.0 ±5.9 49.4 ±4.6 51.5 ±1.8 56.8 ±2.2 46.5 ±1.1 51.2 ±2.4 66.8 ±2.7 46.2 ±1.5 48.5 ±1.9 33.2 ±2.1 43.1 ±1.4 
+
+DEAG 74.8 ±1.2 67.1 ±1.6 65.6 ±2.3 72.5 ±1.3 75.7 ±2.3 65.3 ±2.0 72.3 ±3.0 78.0 ±2.1 69.5 ±1.2 65.8 ±6.1 64.5 ±8.4 72.6 ±2.9 
+
+Table 7: The classification results (in %) on the NCI1 dataset under node density domain shift (source → target). N0, N1, N2, and N3 denote the sub-datasets partitioned with node density. Bold results indicate the best performance. 
+
+Method N0 →N1 N0 →N2 N0 →N3 N1 →N0 N1 →N2 N1 →N3 N2 →N0 N2 →N1 N2 →N3 N3 →N0 N3 →N1 N3 →N2 GCN 49.5 ±2.1 42.2 ±1.8 32.1 ±2.4 62.1 ±15.5 41.2 ±1.8 38.5 ±11.2 25.5 ±1.4 47.5 ±1.5 61.2 ±1.1 26.5 ±1.5 48.3 ±1.7 56.1 ±2.2 GIN 50.1 ±1.9 42.4 ±2.0 31.8 ±1.9 62.6 ±16.1 41.6 ±2.1 38.9 ±11.8 25.8 ±1.6 47.9 ±1.7 61.6 ±1.3 26.8 ±1.3 48.8 ±2.1 55.8 ±2.4 GMT 51.2 ±2.4 43.1 ±2.5 33.0 ±2.8 63.8 ±14.8 42.5 ±1.5 39.8 ±10.5 26.4 ±1.2 48.8 ±1.3 62.5 ±0.9 27.0 ±1.6 49.1 ±1.8 56.5 ±1.9 CIN 50.6 ±2.1 42.8 ±2.3 32.5 ±2.2 63.2 ±15.3 41.9 ±1.7 39.2 ±11.0 26.1 ±1.3 48.2 ±1.4 61.9 ±1.0 26.9 ±1.8 49.0 ±2.0 56.2 ±2.1 PathNN 51.5 ±1.8 43.5 ±1.9 33.2 ±2.0 63.5 ±15.0 42.2 ±1.9 39.5 ±10.8 26.3 ±1.5 48.5 ±1.6 62.2 ±1.2 27.1 ±1.2 49.4 ±1.5 56.8 ±1.7 DEAL 53.2 ±1.8 46.1 ±3.6 38.8 ±6.2 71.1 ±1.5 54.9 ±3.5 48.4 ±2.4 40.2 ±12.5 50.3 ±2.8 66.5 ±0.9 27.2 ±1.1 49.3 ±1.2 57.2 ±1.8 SGDA 50.8 ±1.4 42.6 ±2.1 33.4 ±1.5 63.9 ±18.4 42.8 ±1.9 40.2 ±13.2 27.1 ±1.2 49.0 ±1.7 66.4 ±1.1 27.1 ±1.8 49.2 ±2.0 57.4 ±1.5 A2GNN 51.0 ±1.9 42.8 ±1.7 33.6 ±2.1 72.9 ±1.8 42.6 ±2.4 39.9 ±15.1 36.1 ±19.2 49.2 ±1.4 62.6 ±1.3 26.9 ±1.5 49.0 ±1.8 57.2 ±2.2 StruRW 50.9 ±1.5 42.7 ±1.8 33.5 ±1.2 72.8 ±1.1 53.2 ±2.4 42.8 ±5.2 26.9 ±1.7 49.1 ±1.5 66.4 ±0.8 27.1 ±1.4 49.1 ±1.3 57.4 ±1.9 PA-BOTH 50.8 ±1.2 42.9 ±1.5 33.4 ±1.7 73.1 ±0.9 53.7 ±2.8 45.8 ±7.6 27.2 ±1.4 49.0 ±1.9 66.6 ±1.0 26.8 ±1.9 49.2 ±1.5 57.3 ±1.6 GAA 61.2 ±2.5 57.0 ±2.6 52.1 ±4.1 73.7 ±2.2 65.8 ±1.8 60.8 ±3.4 60.1 ±3.2 63.4 ±2.6 66.2 ±1.8 52.2 ±11.8 57.4 ±4.1 62.8 ±3.3 TDSS 50.9 ±2.1 42.8 ±1.4 33.6 ±1.9 72.9 ±1.5 42.7 ±1.8 40.2 ±13.8 36.3 ±18.5 49.1 ±1.2 66.5 ±1.4 27.0 ±1.6 49.0 ±2.1 57.2 ±1.7 
+
+DEAG 65.7 ±1.0 63.5 ±1.9 61.0 ±0.8 76.5 ±0.4 66.7 ±1.8 60.1 ±2.5 67.1 ±19.7 63.4 ±2.9 63.5 ±3.3 52.9 ±5.4 58.1 ±2.1 63.9 ±2.8 Data-Efficient Agentic Graph Domain Adaptation 21 
+
+Table 8: The classification results (in %) on the NCI1 dataset under edge density domain shift (source → target). N0, N1, N2, and N3 denote the sub-datasets partitioned with edge density. Bold results indicate the best performance. 
+
+Method N0 →N1 N0 →N2 N0 →N3 N1 →N0 N1 →N2 N1 →N3 N2 →N0 N2 →N1 N2 →N3 N3 →N0 N3 →N1 N3 →N2 GCN 47.8 ±1.9 45.3 ±2.1 30.8 ±1.6 43.1 ±15.2 48.2 ±2.4 51.5 ±15.2 34.2 ±16.5 49.5 ±1.5 58.7 ±8.5 26.8 ±1.4 49.5 ±1.8 51.9 ±2.0 GIN 48.2 ±1.7 46.1 ±1.5 31.2 ±2.1 43.5 ±16.1 48.7 ±2.7 52.1 ±16.1 34.8 ±17.1 50.1 ±1.7 59.3 ±9.1 27.1 ±1.8 50.2 ±2.2 52.4 ±1.6 GMT 49.9 ±2.2 46.5 ±2.4 31.5 ±1.9 44.8 ±14.8 49.5 ±2.1 53.0 ±14.8 35.6 ±15.8 51.0 ±1.3 60.5 ±7.8 27.2 ±1.5 50.8 ±1.7 52.8 ±2.1 CIN 48.5 ±1.8 46.2 ±2.0 31.3 ±1.7 44.2 ±15.3 48.9 ±2.3 52.4 ±15.3 35.1 ±16.2 50.4 ±1.4 59.9 ±8.2 27.0 ±1.7 50.5 ±1.6 52.6 ±1.9 PathNN 49.1 ±1.5 46.8 ±1.8 31.7 ±1.4 44.6 ±15.0 49.2 ±2.5 52.8 ±15.0 35.4 ±16.0 50.7 ±1.6 60.2 ±8.0 27.3 ±1.3 50.6 ±1.7 53.0 ±1.5 DEAL 52.1 ±2.7 49.2 ±1.8 36.7 ±6.4 70.8 ±2.5 53.8 ±2.1 54.7 ±7.2 42.8 ±13.5 54.1 ±3.4 64.1 ±4.8 27.5 ±1.2 51.2 ±1.1 53.1 ±1.4 SGDA 48.9 ±1.5 46.7 ±1.2 31.7 ±1.8 45.4 ±22.5 49.5 ±3.1 53.5 ±18.2 45.4 ±22.1 51.1 ±1.4 60.8 ±14.8 27.3 ±1.6 50.9 ±1.8 53.3 ±1.1 A2GNN 49.1 ±1.8 46.9 ±1.6 31.9 ±1.4 45.7 ±23.1 50.5 ±3.8 53.7 ±19.5 36.5 ±18.7 50.9 ±1.7 65.1 ±1.2 27.5 ±1.5 51.1 ±1.5 53.1 ±1.6 StruRW 48.9 ±1.2 46.8 ±1.9 31.7 ±1.5 70.1 ±3.2 50.8 ±1.1 52.2 ±6.8 29.5 ±3.2 52.6 ±1.4 63.4 ±4.7 27.3 ±1.4 50.9 ±1.3 53.2 ±1.8 PA-BOTH 49.0 ±1.4 46.7 ±1.5 31.9 ±1.1 72.1 ±2.2 51.7 ±1.6 57.6 ±6.5 29.1 ±2.8 52.3 ±1.2 63.2 ±5.3 27.4 ±1.1 51.0 ±1.6 53.1 ±1.5 GAA 62.2 ±2.6 56.9 ±2.9 50.6 ±3.5 75.1 ±3.8 63.8 ±2.7 63.2 ±3.3 63.8 ±4.4 64.5 ±1.5 64.7 ±1.2 39.6 ±10.5 55.1 ±3.2 57.6 ±2.4 TDSS 49.1 ±1.7 46.9 ±1.4 31.8 ±1.9 45.5 ±22.8 50.7 ±3.3 53.8 ±18.9 36.3 ±19.4 51.1 ±1.3 68.3 ±1.5 27.4 ±1.8 51.0 ±1.2 53.3 ±1.9 
+
+DEAG 65.1 ±3.0 60.9 ±1.9 60.9 ±1.8 76.9 ±1.2 66.2 ±1.5 62.1 ±2.2 66.3 ±17.3 65.5 ±1.8 68.1 ±3.5 43.3 ±16.4 55.7 ±1.6 60.1 ±1.8

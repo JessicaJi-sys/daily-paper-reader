@@ -1,0 +1,295 @@
+Title: InstMoE: Adaptive Multimodal Routing with Specialized Experts
+
+URL Source: https://arxiv.org/pdf/2610.05111v1
+
+Published Time: Tue, 06 Oct 2026 01:52:08 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# InstMoE: Adaptive Multimodal Routing with Specialized Experts 
+
+Guimin Hu 1, Xiang He 2, Yingjian Li 3,Zheng Lian 4, Boyan Xu 1, Ruichu Cai 11Guangdong University of Technology 2University of Copenhagen 
+
+> 3
+
+Pengcheng Laboratory 4Tongji University 
+
+rice.hu.x@gmail.com 
+
+Abstract 
+
+Multimodal inputs are inherently heteroge-neous, not only across modalities but also in the information pathways required for effec-tive prediction. To address this limitation, we propose InstMoE , an adaptive expert routing framework for multimodal learning. InstMoE dynamically routes each input to specialized unimodal and cross-modal experts, allowing the model to adapt its information pathways to the characteristics of the input. However, rout-ing can be misled when modality-specific vari-ations obscure task-relevant semantics. Such irrelevant variations may distort routing deci-sions, causing inputs to be assigned to inappro-priate experts. We therefore introduce a Con-trastive Semantic Alignment module, which encourages semantically similar inputs to share task-relevant representations while suppressing irrelevant modality-specific variations. Experi-ments on multimodal sentiment analysis bench-marks demonstrate that InstMoE achieves state-of-the-art performance on CMU-MOSEI and CH-SIMS v2 while using substantially fewer parameters than competitive baselines. Fur-ther analysis shows that different inputs exhibit distinct expert preferences, demonstrating that InstMoE moves beyond fixed fusion toward adaptive multimodal computation. 
+
+1 Introduction 
+
+A fundamental challenge in multimodal learning is that the importance of each modality is not fixed across inputs . A modality that provides a reliable signal for one input may be noisy or ambiguous for another. For example, text may clearly convey a user’s sentiment in some cases, whereas subtle acoustic or visual cues may provide more informa-tive evidence when the textual signal is ambigu-ous. Moreover, modality-specific variations, such as speaking style, background conditions, or fa-cial appearance, can alter the informativeness of individual modalities. This variability motivates adaptive routing that dynamically adjusts the con-tribution of different unimodal and cross-modal evidence pathways. Despite this variability, most existing mul-timodal models rely on fixed fusion architec-tures (Tsai et al., 2019; Zhang et al., 2023; Huang et al., 2024), processing different inputs through essentially the same computational pathway. This design implicitly assumes that modalities should contribute in a relatively consistent manner across samples. Such an assumption can be problem-atic: a dominant modality may overwhelm com-plementary evidence, while an unreliable modal-ity may inject noise into the fused representation. Although prior studies have explored modality-invariant representation learning (Hazarika et al., 2020; Wu et al., 2024a) and dynamic modality weighting (Feng et al., 2024; Hu et al., 2022), they typically focus on improving representations or adjusting modality contributions, rather than funda-mentally rethinking how multimodal inputs should be processed .This leads to a simple but important question: 
+
+should every multimodal input really follow the same fusion pathway? We argue that an effective multimodal learner should adapt its computation to the characteristics of the input. Rather than uni-formly combining all modalities, it should identify task-relevant semantic information, assess the in-formativeness of available modalities, and route each input to the experts that are most appropri-ate for its multimodal evidence. Such adaptive computation allows the model to emphasize infor-mative modalities, suppress unreliable signals, and exploit complementary cross-modal interactions when needed. Motivated by this perspective, we propose In-stMoE , an adaptive expert routing framework 
+
+that moves beyond fixed fusion through dynamic expert routing. A router dynamically determines how each input should be processed by a set of arXiv:2610.05111v1 [cs.CL] 4 Oct 2026 specialized modality-aware and cross-modal ex-perts. Consequently, different inputs can activate different expert combinations and follow different multimodal processing paths, enabling the model to adapt its fusion behavior to the available evi-dence. InstMoE is task-agnostic and can be applied to general multimodal learning problems. The main contributions of this work are summa-rized as follows: • Beyond Fixed Fusion. We propose InstMoE ,an adaptive multimodal routing framework that dynamically selects among specialized unimodal and cross-modal experts according to the characteristics of each input, moving beyond the shared fusion pathways adopted by conventional multimodal models. Specifi-cally, InstMoE identifies informative evidence pathways and adaptively combines them to construct an input-specific multimodal repre-sentation. • Adaptive Evidence Routing. We integrate contrastive semantic alignment with dynamic expert routing, aligning multimodal repre-sentations while adaptively determining how different information sources should be pro-cessed. This design improves routing robust-ness by reducing the influence of irrelevant modality-specific variations. • Effective and Parameter-Efficient Learn-ing. InstMoE achieves state-of-the-art perfor-mance on CMU-MOSEI and CH-SIMS v2 with only 3.53M parameters, demonstrating that adaptive multimodal computation can de-liver stronger performance with substantially lower model complexity. 
+
+2 Related Work 
+
+2.1 Multimodal Fusion 
+
+Multimodal fusion has evolved from early and late fusion toward intermediate fusion , which ex-plicitly models cross-modal interactions. Exist-ing approaches employ tensor-based fusion (Zadeh et al., 2017; Liu et al., 2018), cross-modal atten-tion (Tsai et al., 2019), and gating or information-theoretic mechanisms (Rahman et al., 2020; Han et al., 2021b). Despite their diverse designs, these methods predominantly rely on shared fusion ar-chitectures with uniform information composition across instances. InstMoE instead enables adap-tive routing over specialized modality-aware and cross-modal experts. 
+
+2.2 Multimodal Representation Learning 
+
+Another line of work focuses on disentangling mul-timodal representations to better characterize the relationships between shared and modality-specific information. MISA (Hazarika et al., 2020), for ex-ample, separates modality-invariant and modality-specific representations to preserve both shared se-mantics and modality-specific characteristics. Sub-sequent studies have explored related decomposi-tion strategies to retain complementary modality-specific information during fusion (Yu et al., 2021; Wu et al., 2024a). More recently, (Jun et al., 2025) introduces Dynamic Gaussian Anchoring to encour-age attribute-separated latent units and improve the interpretability of disentangled representations, while (Pu et al., 2025) disentangles authenticity-related and event-specific representations in news content. 
+
+2.3 Mixture of Experts (MoE) 
+
+Mixture-of-Experts (MoE) architectures (Jacobs et al., 1991) enable conditional computation by routing inputs to specialized experts. Recent stud-ies have extended MoE to multimodal fusion and multi-task learning (Wu et al., 2024b; Zhang et al., 2025), while others have examined the special-ization and interpretability of MoE routing (Yang et al., 2025; Lo et al., 2025). However, existing approaches predominantly employ latent experts 
+
+whose roles are learned implicitly. InstMoE instead defines experts according to modality-specific and cross-modal representations , providing semanti-cally structured choices for instance-level routing. 
+
+3 InstMoE 
+
+3.1 Overview 
+
+As illustrated in Table 1, different multimodal in-stances may require different compositions of multimodal evidence . While some instances can be effectively characterized by individual modal-ities, others require complementary information from multiple modalities and their interactions. Thus, the effective information pathway varies across instances, suggesting that a fixed fusion strat-egy may be suboptimal. This motivates an instance-adaptive mechanism that dynamically determines how multimodal evidence should be composed. Table 1: Illustrative multimodal instances showing that different instances may rely on different compositions of multimodal evidence. T, A, and V denote textual, acoustic, and visual information, respectively.                     
+
+> Instance Language Audio Vision Pathway
+> 1“I absolutely love this movie.” Neutral tone Neutral expression T
+> 2“Yeah, that’s great.” Sarcastic tone Neutral expression T+A
+> 3“I’m fine.” Neutral tone Sad expression T+V
+> 4“I guess I’m okay.” Hesitant, low-energy tone Sad facial expression T+A+V
+
+Building on this insight, InstMoE treats uni-modal and cross-modal representations as alterna-tive information pathways and dynamically selects the most relevant ones for each instance. Specifi-cally, an adaptive router learns to emphasize infor-mative pathways while suppressing less relevant ones, thereby forming an instance-specific com-position of multimodal evidence. In this way, In-stMoE adapts the information flow to individual instances rather than imposing a shared fusion pat-tern across all inputs. 
+
+3.2 Semantic Alignment Evidence Grounding We first process the pre-extracted feature sequences to obtain task-relevant representations for the three modalities. Specifi-cally, the model takes aligned sequences for lan-guage ( Xt), audio ( Xa), and vision ( Xv), which are derived using established pretrained feature ex-tractors (e.g., BERT (Devlin et al., 2019) for lan-guage and COVAREP (Degottex et al., 2014) for audio). To adapt these general-purpose represen-tations to sentiment analysis without fine-tuning the large pretrained backbones, we employ inde-pendent lightweight Transformer encoders for each modality. These encoders model intra-modal de-pendencies and transform the heterogeneous in-put features into a unified dimensionality. An attention-based aggregation layer then produces fixed-size representations fm for each modality 
+
+m ∈ { t, a, v }.To establish a common semantic basis for mul-timodal evidence, we further project the unimodal representations fm into a shared latent space us-ing modality-specific projection heads. Let the resulting representations be denoted as zm. We em-ploy a symmetric InfoNCE objective to encourage semantically corresponding representations from different modalities to remain close while separat-ing representations from different instances. For a text-to-modality pair (t, m ), where m ∈ { a, v },the contrastive objective is defined as: 
+
+Lt→m = − 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+log exp(sim( zt,i , z m,i )/τ )
+
+PNj=1 exp(sim( zt,i , z m,j )/τ )
+
+(1) where N is the batch size, (zt,i , z m,i ) denotes the positive pair corresponding to the same instance, 
+
+sim( ·) is cosine similarity, and τ is a learnable temperature parameter. We obtain the symmetric alignment objective by averaging the two directions across the auxiliary modalities: 
+
+Lcontrastive = 12|M| 
+
+X
+
+> m∈M
+
+(Lt→m + Lm→t) (2) The alignment objective is used to shape the modality encoders through backpropagation, while the resulting unimodal representations ft, fa, and 
+
+fv are retained as direct evidence sources for sub-sequent evidence composition. 
+
+3.3 Adaptive Evidence Routing Relational Evidence Unimodal representations provide direct evidence from individual modali-ties, but some predictive cues emerge only from interactions between modalities. We therefore con-struct additional relational evidence through cross-modal attention, where the textual representation queries the pre-encoded acoustic and visual feature sequences: 
+
+ft→m = Attn( ft, X m), (3) where Attn( ·, ·) denotes cross-modal attention with the textual representation serving as the query and the acoustic or visual features as keys and values. The resulting ft→a and ft→v capture interaction-aware evidence between language and acoustic or visual signals, complementing the di-rect evidence provided by ft, fa, and fv. Together, these representations preserve both unimodal and relational evidence for subsequent adaptive multi-modal routing. Figure 1: Overview of InstMoE. 
+
+Adaptive Multimodal Evidence Composition 
+
+The resulting representations define five candidate evidence pathways: 
+
+K = {t, a, v, ta, tv }, (4) corresponding to the textual, acoustic, visual, text-audio, and text-visual evidence sources, respec-tively. Rather than applying a fixed fusion rule to these pathways, InstMoE assigns each pathway to a dedicated expert: 
+
+Ek(xk) = LayerNorm (ReLU ( Wkxk + bk)) 
+
+(5) where xk denotes the corresponding evidence rep-resentation and Wk, b k are trainable expert param-eters. To determine how these evidence pathways should be composed for each instance, we intro-duce an instance-conditioned router. The router first aggregates the available evidence: 
+
+xin = Concat ( ft, f a, f v, f t→a, f t→v) (6) and produces a probability distribution over the five evidence pathways: 
+
+w = Softmax ( R(xin )) . (7) where R(·) denotes a learnable instance-conditioned routing network that maps the concatenated multimodal evidence to a set of routing logits, which are normalized by Softmax to obtain instance-specific weights over the five evidence pathways. The final multimodal representation is obtained by composing the expert outputs according to these instance-specific weights: 
+
+hmoe = X
+
+> k∈K
+
+wkEk(xk). (8) The InstMoE router dynamically allocates each instance to a task-relevant combination of unimodal and cross-modal evidence pathways, moving be-yond conventional dynamic modality weighting toward instance-adaptive multimodal fusion. Ac-cordingly, the model can selectively exploit a dom-inant evidence source when it is sufficient for pre-diction, while activating complementary unimodal and cross-modal pathways when reliable inference requires richer multimodal evidence. The result-ing representation hmoe is then fed into the task-specific regression and classification heads. 
+
+Evidence-Aware Expert Initialization To mit-igate expert collapse and provide stable starting points for the evidence pathways, we initialize each expert using the empirical centroid of its corre-sponding training representations. Specifically, the centroid for the k-th evidence pathway is computed offline as: 
+
+ck = 1
+
+|D k|
+
+X
+
+> x∈D k
+
+x, (9) where Dk denotes the training representations as-sociated with the k-th pathway. The resulting cen-troids are used to initialize the bias terms of the corresponding experts, bk ← ck, while the weight matrices retain standard variance-preserving initial-ization. The centroids are computed once before training and remain fixed throughout optimization, providing pathway-specific starting points without altering the initialization of the expert weights. InstMoE is trained end-to-end with the final pre-diction objective, while auxiliary supervision is applied to the unimodal representations to preserve their task-relevant information. The contrastive alignment objective further provides semantic su-pervision for the common evidence space. These objectives are jointly optimized so that the model learns informative evidence pathways together with their instance-specific compositions. 
+
+4 Experiments and Results 
+
+4.1 Experimental Setup Datasets We evaluate the proposed InstMoE framework on two widely used multimodal bench-marks: English CMU-MOSEI (Bagher Zadeh et al., 2018) and Chinese CH-SIMS v2 (Liu et al., 2022). Each dataset provides sequences from mul-tiple modalities, including textual, audio, and vi-sual information. Data splits (Train/Valid/Test) are based on official partitions. Detailed statistics and aligned/unaligned settings are provided in Table 2. We compare InstMoE against several established and recent baseline models, referenced in Section 4.2. Below are brief descriptions, categorized by their core methodologies.             
+
+> Dataset Lang. Total Samples Split (Train/Valid/Test) Alignment
+> CH-SIMS v2 Zh 4,002 2,400 / 800 / 802 Unaligned CMU-MOSEI En 22,856 16,326 / 1,871 / 4,659 Aligned
+> Table 2: Statistics of the primary benchmark datasets.
+
+Evaluation Metrics We assess performance us-ing four standard metrics. For regression: Mean Absolute Error (MAE) (↓) and Pearson Correla-tion (Corr) (↑). For binary classification (positive vs. negative, excluding neutral samples): Accu-racy (Acc-2, non-zero) (↑) and F1-Score (non-zero) (↑). 
+
+4.2 Main Experimental Results 4.2.1 Analysis on CH-SIMS v2 (Chinese) Performance Analysis Comparative results on the Chinese CH-SIMS v2 dataset are presented in the left of Table 3. InstMoE achieves new state-of-the-art performance, outperforming all baseline models on three of the four core metrics (Corr, Acc-2, and F1-Score) and matching the state-of-the-art on MAE. Paired t-tests across five random seeds further confirm the reliability of these improve-ments. As indicated by the ‡ markers, InstMoE sig-nificantly outperforms the previous SOTA method, CaReFlow, with p < 0.05 , including a 1.97-point improvement in F1-Score. These results demonstrate the effectiveness of adaptive expert routing for multimodal sentiment analysis. Rather than applying a shared fusion strat-egy to all instances, InstMoE dynamically adjusts the contribution of different unimodal and cross-modal pathways according to the characteristics of each input. This behavior is consistent with our routing analysis in Sec. 4.4, where different sentiment conditions exhibit distinct expert prefer-ences. Combined with its lightweight architecture, these results show that InstMoE can achieve strong multimodal performance without relying on sub-stantially larger model capacity. 
+
+Computational Efficiency Analysis As summa-rized in the right of Table 3, InstMoE achieves a highly compact design with only 3.49M parame-ters, representing up to a 72% reduction compared to larger baselines such as Self-MMM, TETFN, and ALMT, and smaller than the recent efficient model KAN-MCP ( ∼3.95M). This parameter ef-ficiency is achieved by employing lightweight linear experts within the mixture-of-experts-style framework, in contrast to models that rely on more complex attention or spline-based compu-tations (e.g., KAN-MCP). Consequently, InstMoE exhibits faster training ( 65s/epoch ) and inference (1.5ms/sample ) times than all baselines, high-lighting its suitability for deployment in resource-constrained environments while maintaining supe-rior predictive performance. 
+
+4.2.2 Analysis on CMU-MOSEI (English) Performance Analysis Results for the large-scale English CMU-MOSEI dataset are presented in the left of Table 4. On this dataset, InstMoE achieves highly competitive performance, attain-ing a state-of-the-art F1 score of 88.67, which im-proves upon the previous SOTA by 1.17 points, and an Acc-2 of 87.96, also setting a new state of the art. Statistical testing further validates this re-sult, showing a significant improvement ( p < 0.05 ,marked with ‡) over the strongest baseline. Re-markably, InstMoE achieves these superior results with significantly fewer parameters than compet-ing Transformer-based models. This indicates that our MoE strategy improves performance not by brute-force scaling, but by learning more efficient, specialized representations. This suggests that with sufficient data, the MoE architecture and joint train-ing objective facilitate the learning of robust classi-fication capabilities. 
+
+Computational Efficiency Analysis As shown in the right of Table 4, InstMoE achieves supe-Model Venue MAE ↓ Corr ↑ Acc-2 ↑ F1-Score ↑ Params (M) ↓ Train / ep. (s) ↓ Infer. (ms) ↓                                                                 
+
+> CubeMLP* (Sun et al., 2022) ACM MM 2022 0.334 0.648 71.95 78.53 ∼6.5 ∼210 ∼3.8 CENet †(Wang et al., 2022) TMM 2022 0.310 0.699 79.56 79.63 ∼6.4 ∼210 ∼3.7 ALMT* (Zhang et al., 2023) EMNLP 2023 0.308 0.700 71.86 79.51 ∼12.4 ∼310 ∼5.4 KuDA* (Feng et al., 2024) EMNLP 2024 0.289 0.741 76.21 82.11 ∼10.6 ∼280 ∼5.0 KAN-MCP* (Luo et al., 2025) ACM MM 2025 0.281 0.742 81.60 81.70 ∼3.95 ∼140 ∼2.8 CaReFlow (Mai and Han, 2026a) CVPR 2026 0.277 0.745 82.90 82.90 ∼7∼210 ∼4.0 CmIR (Mai and Han, 2026b) ACL 2026 0.286 0.742 81.90 82.00 ∼4.1 ∼80 ∼2.5
+> InstMoE Ours 0.271 ‡0.751 ‡85.85 ‡84.87 ‡3.49 65 1.5
+
+Table 3: PA Comparative Analysis of Performance and Computational Efficiency on CH-SIMS v2. Best result per metric in bold . † denotes results from (Mao et al., 2022); * denotes results from author-provided code. Results marked with ‡ indicate statistical significance ( p < 0.05 ) over the previous SOTA (KAN-MCP) via paired t-test. 
+
+rior efficiency with only 3.53M parameters. This represents a reduction of up to 72% compared to heavy baselines like MISA, and is even lighter than the recent efficient baseline KAN-MCP ( ∼3.95M). Crucially, InstMoE translates this compactness into speed. Unlike architectures that rely on complex at-tention mechanisms or spline-based computations (e.g., KAN-MCP), our model adopts lightweight linear experts within a mixture-of-experts-style framework while achieving superior performance. Consequently, it achieves significantly faster train-ing ( 95s/epoch ) and inference ( 1.6ms/sample )compared to all baselines, offering a robust solution for deployment-constrained environments. 
+
+4.3 Ablation Studies 
+
+As shown in Table 5, the removal of the MoE module (replaced by direct feature concatenation) caused the largest performance drop (an F1-Score drop of 3.35%, from 84.87 to 81.52), validat-ing the critical role of dynamic fusion. Ablating the Semantic Alignment Loss (w/o Align Loss) led to the second-largest drop (an F1-Score drop of 2.82%, from 84.87 to 82.05), confirming the benefit of style-content disentanglement. The knowledge-guided initialization and auxiliary su-pervision losses also clearly contributed, with F1-Score drops of 1.74% ( w/o Centroid Init ) and 1.15% (w/o Aux Loss), respectively. The results demonstrate the effectiveness of the proposed mod-ule in multimodal sentiment analysis. Collectively, these results reveal a clear hierar-chy of component importance. As demonstrated, the removal of our two core conceptual innova-tions, specifically dynamic fusion (w/o MoE Mod-ule) and style-content disentanglement (w/o CA), induced the most significant performance degra-dation. We interpret this as strong evidence that these two components are the primary drivers of the model’s success, validating our hypotheses that models must dynamically fuse modalities and sepa-rate style from content. The other two components (w/o Centroid Init and w/o Aux Loss) function as crucial supporting strategies . We posit they sta-bilize and enhance the training process, ensuring the core MoE experts specialize effectively and the unimodal features are robust before fusion. 
+
+4.4 Router Weight Distribution Analysis 
+
+Figure 2: Average weight allocation per expert across sentiment intensity groups (CH-SIMS v2). 
+
+To examine the router’s dynamic behavior, we analyze its expert weight assignments across three sentiment intensity groups on CH-SIMS v2 (Fig-ure 2): Strongly Positive (≥ 0.5), Strongly Negative 
+
+(≤ − 0.5), and Neutral/Subtle ([−0.2, 0.2] ). The router exhibits clear instance-dependent variations in expert allocation. Strongly Nega-tive samples rely most heavily on the Text expert (0.457), whereas Strongly Positive samples assign greater weight to the Video expert (0.281). In con-trast, Neutral/Subtle samples distribute substantial weight across both the Text (0.323) and Text-Video Model Venue MAE ↓ Corr ↑ Acc-2 ↑ F1-Score ↑ Acc-7 ↑ Params (M) ↓ Train / ep. (s) ↓ Infer. (ms) ↓                                                                        
+
+> UniMSE (Hu et al., 2022) EMNLP 2022 0.523 0.773 87.46 87.50 54.39 ∼12.1 ∼300 ∼5.2 HyCon (Mai et al., 2023) TAC 2023 0.590 0.792 86.50 86.40 52.80 ∼7.6 ∼200 ∼3.8 DMD (Li et al., 2023) CVPR 2023 --85.00 84.90 53.70 ∼9.8 ∼210 ∼4.0 MMML (Wu et al., 2024a) NAACL 2024 0.517 0.790 86.49 86.50 54.95 ∼8.4 ∼230 ∼4.1 EMOE (Fang et al., 2025) CVPR 2025 0.536 -85.30 85.30 54.10 ∼10.1 ∼250 ∼4.7 CaReFlow (Mai and Han, 2026a) CVPR 2026 0.504 0.799 87.90 88.00 54.10 ∼7∼210 ∼4.0 CmIR (Mai and Han, 2026b) ACL 2026 0.513 0.793 87.80 87.70 -∼3∼80 ∼2.5
+> InstMoE Ours 0.548 0.771 87.96 ‡88.67 ‡55.54 3.53 95 1.6
+
+Table 4: A Comparative Analysis of Performance and Computational Efficiency on the CMU-MOSEI Dataset. Acc-2 and F1-Score are non-zero binary metrics. Best results in bold . Baseline data are primarily retrieved from (Wu et al., 2024a), except for KAN-MCP which is cited from its original paper (Luo et al., 2025). Results marked with ‡
+
+indicate statistical significance ( p < 0.05 ) over the second-best F1-Score.                                                        
+
+> MAE ↓Corr. ↑Acc-2 ↑F1-Score ↑
+> InstMoE 0.271 0.751 85.85 84.87
+> w/o MoE Module 0.302 (↑0.031) 0.721 (↓0.030) 82.81 (↓3.04) 81.52 (↓3.35)
+> w/o CA module 0.298 (↑0.027) 0.737 (↓0.014) 83.94 (↓1.91) 82.05 (↓2.82)
+> w/o Centroid Init 0.284 (↑0.013) 0.743 (↓0.008) 84.35 (↓1.50) 83.13 (↓1.74)
+> w/o Aux Loss 0.283 (↑0.012) 0.747 (↓0.004) 84.82 (↓1.03) 83.72 (↓1.15)
+
+Table 5: Ablation study results on CH-SIMS v2. The values in parentheses indicate the performance degrada-tion compared to the full InstMoE model. “CA” denotes contrastive alignment module. 
+
+Condition GA GV GT
+
+Original 31.4 34.2 34.4 Audio degraded (80%) 14.7 41.6 43.7 Visual degraded (80%) 42.1 16.3 41.6 Text degraded (80%) 43.5 42.7 13.8 Audio + Visual degraded (80%) 11.2 13.5 75.3 
+
+Table 6: Routing behavior under controlled modality degradation. GA, GV , and GT denote the aggregated normalized routing weights assigned to audio-, visual-, and text-related experts, respectively. The reported values are preliminary placeholders. 
+
+(0.196) experts. These shifts indicate that differ-ent sentiment conditions favor different unimodal and cross-modal pathways, rather than following a fixed fusion strategy. Overall, the results provide direct evidence that InstMoE performs instance-adaptive expert allocation, dynamically adjusting the contribution of different information pathways according to the characteristics of each input. 
+
+5 Instance-Adaptive Routing 
+
+To evaluate whether InstMoE adapts its routing to modality reliability, we conduct controlled modal-ity degradation experiments. For each instance, we selectively degrade one or more modalities while keeping the others unchanged, using tem-poral masking for audio and visual features and span-level masking for text at ratios of 20% –80% .We then compare the routing weights of the original and degraded inputs using the same settings. The routing consistently shifts away from de-graded modalities. For example, degrading audio by 80% reduces the weight of audio-related experts from 31.4% to 14.7%, while increasing the weights of visual- and text-related experts from 34.2% and 34.4% to 41.6% and 43.7%, respectively. Similar shifts occur under visual and textual degradation, with the corresponding modality weights decreas-ing by approximately 15–18 percentage points. Un-der asymmetric audio-visual degradation, the rout-ing also responds to relative modality reliability, with the more severely degraded modality receiv-ing a larger reduction in routing weight. These results suggest that InstMoE reallocates compu-tation toward relatively more reliable modalities rather than merely responding to the presence of degradation. 
+
+5.1 Representation Invariance Analysis 
+
+To examine whether contrastive semantic align-ment (CA) reduces sensitivity to irrelevant modality-specific variations while preserving task-relevant information, we train linear probes to pre-dict speaker identity, clip source, and sentiment from representations learned with and without CA. Speaker and clip identities serve as proxies for instance-specific variations, while sentiment mea-sures the preservation of task-relevant information. Lower speaker and clip prediction accuracy, to-gether with stable sentiment accuracy, indicates greater representation invariance without sacrific-ing task-relevant information. As shown in Table 7, CA substantially reduces the predictability of speaker and clip identity while largely preserving sentiment information. On MO-SEI, for example, speaker identification accuracy decreases from 90% to 69%, whereas sentiment ac-Dataset Representation Speaker ID Clip Source Emotion Acc                           
+
+> CH-SIMS v2 w/o CA 72 68 78.4 w/ CA 65 (↓7) 50 (↓18) 77.9 (↓0.5)
+> MOSEI w/o CA 90 68 79.6 w/ CA 69 (↓21) 54 (↓14) 78.2 (↓1.4)
+
+Table 7: Representation probing results with and with-out contrastive alignment (CA).                            
+
+> Dataset Model Pitch ↑Speed ↑Noise ↑∆Acc ↓
+> CH-SIMS v2 w/o CA 76.4 74.1 70.2 -5.4 w CA 85.1 83.7 82.4 -2.1
+> MOSEI w/o CA 74.2 71.5 69.8 -6.7 w/ CA 85.4 86.2 83.8 -1.7
+
+Table 8: Robustness under controlled stylistic pertur-bations, measured by consistency between original and perturbed samples and the resulting drop in accuracy. 
+
+curacy changes only slightly from 79.6% to 78.2%. Similar trends are observed on CH-SIMS v2. These results suggest that CA does not merely make rep-resentations invariant; it stabilizes the routing deci-sions against irrelevant modality-specific variation. 
+
+5.2 Perturbation Robustness 
+
+To assess whether semantic alignment reduces sen-sitivity to irrelevant modality-specific variations, we conduct a controlled perturbation study. We apply three acoustic perturbations—pitch shifting, speed perturbation, and additive noise—to the au-dio modality while keeping the linguistic content unchanged. These perturbations modify acoustic characteristics without intentionally altering the underlying sentiment. For each sample, we com-pare the model prediction on the original and per-turbed inputs. We report prediction consistency for each perturbation and the resulting accuracy change ∆Acc. Higher consistency and a smaller ac-curacy drop indicate greater robustness to modality-specific variations. As shown in Table 8, models with CA consis-tently achieve higher prediction consistency and smaller accuracy drops across both datasets. On MOSEI, for example, consistency under pitch, speed, and noise perturbations improves from 74.2, 71.5, and 69.8 to 85.4, 86.2, and 83.8, respectively, while the accuracy drop decreases from 6.7 to 1.7 points. These results indicate that semantic align-ment reduces sensitivity to superficial acoustic vari-ations while preserving the information needed for sentiment prediction. 
+
+Figure 3: t-SNE visualization of all expert network outputs (CH-SIMS v2), colored by expert type. 
+
+5.3 Expert Specialization Visualization 
+
+To examine whether different experts learn distinct representations, we project the outputs of all five experts on CH-SIMS v2 test samples into a 2D t-SNE space, with points colored by expert identity. As shown in Figure 3, the five experts form clearly separated clusters with limited overlap, indi-cating that they learn distinct representation spaces. The separation between unimodal and cross-modal experts further suggests functional specialization, with different experts capturing modality-specific information and cross-modal interactions. These results provide qualitative evidence that the rout-ing mechanism assigns instances to complementary rather than redundant experts, supporting the effec-tiveness of instance-adaptive expert specialization. 
+
+Conclusion 
+
+We propose InstMoE , an instance-adaptive mixture-of-experts-style framework with three key components: (1) a contrastive semantic align-ment module for reducing irrelevant modality-specific variations; (2) a dynamic MoE module 
+
+with instance-adaptive routing across unimodal and cross-modal experts; and (3) a knowledge-guided initialization strategy for stable expert specializa-tion. Experiments on CMU-MOSEI and CH-SIMS v2 demonstrate state-of-the-art performance with substantially fewer parameters than competitive baselines. Further analysis confirms that InstMoE learns distinct expert preferences across instances, supporting effective instance-adaptive multimodal computation. Limitations 
+
+Despite promising results, this study has certain limitations. First, the current implementation re-lies on pre-aligned, fixed-length input sequences, potentially limiting its use in real-world scenar-ios with unaligned or variable-length multimodal data. Second, our current implementation relies on standard BERT features to align with baseline protocols. Exploring the impact of more advanced pre-trained language models (e.g., RoBERTa, De-BERTa, or LLM-based embeddings) on expert spe-cialization remains a promising direction for future work. Third, style disentanglement is learned im-plicitly through the contrastive objective; the lack of explicit interpretability regarding the specific features designated as "style" requires further in-vestigation. 
+
+Ethics Statement 
+
+We utilize publicly available datasets (CMU-MOSI,CMU-MOSEI, CH-SIMS v2) which have been scrutinized for ethical standards. However, we acknowledge that sentiment analysis models can potentially be misused for surveillance or ma-nipulation if deployed irresponsibly. Additionally, while our model improves style disentanglement, it may still inherit biases present in the training data. We urge researchers to use this technology with discretion and primarily for analyzing aggre-gate user feedback or improving human-computer interaction. 
+
+References 
+
+Takuya Akiba, Shotaro Sano, Toshihiko Yanase, Takeru Ohta, and Masanori Koyama. 2019. Optuna: A next-generation hyperparameter optimization framework. 
+
+Preprint , arXiv:1907.10902. AmirAli Bagher Zadeh, Paul Pu Liang, Soujanya Poria, Erik Cambria, and Louis-Philippe Morency. 2018. Multimodal language analysis in the wild: CMU-MOSEI dataset and interpretable dynamic fusion graph. In Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Vol-ume 1: Long Papers) , pages 2236–2246, Melbourne, Australia. Association for Computational Linguistics. Gilles Degottex, John Kane, Thomas Drugman, Tuomo Raitio, and Stefan Scherer. 2014. Covarep — a col-laborative voice analysis repository for speech tech-nologies. In 2014 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) ,pages 960–964. Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019. BERT: Pre-training of deep bidirectional transformers for language under-standing. In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Tech-nologies, Volume 1 (Long and Short Papers) , pages 4171–4186, Minneapolis, Minnesota. Association for Computational Linguistics. Florian Eyben, Martin Wöllmer, and Björn Schuller. 2010. Opensmile: the munich versatile and fast open-source audio feature extractor. Proceedings of the 18th ACM international conference on Multimedia .Yiyang Fang, Wenke Huang, Guancheng Wan, Kehua Su, and Mang Ye. 2025. Emoe: Modality-specific enhanced dynamic emotion experts. In Proceedings of the Computer Vision and Pattern Recognition Con-ference , pages 14314–14324. Xinyu Feng, Yuming Lin, Lihua He, You Li, Liang Chang, and Ya Zhou. 2024. Knowledge-guided dynamic modality attention fusion frame-work for multimodal sentiment analysis. Preprint ,arXiv:2410.04491. Wei Han, Hui Chen, Alexander Gelbukh, Amir Zadeh, Louis-philippe Morency, and Soujanya Poria. 2021a. Bi-bimodal modality fusion for correlation-controlled multimodal sentiment analysis. ICMI 2021 .Wei Han, Hui Chen, and Soujanya Poria. 2021b. Im-proving multimodal fusion with hierarchical mutual information maximization for multimodal sentiment analysis. In Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing ,pages 9180–9192, Online and Punta Cana, Domini-can Republic. Association for Computational Lin-guistics. Devamanyu Hazarika, Roger Zimmermann, and Sou-janya Poria. 2020. Misa: Modality-invariant and -specific representations for multimodal sentiment analysis. Preprint , arXiv:2005.03545. Guimin Hu, Ting-En Lin, Yi Zhao, Guangming Lu, Yuchuan Wu, and Yongbin Li. 2022. UniMSE: To-wards unified multimodal sentiment analysis and emotion recognition. In Proceedings of the 2022 Conference on Empirical Methods in Natural Lan-guage Processing , pages 7837–7851, Abu Dhabi, United Arab Emirates. Association for Computa-tional Linguistics. Jiehui Huang, Jun Zhou, Zhenchao Tang, Jiay-ing Lin, and Calvin Yu-Chian Chen. 2024. Tmbl: Transformer-based multimodal binding learn-ing model for multimodal sentiment analysis. 
+
+Knowledge-Based Systems , 285:111346. Robert A. Jacobs, Michael I. Jordan, Steven J. Nowlan, and Geoffrey E. Hinton. 1991. Adaptive mixtures of local experts. Neural Computation , 3(1):79–87. Youngjun Jun, Jiwoo Park, Kyobin Choo, Tae Eun Choi, and Seong Jae Hwang. 2025. Disentangling disentan-gled representations: Towards improved latent units via diffusion models. In 2025 IEEE/CVF Winter Con-ference on Applications of Computer Vision (WACV) ,pages 3559–3569. IEEE. Yong Li, Yuanzhi Wang, and Zhen Cui. 2023. De-coupled multimodal distilling for emotion recogni-tion. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 6631–6640. Yihe Liu, Ziqi Yuan, Huisheng Mao, Zhiyun Liang, Wanqiuyue Yang, Yuanzhe Qiu, Tie Cheng, Xiaoteng Li, Hua Xu, and Kai Gao. 2022. Make acoustic and visual cues matter: Ch-sims v2.0 dataset and av-mixup consistent module. In Proceedings of the 2022 International Conference on Multimodal Inter-action , ICMI ’22, page 247–258, New York, NY, USA. Association for Computing Machinery. Zhun Liu, Ying Shen, Varun Bharadhwaj Laksh-minarasimhan, Paul Pu Liang, Amir Zadeh, and Louis-Philippe Morency. 2018. Efficient low-rank multimodal fusion with modality-specific factors. 
+
+Preprint , arXiv:1806.00064. Ka Man Lo, Zeyu Huang, Zihan Qiu, Zili Wang, and Jie Fu. 2025. A closer look into mixture-of-experts in large language models. In Findings of the Associ-ation for Computational Linguistics: NAACL 2025 ,pages 4427–4447. Ilya Loshchilov and Frank Hutter. 2017. Decoupled weight decay regularization. In International Confer-ence on Learning Representations .Miaosen Luo, Yuncheng Jiang, and Sijie Mai. 2025. Towards explainable fusion and balanced learn-ing in multimodal sentiment analysis. Preprint ,arXiv:2504.12151. Sijie Mai and Shiqin Han. 2026a. Careflow: Cyclic adaptive rectified flow for multimodal fusion. In 
+
+Proceedings of the IEEE/CVF Conference on Com-puter Vision and Pattern Recognition (CVPR) , pages 37799–37809. Sijie Mai and Shiqin Han. 2026b. Learning invariant modality representation for robust multimodal learn-ing from a causal inference perspective. In Proceed-ings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) ,pages 45698–45721. Sijie Mai, Ying Zeng, Shuangjia Zheng, and Haifeng Hu. 2023. Hybrid contrastive learning of tri-modal repre-sentation for multimodal sentiment analysis. IEEE Transactions on Affective Computing , 14(3):2276– 2289. Huisheng Mao, Ziqi Yuan, Hua Xu, Wenmeng Yu, Yihe Liu, and Kai Gao. 2022. M-sena: An integrated platform for multimodal sentiment analysis. Preprint ,arXiv:2203.12441. Xiao Pu, Hao Wu, Xiuli Bi, Yu Wu, and Xinbo Gao. 2025. Dear: Disentangled event-agnostic representa-tion learning for early fake news detection. Transac-tions of the Association for Computational Linguis-tics , 13:343–356. Wasifur Rahman, Md. Kamrul Hasan, Sangwu Lee, Amir Zadeh, Chengfeng Mao, Louis-Philippe Morency, and Ehsan Hoque. 2020. Integrating multi-modal information in large pretrained transformers. 
+
+Preprint , arXiv:1908.05787. Hao Sun, Hongyi Wang, Jiaqing Liu, Yen-Wei Chen, and Lanfen Lin. 2022. Cubemlp: An mlp-based model for multimodal sentiment analysis and depres-sion estimation. In Proceedings of the 30th ACM International Conference on Multimedia , MM ’22, page 3722–3729. ACM. Yao-Hung Hubert Tsai, Shaojie Bai, Paul Pu Liang, J. Zico Kolter, Louis-Philippe Morency, and Rus-lan Salakhutdinov. 2019. Multimodal transformer for unaligned multimodal language sequences. In 
+
+Proceedings of the 57th Annual Meeting of the Asso-ciation for Computational Linguistics , pages 6558– 6569, Florence, Italy. Association for Computational Linguistics. Di Wang, Shuai Liu, Quan Wang, Yumin Tian, Lihuo He, and Xinbo Gao. 2022. Cross-modal enhance-ment network for multimodal sentiment analysis. 
+
+IEEE Transactions on Multimedia , pages 1–13. Jingchao Wang, Xiao Liu, Weimin Li, Fangfang Liu, Xing Wu, and Qun Jin. 2024. A text-enhanced transformer fusion network for multimodal knowl-edge graph completion. IEEE Intelligent Systems ,39(3):54–62. Zehui Wu, Ziwei Gong, Jaywon Koo, and Julia Hirschberg. 2024a. Multimodal multi-loss fusion network for sentiment analysis. In Proceedings of the 2024 Conference of the North American Chap-ter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) , pages 3588–3602, Mexico City, Mexico. As-sociation for Computational Linguistics. Zichen Wu, Hsiu-Yuan Huang, Fanyi Qu, and Yunfang Wu. 2024b. Mixture-of-prompt-experts for multi-modal semantic understanding. In Proceedings of the 2024 Joint International Conference on Compu-tational Linguistics, Language Resources and Evalu-ation (LREC-COLING 2024) , pages 11381–11393, Torino, Italia. ELRA and ICCL. Xingyi Yang, Constantin Venhoff, Ashkan Khakzar, Christian Schröder de Witt, Puneet K. Dokania, Adel Bibi, and Philip Torr. 2025. Mixture of experts made intrinsically interpretable. CoRR , abs/2503.07639. Wenmeng Yu, Hua Xu, Yuan Ziqi, and Wu Jiele. 2021. Learning modality-specific representations with self-supervised multi-task learning for multimodal senti-ment analysis. In Proceedings of the AAAI Confer-ence on Artificial Intelligence .Amir Zadeh, Minghai Chen, Soujanya Poria, Erik Cam-bria, and Louis-Philippe Morency. 2017. Tensor fusion network for multimodal sentiment analysis.    
+
+> Preprint , arXiv:1707.07250. Haoyu Zhang, Yu Wang, Guanghao Yin, Kejun Liu, Yuanyuan Liu, and Tianshu Yu. 2023. Learning language-guided adaptive hyper-modality representa-tion for multimodal sentiment analysis. In Proceed-ings of the 2023 Conference on Empirical Methods in Natural Language Processing , pages 756–767. As-sociation for Computational Linguistics. Shuo Zhang, Jinsong Zhang, Zhejun Zhang, and Lei Li. 2025. Multimodal mixture of low-rank ex-perts for sentiment analysis and emotion recognition.
+> Preprint , arXiv:2505.14143.
+
+Tensor-based Fusion Models 
+
+• TFN (Zadeh et al., 2017) models uni-, bi-, and tri-modal interactions via tensor (Cartesian) fusion; • LMF (Liu et al., 2018) improves efficiency with low-rank factorization; • TETFN (Wang et al., 2024) further integrates text-centric tensor fusion within a Trans-former framework. 
+
+Transformer and Attention-based Models 
+
+• MulT (Tsai et al., 2019) leverages cross-modal Transformers to model interactions over unaligned sequences; • MAG-BERT (Rahman et al., 2020) injects audio-visual cues into pretrained BERT via multimodal attention and gating; • ALMT (Zhang et al., 2023) learns adaptive modality representations under language guid-ance. 
+
+Disentanglement and Representation Learning 
+
+• MISA (Hazarika et al., 2020) disentangles representations into modality-invariant and modality-specific components; • Self-MM (Yu et al., 2021) learns robust modality-specific features via self-supervised multi-task learning; • MMML (Wu et al., 2024a) extends decom-position with multiple specialized losses for optimized fusion. 
+
+Other Fusion and Learning Strategies 
+
+• BBFN (Han et al., 2021a) performs pairwise bimodal fusion prior to final aggregation; • MMIM (Han et al., 2021b) enhances fusion via mutual information maximization; • UniMSE (Hu et al., 2022) provides a unified framework for MSA and MER; • HyCon (Mai et al., 2023) leverages hybrid contrastive learning for tri-modal representa-tion learning; • CubeMLP (Sun et al., 2022) replaces Trans-formers with MLP-based fusion; • CENet (Wang et al., 2022) improves cross-modal feature enhancement; • TMBL (Huang et al., 2024) focuses on Transformer-based multimodal binding; • KuDA (Feng et al., 2024) introduces knowledge-guided dynamic attention; • KAN-MCP (Luo et al., 2025) explores explainable fusion via KAN and multi-perspective contrastive learning. 
+
+Implementation Details We use pre-extracted features following standard protocols in prior MSA studies (Tsai et al., 2019; Hazarika et al., 2020). Text features are extracted with pre-trained BERT (Devlin et al., 2019), while CMU-MOSEI uses COVAREP (Degottex et al., 2014) and Facet for audio and visual features, respectively. For CH-SIMS v2, audio and visual features are extracted using openSMILE (Eyben et al., 2010) and Open-Face, respectively. Using fixed features enables us to isolate the effectiveness of the proposed InstMoE 
+
+fusion architecture. We employ Nexp = 5 experts, including three unimodal and two cross-modal experts. The router is implemented as a residual MLP with a 4-head self-attention block, followed by a two-layer MLP to produce expert weights. The model is imple-mented in PyTorch and trained on a single NVIDIA 4060Ti GPU using AdamW (Loshchilov and Hut-ter, 2017) with a batch size of 32. Dataset-specific hyperparameters, including the learning rate and semantic alignment loss weight, are tuned with Optuna (Akiba et al., 2019); detailed settings are reported in Table 9 in Appendix. Hyperparameter CMU-MOSEI CH-SIMS v2 
+
+Training Parameters 
+
+Initial Learning Rate 6.09 × 10 −5 2.27 × 10 −4
+
+Weight Decay 0.0011 0.0095 Max Epochs 50 50 
+
+Main and Alignment Loss Weights 
+
+Alignment Loss ( λalign ) 0.314 0.315 Main Reg. ( λreg ) 1.181 2.084 Main Cls. ( λcls ) 1.960 1.757 
+
+Auxiliary Loss Weights 
+
+Text Reg. 0.526 0.293 Text Cls. 0.241 0.306 Audio Reg. 0.053 0.192 Audio Cls. 0.297 0.022 Vision Reg. 0.459 0.029 Vision Cls. 0.209 0.010 
+
+Model Parameters 
+
+Modality Dropout 0.239 0.277 Focal Loss ( γ) 1.520 2.028 Focal Loss ( αt) [0.5, 0.5] [0.4, 0.6] 
+
+> Table 9: Hyperparameter settings for the CMU-MOSEI and CH-SIMS v2 datasets.
+
+InstMoE uses pre-extracted features. Following standard protocols in prior MSA studies (Tsai et al., 2019; Hazarika et al., 2020), we adopt official pre-extracted features for fair comparison. Across all datasets, text features were extracted using a pre-trained BERT model (Devlin et al., 2019). Using fixed BERT representations allows us to isolate the performance gains of the proposed InstMoE fusion architecture. For the CMU-MOSEI datasets, au-dio features were extracted using the COVAREP toolkit (Degottex et al., 2014), while visual fea-tures were derived from Facet. For the CH-SIMS v2 dataset, audio features were extracted with the openSMILE toolkit (Eyben et al., 2010), and vision features were generated using OpenFace. Our model architecture uses Nexp = 5 experts as defined in Sec Expert Network Design (three unimodal and two cross-modal). The MoE routing module is implemented as a single fusion stage fol-lowing the feature encoders. The router network itself consists of a residual MLP with an atten-tion mechanism, comprising a projection layer, a self-attention block (4 heads), and a 2-layer MLP to compute the expert weights. Our model is implemented in PyTorch and trained on a single NVIDIA 4060Ti GPU. We use the AdamW opti-mizer (Loshchilov and Hutter, 2017) with a batch size of 32. Key hyperparameters, such as the ini-tial learning rate (e.g., 6.09 e−5 for CMU-MOSEI) and the semantic alignment loss weight ( λalign ), were optimized using Optuna (Akiba et al., 2019) for each dataset. Key hyperparameters for CMU-MOSEI and CH-SIMS v2 are detailed in Table 9.
