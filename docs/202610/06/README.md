@@ -1,13 +1,16 @@
 # 日报 · 2026-10-06
 
-- 最近生成时间：2026-10-06 01:11:02 UTC
-- 今日累计更新：1 次
+- 最近生成时间：2026-10-07 00:08:35 UTC
+- 今日累计更新：2 次
 - 今日累计推荐总数：8
 - 精读区：1
 - 速读区：7
 
 ## 今日简报（AI）
-今日精读1篇、速读7篇，共追踪8篇AI论文，重点关注药物靶点亲和力模型在化学与生物分布偏移下的评估。最值得看的是《Beyond Random Splits》（8.0/10）对传统随机划分的反思，以及医学LLM路由推理与罕见病诊断两个6分方向。普通读者可先读精读这篇，再按兴趣扫读速读列表。
+- 今日共生成 8 篇推荐（精读 1 篇，速读 7 篇）
+- 精读：《Beyond Random Splits: Evaluating Drug-Target Affinity Models Under Chemically and Biologically Motivated Distribution Shifts Copy》（8.0/10）
+- 速读：《MedRouter: Demystifying Knowledge Differences Across Medical LLMs for Routing-Based Reasoning》（6.0/10）, 《RareDx: Controlled Knowledge Integration and Graph-Grounded Policy Optimization for Rare-Disease Diagnosis》（6.0/10）, 《Predictive Self-Supervised Learning Provably Identifies Stochastic Signals under Nuisance》（6.0/10）
+- 这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。
 
 ## 精读区
 1. [Beyond Random Splits: Evaluating Drug-Target Affinity Models Under Chemically and Biologically Motivated Distribution Shifts Copy](/202610/06/2610.03456v1-beyond-random-splits-evaluating-drug-target-affinity-models-under-chemically-and-biologically-motivated-distribution-shifts-copy) （8.0/10）

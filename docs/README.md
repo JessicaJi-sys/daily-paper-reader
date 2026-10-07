@@ -54,11 +54,11 @@
     <strong class="dpr-home-dashboard-count">共 8 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
-    <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>2 次</dd></div>
     <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>1</dd></div>
     <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>7</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-10-06 01:11:02 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-10-07 00:08:35 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,7 +69,10 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>今日精读1篇、速读7篇，共追踪8篇AI论文，重点关注药物靶点亲和力模型在化学与生物分布偏移下的评估。最值得看的是《Beyond Random Splits》（8.0/10）对传统随机划分的反思，以及医学LLM路由推理与罕见病诊断两个6分方向。普通读者可先读精读这篇，再按兴趣扫读速读列表。</p>
+<p>今日共生成 8 篇推荐（精读 1 篇，速读 7 篇）</p>
+<p>精读：《Beyond Random Splits: Evaluating Drug-Target Affinity Models Under Chemically and Biologically Motivated Distribution Shifts Copy》（8.0/10）</p>
+<p>速读：《MedRouter: Demystifying Knowledge Differences Across Medical LLMs for Routing-Based Reasoning》（6.0/10）, 《RareDx: Controlled Knowledge Integration and Graph-Grounded Policy Optimization for Rare-Disease Diagnosis》（6.0/10）, 《Predictive Self-Supervised Learning Provably Identifies Stochastic Signals under Nuisance》（6.0/10）</p>
+<p>这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
