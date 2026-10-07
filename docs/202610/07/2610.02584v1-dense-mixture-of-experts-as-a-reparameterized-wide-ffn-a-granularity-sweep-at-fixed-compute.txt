@@ -1,0 +1,252 @@
+Title: Dense Mixture-of-Experts as a Reparameterized Wide FFN: A Granularity Sweep at Fixed Compute
+
+URL Source: https://arxiv.org/pdf/2610.02584v1
+
+Published Time: Mon, 05 Oct 2026 00:23:47 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+# Dense Mixture-of-Experts as a Reparameterized Wide FFN: A Granularity Sweep at Fixed Compute 
+
+Vu Quang Hoang 1,2, Nghia Hieu Nguyen 1,21 University of Information Technology  
+
+> 2
+
+Vietnam National University, Ho Chi Minh City, Viet Nam 
+
+25520611@gm.uit.edu.vn, nghiangh@uit.edu.vn 
+
+October 1, 2026 
+
+Abstract 
+
+Sparse Mixture-of-Experts (MoE) models scale parameter count beyond a token’s active compute by routing each token to K experts drawn from a much larger pool of N ≫ K. This raises a basic question: does MoE’s benefit come from the dynamic, learned combination of experts, or specifically from the combinatorial capacity of selecting from a large pool? We isolate the first factor with a fully dense analogue: a fixed set of K complete SwiGLU experts, all active on every token, combined by a per-token softmax gate, with no larger pool ( N = K)and no discretization, at fixed total FFN width, so the dense baseline is the K = 1 case of the same family. Validation loss is non-monotonic in K: K = 2 finishes below the dense baseline (−0.0048 ), while K = 4 and K = 6 finish above it ( +0 .0053 and +0 .0197 ), with the gap to the baseline growing with K. All three expert models start behind the baseline early in training; 
+
+K = 2 overtakes it between steps 4000 and 4500 and stays ahead for the rest of training, while K = 4 and K = 6 never do, and all three gaps plateau by roughly step 9000. Router diagnostics mostly rule out collapse: averaged over layers, per-token gate entropy is moderate (≈ 0.66 –0.72 normalized) and expert usage is fairly balanced ( ≥ 0.90 normalized) for every K.One layer is a clear exception: in the K = 4 model, layer 0’s gate is nearly one-hot (91% of tokens have a gate weight above 0.9, usage 93 /1/5/1% across experts), while every other layer in every model stays soft. Pairwise cosine similarity between that model’s expert outputs is far higher in layer 0 (mean 0.41) and in the last layer (mean 0.39) than in any layer between them (0.02–0.16), plausibly reflecting each layer’s structural position (proximity to the embedding; convergence toward the output head) rather than functional interchangeability: forcing layer 0’s gate to uniform at evaluation increases loss by 2.4 nats on a fixed diagnostic subset, showing its collapsed routing is load-bearing, not redundant in any sense that makes it safe to override. We also show that the architecture is exactly a dense SwiGLU of width Kd e whose hidden units are scaled by token-dependent, simplex-constrained group weights, so the dense baseline is contained in its function class. These results are consistent with a granularity sweet spot for a softly gated, always-active FFN at fixed total width, with K = 2 best among the values tested and larger K costing more than it buys; we report this from single runs per configuration. 
+
+# 1 Introduction 
+
+Sparse Mixture-of-Experts architectures have become a standard way to decouple a language model’s total parameter count from its per-token compute. A router selects the top-K of N experts for each token, with N often an order of magnitude or more larger than K [3, 5, 20], so only the 1arXiv:2610.02584v1 [cs.LG] 1 Oct 2026 selected experts’ parameters are used. Making this practical requires solving a set of systems and optimization problems: load-balancing auxiliary losses, expert-capacity limits, token dropping under imbalance, and all-to-all communication across expert-parallel devices. This machinery exists to make routing discrete and therefore cheap; evaluating all N experts densely would defeat the purpose. Discreteness is a computational convenience, not obviously a source of quality. The original Mixture-of-Experts formulation [7] used a fully dense, differentiable gate over all experts, and sparse routing was introduced later to make large expert pools afford-able [20]. This leaves a question distinct from “does MoE help” and from “does a larger total pool help at fixed active compute” (both well supported [22]): does the dynamic per-token combination mecha-nism itself provide any benefit, independent of pool size? We test this with the simplest instance: a fixed, small set of K complete experts, all active on every token, combined by a learned softmax gate. There is no routing, no discretization, and no larger pool ( N = K). The architecture is matched to a dense SwiGLU transformer in parameters and FLOPs, and it generalizes the baseline: the gate is near-uniform at initialization and can, in principle, learn behavior close to a single FFN. In the worst case we would expect parity. Validation loss turns out to be non-monotonic in K at fixed total FFN width, with the dense baseline as K = 1 : K = 2 ends below the baseline, and K = 4 , 6 end above it by an increasing margin (Section 5). All expert models trail the baseline early in training, and only K = 2 overtakes it, doing so partway through training and holding a stable lead afterward, while K = 4 , 6 never overtake it and instead plateau at a persistent deficit. Router diagnostics mostly rule out collapse: entropy and usage stay moderate to balanced for almost every layer of every model, with one clear exception, a single layer in the K = 4 model whose gate is nearly one-hot. We also show the architecture is exactly a dense wide FFN with token-dependent, group-wise scaling of hidden units, which contains the baseline as a special case; this frames the K sweep as a granularity study of that one added mechanism. Our contributions are: 1. A controlled, FLOP- and parameter-matched comparison between a dense SwiGLU trans-former and a dense transformer with an always-active, dynamically-weighted set of K experts, at small scale. 2. An exact algebraic equivalence (Section 3.3): the model is a dense SwiGLU of width Kd e with token-dependent, simplex-constrained group scaling of hidden units, so the dense baseline is the K = 1 case of the same family. 3. A methodological caution: an early conclusion that the baseline wins, drawn from single-batch logged training loss during training, did not hold on validation loss at the end of annealing. 4. A granularity sweep at fixed total FFN width: K = 2 finishes below the dense baseline in validation loss, while K = 4 and K = 6 finish above it by a growing margin; only K = 2 ’s loss curve crosses the baseline’s during training, while K = 4 , 6 never do and instead plateau at a persistent deficit. 5. Router diagnostics for K = 2 , 4, 6, layer by layer: gates are mostly soft and experts fairly evenly used, with one clear exception, a single collapsed layer in the K = 4 model, which a layer-averaged summary would miss. 6. Practical guidance for small-scale MoE-inspired research, where details of this kind can reverse an apparent result. 22 Related Work 
+
+Classical dense-gated and sparse MoE. The original MoE formulation [7] uses a differentiable gate over all experts, every expert processes every input, and outputs are combined by the gate distribution. This is the direct ancestor of the design studied here. Sparse top-k routing was introduced to make much larger expert pools tractable [20]; GShard [8] and Switch Transformer [5] developed the load-balancing and capacity machinery, and ST-MoE [26] introduced the router z-loss for stability. Fine-grained expert segmentation [2, 3] pushes N far beyond K (DeepSeek-V3 uses 256 routed experts with 8 active plus a shared expert), relying on combinatorial selection to keep narrow experts expressive. We return to the pre-sparse formulation deliberately, as an instrument for isolating what dynamic combination contributes independent of pool size. 
+
+Soft routing via token merging. Soft MoE [18] avoids discrete routing differently: it forms per-expert “slots” as learned weighted averages over all tokens in the sequence , processes each slot with its expert, and reconstructs token outputs as weighted combinations over slots. This is a different axis of “softness” from ours (mixing tokens before routing, rather than mixing expert outputs per token), and the authors note that it is difficult to apply to autoregressive decoders because slot computation normalizes over the whole sequence; they leave this to future work. Our gate is per-token with no cross-token dependency and is therefore causal by construction. 
+
+Soft routing via parameter merging. SMEAR [14] constructs a single merged expert whose parameters are the router-weighted average of the experts’ parameters, then runs one forward pass through it, keeping compute close to that of a single expert. For a nonlinear expert f ,
+
+f (u; P 
+
+> i
+
+wiθi)̸ = P 
+
+> i
+
+wif (u; θi) in general, so parameter merging and output merging are not in-terchangeable relaxations. We use output-space combination at K× the FLOPs of a single expert, matched to a K×-wide dense baseline. 
+
+Geometric and theoretical analyses of soft routing. The closest empirical setup we found compares dense, top-k, and fully-soft routing under matched capacity, but through representational geometry (Jacobian spectra, effective rank) rather than training dynamics or task loss [11]; its fully-soft configuration is architecturally close to ours. On the theory side, convergence guarantees exist for jointly trained soft-routed MoE with nonlinear routers and experts under weighted-sum aggregation [10]. Whether the expert redundancy we observe (Section 5.5) matches the feature-learning behavior these analyses predict is beyond our scope. 
+
+Causality-preserving differentiable routing. A differentiable soft top-k relaxation [23] keeps routing per-token (hence causal) while relaxing the hard top-k operator, with a learned per-layer expert budget. (It shares the short name “SoftMoE” with, but is unrelated to, the method of Puigcerver et al.) It still targets genuine sparsity, whereas our design is dense over a small fixed K.
+
+Granularity, dense training, and FFN splitting. Granularity, the ratio of expert width to dense FFN width, was introduced as an explicit hyperparameter for sparse MoE, and the common choice of setting expert size equal to the dense FFN width was found to be suboptimal at almost any compute budget [13]. At larger scale, sparse MoE with an activation rate in a suitable range is reported to beat a dense model with the same total parameters, compute and data [9]. Other work uses dense computation inside MoE training: DS-MoE trains with all experts active and routes sparsely only at inference [15], and a lightweight method gives the router a dense gradient while 3keeping sparse activation [16]. On the FFN side, the sum of parallel FFNs with a shared input is equivalent to one wider FFN [1], which matches our uniform-gate case; MoEfication splits a pretrained FFN into k experts of width dff /k to sparsify it [25]; and a multi-branch FFN variant in machine translation was reported to slightly hurt performance [4]. None of these studies sweeps the number of groups of an always-active, softly gated FFN at fixed total width. 
+
+Positioning. Within the searches we ran (dense-gated MoE, soft routing, granularity studies, FFN splitting), we did not find prior work that varies the number of groups K of a softly gated, always-active FFN at fixed total width, with the dense baseline as K = 1 , and analyzes it through an exact equivalence to a wide dense FFN. Prior soft-routing work either targets large N with capacity gains as the goal, targets single-expert FLOPs, or studies geometry. 
+
+# 3 Method 
+
+3.1 Dense baseline 
+
+Each block is pre-norm (RMSNorm [24]) with rotary position embeddings [21] and multi-head causal attention; tokens embeddings are tied to the output head. The baseline FFN is SwiGLU [19]: 
+
+FFN( x) = Wdown 
+
+  SiLU( Wgate x) ⊙ Wup x, (1) with Wgate , W up ∈ Rdffn ×dmodel and Wdown ∈ Rdmodel ×dffn .
+
+3.2 Dense dynamic mixture of experts 
+
+We replace the FFN with K complete SwiGLU experts E1, . . . , E K , each of hidden width de, and a single linear router Wr ∈ RK×dmodel :
+
+Ek(x) = W (k)
+
+> down
+
+  SiLU( W (k)
+
+> gate
+
+x) ⊙ W (k) 
+
+> up
+
+x, (2) 
+
+g(x) = softmax  s · Wrx ∈ ∆K−1, (3) 
+
+y(x) = 
+
+> K
+
+X
+
+> k=1
+
+gk(x) Ek(x), (4) where s ∈ { 1, 1/√dmodel } is a router logit scale (an ablation factor). All K experts are always evaluated, so there is no top-k selection, no capacity factor, no auxiliary balancing loss, and g(x)
+
+depends only on the current token, so decoding remains causal and incremental. 
+
+Matching. We set Kd e = ddense ffn . Core FFN parameters are then 3dmodel ddense ffn for both models; the router adds Kd model parameters. Table 1 gives exact configurations and total parameter counts. 
+
+3.3 Relation to a wide dense FFN 
+
+Let hk(x) = SiLU( W (k)
+
+> gate
+
+x)⊙W (k) 
+
+> up
+
+x ∈ Rde , h(x) = [ h1(x); . . . ; hK (x)] ∈ RKd e , and D = [ W (1) 
+
+> down
+
+, . . . , W (K)
+
+> down
+
+] ∈
+
+Rdmodel ×Kd e . Stacking the gate and up matrices, h(x) is exactly the hidden activation of a dense SwiGLU of width Kd e, and 
+
+y(x) = D diag  g(x) ⊗ 1de
+
+ h(x). (5) That is, the model is a dense SwiGLU of width Kd e whose hidden units are multiplied, before the down projection, by token-dependent scalars that are shared within each group of de units and 4K de Router params Non-embedding params Total params (tied embed./head) 1 (dense) 4dmodel = 1536 0 28,321,152 47,619,840 2 2dmodel = 768 768 28,330,368 47,629,056 4 dmodel = 384 1,536 28,339,584 47,638,272 6 23 dmodel = 256 2,304 28,348,800 47,647,488 Table 1: Exact parameter counts. 12 layers, dmodel = 384 , 6 heads, head dim 64, vocab 50,257, embeddings tied with the output head. The router adds at most 2,304 parameters total (0.005% of the model), which we treat as negligible for matching purposes. constrained to the simplex. Two consequences follow. (i) At a uniform gate, g = 1/K , the model equals a dense SwiGLU of width Kd e with down projection D/K ; since D is free, the function class contains that of the baseline, so a deficit is not a lack of expressiveness. (ii) The only extra flexibility relative to the wide dense FFN is the group-wise, token-dependent scaling, and whether it helps is an empirical question. The simplex constraint also fixes the average scale at 1/K , so matching a dense FFN’s output scale requires larger down-projection weights, a reparameterization that can change optimization even when the function class is the same. 
+
+3.4 Initialization and router variants 
+
+Dense weights use PyTorch’s default fan-in scaling, i.e. U (−b, b ) with b = 1 /√fan-in. For the expert model we compare: • Scaled init: bgate/up = 1 /√dmodel K and bdown = 1 /√deK (an extra 1/√K intended to preserve variance under summation). • Fan-in init: bgate/up = 1 /√dmodel and bdown = 1 /√de, identical per-expert scaling to the baseline. The router is initialized N (0 , 0.005 2) so g(x) ≈ 1/K at step 0. Because g sums to one, the com-bination already shrinks output variance by roughly P 
+
+> k
+
+g2 
+
+> k
+
+≈ 1/K relative to a single expert, so the extra 1/√K factor compounds that shrinkage. Table 2 shows a step-0 audit (Gaussian inputs, 
+
+dmodel = 384 , K = 3 , de = 384 vs. dense dffn = 1152 ). FFN block at initialization Output std Variance / baseline Dense SwiGLU ( dffn = 3 dmodel ) 0.1056 1.00 Experts, scaled init 0.0111 0.011 Experts, fan-in init 0.0610 0.334 Table 2: Step-0 output scale of the FFN block (numerical simulation of the initialization scheme with i.i.d. Gaussian inputs). The fan-in variant’s residual ratio ≈ 1/K matches the softmax-averaging prediction; the scaled variant starts roughly an order of magnitude quieter in standard deviation. 
+
+# 4 Experimental Setup 
+
+Models. All models are 12-layer decoders with dmodel = 384 , 6 attention heads (head dim 64), RMSNorm, RoPE and tied embeddings, using the 50,257-token GPT-2 BPE vocabulary; total 5parameter counts are given in Table 1. They differ only in the FFN. Every FFN has total hidden width 4dmodel = 1536 : the dense baseline ( K=1 , dffn = 1536 ) and expert models with K = 2 
+
+(de = 768 ), K = 4 (de = 384 ) and K = 6 (de = 256 ). We report this set in place of an earlier 
+
+K ∈ { 3, 8} run, which used inconsistent settings across configurations and is superseded here; all results in this paper use one fixed init/router variant (fan-in init, no router logit scale) across every 
+
+K.
+
+Training. Sequences of 1024 tokens are packed from concatenated documents (no padding; loss and attention use only a causal mask), tokenized with the GPT-2 BPE vocabulary (50,257 tokens). Each optimizer step uses a micro-batch of 16 sequences with 4 gradient-accumulation steps, giving an effective batch of 64 sequences (65,536 tokens) per step; batches are not shuffled, so all models see identical data in identical order. The schedule has 500 warmup steps, in which the learning rate grows exponentially from 8 × 10 −5 by a factor of 1.0025 per step to a peak of ≈ 2.8 × 10 −4, followed by 20,000 steps of cosine annealing to 10 −5. Training covers 1,343,488,000 tokens, about 1.03 passes over the ∼1.3B-token training subset (so close to a single epoch). Training data is a subsample of FineWeb-10B [17]; validation uses the full FineWeb validation split. Throughout this paper, “step” refers to the optimizer step count after the 500-step warmup (i.e. step s in our tables and figures is the (s+500) -th optimizer step from initialization); token counts were logged from true step 0 and are unaffected by this offset. Optimization uses AdamW [12] with weight decay 0.01 (PyTorch defaults otherwise: β1=0 .9, β2=0 .999 , ϵ=10 −8), mixed fp16 precision, on 2 ×NVIDIA T4 GPUs. No random seed was fixed, so each of the four runs used an independent, uncontrolled initialization and data-loader state; this is part of why we treat the final-loss gaps in Section 5 as suggestive pending a noise estimate (Section 4, Limitations). 
+
+Compared models. (i) Dense SwiGLU baseline; (ii) dense dynamic MoE (this work) with K ∈{2, 4, 6}, all at fixed total FFN width 4dmodel (Table 1). 
+
+Metrics. We compare models by validation loss, logged every 500 steps on the full FineWeb validation split, disjoint from training. Logged training loss is the single-batch loss at the evaluation step and is too noisy to compare across runs, so we do not use it for comparison (Section 5 discusses a case where it was misleading). Each configuration was run once, without seed-based replication (Limitations). 
+
+# 5 Results 
+
+5.1 Dense dynamic MoE vs. dense baseline 
+
+Configuration de Val. loss (step 20,000) ∆Val vs. dense Dense SwiGLU ( K=1 ) 4dmodel 3.8752 —
+
+K=2 2dmodel 3.8704 −0.0048 
+
+K=4 dmodel 3.8805 +0 .0053 
+
+K=6 23 dmodel 3.8949 +0 .0197 
+
+Table 3: Validation loss at step 20,000. ∆ is expert model minus dense baseline, so negative means the expert model is better. One run per configuration; all use the same init and router variant; parameter counts in Table 1. 60 5000 10000 15000 20000           
+
+> Step (post-warmup; +500 for total optimizer steps)
+> 4.00 4.25 4.50 4.75 5.00 5.25 5.50 Validation loss (a) Full training
+> Dense baseline ( K= 1)
+> K= 2
+> K= 4
+> K= 6
+> 8000 10000 12000 14000 16000 18000 20000
+> Step (post-warmup; +500 for total optimizer steps)
+> 3.90 3.95 4.00 4.05 4.10 Validation loss (b) Late training (zoom)
+
+Figure 1: Validation loss over 20,000 steps for the dense baseline ( K=1 ) and K = 2 , 4, 6. (a) Full training. (b) Zoom on steps 8,000–20,000, where all four curves have entered a slowly-decaying plateau regime. Validation loss is non-monotonic in K: K=2 finishes 0.0048 below the dense baseline, while 
+
+K=4 and K=6 finish 0.0053 and 0.0197 above it. Figure 1 shows all three expert models start behind the baseline early in training (by 0.07–0.15 at step 500) and close most of that gap within the first few thousand steps. Figure 2 shows what happens after: K=2 ’s gap crosses zero between step 4000 and 4500 and stays negative (better than baseline) for the remaining 15,500 steps, settling around −0.005 to −0.007 from step 9000 onward. K=4 and K=6 never cross zero; their gaps shrink sharply early, then plateau at roughly +0 .004 and +0 .019 respectively from step 9000 onward and stay essentially flat for the rest of training. The three curves therefore do not merely differ at the final step: they reach visibly different, stable plateaus well before training ends, which we read as evidence that the differences reflect the architecture rather than still-converging noise. 
+
+5.2 An early, confounded observation at smaller scale 
+
+In earlier experiments at ∼5M parameters, an expert model using the scaled init and the 1/√dmodel 
+
+router scale from Section 3.4 beat a dense baseline by about 0.03 loss, with the gap opening near a token-to-parameter ratio of roughly 20:1 [6]. Given that both the scaled init and the router scale are confounds we identify and remove in the runs reported here (Section 3.4), we do not treat that number as informative on its own; we mention it only because the K=2 result in Section 5, obtained without either confound, independently shows the dense baseline being beaten, which is some indication the earlier observation was not purely a confound artifact. 
+
+5.3 Reading the granularity sweep 
+
+Table 3 and Figures 1–2 give a single, consistent picture: at fixed total FFN width, going from K=1 
+
+(dense) to K=2 helps slightly, and going further to K=4 or K=6 costs increasingly more. This is not the pattern fine-grained sparse MoE predicts for narrower experts. In fine-grained sparse MoE, narrowing experts while increasing both total pool size N and active count K is beneficial because different tokens can draw on different subsets of a large pool; narrowness is compensated by combinatorial selection [2, 13]. Our design has no such pool ( N = K always), so narrowing experts here only removes per-branch capacity without adding any compensating selection benefit, 70 2500 5000 7500 10000 12500 15000 17500 20000    
+
+> Step (post-warmup; +500 for total optimizer steps)
+> 0.00 0.02 0.04 0.06 0.08 0.10 0.12 0.14 0.16 Val.\ loss  baseline val.\ loss
+> K= 2
+> K= 4
+> K= 6
+
+Figure 2: Validation loss minus the dense baseline’s validation loss, at the same step, for K = 2 , 4, 6.All three start positive (worse than baseline). K = 2 crosses zero between steps 4000 and 4500 and stays negative afterward; K = 4 and K = 6 never cross zero and plateau at a positive gap that grows with K.and K=4 , 6 degrade accordingly. This leaves open why K=2 specifically improves on the baseline rather than merely degrading least; Section 3.3’s equivalence and the router diagnostics below (Section 5.5) are our attempt to explain that specifically, rather than only the ordering. 
+
+5.4 Initialization and router variant 
+
+All results in this paper use one fixed variant throughout: fan-in expert init (Section 3.4) and no router logit scale. During earlier development, removing the 1/√dmodel router scale and switching from scaled to fan-in expert init both visibly lowered loss faster over the first few hundred steps; those observations came from partially trained runs under a cosine schedule and are not re-verified as a controlled ablation on completed runs. 
+
+5.5 Router diagnostics 
+
+We measured the router at step 20,000 on a fixed held-out batch, per layer. We report normalized per-token gate entropy H/ ln K (1 is uniform, 0 is one-hot), the mean maximum gate weight, the fraction of tokens whose maximum gate weight exceeds 0.9, and the normalized entropy of the mean gate (expert usage; 1 means all experts equally used). 
+
+K Per-token entropy Mean max weight (uniform) Frac. > 0.9 Usage entropy 2 0.719 0.762 (0.500) 0.189 0.948 4 0.668 0.622 (0.250) 0.097 0.901 6 0.713 0.517 (0.167) 0.015 0.941 Table 4: Router statistics at step 20,000, averaged over layers, for the models in Table 3. 8Averaged over layers, no model looks collapsed: usage entropy is at least 0.90, and per-token entropy is well above zero for all three (0.67–0.72), with mean maximum gate weight clearly above uniform in every case (e.g. 0.762 vs. 0.500 for K = 2 ), so the gate is doing real, non-trivial, token-dependent work without degenerating. Layer averages hide a real exception. The per-layer values behind Table 4 show that in the 
+
+K=4 model, layer 0 is qualitatively different from every other layer in every model we measured: its per-token entropy is 0.185 (vs. 0.48–0.85 elsewhere), 90.9% of tokens have a maximum gate weight above 0.9 (vs. 0–40% elsewhere), and expert usage is 93 /1/5/1% (vs. roughly balanced elsewhere, usage entropy 0.221 for this layer against 0.87–1.00 for every other layer in every model). This one layer has, in effect, learned close to hard top-1 routing on its own, with no discretization mechanism forcing it to. Every other layer in the K=2 , K=4 , and K=6 models stays soft (per-token entropy 
+
+≥ 0.48 , usage entropy ≥ 0.87 ). We do not have an explanation for why this happens in exactly one layer of one configuration. This means our claim that “no router collapses” should be read as a layer-averaged, mostly-true statement rather than a universal one: collapse toward a small number of experts does occur here, locally, without any hard top-k operator or load-balancing loss encouraging it. These statistics come from the final checkpoint only and do not characterize training-time dy-namics; whether layer 0’s collapse in the K=4 model appeared early or late in training is unknown. 
+
+5.5.1 Expert redundancy in the K=4 model 
+
+To test whether the collapsed layer’s experts are functionally redundant, we computed pairwise cosine similarity between the four experts’ outputs Ek(x) in the K=4 model, per token on a held-out batch, then averaged the mean and maximum (over the  42
+
+=6 pairs) per layer. Layer Mean pairwise cosine sim. Max pairwise cosine sim. 0 0.414 0.650 1 0.161 0.249 2 0.085 0.187 3 0.049 0.156 4 0.044 0.143 5 0.040 0.125 6 0.037 0.117 7 0.027 0.107 8 0.021 0.091 9 0.037 0.115 10 0.061 0.143 11 0.388 0.496 Average 0.114 0.215 Table 5: Pairwise cosine similarity between the K=4 model’s expert outputs, by layer, on a held-out batch. Layers 0 and 11, the first and last, are outliers (Table 5): mean pairwise cosine similarity is 0.41 and 0.39 there, four to twenty times higher than every layer in between (0.02–0.16). Layer 0 is exactly the layer whose router collapsed (Section 5.5), which suggests an immediate hypothesis: if its experts are relatively redundant, the router’s precise weighting may matter little there, making the collapse inexpensive rather than costly. Layer 11 is a natural case to test this against, since it is comparably 9redundant (mean cosine 0.388 vs. layer 0’s 0.414) but its router did not collapse (entropy 0.821 vs. 0.185, usage entropy 0.983 vs. 0.221; Section 5.5). Section 5.5.2 tests the hypothesis directly, by ablation rather than by inference from cosine similarity alone, and finds against it. 
+
+5.5.2 Layer 0 is load-bearing, not redundant: a direct ablation 
+
+The cosine similarity pattern above raises an immediate question: if layer 0’s experts are more mutually aligned than elsewhere, is its router’s near-one-hot collapse (Section 5.5) inexpensive, in the sense that overriding it should barely change the model’s output? We tested this directly by forcing layer 0’s gate to uniform ( g = [ 14 , 14 , 14 , 14 ]) at evaluation and leaving every other layer untouched. Configuration Val. loss Val. ppl. Normal routing (trained gates) 3.7493 42.49 Layer 0 forced uniform 6.1216 455.59 Table 6: Uniform-gate ablation on layer 0 of the K=4 model, evaluated on a smaller, fixed subset of the validation split (CPU-only, for speed; see text). Both rows use this identical subset, so the comparison between them is unaffected by the choice of subset; the absolute values are not directly comparable to Table 3’s full-validation-split figures. This ablation was run on CPU for practicality and therefore evaluated on a smaller, fixed subset of the validation split rather than the full split used for the training-time logging behind Table 3; the two available “normal routing” figures for K=4 (3.7493 here, 3.8805 there) differ for that reason and should not be compared directly. What matters for this ablation is the comparison within Table 6, where both rows share the same fixed subset: the effect is not small, forcing uniformity at this one layer, out of twelve, increases loss by roughly 2.4 nats and perplexity by an order of magnitude on that subset. This rules out the hypothesis, which we raised in Section 5.5.1 and retract here, that elevated cosine similarity makes layer 0’s collapse cheap because the experts are close to interchangeable. Cosine similarity measures the direction of each expert’s output; it says nothing about which direction is load-bearing or about magnitude. A mean pairwise cosine similarity of 0.41 reflects a moderate, layer-position-dependent alignment (plausibly because layer 0’s input, drawn from the embedding through only one attention block, has had comparatively little opportunity to differentiate across experts, and layer 11’s output is pulled toward the narrow subspace the tied output head reads from) – not near-duplication, and not evidence that any one expert is safe to override. The router’s concentration of 93% of its weight on a single expert at layer 0 is better read as having found a specific, necessary transformation, which uniform blending with three imperfectly-aligned alternatives corrupts rather than approximates. Why layer 11, under a plausibly similar structural pressure toward alignment, did not also collapse remains unexplained. 
+
+# 6 Discussion 
+
+Why is there a sweet spot at K = 2 ? By Section 3.3, the only thing the gate adds over a wide dense FFN is a token-dependent, simplex-constrained scaling of K groups of hidden units; the dense baseline is the K=1 case where that scaling is trivial (always 1). Two groups with a soft, mostly-balanced gate (Table 4) is enough to beat the baseline slightly; four or six groups is not, and gets worse as K grows. One reading is a trade-off: splitting the same total width into more, narrower groups gives the gate more degrees of freedom to reweight, but each group is individually less capable 10 (Section 5.3), and past K=2 the second cost outgrows the first benefit. This is consistent with, but not established by, our data; it predicts that expert outputs should be more similar (redundant) at K=2 than at K=4 , 6, and that a static-weight (non-input-dependent) version of K=2 should still beat the baseline by less than the full dynamic version, since it lacks the reweighting benefit but keeps the narrower groups. Cosine similarity for the K=4 model (Section 5.5.1) shows the redundancy pattern is not uniform across depth (concentrated in the first and last layers) and is not, by itself, sufficient to explain the one router collapse we observe. This trade-off account remains a hypothesis rather than an established mechanism. 
+
+The K=4 layer-0 collapse. That one layer, in one configuration, converges to near-hard routing without any mechanism designed to produce that (Section 5.5) is itself notable: it shows this architecture can rediscover something close to discrete top-1 selection on its own, at least locally, purely from gradient descent on a continuous softmax. We initially hypothesized that layer 0’s elevated expert-output cosine similarity (Section 5.5.1) made its collapse inexpensive, since near-duplicate experts would make the router’s precise weighting inconsequential. A direct ablation (Section 5.5.2) rules this out: forcing layer 0’s gate to uniform costs roughly 2.4 nats of validation loss, an order-of-magnitude increase in perplexity, so its collapsed routing is load-bearing rather than safe to override. The elevated cosine similarity is better read as a structural, position-dependent alignment (Section 5.5.2) than as functional redundancy. Why this collapse happens in layer 0 and not the similarly aligned layer 11 remains unexplained. 
+
+What the result implies about MoE. Because the expert models have the same FLOPs and parameters as the baseline and at least the same function class (Section 3.3), the differences we observe (all within about 0.02 validation loss) cannot come from extra capacity in the sense sparse MoE has it. This is consistent with the sparse-MoE literature’s attribution of its benefit to selecting from a larger pool ( N ≫ K) [2, 9, 13], which this design cannot do by construction. 
+
+Practical advantages retained. The design needs no load-balancing loss, capacity factor, or token dropping, and it is causal and incrementally decodable (unlike token-merging Soft MoE), independent of whether K=2 ’s small win holds up under further scrutiny. 
+
+# 7 Limitations 
+
+Scale is small (28–29M non-embedding, 48M total parameters, Table 1) and results come from one dataset. Each configuration was run once, with no random seed fixed, so the four runs are independent single draws rather than seed-paired comparisons, and the −0.0048 /+0 .0053 /+0 .0197 
+
+gaps in Table 3 are single-run figures; we read the stable plateaus in Figure 2 as evidence they reflect the architecture rather than noise, but this is not established by seed-based replication. The K=4 layer-0 collapse and its ablation come from a single checkpoint, with no training-time trajectory. The layer-0 ablation used a smaller, fixed validation subset for computational reasons (Section 5.5.2); its within-ablation loss increase, not its absolute values, is what is comparable to the rest of the paper. The trade-off account of the K=2 sweet spot (Section 6) is a hypothesis, not an established mechanism. We did not train a sparse MoE model or test K values beyond {1, 2, 4, 6}.These results are specific to this scale, dataset, and architecture. 11 8 Conclusion 
+
+At fixed total FFN width, splitting a dense SwiGLU into a small, always-active, dynamically-weighted set of K experts is not uniformly good or bad: K=2 slightly beats the dense baseline (K=1 ) in validation loss and overtakes it partway through training, while K=4 and K=6 fall increasingly behind and never overtake it, with all three gaps stable over the last 11,000 of 20,000 training steps. Router diagnostics mostly show soft, balanced gates, ruling out collapse as a general explanation, but one layer of the K=4 model collapses toward near-hard routing on its own, without any mechanism encouraging it to. An exact equivalence to a wide dense FFN with token-dependent group scaling of hidden units (Section 3.3) frames this as a granularity study: adding one soft reweighting dimension to a fixed FFN budget can help a little, in moderation, and hurt increasingly once experts are split too finely, with no larger expert pool available to compensate. These results come from single runs per configuration, without seed-based replication, and should be read with that scope in mind. 
+
+# References 
+
+[1] Akhiad Bercovich et al. FFN fusion: Rethinking sequential computation in large language models. arXiv preprint arXiv:2503.18908 , 2025. [2] Damai Dai, Chengqi Deng, Chenggang Zhao, et al. DeepSeekMoE: Towards ultimate expert specialization in mixture-of-experts language models. In Proceedings of the Association for Computational Linguistics (ACL) , 2024. arXiv:2401.06066. [3] DeepSeek-AI. DeepSeek-V3 technical report. arXiv preprint arXiv:2412.19437 , 2024. [4] Yang Fan et al. Multi-branch attentive transformer. arXiv preprint arXiv:2006.10270 , 2020. [5] William Fedus, Barret Zoph, and Noam Shazeer. Switch transformers: Scaling to trillion parameter models with simple and efficient sparsity. Journal of Machine Learning Research ,23(120):1–39, 2022. [6] Jordan Hoffmann, Sebastian Borgeaud, Arthur Mensch, et al. Training compute-optimal large language models. arXiv preprint arXiv:2203.15556 , 2022. [7] Robert A. Jacobs, Michael I. Jordan, Steven J. Nowlan, and Geoffrey E. Hinton. Adaptive mixtures of local experts. Neural Computation , 3(1):79–87, 1991. [8] Dmitry Lepikhin, HyoukJoong Lee, Yuanzhong Xu, Dehao Chen, Orhan Firat, Yanping Huang, Maxim Krikun, Noam Shazeer, and Zhifeng Chen. GShard: Scaling giant models with condi-tional computation and automatic sharding. arXiv preprint arXiv:2006.16668 , 2020. [9] Houyi Li, Ka Man Lo, Shijie Xuyang, Ziqi Wang, Wenzhen Zheng, Haocheng Zhang, Zhao Li, Shuigeng Zhou, Xiangyu Zhang, and Daxin Jiang. Mixture-of-experts can surpass dense LLMs under strictly equal resource. In International Conference on Learning Representations (ICLR) , 2026. [10] Fangshuo Liao and Anastasios Kyrillidis. Guided by the experts: Provable feature learning dynamic of soft-routed mixture-of-experts. In Proceedings of the 29th International Conference on Artificial Intelligence and Statistics (AISTATS) , volume 300 of PMLR , pages 3898–3906, 2026. 12 [11] Feilong Liu. Mixture-of-experts as soft clustering: A dual jacobian-PCA spectral geometry perspective. arXiv preprint arXiv:2601.11616 , 2026. [12] Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. In International Conference on Learning Representations (ICLR) , 2019. [13] Jan Ludziejewski, Jakub Krajewski, Kamil Adamczewski, Maciej Pióro, Michał Krutul, Szymon Antoniak, Kamil Ciebiera, Krystian Król, Tomasz Odrzygóźdź, Piotr Sankowski, Marek Cygan, and Sebastian Jaszczur. Scaling laws for fine-grained mixture of experts. In Proceedings of the 41st International Conference on Machine Learning (ICML) , volume 235 of PMLR , pages 33270–33288, 2024. [14] Mohammed Muqeeth, Haokun Liu, and Colin Raffel. Soft merging of experts with adaptive routing. Transactions on Machine Learning Research , 2024. arXiv:2306.03745. [15] Bowen Pan et al. Dense training, sparse inference: Rethinking training of mixture-of-experts language models. arXiv preprint arXiv:2404.05567 , 2024. [16] Ashwinee Panda, Vatsal Baherwani, Zain Sarwar, Benjamin Therien, Supriyo Chakraborty, and Tom Goldstein. Dense backpropagation improves training for sparse mixture-of-experts. 
+
+arXiv preprint arXiv:2504.12463 , 2025. [17] Guilherme Penedo, Hynek Kydlíček, Anton Lozhkov, Margaret Mitchell, Colin Raffel, Leandro Von Werra, and Thomas Wolf. The FineWeb datasets: Decanting the web for the finest text data at scale. arXiv preprint arXiv:2406.17557 , 2024. [18] Joan Puigcerver, Carlos Riquelme, Basil Mustafa, and Neil Houlsby. From sparse to soft mixtures of experts. In International Conference on Learning Representations (ICLR) , 2024. arXiv:2308.00951. [19] Noam Shazeer. GLU variants improve transformer. arXiv preprint arXiv:2002.05202 , 2020. [20] Noam Shazeer, Azalia Mirhoseini, Krzysztof Maziarz, Andy Davis, Quoc Le, Geoffrey Hin-ton, and Jeff Dean. Outrageously large neural networks: The sparsely-gated mixture-of-experts layer. In International Conference on Learning Representations (ICLR) , 2017. arXiv:1701.06538. [21] Jianlin Su, Yu Lu, Shengfeng Pan, Ahmed Murtadha, Bo Wen, and Yunfeng Liu. RoFormer: Enhanced transformer with rotary position embedding. arXiv preprint arXiv:2104.09864 , 2021. [22] Abdalrahman Wael. Dense vs sparse pretraining at tiny scale: Active-parameter vs total-parameter matching. arXiv preprint arXiv:2605.13769 , 2026. [23] Mikołaj Zasada, Łukasz Struski, Jacek Tabor, and Marcin Kurdziel. SoftMoE: Soft differen-tiable routing for mixture-of-experts in LLMs. arXiv preprint arXiv:2606.17952 , 2026. [24] Biao Zhang and Rico Sennrich. Root mean square layer normalization. In Advances in Neural Information Processing Systems (NeurIPS) , 2019. [25] Zhengyan Zhang et al. MoEfication: Transformer feed-forward layers are mixtures of experts. 
+
+arXiv preprint arXiv:2110.01786 , 2021. [26] Barret Zoph, Irwan Bello, Sameer Kumar, Nan Du, Yanping Huang, Jeff Dean, Noam Shazeer, and William Fedus. ST-MoE: Designing stable and transferable sparse expert models. arXiv preprint arXiv:2202.08906 , 2022. 13

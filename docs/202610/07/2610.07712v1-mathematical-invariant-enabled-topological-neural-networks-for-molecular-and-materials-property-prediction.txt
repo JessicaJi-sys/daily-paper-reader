@@ -1,0 +1,709 @@
+Title: Mathematical Invariant-Enabled Topological Neural Networks for Molecular and Materials Property Prediction
+
+URL Source: https://arxiv.org/pdf/2610.07712v1
+
+Published Time: Wed, 07 Oct 2026 01:02:14 GMT
+
+Number of Pages: 22
+
+Markdown Content:
+# Mathematical Invariant-Enabled Topological Neural Networks for Molecular and Materials Property Prediction 
+
+## Yiming Ren 1, Xiang Liu 1, Mustafa Hajij 2, Pietro Liò 3, and Guo-Wei Wei 1,4,5,∗
+
+1Department of Mathematics, University of Georgia, Athens, GA 30602, USA. 
+
+2Department of Data Science, University of San Francisco, CA 94117, USA. 
+
+3 Department of Computer Science and Technology, Cambridge University, Cambridge, United Kingdom. 
+
+4Department of Biochemistry and Molecular Biology, University of Georgia, Athens, GA 30602, USA. 
+
+5School of Computing, University of Georgia, Athens, GA 30602, USA. 
+
+Abstract 
+
+Existing molecular and materials learning approaches often rely on a limited set of structural representations, which may capture only selected aspects of complex three-dimensional structure. Here, we introduce mathematical invariant-enabled topological neural networks (MITNNs), a framework that represents complex structures through multiple complementary mathematical views and integrates them with topological neural architectures. MITNNs combine multiscale invariants from topology, spectral theory, commutative algebra, differential geometry, and discrete curvature, capturing complementary structural information from the same system. Systematic invariant-subset, architecture-subset, and ensemble analyses show that predictive performance depends on how mathematical representations and neural architectures are paired, with selected combinations outperforming individual models and the aggregation of all available components. Across protein–ligand binding, metal–organic framework properties, mutation-induced protein solubility, and molecular toxicity prediction, MITNN consistently outperforms existing methods. These results establish MITNN as a mathematically multimodal framework for scientific machine learning. 
+
+> ∗
+
+Corresponding author. Email: guowei.wei@uga.edu 
+
+1arXiv:2610.07712v1 [q-bio.BM] 6 Oct 2026 1 Introduction 
+
+Accurate prediction of molecular and materials properties underpins a broad range of scientific and technological applications, including drug discovery, protein engineering, porous-material design and predictive toxicology [1–3]. Despite rapid advances in machine learning, a fundamental challenge remains: how to represent complex molecular and materials structures in a manner that faithfully captures their three-dimensional (3D) organization, stereochemistry and higher-order relationships across multiple spatial scales. These structural characteristics span local chemical environments and interatomic interactions, mesoscale connectivity and global 3D organization, and are not fully captured by many existing molecular representations [4]. The resulting representation gap can limit the ability of learning models to distinguish structurally distinct systems that exhibit similar low-order descriptors. Existing approaches make different trade-offs between structural fidelity, invariance and computational complexity. Conventional fixed-length molecular descriptors provide compact representations but may omit spatial relationships that are not explicitly encoded during descriptor construction [5]. Coordinate-aware and geometric graph models preserve more explicit 3D information, but their architectures must account for the invariance or equivariance of molecular systems under atom permutations, translations and rotations [6–8]. Moreover, conventional message-passing schemes primarily propagate information through pairwise connectivity and therefore may have limited capacity to represent angular, many-body and higher-order organization unless these relationships are explicitly incorporated into the representation or architecture [9–11]. These limitations point to a broader need for representations that encode complementary struc-tural information across topology, geometry, algebra and higher-order organization while respecting the mathematical symmetries inherent to molecular and materials systems. Mathematical invariants offer a principled route to such representations. By construction, invariants characterize structural properties that remain unchanged under specified transformations, while different mathematical formalisms can capture complementary aspects of a system. Topological data analysis, for example, uses persistent homology (PH) to track the birth and death of connected components, loops and cavities across a filtration, providing scale-dependent summaries of topological organization [12–14]. Persistent combinatorial Laplacians extend this description by incorporating spectral information associated with the underlying topological structures [15], while related persistent operators provide representations for labeled, directed and higher-order structures [16]. Differential-geometric approaches characterize local shape and interaction geometry through curvature descriptors [17], and Forman persistent Ricci curvature captures the multiscale evolution of discrete curvature in combinatorial structures [18]. Persistent commutative algebra provides yet another perspective by encoding algebraic, combinatorial and graded topological information across a filtration [19]. Collectively, these constructions provide mathematically distinct but potentially complementary descriptions of molecular and materials structure, including topological, spectral, algebraic–combinatorial, geometric and curvature information. Extracting mathematical invariants, however, addresses only one part of the representation problem. An equally important question is how the resulting information should be processed by a learning architecture. One approach is descriptor-based learning, in which mathematical outputs are transformed into fixed-length vectors, images, curves or multiscale arrays and subsequently processed by conventional neural networks [20, 21]. Fully connected artificial neural networks (ANNs) can learn nonlinear interactions among global descriptors, whereas convolutional neural networks (CNNs) exploit local patterns in spatially or multiscale-organized representations. A complementary approach incorporates structural organization directly into neural computation. Graph neural networks propagate information through pairwise connectivity, while geometric and equivariant architectures explicitly encode 3D geometry and prescribed transformation behavior [7–9]. More recently, higher-order neural architectures have extended message passing beyond pairwise relationships by organizing computation over simplicial complexes, cell complexes, sheaves and copresheaves [22–27]. In particular, simplicial neural networks (SNNs) propagate information through incidence relations among simplices [28], whereas copresheaf transformer neural networks (CTNNs) organize information exchange through copresheaf-based structure maps [26, 29]. These architectures provide a means of incorporating higher-order organization directly into the learning process rather than encoding it solely through pairwise descriptors. The diversity of mathematical invariants and neural architectures raises a fundamental modeling 2question: can complex scientific structures be learned more effectively by combining multiple complementary mathematical views, and how does the utility of each view depend on the neural architecture used to process it? Existing studies have demonstrated the predictive value of individual mathematical invariants, including persistent topological and curvature-based descriptors, and have combined topological information with conventional molecular descriptors or structure-aware neural networks [18, 20, 30]. However, these approaches have generally focused on individual mathematical representations or particular invariant– architecture combinations rather than systematically integrating multiple mathematical formalisms within a common learning framework. Consequently, it remains unclear whether different mathematical invariants provide complementary information, whether higher-order neural architectures can better exploit such information, and whether combining increasingly diverse mathematical representations necessarily leads to improved prediction. Here we introduce mathematical invariant-enabled topological neural networks (MITNNs), a math-ematically multimodal framework that represents molecular and materials structures through multiple complementary mathematical views and integrates them with neural architectures. MITNNs consider five families of mathematical invariants: persistent homology (PH), persistent Laplacian (PL), commutative algebra (CA), element interactive curvature (EIC) and Forman persistent Ricci curvature (FPRC). These invariants characterize complementary aspects of molecular and materials structures through topological, spectral, algebraic–combinatorial, geometric and discrete-curvature information. On the learning side, MITNNs combine these invariant representations with four neural architectures spanning conventional and higher-order learning: artificial neural networks (ANNs), convolutional neural networks (CNNs), simplicial neural networks (SNNs) and copresheaf transformer neural networks (CTNNs). Pairing the five invariant families with the four architectures produces a systematic library of invariant–architecture models within a common experimental framework. Rather than assuming that a particular invariant or neural architecture is universally optimal, MITNNs enable their predictive roles and interactions to be evaluated systematically. We benchmark this framework on five datasets spanning four representative molecular and materials prediction tasks: protein–ligand binding affinity, metal–organic framework (MOF) gas uptake, mutation-induced changes in protein solubility and quantitative toxicity prediction. Across these tasks, MITNNs consistently outperform existing state-of-the-art methods. These results demonstrate the effectiveness of mathematically multimodal learning and highlight the value of integrating complementary mathematical representations with topological neural computation. 
+
+# 2 Results 
+
+## 2.1 Overview of the MITNN Framework 
+
+As illustrated in Fig. 1, MITNN provides a unified framework that maps three-dimensional molecular and materials structures to mathematical domains, constructs multiscale mathematical invariants, processes the resulting invariant features using multiple neural architectures, and integrates base-model predictions to form consensus predictions. The framework accommodates structurally distinct systems, including protein–ligand complexes, metal–organic frameworks (MOFs), wild-type and mutant proteins, and small molecules (Fig. 1A). Because these systems differ substantially in their structural organization, MITNN adapts the mathematical domains and invariant constructions to the characteristics of each application. The first stage maps three-dimensional molecular and materials structures to mathematical domains for invariant construction (Fig. 1B). Bipartite graphs encode interactions between element-specific atom groups, providing a natural representation of heterogeneous intermolecular interactions. Simplicial complexes encode proximity and higher-order connectivity across multiple scales, with Vietoris–Rips and alpha complexes providing distinct constructions for different invariant formulations and structural settings. Differentiable manifolds provide continuous geometric representations from which local and multiscale geometric quantities can be derived. From these mathematical domains, MITNN constructs five families of multiscale mathematical invariants (Fig. 1C). Commutative algebra (CA) encodes algebraic–combinatorial structure through facet counts and f -vector quantities. Persistent homology (PH) tracks the evolution of topological 3A
+
+Protein –ligand complex 
+
+A1 
+
+A2  MOF structure 
+
+Protein structure  
+
+> Wild Mutant
+
+A3 
+
+Persistent homology 
+
+Persistent Laplacian 
+
+Harmonic 
+
+spectra 
+
+C Mathematical invariants 
+
+C1 
+
+C2 
+
+C3 
+
+C4 
+
+B Mathematical domains 
+
+B1 
+
+B2  Simplicial complex 
+
+Bipartite graph 
+
+Deep learning architectures D
+
+> Input
+> Linear
+> Attention
+> Norm
+> MLP
+> Output
+> Dropout
+> Add
+> Pooling
+
+D1 
+
+> Input
+> LR-CT Self-
+> attention
+> Norm&Add
+> MLP
+> Output
+> Feedforward
+> Norm&Add
+> Pooling
+
+D2  
+
+> 𝑁 × 𝑁 ×
+
+Commutative algebra 
+
+A4  Small molecules 
+
+𝐻 0 𝐻 1 𝐻 2
+
+Nonharmonic 
+
+spectra 
+
+B3  Differentiable manifold 
+
+Vietoris-Rips complex 
+
+Alpha complex 
+
+Party A  Party B 
+
+F-vector Facet 
+
+Simplicial 
+
+neural network 
+
+Copresheaf 
+
+transformer 
+
+Element 
+
+interactive 
+
+curvature 
+
+Forman persistent 
+
+Ricci curvature 
+
+C5 
+
+Molecules & Materials 
+
+E Consensus 
+
+prediction 
+
+Invariant-architecture 
+
+base models 
+
+Consensus 
+
+Prediction 
+
+Aggregation 
+
+Artificial 
+
+neural network 
+
+> Input
+> Linear
+> Norm
+> ReLU
+> Linear
+> Output
+> Linear
+> Norm
+> ReLU
+
+D3 
+
+> 𝑁 ×
+
+Convolutional 
+
+neural network 
+
+> Input
+> Conv1D
+> Norm
+> ReLU
+> MLP
+> Output
+> Add
+> MaxPool
+> AvgPool1D
+
+D4 
+
+> 𝑁 ×
+
+Topological neural architectures  Classic neural architectures Figure 1: Overview of the MITNN framework. (A) Representative molecular and materials systems, including (A1) protein–ligand complexes, (A2) metal–organic frameworks, (A3) wild-type and mutant protein structures, and (A4) small molecules. (B) Mathematical domains, including (B1) bipartite graphs, (B2) Vietoris–Rips and Alpha simplicial complexes, and (B3) differentiable manifolds. (C) Mathematical invariant families, including (C1) commutative algebra, (C2) persistent homology, (C3) persistent Laplacian, (C4) element interactive curvature, and (C5) Forman persistent Ricci curvature. (D) Neural architectures, including the topological neural architectures (D1) simplicial neural networks and (D2) copresheaf transformer neural networks, and the classic neural architectures (D3) artificial neural networks and (D4) convolutional neural networks. (E) Consensus prediction obtained by aggregating invariant–architecture base models. 
+
+4features across filtration scales in dimensions H0, H1, and H2. Persistent Laplacian (PL) enriches this multiscale topological information with spectral characteristics derived from its zero and nonzero eigenvalue components [15]. Element interactive curvature (EIC) captures continuous local geometry through curvature quantities derived from element-resolved interaction manifolds. Forman persistent Ricci curvature (FPRC) describes the evolution of discrete curvature across filtered simplicial structures [18]. The detailed construction of each mathematical invariant is provided in Section S3. The resulting invariant features are processed using four neural architectures (Fig. 1D), including two topological neural architectures and two classic neural architectures. The topological architectures comprise simplicial neural networks (SNNs), which organize feature propagation according to simplicial relations, and copresheaf transformer neural networks (CTNNs), which organize information exchange through copresheaf structure maps and low-rank copresheaf transformer (LR-CT) self-attention. The LR-CT formulation preserves structured directional information flow across local feature spaces while improving computational scalability [29]. MITNN also incorporates ANNs for fully connected nonlinear processing of invariant features and CNNs for capturing local dependencies in ordered multiscale feature arrays. Detailed architecture implementations are provided in Section S4. Pairing an available mathematical invariant with a neural architecture produces an invariant–architecture base model. With five invariant families and four neural architectures, the general MITNN framework ad-mits up to 20 such base models. MITNN supports two consensus variants (Fig. 1E). MITNN all aggregates all available invariant–architecture base models, whereas MITNN best uses the best-performing base-model subset identified through exhaustive ensemble analysis. Details of the consensus aggregation procedures for each application and the base-model compositions of MITNN best are provided in Section S2.1 and Table S2, respectively. 
+
+## 2.2 MITNN for Protein–Ligand Binding Affinity Prediction 
+
+Protein–ligand binding affinity quantifies the interaction strength between a ligand and its macromolecular target and is a central endpoint in structure-based drug discovery [52, 53]. We evaluated MITNN on the CASF-2016 benchmark [54], which has been widely used to assess the scoring performance of computational binding affinity models [36, 55, 56]. The evaluation protocol used PDBbind-v2016 refined complexes for model training and CASF-2016 core complexes for benchmark evaluation. Each invariant–architecture base model was trained in ten independent runs with different random seeds to account for stochastic variation in model initialization and training. Predictions from the ten runs were summarized by their median for each base model, and the MITNN consensus predictions were then obtained by taking the median across the included base models. Predictive performance was evaluated using the Pearson correlation coefficient (PCC) and standard deviation (SD), as defined in Section S1.2. Binding affinities originally expressed on the pK d
+
+scale were converted to kcal/mol by multiplying both experimental and predicted values by a factor of 
+
+−1.36. As shown in Fig. 2A, MITNN all achieved a PCC of 0.857 and an SD of 1.522 kcal/mol, while MITNN best 
+
+further improved the PCC to 0.865 and reduced the SD to 1.483 kcal/mol. As summarized in Table S3, both consensus models outperformed all existing scoring functions and topology-based learning methods [14, 31–38]. In particular, MITNN best achieved the highest PCC and the lowest reported SD among all evaluated methods. Relative to TopoFormer-Seq, the strongest prior method in the comparison, MITNN best 
+
+increased the PCC from 0.852 to 0.865 and reduced the SD from 1.612 to 1.483 kcal/mol, corresponding to a 1.5% relative improvement in PCC and an 8.0% reduction in SD. MITNN also outperformed other competitive approaches, including PerSpect-ML [32], AGL-Score, PLEC, DeltaVinaRF20, and Pafnucy. 
+
+## 2.3 MITNN for MOF Gas-Uptake Prediction 
+
+Metal–organic frameworks (MOFs) are porous crystalline materials whose gas adsorption properties depend on both global structural characteristics, such as pore geometry and framework connectivity, and local chemical environments. We therefore evaluated MITNN on MOF gas-uptake prediction to assess its performance on a materials property prediction task involving both global structural organization 5A B MOF gas-uptake prediction 
+
+> Mutation-induced protein-solubility prediction
+
+C
+
+> Protein –ligand binding-affinity prediction
+> Quantitative LD50 toxicity prediction
+
+DFigure 2: Overall predictive performance of MITNN across molecular and materials benchmark applications. Results are shown for both MITNN consensus variants. (A) Protein–ligand binding affinity prediction on CASF-2016, evaluated by PCC and SD and compared with representative scoring functions and topology-based models [14, 31–38]. (B) O 2 and N 2 uptake prediction in MOFs, evaluated by R2, MAE, and RMSE and compared with representative descriptor-based, topology-based, and transformer-based approaches [39–43]. (C) Mutation-induced protein solubility prediction on PON-Sol2, evaluated by CPR and GC 2 and compared with existing solubility predictors [44, 45]. (D) Quantitative LD 50 toxicity prediction, evaluated by PCC 2 and RMSE and compared with representative traditional machine-learning, multitask-learning, and molecular-descriptor-based methods [46–51]. 
+
+6and local chemical environments. To account for elemental heterogeneity, the constituent elements were grouped into eight chemical categories together with an all-atom category (Fig. S3). We evaluated MITNN for O 2 and N 2 uptake prediction, with uptake reported in mol/kg. The dataset sizes and partitioning protocols are summarized in Table S1. For each gas species, ten random train–validation–test partitions were generated using an 8:1:1 ratio. Within each partition, each invariant– architecture base model was evaluated over multiple independently seeded runs. The predictions from the included base models and independent runs were averaged to obtain the corresponding MITNN consensus prediction. Predictive performance was evaluated using R2, MAE, and RMSE, as defined in Section S1.2. The reported metrics were averaged across the ten random partitions. As shown in Fig. 2B, MITNN all achieved an R2 of 0.909 for O 2 uptake, which increased to 0.917 for MITNN best . For N 2 uptake, MITNN all and MITNN best achieved R2 values of 0.838 and 0.845, respectively. MITNN best also yielded lower MAE and RMSE than MITNN all for both gas species. Both MITNN consensus models outperformed all representative descriptor-based, topology-based, and transformer-based approaches included in our evaluation. In particular, compared with the strongest non-MITNN baselines, MITNN best improved R2 by 7.9% for O 2 uptake and 7.0% for N 2 uptake, while reducing MAE by 23.9% and 15.1%, and RMSE by 23.3% and 13.8%, respectively. These comparisons include MOFTransformer [39], PMTransformer [40], a descriptor-based model [41], CSTL [42], CSCA [43], as well as the topology-based FPRC-GBT and PL-GBT baselines evaluated under the same ten-partition protocol. Detailed numerical comparisons are provided in Table S4, which also includes PL-GBT and FPRC-GBT, obtained by coupling persistent Laplacian and Forman persistent Ricci curvature features, respectively, with gradient-boosting trees. 
+
+## 2.4 MITNN for Mutation-Induced Protein Solubility Prediction 
+
+Mutation-induced changes in protein solubility can influence protein stability, aggregation propensity, and biological function. We evaluated MITNN on the PON-Sol2 benchmark [44], which formulates mutation-induced solubility prediction as a three-class classification problem comprising decreased, neutral, and increased solubility. Following the position-stratified blind-test protocol of PON-Sol2 [44], models were evaluated on an independent test set of 662 variants, including 338 solubility-decreasing, 87 neutral, and 237 solubility-increasing mutations. The dataset sizes and partitioning protocol are summarized in Table S1. Each invariant–architecture base model was trained in ten independent runs with different random seeds. Predictions from the included base models and independent runs were averaged before class assignment. Predictive performance was evaluated using the Correct Prediction Ratio (CPR) and Generalized Squared Correlation (GC 2), as defined in Section S1.2. As shown in Fig. 2C, MITNN all 
+
+achieved a CPR of 0.669 and a GC 2 of 0.149. MITNN best improved these values to 0.699 and 0.184, respectively, outperforming the published PON-Sol2 predictor, which reported a CPR of 0.671 and a GC 2
+
+of 0.181. Detailed comparisons with the evaluated protein solubility predictors are provided in Table S5. 
+
+## 2.5 MITNN for Quantitative Toxicity Prediction 
+
+Quantitative toxicity prediction is important for chemical safety assessment and drug development. We evaluated MITNN on the oral rat median lethal dose (LD 50 ) endpoint, a widely used measure of acute toxicity [48]. Each invariant–architecture base model was trained in ten independent runs with different random seeds. Predictions were summarized by the median across the independent runs for each base model, and the MITNN consensus was then obtained by taking the median across the included base models. Predictive performance was evaluated using the squared Pearson correlation coefficient (PCC 2) and root mean square error (RMSE), as defined in Section S1.2. As shown in Fig. 2D, MITNN all achieved a PCC 2 of 0.675 and an RMSE of 0.550, whereas MITNN best further improved these values to 0.684 and 0.542, respectively. As summarized in Table S6, MITNN best achieved the highest PCC 2 and the lowest RMSE among all evaluated toxicity-prediction methods, outperforming conventional toxicity-estimation approaches, molecular-descriptor-based machine-learning models, multitask-learning methods, and graph-based neural networks [46–48, 50, 51]. 71
+
+2
+
+3
+
+4
+
+5
+
+A
+
+B   
+
+> Mathematical invariant subset
+> Number of Invariants Number of Invariants Number of Invariants Number of Invariants
+
+Figure 3: Complementarity among mathematical invariant families in MITNN. (A) Exhaustive invariant-subset analysis for CASF-2016 and LD 50 . The incidence matrix indicates the invariant families included in each subset. For each neural-network architecture, predictions from the corresponding base models were averaged to form the subset prediction. The heatmaps report PCC for CASF-2016 and PCC 2 for LD 50 across four architectures. (B) Performance versus invariant-subset size for CASF-2016, MOF O 2 uptake, PON-Sol2, and LD 50 . Each point denotes one invariant subset under a fixed architecture; solid lines show the mean over subsets of the same size across the four architectures, with shaded regions indicating variability. CASF-2016, PON-Sol2, and LD 50 use PH, PL, CA, FPRC, and EIC, while MOF O 2 uptake uses PH, PL, CA, and FPRC. 
+
+8B
+
+C
+
+> Exhaustive Ensemble Landscape
+
+A  
+
+> Mathematical descriptor Mathematical invariant
+> Mathematical invariant Mathematical invariant
+> Number of components
+> Number of components
+> Number of components
+> Number of components
+> Mathematical invariant
+> Number of neural architectures Number of neural architectures
+> Number of neural architectures Number of neural architectures
+> Neural architectures
+> Neural architectures
+> Neural architectures
+> Neural architectures
+
+Figure 4: Architectural complementarity and selective ensemble composition in MITNN. (A) Architecture-subset analysis with the mathematical invariant held fixed. For each invariant, predictions from the corresponding invariant–architecture base models within a given architecture subset were averaged to form the subset prediction. Points show the mean performance over all architecture subsets of the same cardinality, and shaded regions indicate the corresponding variability. (B) Ensemble-performance landscapes over the complete invariant–architecture base-model pool for CASF-2016, PON-Sol2, LD 50 , and MOF O 2 uptake. For each ensemble size, the performance distribution was obtained over all candidate base-model subsets of that cardinality. Solid and dashed curves denote the median and best performance at each ensemble size, respectively, and shaded regions indicate the 25–75 and 10–90 percentile intervals. Stars mark MITNN best , corresponding to the global maximum of each ensemble landscape, whereas hollow squares mark MITNN all at the complete-pool endpoints. (C) Inclusion frequency of each invariant–architecture base model among the top 100 performing ensembles for each application. 
+
+92.6 Mathematical-Invariant Complementarity within Fixed Neural Architec-tures 
+
+To assess complementarity among mathematical invariant families, we held the neural architecture fixed and systematically varied the invariant subset. For CASF-2016, PON-Sol2, and LD 50 , all 31 nonempty subsets of PH, PL, CA, FPRC, and EIC were evaluated. For the MOF application, all 15 nonempty subsets of PH, PL, CA, and FPRC were evaluated for both O 2 and N 2 uptake. For the MOF application, the complementarity analysis presented here focuses on O 2 uptake, while the corresponding N 2 uptake results are provided in Section S5. For each fixed architecture, predictions from the base models corresponding to a given invariant subset were averaged at the sample level. Complete results are provided in Tables S7–S10 for CASF-2016, Tables S11–S14 for PON-Sol2, Tables S15–S18 and S19–S22 for MOF O 2 and N 2 uptake, respectively, and Tables S23–S26 for LD 50 .Figure 3A shows the performance of all invariant combinations for CASF-2016 and LD 50 under each fixed neural architecture, whereas Figure 3B summarizes performance as a function of invariant-subset size across all four applications. Overall, combining multiple invariant families tends to improve predictive performance, with the largest average gain generally occurring from one to two invariants and smaller gains as additional invariants are included. This trend supports complementarity among mathematically distinct invariant families. However, performance also depends strongly on invariant composition. For PON-Sol2, subsets of the same size show substantial performance variability. For CASF-2016, CNN achieves its highest PCC of 0.853 with PH+PL+CA+EIC, slightly exceeding the PCC of 0.852 obtained with all five invariant families, indicating that the complete invariant set is not necessarily optimal. Invariant preferences also vary across applications and neural architectures. For CASF-2016, PL appears consistently in high-performing combinations across architectures. For MOF O 2 uptake, CA and FPRC occur frequently in high-performing subsets, with PH or PL providing additional gains depending on the architecture. For PON-Sol2 and LD 50 , the best-performing invariant combinations vary more substantially across architectures. Figure S4 further summarizes the distributions of invariant-subset performance under each fixed architecture. CNN shows the highest central tendency for CASF-2016, whereas CTNN shows the highest central tendency for MOF O 2 uptake and LD 50 ; the PON-Sol2 distributions are more similar across architectures. 
+
+## 2.7 Architectural Complementarity for Fixed Mathematical Invariants 
+
+Architectural complementarity was examined by holding the mathematical invariant fixed and systemati-cally varying the subset of neural architectures. For each invariant, all 15 nonempty subsets of ANN, CNN, SNN, and CTNN were evaluated. For this architecture-subset analysis, predictions from the corresponding invariant–architecture base models were averaged at the sample level. Complete results are provided in Tables S27–S31 for CASF-2016, Tables S32–S36 for PON-Sol2, Tables S37–S40 and S41–S44 for MOF O 2
+
+and N 2 uptake, respectively, and Tables S45–S49 for LD 50 .Figure 4A summarizes performance as a function of architecture-subset size for each fixed mathematical invariant. Across most invariant–application settings, combining multiple architectures improves average performance relative to using a single architecture, although the improvement is not necessarily monotonic and depends on architecture composition. For CASF-2016, PL remains consistently strong across architecture subsets, indicating relatively low sensitivity to architecture composition. For MOF O 2 uptake, CA achieves the strongest overall performance, whereas FPRC shows larger gains from combining multiple architectures. For PON-Sol2, the overlapping and nonmonotonic performance trends indicate that the specific architecture composition is more influential than subset size alone. For LD 50 , FPRC performs strongly with CTNN alone, whereas EIC benefits more substantially from combining multiple architectures. 
+
+## 2.8 Selective Integration of Invariant–Architecture Base Models 
+
+The preceding complementarity analyses show that predictive performance depends jointly on the mathe-matical invariant and the neural architecture. We therefore examined ensembles of available invariant– architecture base models to assess how the number and composition of included base models influence 10 performance. Candidate subsets were evaluated using the aggregation procedures defined for each application. Figure 4B shows the ensemble-performance landscapes for CASF-2016 binding affinity, MOF O 2
+
+uptake, PON-Sol2 protein solubility, and LD 50 toxicity. Across all four applications, median performance increases rapidly for smaller ensembles and then gradually approaches a plateau as more base models are included. Meanwhile, the 25–75 and 10–90 percentile intervals become progressively narrower, indicating reduced variability among base-model subsets of the same size. Despite this overall trend, the highest performance is reached before all available base models are included. The best-performing ensembles contain 9, 7, 6, and 7 base models for CASF-2016, MOF O 2 uptake, PON-Sol2, and LD 50 , respectively, with their corresponding base-model compositions summarized in Table S2. Additional base-model-level comparisons are provided in Figs. S1 and S2. Overall, increasing ensemble size generally improves typical performance and reduces variability, whereas optimal performance depends on base-model composition rather than ensemble size alone. Figure 4C further characterizes the composition of high-performing ensembles by reporting the inclusion frequencies of individual invariant–architecture base models among the top 100 ensembles. The resulting frequency distributions are markedly nonuniform and vary across applications, indicating that certain base models are preferentially selected. For CASF-2016, PL-based models appear frequently across multiple architectures, whereas CA- and FPRC-based models are more prominent for MOF O 2 uptake. These patterns are consistent with the invariant-level complementarity results in Section 2.6 and broadly agree with the compositions of MITNN best summarized in Table S2. Overall, high-performing ensembles favor specific invariant–architecture pairings rather than sampling uniformly from the available base-model pool, further highlighting the importance of ensemble composition for predictive performance. 
+
+# 3 Discussion 
+
+MITNN provides a unified, mathematically multimodal framework for integrating complementary mathe-matical representations with multiple neural architectures in molecular and materials property prediction. The framework combines five invariant families that capture algebraic-topological, spectral, algebraic– combinatorial, continuous differential-geometric, and discrete-curvature information, providing distinct mathematical views of the same underlying structures. On the learning side, MITNN incorporates topological neural architectures, including simplicial neural networks and copresheaf transformer neural networks, alongside artificial and convolutional neural networks. Coupling the available mathematical invariants with these architectures forms a library of invariant–architecture base models, enabling mathe-matical and architectural complementarity to be examined within a common predictive framework. Across protein–ligand binding affinity, MOF gas uptake, mutation-induced protein solubility, and quantitative toxicity, MITNN achieves consistently strong performance relative to the evaluated baselines. The complementarity analyses show that predictive performance depends jointly on the mathematical invariant and the neural architecture used to process its features. Combining multiple invariant families or neural architectures is generally beneficial, but the extent of improvement depends on the specific invariants, architectures, and prediction task. For example, for CASF-2016, the frequent representation of PL-based models among high-performing combinations may reflect the additional spectral information captured by PL alongside multiscale topological connectivity. The ensemble analyses further show that broader aggregation improves typical performance and reduces variability, whereas the highest performance is achieved by selected subsets of invariant–architecture base models. The nonuniform inclusion frequencies among high-performing ensembles further indicate that certain invariant–architecture pairings are preferentially represented. These results demonstrate that predictive gains depend not only on the diversity of mathematical invariants and neural architectures, but also on how they are paired and integrated. The conclusions of this study are conditioned on the invariant families, neural architectures, and benchmark applications considered here, and the observed trends should therefore not be interpreted as universally applicable across all prediction problems. Future extensions may incorporate additional mathematical constructions, including persistent path Laplacians [57], persistent hyperdigraph Laplacians 11 [58], and localized persistent commutative algebra [59], together with additional topological neural archi-tectures [22, 24, 25] and geometric and equivariant neural networks [7, 8, 11]. As the invariant–architecture library grows, scalable strategies for base-model screening and selection will also become important. More broadly, MITNN may be extended to other complex scientific data in which complementary mathematical representations of stereochemistry need to be coupled with high-order neural processing mechanisms. 
+
+# 4 Methods 
+
+## 4.1 Mathematical Invariants 
+
+MITNN employs five families of multiscale mathematical invariants: PH, PL, CA, EIC, and FPRC. In general, let Dλ denote a mathematical quantity constructed from a mathematical domain X at scale λ.For an admissible transformation g, Dλ is invariant with respect to g if 
+
+Dλ(gX ) = Dλ(X ).
+
+The admissible transformations depend on the particular invariant construction and may include label-preserving atom or vertex reindexings, Euclidean rigid motions, and simplicial isomorphisms. The five invariant families characterize distinct aspects of molecular and materials structure. PH charac-terizes the persistence of topological features across a filtration; PL augments this topological information with spectral quantities derived from its zero and nonzero eigenvalues; CA encodes algebraic–combinatorial properties of filtered simplicial complexes; EIC characterizes continuous geometric information derived from element-specific interaction density fields; and FPRC describes the evolution of discrete combinatorial curvature over filtered simplicial complexes. Because these quantities are evaluated across filtration or interaction scales, their values generally vary with λ, while remaining invariant under the admissible transformations at each fixed scale. The resulting scale-indexed quantities are organized into multiscale invariant feature blocks and subsequently supplied to the neural architectures. Further details of invariant construction and feature generation are provided in Section S3. 
+
+## 4.2 Simplicial Complexes and Filtrations 
+
+We first introduce the algebraic-topological notation shared by the filtration-based invariant constructions. A q-simplex is the convex hull of q + 1 affinely independent vertices. In particular, 0-, 1-, 2-, and 3-simplices correspond to vertices, edges, filled triangles, and tetrahedra, respectively. A simplicial complex K is a finite collection of simplices that is closed under taking faces: if σ ∈ K , then every face of σ also belongs to K.Let k be a field and let Cq (K; k) denote the q-chain group generated by the oriented q-simplices of K.The boundary operator 
+
+∂q : Cq (K; k) −→ Cq−1(K; k)acts on an oriented simplex as 
+
+∂q [u0, . . . , u q ] = 
+
+> q
+
+∑
+
+> ℓ=0
+
+(−1) ℓ[u0, . . . , ̂u ℓ, . . . , u q ],
+
+where ̂u ℓ denotes omission of the vertex uℓ. Because ∂q ∂q+1 = 0, every boundary is a cycle. The q-th homology group is therefore 
+
+Hq (K; k) = ker ∂q
+
+im ∂q+1 
+
+,
+
+and its dimension 
+
+βq = dim k Hq (K; k)is the q-th Betti number. In the usual geometric interpretation, β0, β1, and β2 quantify connected components, independent loops, and enclosed cavities, respectively. 12 To characterize point-cloud data across geometric scales, we consider a filtration, namely a nested sequence of simplicial complexes 
+
+Kt0 ⊆ K t1 ⊆ · · · ⊆ K tM , t0 < t 1 < · · · < t M .
+
+Common constructions include Vietoris–Rips and alpha filtrations [60–62]. For ta ≤ tb, the inclusion 
+
+Kta ↪→ K tb
+
+captures the evolution of the simplicial structure across scales and provides the basis for the topological, spectral, algebraic–combinatorial, and discrete-curvature invariants introduced below. Figure 5A shows representative stages of such a filtration in the schematic example. D
+
+C
+
+A
+
+D
+
+E
+
+Filtration parameter 
+
+Filtration parameter 
+
+Filtration parameter 
+
+Filtration parameter 
+
+B
+
+Figure 5: Schematic comparison of four filtration-based multiscale mathematical invariants obtained from the same Vietoris–Rips filtration of a 14-point two-loop point cloud. (A) Representative Vietoris–Rips complexes at increasing filtration parameter ϵ. (B) Persistence intervals for H0 and H1. (C) Evolution of the nonharmonic spectrum of the 0-Laplacian L0, illustrated by the smallest and largest positive eigenvalues λ+min and λ+max , the mean positive eigenvalue ¯λ, and the nonharmonic spectral range. (D) Facet-persistence bars P0, P1, and P2
+
+associated with 0-, 1-, and 2-dimensional facets. (E) Signed mean Forman curvature mean( Fp) for p = 0 , 1, 2. 
+
+13 4.3 Persistent Homology (PH) 
+
+Persistent homology (PH) [13] extends simplicial homology by tracking the appearance and disappearance of topological features across a filtration. For filtration indices a ≤ b, the inclusion 
+
+Kta ↪→ K tb
+
+induces a homomorphism 
+
+ϕqa,b : Hq (Kta ; k) −→ Hq (Ktb ; k).
+
+The corresponding persistent homology group is 
+
+Ha,b q = im ϕqa,b ,
+
+and its dimension 
+
+βa,b q = dim k Ha,b q
+
+is the persistent Betti number. The birth and death of homological features across the filtration are summarized by persistence intervals, which provide a multiscale characterization of topological structure. PH is invariant under vertex relabeling and filtration-preserving simplicial isomorphisms. For distance-based filtrations, Euclidean translations and rotations preserve pairwise distances and therefore leave the persistence barcodes unchanged. Uniform spatial scaling, however, rescales the filtration parameters and is not considered an invariant transformation here. Figure 5B illustrates the H0 and H1 persistence intervals for the schematic two-loop point cloud. The 
+
+H0 intervals describe the progressive merging of connected components as the filtration expands, whereas the H1 intervals record the formation and subsequent filling of the two loop-like structures. 
+
+## 4.4 Persistent Laplacian (PL) 
+
+Persistent Laplacian (PL) spectra complement persistent homology by characterizing both harmonic and nonharmonic spectral properties of simplicial complexes along a filtration[63]. For the spectral construction, the chain groups are taken over R and endowed with the inner product for which the oriented simplices form an orthonormal basis. The q-th combinatorial Laplacian is 
+
+Lq = ∂q+1 ∂∗ 
+
+> q+1
+
++ ∂∗ 
+
+> q
+
+∂q , (1) where ∂∗ 
+
+> q
+
+denotes the adjoint of the boundary operator. The operator Lq is real, symmetric, and positive semidefinite, and induces the discrete Hodge decomposition 
+
+Cq (K; R) = im ∂q+1 ⊕ ker Lq ⊕ im ∂∗ 
+
+> q
+
+.
+
+Moreover, ker Lq ∼= Hq (K; R),
+
+so the multiplicity of the zero eigenvalue equals the q-th Betti number [64]. Thus, the zero-eigenvalue multiplicity recovers topological information, whereas the positive eigenvalues encode additional spectral information about the incidence and connectivity structure of the simplicial complex. For filtration indices a ≤ b, define 
+
+Ca,b q+1 = {c ∈ Cq+1 (Ktb ; R) ∣∣ ∂bq+1 c ∈ Cq (Kta ; R)} .
+
+Restricting ∂bq+1 to this space gives the persistent boundary operator 
+
+∂a,b q+1 : Ca,b q+1 → Cq (Kta ; R),
+
+and the corresponding persistent Laplacian is 
+
+La,b q = ∂a,b q+1 
+
+(∂a,b q+1 
+
+)∗ + (∂aq
+
+)∗∂aq . (2) 14 Its kernel is isomorphic to the persistent homology group, ker La,b q ∼= Ha,b q ,
+
+so the multiplicity of the zero eigenvalue equals the persistent Betti number βa,b q . The positive spectrum contains complementary nonharmonic information not captured by persistent Betti numbers alone [63, 65, 66]. The PL spectrum is invariant under filtration-preserving simplicial relabeling. Reordering or consistently reorienting simplices transforms the Laplacian by an orthogonal signed-permutation similarity, 
+
+L′ 
+
+> q
+
+= P ⊤ 
+
+> q
+
+Lq Pq ,
+
+and therefore leaves its spectrum unchanged. For distance-based filtrations, Euclidean translations and rotations likewise preserve the filtered simplicial complexes and their Laplacian spectra. Figure 5C illustrates the evolution of the nonharmonic spectrum of L0 along the filtration. Initially, the complex contains only isolated vertices and the spectrum is entirely harmonic. As edges are introduced, positive eigenvalues emerge and evolve with the connectivity of the simplicial complex. Once the Vietoris– Rips filtration of the 14-point example reaches the complete clique complex, all positive eigenvalues coincide. 
+
+## 4.5 Commutative Algebra (CA) 
+
+The commutative-algebra (CA) invariant family used in MITNN is based on the persistent Stanley– Reisner theory introduced by Suwayyid and Wei [19], which associates filtered simplicial complexes with commutative-algebraic objects. This construction encodes the combinatorial organization of a simplicial complex through squarefree monomial ideals, their quotient rings, and facet-associated prime decompositions. Let ∆ be a finite simplicial complex on the vertex set W = {y1, . . . , y n}, and let φ : ∆ → R be a monotone face function satisfying φ(ω) ≤ φ(ω′) whenever ω ⊆ ω′. The function φ induces the filtration ∆ϵ = {ω ∈ ∆ | φ(ω) ≤ ϵ},
+
+with ∆ ϵa ⊆ ∆ϵb for ϵa ≤ ϵb. Fix a field k and let R = k[y1, . . . , y n] be the standard graded polynomial ring. At each filtration scale ϵ, the Stanley–Reisner ideal of ∆ ϵ is 
+
+Iϵ = I(∆ ϵ) = ( yi1 · · · yis | { yi1 , . . . , y is } /∈ ∆ϵ) ⊆ R, (3) and the corresponding Stanley–Reisner ring is k[∆ ϵ] = R/I ϵ. As the filtration expands, the set of nonfaces decreases, yielding a descending sequence of squarefree monomial ideals. The Stanley–Reisner ideal admits an irredundant minimal-prime decomposition indexed by the facets of the simplicial complex: 
+
+Iϵ = ⋂
+
+> ω∈F (∆ ϵ)
+
+Pω , Pω = ( yi | yi /∈ ω), (4) where F(∆ ϵ) denotes the set of facets of ∆ ϵ. To distinguish facets by dimension, define 
+
+P(p) 
+
+> ϵ
+
+= {Pω | ω ∈ F (∆ ϵ), dim( ω) = p} .
+
+For ϵa ≤ ϵb, the persistent p-dimensional facet set and its cardinality are 
+
+P(p) 
+
+> ϵa,ϵ b
+
+= P(p) 
+
+> ϵa
+
+∩ P (p) 
+
+> ϵb
+
+, μϵa,ϵ b 
+
+> p
+
+=
+
+∣∣∣P(p)
+
+> ϵa,ϵ b
+
+∣∣∣ . (5) These quantities characterize the persistence of maximal simplices across the filtration. Facet-based quantities describe only maximal simplices, whereas the f -vector records simplices of all dimensions. Let ∆ (p) 
+
+> ϵ
+
+denote the set of p-simplices in ∆ ϵ. The f -vector at scale ϵ is 
+
+f ϵ =
+
+(
+
+f ϵ 
+
+> 0
+
+, f ϵ 
+
+> 1
+
+, . . . , f ϵ
+
+> dim(∆ ϵ)
+
+)
+
+, f ϵp =
+
+∣∣∣∆(p)
+
+> ϵ
+
+∣∣∣ . (6) 15 Thus, facet persistence and f -vectors provide complementary algebraic–combinatorial information about the evolving simplicial complex. The resulting CA quantities are invariant under vertex relabeling. A permutation of the vertices induces a corresponding permutation of the polynomial variables and hence a graded automorphism of R that maps the associated Stanley–Reisner ideals to isomorphic ideals. Consequently, the facet-associated quantities and f -vector components are unchanged. These quantities therefore define algebraic–combinatorial invariants, although they are not complete invariants, since nonisomorphic simplicial complexes may share the same facet counts or f -vectors. Figure 5D illustrates the persistence of 0-, 1-, and 2-dimensional facets along the filtration. A facet is born when it first appears as a maximal simplex and ceases to persist once it becomes a face of a higher-dimensional simplex. The corresponding P0, P1, and P2 bars therefore describe the multiscale evolution of maximal vertices, edges, and triangles, respectively. 
+
+## 4.6 Element Interactive Curvature (EIC) 
+
+Element interactive curvature (EIC) provides a continuous differential-geometric representation of element-specific molecular interactions through differentiable density fields [17]. Let a molecular system consist of atoms at positions xj with weights wj . A discrete-to-continuum density field is defined as 
+
+ρ(x; {ηj }, {wj }) = 
+
+> N
+
+∑
+
+> j=1
+
+wj Φ( ∥x − xj ∥; ηj ), (7) where wj = 1 gives a number density and wj = qj gives a charge density. The kernel Φ is a monotonically decaying C2 radial function satisfying Φ( d; η) → 1 as d → 0, Φ( d; η) → 0 as d → ∞ .
+
+Common choices include the generalized exponential and generalized Lorentz kernels, ΦE(d; η) = exp 
+
+[
+
+−
+
+( dη
+
+)κ]
+
+, κ > 0,
+
+ΦL(d; η) = 11 + 
+
+( dη
+
+)ν , ν > 0. (8) To retain chemical specificity, the density construction is resolved by element pairs. Let Da =⋃ 
+
+> i:ei=a
+
+B(xi, r i) denote the van der Waals domain associated with atoms of element type a. For two distinct element types a and b, the element-interactive density generated by atoms of type b over Da is 
+
+ρab (x; ηab ) = ∑     
+
+> j:ej=b
+> ∥xi−xj∥>r i+rj+σ, ∀i:ei=a
+
+wj Φ( ∥x − xj ∥; ηab ), x ∈ Da, (9) where ri and rj are atomic radii and σ is the dataset-dependent correction used in the original EIC construction. The distance constraint excludes covalent interactions. Interactions between atoms of the same element type are treated using atom-specific van der Waals domains to avoid self-contributions. A multiscale representation is obtained by varying the characteristic interaction length. Following the EIC parametrization, 
+
+ηab (τ ) = τ (¯ra + ¯ rb
+
+),
+
+where ¯ ra and ¯ rb are the van der Waals radii associated with element types a and b, and τ is a dimensionless scale parameter. Different values of τ probe element-specific interactions over different spatial ranges. For a fixed element pair and interaction scale, element-interactive manifolds are defined by the level sets 
+
+ρab (x; ηab ) = c ρ max , 0 ≤ c ≤ 1,
+
+16 where ρmax = max x∈Da ρab (x; ηab ). At regular points for which ∇ρ̸ = 0, let g = ρ2 
+
+> x
+
++ ρ2 
+
+> y
+
++ ρ2 
+
+> z
+
+. The Gaussian curvature K and mean curvature H are obtained from the first- and second-order spatial derivatives of the density: 
+
+K = 1
+
+g2
+
+[
+
+2ρxρy ρxz ρyz + 2 ρxρz ρxy ρyz + 2 ρy ρz ρxy ρxz 
+
+− 2ρxρz ρxz ρyy − 2ρy ρz ρxx ρyz − 2ρxρy ρxy ρzz 
+
++ ρ2 
+
+> z
+
+ρxx ρyy + ρ2
+
+> x
+
+ρyy ρzz + ρ2 
+
+> y
+
+ρxx ρzz − ρ2
+
+> x
+
+ρ2 
+
+> yz
+
+− ρ2 
+
+> y
+
+ρ2 
+
+> xz
+
+− ρ2 
+
+> z
+
+ρ2
+
+> xy
+
+]
+
+, (10) and 
+
+H = 12g3/2
+
+[
+
+2ρxρy ρxy + 2 ρxρz ρxz + 2 ρy ρz ρyz 
+
+− (ρ2 
+
+> y
+
++ ρ2 
+
+> z
+
+)ρxx − (ρ2 
+
+> x
+
++ ρ2 
+
+> z
+
+)ρyy − (ρ2 
+
+> x
+
++ ρ2 
+
+> y
+
+)ρzz 
+
+]
+
+. (11) The corresponding principal curvatures are 
+
+κmin = H − √H2 − K, κmax = H + √H2 − K. 
+
+These curvature functions characterize the local geometry associated with each element pair and interaction scale. Because the density construction depends on radial functions of Euclidean distances, atom reindexing leaves it unchanged, while translations and rotations rigidly transform the density field and its level sets without changing their curvature values. Gaussian curvature is independent of surface orientation, whereas the sign of mean curvature depends on the chosen normal direction. Under a consistent normal convention, the EIC quantities are therefore invariant under atom reindexing, translations, and rotations. 
+
+## 4.7 Forman Persistent Ricci Curvature (FPRC) 
+
+Forman persistent Ricci curvature (FPRC) characterizes the evolution of discrete combinatorial curvature across a filtration of simplicial complexes [18]. Two distinct p-simplices α and ¯ α are called parallel, denoted by ¯ α ∥ α, if they share a common ( p − 1)-face but are not both faces of any common ( p + 1)-simplex. For p > 0, the Forman Ricci curvature of a p-simplex α in an unweighted simplicial complex is 
+
+Fp(α) = # {βp+1 | α < β p+1 } + # {γp−1 | γp−1 < α } − #{¯α | ¯α ∥ α}, (12) where the first term counts the ( p + 1)-dimensional cofaces of α, the second counts its ( p − 1)-dimensional faces, and the third counts its parallel p-simplices. Following the convention used in the FPRC construction [18], the curvature of a nonisolated vertex v
+
+is defined from the curvatures of its incident edges as 
+
+F0(v) = 1
+
+d(v)
+
+∑
+
+> e>v
+
+F1(e), (13) where d(v) is the number of edges incident to v. For an isolated vertex, we set F0(v) = 0. Evaluating Forman Ricci curvature across simplex dimensions and filtration values yields a multiscale characterization of the evolving combinatorial curvature. Forman Ricci curvature depends only on the local face–coface incidence relations and parallel-simplex relations. These relations are preserved under simplicial isomorphisms and vertex relabeling, so corre-sponding simplices have identical curvature values. For distance-based filtrations, Euclidean translations and rotations also preserve the filtered simplicial complexes. The resulting FPRC quantities are therefore invariant under these transformations. Figure 5E illustrates the signed mean Forman curvature mean( Fp) for p = 0 , 1, 2. Isolated vertices are assigned F0 = 0. The first edge has F1 = 2, whereas the first triangle has F2 = 3, reflecting their 17 respective local face–coface configurations at the time of appearance. At intermediate filtration values, the mean curvature varies as the local face–coface and parallel-simplex configurations evolve. For the 14-point example, the three mean-curvature curves eventually converge and remain constant once the Vietoris–Rips filtration reaches the complete clique complex. 
+
+# Acknowledgments 
+
+This work was supported in part by NIH grant R35GM148196, the University of Georgia, the Georgia Research Alliance and the Defense Advanced Research Projects Agency (DARPA) under Agreement No. HR00112969E087. MH was supported in part by the National Science Foundation (NSF grant DMS-2134231). The views and conclusions contained in this document are those of the authors and should not be interpreted as representing the official policies, either expressed or implied, of the U.S. Government. 
+
+# References 
+
+[1] Keith T Butler, Daniel W Davies, Hugh Cartwright, Olexandr Isayev, and Aron Walsh. Machine learning for molecular and materials science. Nature , 559(7715):547–555, 2018. [2] Jessica Vamathevan, Dominic Clark, Paul Czodrowski, Ian Dunham, Edgardo Ferran, George Lee, Bin Li, Anant Madabhushi, Parantu Shah, Michaela Spitzer, et al. Applications of machine learning in drug discovery and development. Nature reviews Drug discovery , 18(6):463–477, 2019. [3] Kevin Maik Jablonka, Daniele Ongari, Seyed Mohamad Moosavi, and Berend Smit. Big-data science in porous materials: materials genomics and machine learning. Chemical reviews , 120(16):8066–8129, 2020. [4] Michael Desgagné, Amirabbas Kazeminia, Kübra Kaygisiz, Bradley L Pentelute, and Marinka Zitnik. Stereopep: Do molecular models understand stereochemistry? a benchmark on synthetic diastereomeric peptides. 2026. [5] Albert P Bartók, Risi Kondor, and Gábor Csányi. On representing chemical environments. Physical Review B—Condensed Matter and Materials Physics , 87(18):184115, 2013. [6] Kristof Schütt, Pieter-Jan Kindermans, Huziel Enoc Sauceda Felix, Stefan Chmiela, Alexandre Tkatchenko, and Klaus-Robert Müller. Schnet: A continuous-filter convolutional neural network for modeling quantum interactions. Advances in neural information processing systems , 30, 2017. [7] Vıctor Garcia Satorras, Emiel Hoogeboom, and Max Welling. E (n) equivariant graph neural networks. In International conference on machine learning , pages 9323–9332. PMLR, 2021. [8] Fabian Fuchs, Daniel Worrall, Volker Fischer, and Max Welling. Se (3)-transformers: 3d roto-translation equivariant attention networks. Advances in neural information processing systems , 33: 1970–1981, 2020. [9] Justin Gilmer, Samuel S Schoenholz, Patrick F Riley, Oriol Vinyals, and George E Dahl. Neural message passing for quantum chemistry. In International conference on machine learning , pages 1263–1272. Pmlr, 2017. [10] Johannes Gasteiger, Janek Groß, and Stephan Günnemann. Directional message passing for molecular graphs. arXiv preprint arXiv:2003.03123 , 2020. [11] Ilyes Batatia, David P Kovacs, Gregor Simm, Christoph Ortner, and Gábor Csányi. Mace: Higher order equivariant message passing neural networks for fast and accurate force fields. Advances in neural information processing systems , 35:11423–11436, 2022. 18 [12] Edelsbrunner, Letscher, and Zomorodian. Topological persistence and simplification. Discrete & computational geometry , 28(4):511–533, 2002. [13] Afra Zomorodian and Gunnar Carlsson. Computing persistent homology. In Proceedings of the twentieth annual symposium on Computational geometry , pages 347–356, 2004. [14] Zixuan Cang, Lin Mu, and Guo-Wei Wei. Representability of algebraic topology for biomolecules in machine learning based scoring and virtual screening. PLoS computational biology , 14(1):e1005929, 2018. [15] Rui Wang, Duc Duy Nguyen, and Guo-Wei Wei. Persistent spectral graph. International journal for numerical methods in biomedical engineering , 36(9):e3376, 2020. [16] Xiaoqi Wei and Guo-Wei Wei. Persistent topological laplacians—a survey. Mathematics , 13(2):208, 2025. [17] Duc Duy Nguyen and Guo-Wei Wei. Dg-gl: Differential geometry-based geometric learning of molecular datasets. International journal for numerical methods in biomedical engineering , 35(3): e3179, 2019. [18] JunJie Wee and Kelin Xia. Forman persistent ricci curvature (fprc)-based machine learning models for protein–ligand binding affinity prediction. Briefings in Bioinformatics , 22(6):bbab136, 2021. [19] Faisal Suwayyid and Guo-Wei Wei. Persistent stanley–reisner theory. Foundations of data science (Springfield, Mo.) , 2025. [20] Zixuan Cang and Guo-Wei Wei. Topologynet: Topology based deep convolutional and multi-task neural networks for biomolecular property predictions. PLoS computational biology , 13(7):e1005690, 2017. [21] Zixuan Cang and Guo-Wei Wei. Integration of element specific persistent homology and machine learning for protein-ligand binding affinity prediction. International journal for numerical methods in biomedical engineering , 34(2):e2914, 2018. [22] Cristian Bodnar, Francesco Di Giovanni, Benjamin Chamberlain, Pietro Lio, and Michael Bronstein. Neural sheaf diffusion: A topological perspective on heterophily and oversmoothing in gnns. Advances in Neural Information Processing Systems , 35:18527–18541, 2022. [23] Mustafa Hajij, Ghada Zamzmi, Theodore Papamarkou, Nina Miolane, Aldo Guzmán-Sáenz, Karthikeyan Natesan Ramamurthy, Tolga Birdal, Tamal K Dey, Soham Mukherjee, Shreyas N Samaga, et al. Topological deep learning: Going beyond graph data. arXiv preprint arXiv:2206.00606 ,2022. [24] Mustafa Hajij, Ghada Zamzmi, Theodore Papamarkou, AIdo Guzman-Saenz, ToIga Birdal, and Michael T Schaub. Combinatorial complexes: bridging the gap between cell complexes and hyper-graphs. In 2023 57th Asilomar Conference on Signals, Systems, and Computers , pages 799–803. IEEE, 2023. [25] Patrick Gillespie, Layal Bou Hamdan, Ioannis Schizas, David L Boothe, and Vasileios Maroulas. Bayesian sheaf neural networks. arXiv preprint arXiv:2410.09590 , 2024. [26] Mustafa Hajij, Lennart Bastian, Sarah Osentoski, Hardik Kabaria, John L Davenport, Sheik Dawood, Balaji Cherukuri, Joseph G Kocheemoolayil, Nastaran Shahmansouri, Adrian Lew, et al. Copresheaf topological neural networks: A generalized deep learning framework. arXiv preprint arXiv:2505.21251 ,2025. [27] Theodore Papamarkou, Tolga Birdal, Michael Bronstein, Gunnar Carlsson, Justin Curry, Yue Gao, Mustafa Hajij, Roland Kwitt, Pietro Lio, Paolo Di Lorenzo, et al. Position: Topological deep learning is the new frontier for relational learning. Proceedings of machine learning research , 235:39529, 2024. 19 [28] Stefania Ebli, Michaël Defferrard, and Gard Spreemann. Simplicial neural networks. arXiv preprint arXiv:2010.03633 , 2020. [29] Xiang Liu, Yiming Ren, Mustafa Hajij, Pietro Liò, and Guo-Wei Wei. Dtdl: Dual topological deep learning for drug discovery. Manuscript submitted for publication, 2026. [30] Yogesh Verma, Amauri H Souza, and Vikas Garg. Topological neural networks go persistent, equivariant, and continuous. arXiv preprint arXiv:2406.03164 , 2024. [31] Marta M Stepniewska-Dziubinska, Piotr Zielenkiewicz, and Pawel Siedlecki. Development and evaluation of a deep learning model for protein–ligand binding affinity prediction. Bioinformatics , 34 (21):3666–3674, 2018. [32] Zhenyu Meng and Kelin Xia. Persistent spectral–based machine learning (perspect ml) for protein-ligand binding affinity prediction. Science advances , 7(19):eabc5329, 2021. [33] Yan Li, Li Han, Zhihai Liu, and Renxiao Wang. Comparative assessment of scoring functions on an updated benchmark: 2. evaluation methods and general results. Journal of chemical information and modeling , 54(6):1717–1736, 2014. [34] Minyi Su, Qifan Yang, Yu Du, Guoqin Feng, Zhihai Liu, Yan Li, and Renxiao Wang. Comparative assessment of scoring functions: the casf-2016 update. Journal of chemical information and modeling ,59(2):895–913, 2018. [35] Tiejun Cheng, Xun Li, Yan Li, Zhihai Liu, and Renxiao Wang. Comparative assessment of scoring functions on a diverse test set. Journal of chemical information and modeling , 49(4):1079–1093, 2009. [36] Cheng Wang and Yingkai Zhang. Improving scoring-docking-screening powers of protein–ligand scoring functions using random forest. Journal of computational chemistry , 38(3):169–177, 2017. [37] Duc Duy Nguyen and Guo-Wei Wei. Agl-score: algebraic graph learning score for protein–ligand binding scoring, ranking, docking, and screening. Journal of chemical information and modeling , 59 (7):3291–3304, 2019. [38] Maciej Wójcikowski, Michał Kukiełka, Marta M Stepniewska-Dziubinska, and Pawel Siedlecki. Development of a protein–ligand extended connectivity (plec) fingerprint and its application for binding affinity predictions. Bioinformatics , 35(8):1334–1341, 2019. [39] Yeonghun Kang, Hyunsoo Park, Berend Smit, and Jihan Kim. A multi-modal pre-training transformer for universal transfer learning in metal–organic frameworks. Nature Machine Intelligence , 5(3):309–318, 2023. [40] Hyunsoo Park, Yeonghun Kang, and Jihan Kim. Enhancing structure–property relationships in porous materials through transfer learning and cross-material few-shot learning. ACS Applied Materials & Interfaces , 15(48):56375–56385, 2023. [41] Ibrahim B Orhan, Hilal Daglar, Seda Keskin, Tu C Le, and Ravichandar Babarao. Prediction of o2/n2 selectivity in metal–organic frameworks via high-throughput computational screening and machine learning. ACS applied materials & interfaces , 14(1):736–749, 2021. [42] Dong Chen, Chun-Long Chen, and Guo-Wei Wei. Category-specific topological learning of metal– organic frameworks. Journal of Materials Chemistry A , 13(13):9292–9303, 2025. [43] Caleb Simiyu Khaemba, Hongsong Feng, Dong Chen, Chun-Long Chen, and Guo-Wei Wei. Com-mutative algebra modeling in materials science–a case study on metal–organic frameworks (mofs). 
+
+Journal of Chemical Information and Modeling , 66(5):2584–2596, 2026. [44] Yang Yang, Lianjie Zeng, and Mauno Vihinen. Pon-sol2: prediction of effects of variants on protein solubility. International Journal of Molecular Sciences , 22(15):8027, 2021. 20 [45] Yang Yang, Abhishek Niroula, Bairong Shen, and Mauno Vihinen. Pon-sol: prediction of effects of amino acid substitutions on protein solubility. Bioinformatics , 32(13):2032–2034, 2016. [46] Todd M. Martin. User’s guide for t.e.s.t. (version 4.2): Toxicity estimation software tool—a program to estimate toxicity from molecular structure. Technical Report EPA/600/R-16/058, U.S. Environmental Protection Agency, Office of Research and Development, Washington, DC, 2016. [47] Kaifu Gao, Duc Duy Nguyen, Vishnu Sresht, Alan M Mathiowetz, Meihua Tu, and Guo-Wei Wei. Are 2d fingerprints still valuable for drug discovery? Physical chemistry chemical physics , 22(16): 8373–8390, 2020. [48] Kedi Wu and Guo-Wei Wei. Quantitative toxicity prediction using topology based multitask deep neural networks. Journal of chemical information and modeling , 58(2):520–531, 2018. [49] Jian Jiang, Rui Wang, Menglun Wang, Kaifu Gao, Duc Duy Nguyen, and Guo-Wei Wei. Boosting tree-assisted multitask deep learning for small scientific datasets. Journal of chemical information and modeling , 60(3):1235–1244, 2020. [50] Timothy Szocinski, Duc Duy Nguyen, and Guo-Wei Wei. Awegnn: Auto-parametrized weighted element-specific graph neural networks for molecules. Computers in biology and medicine , 134:104460, 2021. [51] S Jannicke Moe, Anders L Madsen, Kristin A Connors, Jane M Rawlings, Scott E Belanger, Wayne G Landis, Raoul Wolf, and Adam D Lillicrap. Development of a hybrid bayesian network model for predicting acute fish toxicity using multiple lines of evidence. Environmental Modelling & Software ,126:104655, 2020. [52] Heng Cai, Chao Shen, Tianye Jian, Xujun Zhang, Tong Chen, Xiaoqi Han, Zhuo Yang, Wei Dang, Chang-Yu Hsieh, Yu Kang, et al. Carsidock: a deep learning paradigm for accurate protein–ligand docking and screening based on large-scale pre-training. Chemical Science , 15(4):1449–1471, 2024. [53] Qurrat Ul Ain, Antoniya Aleksandrova, Florian D Roessler, and Pedro J Ballester. Machine-learning scoring functions to improve structure-based binding affinity prediction and virtual screening. Wiley Interdisciplinary Reviews: Computational Molecular Science , 5(6):405–424, 2015. [54] Zhihai Liu, Yan Li, Li Han, Jie Li, Jie Liu, Zhixiong Zhao, Wei Nie, Yuchen Liu, and Renxiao Wang. Pdb-wide collection of binding data: current status of the pdbbind database. Bioinformatics , 31(3): 405–412, 2015. [55] Pedro J Ballester and John BO Mitchell. A machine learning approach to predicting protein–ligand binding affinity with applications to molecular docking. Bioinformatics , 26(9):1169–1175, 2010. [56] Chen Li, An Zhang, Lin Wang, Jinhong Zuo, Chenglin Zhu, Jun Xu, Miaomiao Wang, and John Z. H. Zhang. Development of a polynomial scoring function p3-score for improved scoring and ranking powers. Chemical Physics Letters , 824:140547, 2023. doi: 10.1016/j.cplett.2023.140547. [57] Rui Wang and Guo-Wei Wei. Persistent path laplacian. Foundations of data science (Springfield, Mo.) , 5(1):26, 2023. [58] Dong Chen, Jian Liu, Jie Wu, and Guo-Wei Wei. Persistent hyperdigraph homology and persistent hyperdigraph Laplacians. Foundations of data science (Springfield, Mo.) , 5(4):558, 2023. [59] Kaiyue He, Faisal Suwayyid, and Guo-Wei Wei. Localized persistent commutative algebra. arXiv preprint arXiv:2609.02858 , 2026. [60] Leopold Vietoris. Über den höheren zusammenhang kompakter räume und eine klasse von zusam-menhangstreuen abbildungen. Mathematische Annalen , 97(1):454–472, 1927. 21 [61] Herbert Edelsbrunner and John Harer. Computational topology: an introduction . American Mathe-matical Soc., 2010. [62] Herbert Edelsbrunner. Alpha shapes-a survey. In Tessellations in the sciences: Virtues, techniques and applications of geometric tilings . 2011. [63] Rui Wang, Rundong Zhao, Emily Ribando-Gros, Jiahui Chen, Yiying Tong, and Guo-Wei Wei. Hermes: Persistent spectral graph software. Foundations of data science (Springfield, Mo.) , 3(1):67, 2021. [64] Beno Eckmann. Harmonische funktionen und randwertaufgaben in einem komplex. Commentarii Mathematici Helvetici , 17(1):240–255, 1944. [65] Facundo Mémoli, Zhengchao Wan, and Yusu Wang. Persistent laplacians: Properties, algorithms and implications. SIAM Journal on Mathematics of Data Science , 4(2):858–884, 2022. [66] Benjamin Jones and Guo-Wei Wei. Petls: Persistent topological laplacian software. arXiv preprint arXiv:2508.11560 , 2025. 22

@@ -1,0 +1,1633 @@
+Title: BRANCH-MoE: Balance-Aware Tree Routing for Large Embedding Models
+
+URL Source: https://arxiv.org/pdf/2610.06725v1
+
+Published Time: Tue, 06 Oct 2026 03:27:42 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+# BRANCH-MoE: Balance-Aware Tree Routing for Large Embedding Models 
+
+Gang Fu 1, Adel Javanmard 1,2 , MohammadHossein Bateni 1, and Vahab Mirrokni 11Google Research, {thomasfu,bateni,mirrokni }@google.com 
+
+> 2
+
+University of Southern California, ajavanma@usc.edu 
+
+Abstract 
+
+Mixture-of-experts (MoE) layers increase model capacity without a proportional increase in per-example computation. However, conventional flat routers can yield imbalanced expert utilization and treat experts as an unstructured collection, whose indices carry no topological meaning. We introduce BRANCH-MoE , a routing architecture that places E
+
+experts at the leaves of a binary decision tree of depth log 2 E. At each internal node the branching probability is centered on the arrival-weighted mean score of the traffic reaching that node. This mean is estimated using an exponential moving average, which promotes utilization of both child subtrees without an auxiliary load-balancing loss. We show that this moving-average estimate admits an explicit noise–lag trade-off. We prove that for linear node maps and log-concave arrival distributions, this mechanism prevents routing-mass collapse. We further establish that, under a frozen router, an expert’s execution frequency controls its stochastic-gradient convergence rate, and that confident decisions near the root bound cross-device communication when experts are assigned to devices by tree prefix. We evaluate BRANCH-MoE against Switch softmax, DeepSeek-V3 dynamic-bias, Skywork logit-normalized, and deterministic hash routing on Criteo click-through-rate prediction, Forest Covertype, HIGGS, and YearPredictionMSD, using E = 16, top-4 routing, and five random seeds. BRANCH-MoE matches the predictive performance of the strongest baselines, attaining the lowest mean held-out loss on Forest Covertype and showing no statistically significant difference from the best-performing methods on Criteo, HIGGS, or YearPredictionMSD across random seeds. It also maintains balanced expert load without an auxiliary penalty. Unlike flat routers, BRANCH-MoE induces input-conditional co-routing locality: for each input token, the experts selected together tend to lie closer to one another in the routing tree. On all three UCI benchmarks, linear node maps yield a normalized tree distance of 0 .710–0 .718 between co-selected experts, compared with 0 .817 for random expert pairs—a reduction of 12–13%. Every flat-routing baseline remains within 3 .5% of the random-pair distance. Together, these results show that hierarchical routing can preserve task quality and balanced utilization while inducing a topology that supports localized expert co-activation and reduced communication. 
+
+# 1 Introduction 
+
+Mixture-of-experts (MoE; Jacobs et al., 1991) layers increase parameter capacity while activating only a small subset of expert networks for each token (Shazeer et al., 2017; Lepikhin et al., 2021; Fedus et al., 2022). A standard token-choice layer uses a flat E-way router followed by top-K
+
+selection. This design has enabled very large sparse models, but it leaves several properties to losses, constraints, or systems heuristics rather than building them into the routing geometry. 
+
+Limitations of flat routing. First, a flat softmax or top-K gate provides no distribution-free positive lower bound on the mass assigned to every expert: small initial routing advantages can produce highly unequal update frequencies, and an underused expert, receiving little data, can 1arXiv:2610.06725v1 [cs.LG] 5 Oct 2026 improve slowly (Eigen et al., 2013; Shazeer et al., 2017). Auxiliary load-balancing losses, capacity constraints, balanced assignment, and expert-choice routing mitigate this problem (Shazeer et al., 2017; Fedus et al., 2022; Lewis et al., 2021; Zhou et al., 2022), but the protection does not follow from the geometry of a flat gate. Second, a flat expert label is an unstructured categorical index that does not encode which experts share a device, node, rack, or other hardware cut, so the router offers no prefix locality for a distributed implementation to exploit. Third, preventing early routing collapse requires an auxiliary load-balancing penalty that competes with the task objective or an external bias controller (Wang et al., 2024; DeepSeek-AI, 2024). We do not claim that every conventional MoE collapses or incurs the same communication cost, only that these guarantees do not arise from flat routing alone. Our proposal, BRANCH-MoE, changes the routing architecture itself. Its novelty is the combination of three coupled mechanisms within one routing tree: (i) a depth-D binary routing tree for E = 2 D experts; (ii) EMA score anchors and induced offsets that center every routing decision on the tokens arriving at its node; and (iii) a routing-mask cascade whose prefixes can serve as hierarchical expert or device addresses. The cascade determines the incoming mask used to update each node’s anchor, the anchor determines the routing offset, and the final mask selects the experts each token is dispatched to, with the tree path giving each leaf a structured binary address rather than an arbitrary flat label. 
+
+Our contributions. We summarize our contributions as follows: 1. Architecture. BRANCH-MoE couples a soft mask cascade with one scalar EMA score anchor per node, updated with mask weights and a single shared decay α (Section 3). The anchor induces the inference-time bias bj = −νj , so no auxiliary balancing loss, separately learned bias, or d-dimensional centroid is needed; the full soft router evaluates E − 1 internal nodes in O(log 2 E) sequential depth, and inference uses the stored anchors as fixed biases without EMA updates. 2. Theory (Section 4). (1) The mask-weighted constant-decay EMA tracks each node’s incoming mean score with an explicit noise–lag trade-off. (2) For linear routing under log-concave arrival distributions, anchoring prevents vanishing expected branch mass and yields a positive soft leaf-mass bound that degrades quantitatively with anchor error. (3) Under a frozen router and strongly convex conditional expert risks, the realized expert-execution frequency controls the convergence rate of expert SGD (the soft-mass bound does not itself guarantee top-K
+
+execution). (4) We formalize the communication locality induced by tree routing: a token’s experts are determined by its path, so co-routed tokens share path prefixes and confident upper-level decisions concentrate a token’s routing mass within a shared-prefix subtree; under tree-aligned expert placement, the depth at which two paths diverge bounds whether their dispatches cross a hardware boundary, giving explicit bounds on cross-domain communication (Section 4.4). 3. Experiments. We compare BRANCH-MoE against flat softmax (Switch), auxiliary-loss-free (DeepSeek-V3), logit-normalized (Skywork; Wei et al., 2024), and deterministic hash routing on four tabular benchmarks, namely Criteo click-through-rate prediction (Criteo AI Lab, 2015), Forest Covertype (Blackard & Dean, 1999; Blackard, 1998), HIGGS (Baldi et al., 2014; Whiteson, 2014), and YearPredictionMSD (Bertin-Mahieux et al., 2011; Bertin-Mahieux, 2011) (see Appendix D for description of datasets). As experiments show BRANCH-MoE matches the strongest baselines, with the lowest mean held-out loss on Forest Covertype and ties within seed noise on Criteo, HIGGS, and MSD. On all three UCI benchmarks, it is the only router whose co-routing statistics fall materially below the analytical random-pair baseline, reducing normalized tree distance to 0 .710–0 .718 against 0 .817 (12–13% lower) and the leaf index gap by 18–23%, while every flat router stays within 3 .5% of random (Table 2). 22 Background and Related Work 
+
+We first recall the flat token-choice router that serves as the reference template. Let {Fe(·; θe)}Ee=1 
+
+be expert networks, where θe collects the trainable parameters of expert e, and let Wg ∈ Rdin ×E
+
+be a flat gating matrix. A standard token-choice router forms the score vector s = x⊤Wg, whose component sf = x⊤(Wg):,f is the score of expert f , and computes 
+
+G(x) = softmax( x⊤Wg). (1) After retaining the K largest components, the routed output is 
+
+y(x) = 
+
+> E
+
+X
+
+> e=1
+
+TopK( G(x)) eFe(x). (2) Prior work modifies different aspects of this template to improve sparsity, load balance, or routing stability. Switch Transformer specializes it to top-1 routing and combines an auxiliary load-balancing loss with fixed expert capacities (Fedus et al., 2022). DeepSeek-V3 instead adjusts expert selection through a dynamic per-expert bias: the bias increases for underloaded experts and decreases for overloaded experts, while the gate multiplying the expert output is computed from the original, unbiased affinity score (DeepSeek-AI, 2024). Its primary balancing mechanism is therefore auxiliary-loss-free. However, its implementation includes a complementary sequence-wise balancing loss to encourage an even distribution of expert load within each sequence. BRANCH-MoE also uses routing biases, but for a different purpose. Its bias bj = −νj is the negated EMA of the arrival-weighted mean score at node j, and anchors that node’s decision boundary at the center of its own incoming score distribution; it is not a load-error feedback variable. Other methods alter the assignment rule more fundamentally. BASE constructs a balanced batch assignment through a matching problem (Lewis et al., 2021), while Sinkhorn-BASE approximates such an assignment using entropy-regularized optimal transport and Sinkhorn iterations (Clark et al., 2022). Expert Choice reverses the usual assignment direction: each expert selects a fixed-size bucket of high-scoring tokens, controlling expert workloads while allowing different tokens to be processed by different numbers of experts (Zhou et al., 2022). Hash Layers remove the learned router and assign inputs to experts using a fixed input-dependent hash, thereby avoiding router parameters, balancing losses, and batchwise matching (Roller et al., 2021). These methods respectively impose balance through batch-coupled assignment, expert-side capacity control, or a fixed routing rule. BRANCH-MoE instead retains learned, representation-dependent token routing without solving a globally coupled assignment problem. BRANCH-MoE is closely related to hierarchical conditional-computation architectures, including hierarchical mixtures of experts (Jordan & Jacobs, 1994; Shazeer et al., 2017), soft decision trees ( ˙Irsoy et al., 2012; Frosst & Hinton, 2017), tree-based sparse gating mechanisms (Ibrahim et al., 2023), and fast feedforward networks (Belcak & Wattenhofer, 2023). Hierarchical mixtures of experts arrange routing decisions in a tree structure (Jordan & Jacobs, 1994). Similarly, the soft decision tree of Frosst and Hinton uses learned sigmoid splits and path probabilities to distill a neural network into a tree whose leaves represent class distributions (Frosst & Hinton, 2017). BRANCH-MoE employs the hierarchy differently: its soft, fully differentiable branch decisions route tokens to trainable neural experts, and the same cascaded masks used for routing also determine the tokens used to update each node’s score anchor. Notably, BRANCH-MoE does not enforce exact per-batch load equality, as do assignment-constrained methods. Instead, under the conditions stated in our analysis, its anchored hierarchy provides a population-level nonstarvation guarantee while preserving adaptive sparse routing. The resulting tree paths also give experts hierarchical addresses, complementing systems work on token permutation, distributed communication, and topology-aware routing (Rajbhandari et al., 3Dev 0 ( 0* ) Dev 1 ( 1* )         
+
+> Routed Leaf Expert ( Fe)Unanchored Split Node ( w⊤
+> jx)EMA-Anchored Node ( σ(fj(x)−νj))Input Hidden Output Hidden
+> Flat Router
+> Softmax( W⊤
+> gx)
+> 12
+
+. . . E                     
+
+> O(E)flat scoring ·unstructured indices
+> Input Hidden Output Hidden
+> n0
+> n1n21−p0p0
+> 1
+> 00
+> 2
+> 01
+> 3
+> 10
+> E
+> 11
+> 1−p1p1
+> Unanchored split: subtree n2can starve
+> Input Hidden Output Hidden
+> f0(x)−ν0
+> f1(x)−ν1f2(x)−ν2
+> νj←αν j+ (1 −α) ¯fj
+> 1−p0p0
+> 1
+> 00
+> 2
+> 01
+> 3
+> 10
+> E
+> 11
+> 1−p1p1
+> (a) Conventional Flat Top-KRouting (b) + Hierarchical Binary Routing Tree (c) + EMA Score Anchoring & Prefix Locality (BRANCH-MoE)
+
+Figure 1: Architectural progression from conventional flat routing to BRANCH-MoE. (a) Aflat Top-K router scores all E experts independently in O(E) work and treats expert indices as unstructured labels. (b) A depth-D binary routing tree with the experts as leaves gives 
+
+O(log 2 E) sequential routing depth and a structured root-to-leaf binary address per leaf ( 00 ,
+
+01 , . . . ), but unanchored internal splits can starve entire subtrees; the full soft distribution over the leaves still requires evaluating all E − 1 internal nodes. (c) BRANCH-MoE centers each internal split j on its arrival-weighted EMA score anchor ( pj = σ(fj (x) − νj )), supporting non-starvation under the conditions of Section 4.2 without an auxiliary load-balancing loss and inducing prefix-aligned co-routing locality within hardware devices. 2022; Hwang et al., 2023; He et al., 2022; Chen et al., 2022). Notably, prior topology-aware models generally rely on post-hoc routing penalties, dynamic replication, or systems-level scheduling to minimize cross-node traffic, whereas BRANCH-MoE embeds topological locality intrinsically into the geometric structure of the router. 
+
+# 3 Architecture: BRANCH-MoE 
+
+Figure 1 illustrates the architecture, a self-balancing routing tree whose leaves are the experts; Table 1 summarizes the notation. Let T be a complete binary tree of depth D with internal-node set J and leaf set E; an internal node ( d, j ) has depth d ∈ { 0, . . . , D − 1} and index 
+
+j ∈ { 0, . . . , 2d − 1} within that depth, and for any nonroot node or leaf v, path( v) denotes the internal nodes strictly preceding v on its root-to-v path. To avoid overloading the depth index, 
+
+din denotes the hidden dimension. 
+
+3.1 Phase 1: adaptive geometric anchoring 
+
+Each internal node ( d, j ) carries a trainable scalar-valued node map f (d)
+
+j,t : Rdin → R, evaluated at training step t, and a scalar anchor ν(d)
+
+j,t ∈ R. The parameters of f (d)
+
+j,t are optimized by ordinary backpropagation through the routing probabilities, whereas ν(d)
+
+j,t is a non-gradient state variable maintained by the EMA Equation (7); there is no independently learned routing bias or additional scalar calibration variable, since the anchor plays that role and is refreshed whenever the node statistics change. 4Table 1: Principal notation. 
+
+Symbol Definition 
+
+B, d in Number of resident tokens and hidden dimension 
+
+D, E = 2 D Routing-tree depth and number of leaf experts 
+
+T , J , E Binary tree, internal nodes, and leaves 
+
+W ∈ R(2 D −1) ×din Matrix of learned node directions 
+
+νj , b j = −νj Node score anchor and induced routing bias ¯xj Arrival-weighted centroid of the tokens reaching node jP (d) Routing probabilities at tree depth dM (d) ∈ RB×2d
+
+Incoming routing masks at depth dMexperts = M (D) Final expert routing mask 
+
+X ∈ RB×din Input token representations 
+
+α ∈ (0 , 1) Single EMA decay used for anchor tracking 
+
+SK Top-K expert set selected for a token 
+
+Fe(·; θe), θ e Expert e and its trainable parameter vector 
+
+Node maps: linear and nonlinear projections. We instantiate f (d) 
+
+> j,t
+
+either as a linear 
+
+projection with a routing direction W (d) 
+
+> j,t
+
+∈ Rdin and no bias term, or as a nonlinear per-node two-layer MLP of hidden width h:
+
+f (d) 
+
+> j,t
+
+(x) =  W (d)
+
+> j,t
+
+⊤x, (3) 
+
+f (d) 
+
+> j,t
+
+(x) =  v(d)
+
+> j,t
+
+⊤φ
+
+
+
+U (d) 
+
+> j,t
+
+x + c(d)
+
+> j,t
+
+
+
+, U (d) 
+
+> j,t
+
+∈ Rh×din , v(d) 
+
+> j,t
+
+, c (d) 
+
+> j,t
+
+∈ Rh, (4) with φ applied elementwise (ReLU in our experiments); the matrix Wt ∈ R(E−1) ×din stacks the 
+
+ W (d)
+
+> j,t
+
+⊤ as its rows. Every node owns a private MLP whose output layer carries no bias, since anchoring removes any additive constant; taking φ = id and h = 1 recovers Equation (3) up to reparameterization, so linear routing is the degenerate case of nonlinear routing. The added cost is O(hd in ) parameters per node with h small ( h ∈ { 2, 4, 8} here), and the router can still be implemented as a fused batched computation. 
+
+Arrival-weighted anchoring. The anchor statistics and routing masks are constructed jointly in a root-to-leaf pass. At training step t, let m(d) 
+
+> j,t
+
+(x) denote the probability that token x reaches node ( d, j ), and collect the depth-d masks into m(d) 
+
+> t
+
+(x) :=  m(d)0,t (x), . . . , m (d)2d−1,t (x)⊤ ∈ R2d
+
+(abbreviated m(d)(x) when the training index is clear); every token reaches the root with unit mass, so m(0) 0,t (x) = 1. Given the depth-d masks and a batch Xt = ( x1, . . . , x B ), the normalized 
+
+arrival weight of token xb at node ( d, j ), the batch anchor statistic (the arrival-weighted mean of the node scores), and the persistent single-decay EMA anchor are 
+
+ω(d) 
+
+> j,t
+
+(xb) := m(d) 
+
+> j,t
+
+(xb)
+
+PBb′=1 m(d) 
+
+> j,t
+
+(xb′ ) , (5) 
+
+bν(d) 
+
+> j,t
+
+:= 
+
+> B
+
+X
+
+> b=1
+
+ω(d) 
+
+> j,t
+
+(xb) f (d) 
+
+> j,t
+
+(xb), (6) 
+
+ν(d) 
+
+> j,t +1
+
+= αtν(d) 
+
+> j,t
+
++ (1 − αt)bν(d) 
+
+> j,t
+
+, αt = min( α, t−1 
+
+> t
+
+), t ≥ 1, (7) where α ∈ (0 , 1) is the architectural decay rate and the cap ( t − 1) /t is a warmup correction that removes initialization bias from the first updates. Every token thus contributes to every node’s anchor in proportion to the routing mass reaching that node, so the statistic at ( d, j ) is dominated by the token population selected by its ancestors; at the root, all arrival weights equal 51/B and bν(0) 0,t is the ordinary batch mean of the root scores. Following the batch-normalization convention, the active anchor differs between training and inference; the centered node logit and its soft right-branch probability are 
+
+a(d) 
+
+> j,t
+
+:= 
+
+(bν(d) 
+
+> j,t
+
+, during training ,ν(d) 
+
+> j,t
+
+, during inference , (8) 
+
+z(d) 
+
+> j,t
+
+(x) = f (d) 
+
+> j,t
+
+(x) − a(d) 
+
+> j,t
+
+, p(d) 
+
+> j,t
+
+(x) = σ
+
+
+
+z(d) 
+
+> j,t
+
+(x)
+
+
+
+, (9) with σ(·) the sigmoid function. The live batch statistic makes training-time centering responsive to changes in the upstream representations, while the stored EMA makes inference deterministic and independent of batch composition. 
+
+Hierarchical mask propagation. The incoming masks for depth d + 1 follow from the branch probabilities at depth d:
+
+m(d+1) 2j,t (x) = m(d) 
+
+> j,t
+
+(x) 1 − p(d) 
+
+> j,t
+
+(x),m(d+1) 2j+1 ,t (x) = m(d) 
+
+> j,t
+
+(x)p(d) 
+
+> j,t
+
+(x), j = 0 , . . . , 2d − 1. (10) Consequently, m(d) 
+
+> j,t
+
+(x) is the product of the branch probabilities along the unique root-to-node path ending at ( d, j ). For finite logits, every sigmoid probability lies strictly between zero and one, so m(d) 
+
+> j,t
+
+(x) ∈ (0 , 1], with equality only at the root: in exact arithmetic, soft routing sends every token to every node with strictly positive mass rather than assigning it to a single subtree. The cascade also preserves total mass, P2d−1 
+
+> j=0
+
+m(d) 
+
+> j,t
+
+(x) = 1 for every depth d, by induction from 
+
+m(0) 0,t (x) = 1, as the two children of ( d, j ) receive masses summing to m(d) 
+
+> j,t
+
+(x). For the batch Xt = ( x1, . . . , x B ), define [M (d) 
+
+> t
+
+]b,j := m(d) 
+
+> j,t
+
+(xb), [P (d) 
+
+> t
+
+]b,j := p(d) 
+
+> j,t
+
+(xb), (11) so that 
+
+M (d) 
+
+> t
+
+, P (d) 
+
+> t
+
+∈ RB×2d
+
+, M (0)  
+
+> t
+
+= 1B .
+
+The dimensionally explicit batch form of Equation (10) is [M (d+1)  
+
+> t
+
+]:,2j = [ M (d) 
+
+> t
+
+]:,j ⊙  1 − [P (d) 
+
+> t
+
+]:,j 
+
+,
+
+[M (d+1)  
+
+> t
+
+]:,2j+1 = [ M (d) 
+
+> t
+
+]:,j ⊙ [P (d) 
+
+> t
+
+]:,j , j = 0 , . . . , 2d − 1. (12) Equivalently, after applying the fixed column permutation that groups the left children together and the right children together, 
+
+M (d+1)  
+
+> t
+
+=
+
+h
+
+M (d) 
+
+> t
+
+⊙ (1 − P (d) 
+
+> t
+
+) M (d) 
+
+> t
+
+⊙ P (d)
+
+> t
+
+i
+
+. (13) The denominator in Equation (5) is strictly positive since the probabilities are strictly positive. In reduced precision, however, a depth-d mask is a product of d sigmoid factors and may underflow to zero. The implementation therefore clamps the denominator away from zero and skips the corresponding EMA update if the pre-clamp arrival mass vanishes, leaving ν(d)
+
+> j,t
+
+unchanged. This is a numerical safeguard rather than a modification of the routing rule. 
+
+What is anchored, and in which space. Substituting Equation (6) into the training branch of Equation (9) gives BX
+
+> b=1
+
+ω(d) 
+
+> j,t
+
+(xb) z(d) 
+
+> j,t
+
+(xb) = 0 . (14) 6This identity holds for any node map f (d) 
+
+> j,t
+
+, whether linear or nonlinear: each node centers its scores relative to the population that actually reaches it, so any routing imbalance must arise from variation of the scores around this population-specific mean rather than from a shared offset in the incoming representations. For the linear node map 
+
+f (d) 
+
+> j,t
+
+(x) =  W (d)
+
+> j,t
+
+⊤x, 
+
+define the arrival-weighted centroid ¯x(d) 
+
+> j,t
+
+:= 
+
+> B
+
+X
+
+> b=1
+
+ω(d) 
+
+> j,t
+
+(xb)xb. (15) Linearity gives 
+
+bν(d) 
+
+> j,t
+
+=  W (d)
+
+> j,t
+
+⊤ ¯x(d) 
+
+> j,t
+
+, (16) and hence the training-time logit becomes 
+
+z(d) 
+
+> j,t
+
+(x) =  W (d)
+
+> j,t
+
+⊤ x − ¯x(d)
+
+> j,t
+
+. (17) Thus, during training, the separator is the hyperplane with normal W (d) 
+
+> j,t
+
+passing through the centroid of its incoming population. During inference, 
+
+z(d) 
+
+> j,t
+
+(x) =  W (d)
+
+> j,t
+
+⊤x − ν(d) 
+
+> j,t
+
+,
+
+so the stored anchor induces the scalar bias 
+
+b(d) 
+
+> j,t
+
+= −ν(d) 
+
+> j,t
+
+. (18) Scalar anchoring is therefore exactly equivalent to centroid anchoring for the live statistic in the linear case, while requiring only O(1) persistent state per node rather than O(dim( x)). 1
+
+For a nonlinear node map, the anchored quantity is the scalar node score rather than a point in token space. At training time, the decision boundary is the level set 
+
+n
+
+x : f (d) 
+
+> j,t
+
+(x) = bν(d)
+
+> j,t
+
+o
+
+.
+
+This boundary may be curved, piecewise linear, or disconnected, depending on the node map, and need not pass through a centroid in the original token space. What remains exact is the score-centering identity Equation (14). Accordingly, geometric arguments that require halfspace sublevel sets apply directly to linear routing, or to routing that is linear after a shared feature map, but not to an arbitrary nonlinear node map. 
+
+Gradient geometry. During training, the arrival weights in Equation (5) are detached when they are used to form the live anchor. Their forward values determine which tokens contribute to the node statistic, but gradients from the anchor are not propagated through the routing masks. The live anchor remains differentiable through the node scores themselves. Therefore, for the parameters θ(d) 
+
+> j,t
+
+of node ( d, j ), 
+
+∇θ(d)
+
+> j,t
+
+z(d) 
+
+> j,t
+
+(xb) = ∇θ(d)
+
+> j,t
+
+f (d) 
+
+> j,t
+
+(xb) −
+
+> B
+
+X
+
+> b′=1
+
+ω(d) 
+
+> j,t
+
+(xb′ )∇θ(d)
+
+> j,t
+
+f (d) 
+
+> j,t
+
+(xb′ ). (19) Thus, each node receives parameter gradients centered by the arrival-weighted mean gradient of the population it serves. For the linear map, 
+
+∇W (d)
+
+> j,t
+
+z(d) 
+
+> j,t
+
+(xb) = xb − ¯x(d) 
+
+> j,t
+
+. (20) For a nonlinear map, the same centering occurs in the corresponding Jacobian features. Anchoring therefore removes the shared mean component that could otherwise dominate the router gradient when the incoming representations contain a large common offset.          
+
+> 1For the inference statistic, the equivalence is affected by the drift of W(d)
+> j,t over the EMA window: ν(d)
+> j,t averages past values of  W(d)
+> j,τ
+> ⊤¯x(d)
+> j,τ computed with potentially different router parameters.
+
+73.2 Phase 2: expert execution 
+
+Phase 1 produces the leaf-mask matrix Mexperts = M (D) ∈ RB×E , with [ M (D)]b,e = m(D) 
+
+> e
+
+(xb). Each leaf probability is the product of the D branch probabilities along its root-to-leaf path, and every internal node splits its incoming mass between its two children with probabilities p
+
+and 1 − p, so the router outputs a normalized probability distribution over the E leaf experts rather than unnormalized expert scores. The router returns both this distribution and the indices of its K largest entries, leaving top-K sparsification to the expert layer: the same routing distribution thus supports both dense and sparse implementations, and routing statistics and intended expert loads can be measured before capacity constraints alter the realized assignments. 
+
+Gating. Let SK (x) ⊆ E index the K largest entries of m(D)(x), with retained mass RK (x) := 
+
+P  
+
+> e′∈S K(x)
+
+m(D) 
+
+> e′
+
+(x). The gate applied to expert e is given by 
+
+eme(x) = m(D) 
+
+> e
+
+(x) 1{e ∈ S K (x)}
+
+RK (x)η , η ∈ { 0, 1}, (21) With η = 1, each token’s retained gates are renormalized, after top-K masking, to sum to one; with η = 0, they retain their original path probabilities. Importantly, normalization is applied only after top-K masking; unselected experts therefore have no effect on the relative weights of the selected experts. Regarding the choice of η in Equation (21), note that renormalization preserves the relative weights within SK (x). For K > 1, this produces a convex combination of the selected expert outputs and stabilizes the scale of the mixture. For K = 1, however, renormalization would force the unique nonzero gate to equal one, discarding the router’s only scalar measure of confidence in the selected leaf. We therefore use η = 1{K > 1} as the default choice. 
+
+Execution. The BRANCH-MoE output is the gated combination of the selected experts, 
+
+by(x) = X 
+
+> e∈S K(x)
+
+eme(x) Fe(x). (22) The sparse implementation evaluates only the K selected experts, grouping tokens by expert and scattering the gated outputs back to their original positions. Ignoring dispatch overhead, this requires a Θ( K/E ) fraction of the expert computation of dense evaluation. 
+
+# 4 Theoretical Analysis 
+
+We analyze four components of BRANCH-MoE: tracking of the arrival-weighted score anchors, prevention of routing-mass collapse, optimization of sparsely selected experts, and communication locality. Proofs are deferred to Section A. 
+
+4.1 Arrival-weighted population and anchor tracking 
+
+Fix a node ( d, j ) and temporarily freeze the router and the node score. To avoid excessive subscripts, write bνt = bν(d) 
+
+> j,t
+
+and νt = ν(d) 
+
+> j,t
+
+.
+
+Assumption 4.1 (Stationary anchor estimates) . There is a deterministic scalar ¯ν such that 
+
+bνt = ¯ ν + ξt, E[ξt | F t] = 0 , E[ξ2 
+
+> t
+
+| F t] ≤ s2. (23) 
+
+Here Ft contains the model state and all batches preceding the t-th update, so νt is Ft-measurable and bνt is computed from a fresh batch. The initialization ν0 is deterministic. 
+
+8Theorem 4.2 (Stationary behavior of the anchor EMA) . Under Theorem 4.1, consider the constant-decay phase of Equation (7) , after the warmup has reached αt = α. Reindexing the first update in this phase as t = 0 , the anchor satisfies 
+
+E[νt − ¯ν] = αt(ν0 − ¯ν), (24) 
+
+E[( νt − ¯ν)2] ≤ α2t(ν0 − ¯ν)2 + 1 − α
+
+1 + α (1 − α2t)s2. (25) 
+
+Thus, the initialization error decays geometrically, while the asymptotic mean-square fluctuation is at most (1 − α)s2/(1 + α).
+
+The theorem makes the role of α transparent. A larger α reduces the sampling-noise floor but makes the EMA slower to respond. Under soft routing every node receives positive mass in exact arithmetic, but deep-node arrival weights can be highly concentrated, increasing the variance parameter s2 and the risk of numerical underflow. 
+
+Proposition 4.3 (Tracking a drifting anchor) . Under the same constant-decay update, suppose 
+
+E[bνt | F t] = ¯ νt, E[( bνt − ¯νt)2 | F t] ≤ s2, |¯νt+1 − ¯νt| ≤ v, (26) 
+
+where (¯ νt) and ν0 are deterministic. Then 
+
+E[( νt − ¯νt)2] ≤
+
+
+
+αt|ν0 − ¯ν0| + v(1 − αt)1 − α
+
+2
+
++ 1 − α
+
+1 + α (1 − α2t)s2. (27) The two nontransient terms exhibit the tracking trade-off of the single EMA: large α
+
+suppresses sampling noise, whereas small α reduces lag. 
+
+4.2 Score anchoring and routing-mass anti-collapse 
+
+Fix the soft router, including its active anchors, and a node ( d, j ), and suppress the fixed step index. Its expected incoming mass is q(d) 
+
+> j
+
+:= E[m(d) 
+
+> j
+
+(X)] > 0. For every measurable set A in the input space, define the arrival-weighted law by D(d) 
+
+> j
+
+(A) := E[m(d) 
+
+> j
+
+(X)1{X ∈ A} ]/q (d) 
+
+> j
+
+. Let 
+
+ν(d),⋆ j := ED(d)
+
+> j
+
+[f (d) 
+
+> j
+
+(X)] be the population score anchor and let δ(d) 
+
+> j
+
+:= a(d) 
+
+> j
+
+− ν(d),⋆ j denote the active-anchor error. The relative masses sent to the right and left children are, respectively, 
+
+π(d) 
+
+> j, +
+
+:= ED(d)
+
+> j
+
+[σ(f (d) 
+
+> j
+
+(X) − a(d) 
+
+> j
+
+)] and π(d) 
+
+> j, −
+
+:= ED(d)
+
+> j
+
+[σ(a(d) 
+
+> j
+
+− f (d) 
+
+> j
+
+(X))]. 
+
+Lemma 4.4 (Log-concavity under soft linear routing) . Suppose the input distribution has a log-concave density on its affine support and every ancestor of node (d, j ) uses an affine score. Then the arrival-weighted law D(d) 
+
+> j
+
+is log-concave. 
+
+Corollary 4.5 (Linear routing under a log-concave arrival law) . Suppose D(d) 
+
+> j
+
+is log-concave on its affine support and 
+
+f (d) 
+
+> j
+
+(x) =  W (d)
+
+> j
+
+⊤x (28) 
+
+with W (d) 
+
+> j
+
+nonzero on the linear span of that support. At the exact population anchor, 
+
+min {π(d)
+
+> j, +
+
+, π (d)
+
+> j, −
+
+} ≥ 12e . (29) 
+
+If the centered projected score has density bounded by A(d) 
+
+> j
+
+, then for an arbitrary active anchor, 
+
+min {π(d)
+
+> j, +
+
+, π (d)
+
+> j, −
+
+} ≥ 12
+
+ 1e − A(d) 
+
+> j
+
+|δ(d) 
+
+> j
+
+|
+
+
+
+> +
+
+. (30) 9For a fixed soft router, let 
+
+qe := E[m(D) 
+
+> e
+
+(X)] (31) be the expected routing mass of leaf e. If the density condition in Theorem 4.5 holds at every node on the path to e, define 
+
+ρ(d) 
+
+> j
+
+:= 12
+
+ 1e − A(d) 
+
+> j
+
+|δ(d) 
+
+> j
+
+|
+
+
+
+> +
+
+, (32) then repeated conditioning along the path to e gives 
+
+qe ≥ qe := Y
+
+> (d,j )∈path( e)
+
+ρ(d) 
+
+> j
+
+. (33) In the linear log-concave case with exact population anchors, 
+
+qe ≥ (2e) −D for every leaf e. (34) These bounds do not, by themselves, imply that every leaf is retained by deterministic top-K
+
+truncation; this distinction is addressed next. 
+
+4.3 Expert optimization under sparse top-K routing 
+
+Freeze the router, the top-K rule, and any capacity policy. Let 
+
+Ie,t := 1{expert e executes example t}, pe := P(Ie,t = 1) . (35) Thus pe is the actual execution probability after top-K selection, not the expected leaf mass qe
+
+in Equation (31). Let θe collect the trainable parameters of expert Fe, and let Le denote its conditional risk on the examples it executes. 
+
+Assumption 4.6 (Frozen-router expert SGD) . The examples are i.i.d. and P(Ie,t = 1 | H t) = pe,where Ht is the history before example t, and θe, 0 is deterministic. The conditional risk Le is 
+
+μe-strongly convex and Le-smooth with minimizer θ⋆e . Conditional on Ie,t = 1 , the stochastic gradient satisfies 
+
+E[ge,t | H t, I e,t = 1] = ∇L e(θe,t ),
+
+E ∥ge,t − ∇L e(θe,t )∥2 | H t, I e,t = 1  ≤ σ2 
+
+> e
+
+. (36) The global-example update is 
+
+θe,t +1 = θe,t − γeIe,t ge,t . (37) 
+
+Theorem 4.7 (Expert progress under intermittent execution) . Under Theorem 4.6, if pe > 0
+
+and 0 < γ e ≤ 1/L e, then 
+
+E[∥θe,T − θ⋆e ∥2] ≤ (1 − peγeμe)T ∥θe, 0 − θ⋆e ∥2 + γeσ2
+
+> e
+
+μe
+
+≤ exp( −peγeμeT )∥θe, 0 − θ⋆e ∥2 + γeσ2
+
+> e
+
+μe
+
+. (38) 
+
+Consequently, if pe ≥ pmin > 0 for all experts, then, for 0 < ε < ∥θe, 0 − θ⋆e ∥2, the transient is at most ε once 
+
+T ≥ 1
+
+pmin γeμe
+
+log 
+
+ ∥θe, 0 − θ⋆e ∥2
+
+ε
+
+
+
+. (39) 10 Implication for BRANCH-MoE. Theorem 4.7 identifies the realized execution frequency as the optimization bottleneck for sparsely activated experts: a larger minimum frequency pmin 
+
+yields faster worst-expert convergence in global training steps. BRANCH-MoE is designed to improve this quantity by anchoring each internal decision to the population reaching that node, thereby discouraging persistent high-level routing imbalances that would simultaneously suppress every expert in an entire subtree. Although the soft-mass bound in Equation (33) does not formally imply a positive top-K execution probability, it removes an important mechanism of expert starvation and should make realized execution frequencies larger and more stable than under unconstrained learned routing. Thus, the theorem explains how the improved utilization encouraged by BRANCH-MoE can translate into faster optimization of the least frequently selected experts. Uniform random routing remains the natural benchmark for marginal balance; BRANCH-MoE seeks comparable utilization while retaining task-dependent specialization and tree-aligned communication locality. 
+
+4.4 Communication locality from learned tree routing 
+
+We finally analyze communication at a hardware boundary whose domains are aligned with depth-r routing subtrees; a token is transmitted once to every contacted domain and may then be replicated locally. The argument depends only on the centered node scores, so it applies to both linear and nonlinear node maps. Fix a token x, follow the more probable child for r levels, and let u0, u 1, . . . , u r be the resulting path, where ui = ( i, j i) and u0 is the root. Let L(ur) be the leaves below ur, assumed to contain at least K experts, and let SK (x) be the top-K leaf set. Under prefix-aligned placement, let Nr(x) denote the number of depth-r communication domains containing at least one selected expert, and suppose a token representation contains 
+
+stok bytes and transmission across this boundary costs cr per byte. The learned score margin at 
+
+ui, the leaf mass outside the prefix subtree, the smallest retained probability of SK (x), and the communication cost are 
+
+γi(x) := z(i)
+
+> ji,t
+
+(x) = f (i)
+
+> ji,t
+
+(x) − a(i) 
+
+> ji,t
+
+, (40) 
+
+εr(x) := X 
+
+> e / ∈L (ur)
+
+m(D) 
+
+> e,t
+
+(x), (41) 
+
+τK (x) := min   
+
+> e∈S K(x)
+
+m(D) 
+
+> e,t
+
+(x), (42) Comm r(x) := stok crNr(x). (43) At ui, the preferred child receives probability σ(γi(x)), while the other child receives σ(−γi(x)) ≤
+
+e−γi(x).
+
+Theorem 4.8 (Learned-margin communication locality) . For every token x,
+
+εr(x) = 1 −
+
+> r−1
+
+Y
+
+> i=0
+
+σ(γi(x)) ≤
+
+> r−1
+
+X
+
+> i=0
+
+e−γi(x). (44) 
+
+Moreover, 
+
+|S K (x) \ L (ur)| ≤ 
+
+ εr(x)
+
+τK (x)
+
+
+
+, (45) 
+
+and 
+
+Nr(x) ≤ min 
+
+
+
+K, 1 + 
+
+ εr(x)
+
+τK (x)
+
+ 
+
+. (46) 
+
+In particular, if r−1X
+
+> i=0
+
+e−γi(x) < τ K (x), (47) 11 then all top-K experts lie in L(ur) and 
+
+Nr(x) = 1 , Comm r(x) = stok cr. (48) If the first r score margins satisfy γi(x) ≥ γ, then 
+
+εr(x) ≤ re −γ . (49) Thus γ > log( r/τ K (x)) is sufficient for one-domain dispatch at the depth-r boundary. 
+
+Interpretation. An upper-level decision acts on an entire subtree: a large learned margin suppresses the total probability of every leaf in the nonpreferred branch, so after r confident decisions the routing mass is concentrated in a subtree of E/ 2r experts; if that subtree is placed within one hardware domain, the lower levels refine the expert choice locally. This per-token result is compatible with the population-level anti-collapse result of Section 4.2: arrival-weighted anchoring prevents the token population as a whole from placing arbitrarily little routing mass on either child of an internal node, but does not require each token to split its mass evenly. A token may assign most of its probability to one branch while other tokens favor the opposite branch, so BRANCH-MoE can maintain broad expert utilization across tokens while producing concentrated, structured assignments for each token .
+
+# 5 Experiments 
+
+We evaluate BRANCH-MoE against representative MoE routers on four benchmarks, testing (i) whether it is competitive on task quality without an auxiliary balancing loss and (ii) whether it induces the expert locality analyzed in Section 4.4. In short, quality is at parity with the strongest baselines on all four benchmarks, locality appears on the three UCI benchmarks but not on Criteo, and load stays balanced without an auxiliary loss. 
+
+5.1 Setup 
+
+We use Criteo ( ≈41 .5M examples, 39 fields), Forest Covertype (581K, 54 features), HIGGS (600K, 28), and YearPredictionMSD (515K, 90). All MoE conditions share one block of E = 16 SwiGLU experts (top-4, capacity factor 1 .25) between a minimal input stage and a linear head, and differ only in the gate. The baselines are softmax top-K with an auxiliary loss (Switch), dynamic-bias routing (DeepSeek-V3), logit-normalized softmax with an auxiliary loss (Skywork), and a hash-based control (Hash). Node maps are linear or two-layer MLPs of width h ∈ { 2, 4, 8}.Every condition has five seeds; comparisons are paired by seed on UCI and unpaired (Welch) on Criteo, where TPU execution is not bitwise reproducible. We report the normalized tree distance 
+
+L/D between co-selected experts ( L = bit length( i ⊕ j), D = log 2 E; random pairs score 0 .817, lower is more local) and the load CV (std/mean of per-expert load). Details: Section B. 
+
+5.2 Results 
+
+Quality. BRANCH-MoE is at parity with the strongest baselines (Table 2a). On Criteo the learned routers span 1 .9 × 10 −4 logloss with the linear map, about half the smallest resolvable difference; at its best map ( h = 4) BRANCH-MoE has the lowest mean, but its leads over Skywork ( p = 0 .63) and DeepSeek-V3 ( p = 0 .26) are within seed noise, and DeepSeek-V3 has the higher AUC. On Covertype BRANCH-MoE ( h = 8) has the lowest mean cross-entropy (0 .2372); its 0 .0034 margin over Switch is resolved only by the paired test ( t4 = −2.86, critical value 2 .776), the equal margin over Skywork by neither test, and the 0 .0049 margin over DeepSeek-V3 by the paired test ( t4 = −3.25). BRANCH-MoE ranks second on HIGGS (0 .0009 behind Skywork, 12 Table 2: Main results ( E=16, top-4, 5 seeds; mean ± sd). (a) Best held-out loss, each router at its best of four node maps (tag), selected on the reporting split; BRANCH-MoE also with the linear map covered by the theory. Bold: best arm. Hash ignores the node map (UCI: best of its four identical runs). (b) Normalized tree distance (random pairs 0 .817; bold: most local on UCI) / load CV of the same arms. †Not read as locality (Section C.1). Per-map results: Section C. 
+
+Method Criteo (logloss) Covertype (CE) HIGGS (logloss) MSD (MSE) 
+
+(a) Best held-out loss ↓
+
+BRANCH-MoE (best map) 0.44596 ±0.00015 h4 0.2372 ±0.0013 h8 0.5256 ±0.0014 h8 0.6767 ±0.0027 h8 
+
+BRANCH-MoE (linear) 0.44615 ±0.00025 0.2545 ±0.0041 0.5259 ±0.0008 0.6843 ±0.0035 
+
+Skywork 0.44603 ±0.00030 lin 0.2406 ±0.0036 h8 0.5247 ±0.0005 lin 0.6757 ±0.0015 h2 
+
+DeepSeek-V3 0.44605 ±0.00005 h8 0.2421 ±0.0033 h8 0.5264 ±0.0013 lin 0.6746 ±0.0043 h8 
+
+Switch 0.44623 ±0.00019 lin 0.2406 ±0.0028 h8 0.5276 ±0.0003 h4 0.6766 ±0.0038 h8 
+
+Hash 0.44707 ±0.00028 0.4465 ±0.0011 0.5574 ±0.0007 0.6899 ±0.0024 
+
+(b) Tree distance ↓ / load CV ↓ of the same arms 
+
+BRANCH-MoE (best map) 0.757 / 0 .268 0.742 / 0 .112 0.736 / 0 .231 0.749 / 0 .219 BRANCH-MoE (linear) 0.813 / 0 .115 0.718 / 0 .093 0.710 / 0 .227 0.718 / 0 .177 Skywork 0.818 / 0 .004 0.817 / 0 .137 0.812 / 0 .183 0.813 / 0 .536 DeepSeek-V3 0.819 / 0 .004 0.813 / 0 .001 0.816 / 0 .002 0.813 / 0 .003 Switch 0.821 / 0 .003 0.819 / 0 .141 0.814 / 0 .104 0.800 / 0 .278 Hash 0.817 / 0 .002 0.817 / 0 .003 0.817 / 0 .002 0.817 / 0 .004          
+
+> lin h2 h4 h8 0.24 0.26 0.28 0.3Covertype CE  (a) loss vs. node map
+> BRANCH-MoE Skywork Switch DeepSeek-V3
+> lin h8 h2 h4 0.65 0.70.75 0.8BRANCH-MoE tree dist. (b) locality vs. node map
+> Covertype HIGGS MSD
+
+Figure 2: Node-map effect. (a) Covertype loss of the learned routers vs. node map, ±sd (Hash, at 0 .447, is off-scale). (b) BRANCH-MoE’s tree distance vs. node map on UCI; dashed: random pairs (0 .817); shaded: flat routers at their best maps. within seed spread) and fourth on MSD, where the four learned routers span 0 .0021 against seed sds of 0 .0015–0 .0043. Hash is the worst MoE arm everywhere. 
+
+Locality. On the three UCI benchmarks BRANCH-MoE is the only router materially below random (Table 2b). With the linear map its tree distance is 0 .710–0 .718, 12–13% below random (18–23% on index distance), and 0 .736–0 .749 at h = 8; every flat router stays within 3 .5% of random (closest: Switch on MSD, 0 .800). On Criteo BRANCH-MoE shows no locality: with the linear map its tree distance (0 .813) is indistinguishable from random ( p = 0 .48), although an untrained tree scores 0 .725. The lower values with MLP maps ( †) also appear for the flat Skywork router (0 .75–0 .77), so we do not read them as locality. Criteo differs from UCI in input representation, batch size, and training length; we have not isolated which matters (Section C.1). 
+
+Balance. BRANCH-MoE uses no auxiliary loss or bias controller. On UCI its linear-map load CV (0 .09–0 .23) is comparable to that of the auxiliary-loss routers at their best maps (Switch 0.10–0 .28, Skywork 0 .14–0 .54); on Covertype the only dead experts are Skywork’s at h = 2 (6 of 80 slots). On Criteo its CV of 0 .115 exceeds the flat routers’ ( ≤ 0.006) but costs nothing measurable: it drops 0 .08% of dispatches. 
+
+Node maps. The node map can matter more than the routing rule (Figure 2a). On Covertype, replacing the linear map by an h = 8 MLP lowers cross-entropy by 0 .017–0 .028 for every learned 13 router (paired t from −7.99 to −21 .44), 3 .5–5 .8× the largest gap between routers at h = 8 (0 .0049; 0 .016 at linear), while Hash, which ignores the node map, moves by only 0 .00013. The sign depends on the dataset: MSD agrees; on HIGGS the linear map is best for Skywork and DeepSeek-V3 and ties for BRANCH-MoE; on Criteo no router’s loss changes significantly (≤ 4.1 × 10 −4, p > 0.1) except Switch’s, which fails with every MLP map ( ≈68% of dispatches dropped). The MLP also loosens BRANCH-MoE’s structure: on UCI its tree distance rises by 0.024–0 .031 (Figure 2b; same sign on all three datasets, not resolved on Covertype alone), and on Criteo its load CV rises from 0 .115 to 0 .21–0 .38 ( p ≤ 0.01 at h = 4 and 8). 
+
+Takeaway. Balance without an auxiliary loss and locality on UCI are supported, and quality is at parity; locality on Criteo and whether MLP maps erode locality remain open (Section C). 
+
+Conclusion and limitations. BRANCH-MoE combines arrival-weighted score anchoring with hierarchical routing to encourage balanced population-level utilization and structured per-token expert selection without an auxiliary balancing loss. Our analysis characterizes anchor tracking, establishes soft-mass anti-collapse for linear routing under log-concave arrivals, relates realized expert-selection frequency to optimization progress, and bounds communication locality under prefix-aligned placement. The experiments demonstrate competitive task quality and structured locality across several benchmarks. The present study is limited to a single BRANCH-MoE layer and therefore does not capture interactions among routing decisions across multiple layers. Future work will extend both the theory and empirical evaluation to multilayer architectures and develop fused, topology-aware implementations for large-scale distributed settings. 14 AI use statement 
+
+In this work, we used generative AI tools to improve the manuscript’s clarity, presentation and writing. We have not used generative AI tools for conducting experiments. All AI-assisted material was carefully reviewed and verified by the authors. We accept full responsibility for the final content of this work, including all text, claims, and artifacts produced with the assistance of generative AI. 
+
+# References 
+
+Pierre Baldi, Peter Sadowski, and Daniel Whiteson. Searching for exotic particles in high-energy physics with deep learning. Nature Communications , 5:4308, 2014. doi: 10.1038/ncomms5308. Peter Belcak and Roger Wattenhofer. Fast feedforward networks. arXiv preprint arXiv:2308.14711 , 2023. Thierry Bertin-Mahieux. Year prediction msd, 2011. URL https://doi.org/10.24432/C50K61 .Dataset. Thierry Bertin-Mahieux, Daniel P. W. Ellis, Brian Whitman, and Paul Lamere. The million song dataset. In Proceedings of the 12th International Society for Music Information Retrieval Conference , pp. 591–596, 2011. Jock Blackard. Covertype, 1998. URL https://doi.org/10.24432/C50K5N . Dataset. Jock A. Blackard and Denis J. Dean. Comparative accuracies of artificial neural networks and discriminant analysis in predicting forest cover types from cartographic variables. Computers and Electronics in Agriculture , 24(3):131–151, 1999. doi: 10.1016/S0168-1699(99)00046-0. Chang Chen, Min Li, Zhihua Wu, Dianhai Yu, and Chao Yang. TA-MoE: Topology-aware large scale mixture-of-expert training. In Advances in Neural Information Processing Systems ,volume 35, pp. 22173–22186, 2022. Aidan Clark, Diego de las Casas, Aurelia Guy, Arthur Mensch, Michela Paganini, Jordan Hoffmann, Bogdan Damoc, Blake Hechtman, Trevor Cai, Sebastian Borgeaud, George van den Driessche, Eliza Rutherford, Tom Hennigan, Matthew J. Johnson, Albin Cassirer, Chris Jones, Elena Buchatskaya, David Budden, Laurent Sifre, Simon Osindero, Oriol Vinyals, Marc’Aurelio Ranzato, Jack Rae, Erich Elsen, Koray Kavukcuoglu, and Karen Simonyan. Unified scaling laws for routed language models. In Proceedings of the 39th International Conference on Machine Learning , volume 162 of Proceedings of Machine Learning Research , pp. 4057–4086. PMLR, 2022. Criteo AI Lab. Criteo 1tb click logs dataset. https://ailab.criteo.com/ download-criteo-1tb-click-logs-dataset/ , 2015. Accessed: 2026-10-04. DeepSeek-AI. DeepSeek-V3 technical report. arXiv preprint arXiv:2412.19437 , 2024. David Eigen, Marc’Aurelio Ranzato, and Ilya Sutskever. Learning factored representations in a deep mixture of experts. arXiv preprint arXiv:1312.4314 , 2013. William Fedus, Barret Zoph, and Noam Shazeer. Switch Transformers: Scaling to trillion parameter models with simple and efficient sparsity. Journal of Machine Learning Research ,23(120):1–39, 2022. Nicholas Frosst and Geoffrey Hinton. Distilling a neural network into a soft decision tree. arXiv preprint arXiv:1711.09784 , 2017. 15 Jiaao He, Jidong Zhai, Tiago Antunes, Haojie Wang, Fuwen Luo, Shangfeng Shi, and Qin Li. FasterMoE: Modeling and optimizing training of large-scale dynamic pre-trained models. In 
+
+Proceedings of the 27th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming , pp. 120–134, 2022. Changho Hwang, Wei Cui, Yifan Xiong, Ziyue Yang, Ze Liu, Han Hu, Zilong Wang, Rafael Salas, Jithin Jose, Prabhat Ram, HoYuen Chau, Peng Cheng, Fan Yang, Mao Yang, and Yongqiang Xiong. Tutel: Adaptive mixture-of-experts at scale. In Proceedings of Machine Learning and Systems , volume 5, pp. 269–287, 2023. Shibal Ibrahim, Wenyu Chen, Hussein Hazimeh, Natalia Ponomareva, Zhe Zhao, and Rahul Mazumder. COMET: Learning cardinality constrained mixture of experts with trees and local search. In Proceedings of the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pp. 832–844, 2023. Ozan ˙Irsoy, Olcay Taner Yıldız, and Ethem Alpaydın. Soft decision trees. In Proceedings of the 21st International Conference on Pattern Recognition , pp. 1819–1822, 2012. Robert A. Jacobs, Michael I. Jordan, Steven J. Nowlan, and Geoffrey E. Hinton. Adaptive mixtures of local experts. Neural Computation , 3(1):79–87, 1991. Michael I. Jordan and Robert A. Jacobs. Hierarchical mixtures of experts and the EM algorithm. 
+
+Neural Computation , 6(2):181–214, 1994. Dmitry Lepikhin, HyoukJoong Lee, Yuanzhong Xu, Dehao Chen, Orhan Firat, Yanping Huang, Maxim Krikun, Noam Shazeer, and Zhifeng Chen. GShard: Scaling giant models with conditional computation and automatic sharding. In International Conference on Learning Representations , 2021. Mike Lewis, Shruti Bhosale, Tim Dettmers, Naman Goyal, and Luke Zettlemoyer. BASE layers: Simplifying training of large, sparse models. In Proceedings of the 38th International Conference on Machine Learning , volume 139 of Proceedings of Machine Learning Research ,pp. 6265–6274. PMLR, 2021. Samyam Rajbhandari, Conglong Li, Zhewei Yao, Minjia Zhang, Reza Yazdani Aminabadi, Ammar Ahmad Awan, Jeff Rasley, and Yuxiong He. DeepSpeed-MoE: Advancing mixture-of-experts inference and training to power next-generation AI scale. In Proceedings of the 39th International Conference on Machine Learning , volume 162 of Proceedings of Machine Learning Research , pp. 18332–18346. PMLR, 2022. Stephen Roller, Sainbayar Sukhbaatar, Arthur Szlam, and Jason Weston. Hash layers for large sparse models. In Advances in Neural Information Processing Systems , volume 34, pp. 17555–17566, 2021. Noam Shazeer, Azalia Mirhoseini, Krzysztof Maziarz, Andy Davis, Quoc Le, Geoffrey Hinton, and Jeff Dean. Outrageously large neural networks: The sparsely-gated mixture-of-experts layer. In International Conference on Learning Representations , 2017. Lean Wang, Huazuo Gao, Chenggang Zhao, Xu Sun, and Damai Dai. Auxiliary-loss-free load balancing strategy for mixture-of-experts. arXiv preprint arXiv:2408.15664 , 2024. Tianwen Wei, Bo Zhu, Liang Zhao, Cheng Cheng, Biye Li, Weiwei L¨ u, Peng Cheng, Jianhao Zhang, Xiaoyu Zhang, Liang Zeng, Xiaokun Wang, Yutuan Ma, Rui Hu, Shuicheng Yan, Han Fang, and Yahui Zhou. Skywork-MoE: A deep dive into training techniques for mixture-of-experts language models. arXiv preprint arXiv:2406.06563 , 2024. 16 Daniel Whiteson. Higgs, 2014. URL https://doi.org/10.24432/C5V312 . Dataset. Yanqi Zhou, Tao Lei, Hanxiao Liu, Nan Du, Yanping Huang, Vincent Zhao, Andrew M. Dai, Zhifeng Chen, Quoc V. Le, and James Laudon. Mixture-of-experts with expert choice routing. In Advances in Neural Information Processing Systems , volume 35, pp. 7103–7114, 2022. 17 A Proofs 
+
+Proof of Theorem 4.2. Let et := νt − ¯ν. From the constant-decay update and Equation (23), 
+
+et+1 = αe t + (1 − α)ξt.
+
+Taking conditional expectation given Ft gives E[et+1 | F t] = αe t. Iterating proves Equation (24). For the second moment, 
+
+E[e2 
+
+> t+1
+
+| F t] = α2e2 
+
+> t
+
++ 2 α(1 − α)etE[ξt | F t] + (1 − α)2E[ξ2 
+
+> t
+
+| F t]
+
+≤ α2e2 
+
+> t
+
++ (1 − α)2s2.
+
+Taking expectations and unrolling the recursion yields 
+
+E[e2 
+
+> t
+
+] ≤ α2te20 + (1 − α)2s2
+
+> t−1
+
+X
+
+> k=0
+
+α2k.
+
+Using Pt−1 
+
+> k=0
+
+α2k = (1 − α2t)/(1 − α2) gives Equation (25). 
+
+Proof of Theorem 4.3. Write ξt := bνt − ¯νt and et := νt − ¯νt. Then 
+
+et+1 = αe t + (¯ νt − ¯νt+1 ) + (1 − α)ξt.
+
+Unrolling gives 
+
+et = αte0 +
+
+> t−1
+
+X
+
+> k=0
+
+αt−1−k(¯ νk − ¯νk+1 )+ (1 − α)
+
+> t−1
+
+X
+
+> k=0
+
+αt−1−kξk.
+
+The absolute value of the deterministic first line is at most 
+
+αt|e0| + v
+
+> t−1
+
+X
+
+> k=0
+
+αt−1−k = αt|e0| + v(1 − αt)1 − α .
+
+The martingale-difference property makes distinct noise terms orthogonal and eliminates their cross term with the deterministic part. Hence the noise variance is at most (1 − α)2s2
+
+> t−1
+
+X
+
+> k=0
+
+α2k = 1 − α
+
+1 + α (1 − α2t)s2.
+
+Combining the two bounds proves Equation (27). 
+
+Proof of Theorem 4.4. Along the path to node ( d, j ), its mask can be written as 
+
+m(d) 
+
+> j
+
+(x) = Y
+
+> u∈path(( d,j ))
+
+σ(suzu(x)) ,
+
+where su ∈ {− 1, +1 } selects the appropriate branch and zu(x) is an affine centered score. The function y 7 → log σ(y) = − log(1 + exp( −y)) is concave. Therefore each factor x 7 → σ(suzu(x)) is log-concave, and so is their product. The unnormalized arrival density is the product of this mask and the log-concave input density, hence is log-concave. Normalization preserves log-concavity. 18 Proof of Theorem 4.5. Let μ(d) 
+
+> j
+
+:= ED(d)
+
+> j
+
+[X]. Linearity gives 
+
+ν(d),⋆ j =  W (d)
+
+> j
+
+⊤μ(d) 
+
+> j
+
+,
+
+so the population-centered score is 
+
+Z =  W (d)
+
+> j
+
+⊤(X − μ(d) 
+
+> j
+
+).
+
+Gr¨ unbaum’s inequality for log-concave measures implies 
+
+P(Z ≥ 0) ≥ 1e , P(Z ≤ 0) ≥ 1e .
+
+At the exact population anchor, π(d) 
+
+> j, +
+
+= E[σ(Z)] and π(d) 
+
+> j, −
+
+= E[σ(−Z)], where both expectations are under D(d) 
+
+> j
+
+. Since σ(y) ≥ 1/2 for y ≥ 0, each expectation is at least 1 /(2e), proving Equation (29). For an arbitrary active anchor, the two expectations become E[σ(Z − δ(d) 
+
+> j
+
+)] and E[σ(δ(d) 
+
+> j
+
+− Z)]. They are bounded below by one half of P(Z ≥ δ(d) 
+
+> j
+
+) and P(Z ≤ δ(d) 
+
+> j
+
+), respectively. If the density of Z is bounded by A(d) 
+
+> j
+
+, moving the threshold from zero to δ(d) 
+
+> j
+
+changes either tail probability by at most A(d) 
+
+> j
+
+|δ(d) 
+
+> j
+
+|. Combining this fact with Gr¨ unbaum’s bounds and truncating the resulting lower bound at zero proves Equation (30). 
+
+Proof of Theorem 4.7. Write ut = θe,t − θ⋆e . Conditional on Ht, unbiasedness and Equation (37) imply 
+
+E[∥ut+1 ∥2 | H t] = ∥ut∥2 − 2peγe⟨ut, ∇L e(θe,t )⟩
+
++ peγ2 
+
+> e
+
+E[∥ge,t ∥2 | H t, I e,t = 1] .
+
+Strong convexity gives ⟨ut, ∇L e(θe,t )⟩ ≥ μe∥ut∥2. Smoothness, optimality of θ⋆e , and Equation (36) give 
+
+E[∥ge,t ∥2 | H t, I e,t = 1] ≤ ∥∇L e(θe,t )∥2 + σ2 
+
+> e
+
+.
+
+Because a differentiable convex Le-smooth function has an L−1 
+
+> e
+
+-cocoercive gradient, ∥∇L e(θe,t )∥2 ≤
+
+Le⟨ut, ∇L e(θe,t )⟩. Therefore, using γe ≤ 1/L e,
+
+E[∥ut+1 ∥2 | H t] ≤ (1 − peγeμe)∥ut∥2 + peγ2 
+
+> e
+
+σ2 
+
+> e
+
+.
+
+Iteration of this recursion and summation of the geometric series yield 
+
+E∥uT ∥2 ≤ (1 − peγeμe)T ∥u0∥2 + γeσ2
+
+> e
+
+μe
+
+.
+
+Finally, 1 − x ≤ exp( −x) gives the second line of Equation (38). If pe ≥ pmin , replacing pe by 
+
+pmin in the exponential transient and solving for T gives Equation (39). 
+
+Proof of Theorem 4.8. The leaf masks below ur = ( r, j r) sum to its incoming mask: 
+
+X 
+
+> e∈L (ur)
+
+m(D) 
+
+> e,t
+
+(x) = m(r) 
+
+> jr,t
+
+(x). (50) This follows by induction from the cascade, because the two children of a node with incoming mask m receive masses m(1 − p) and mp , whose sum is m.19 Table 3: Benchmark suite. All MoE conditions use E = 16 experts with top-4 routing. “Examples” is the full corpus size (train + held-out); “Seeds” is the number of independent replications per condition. 
+
+Dataset Task Examples Features Seeds Metric Criteo (small) CTR (binary) ≈41 .5M 2 39 fields 5 Logloss / AUC Forest Covertype 7-class 581K 54 5 Cross-entropy / Acc. HIGGS Binary 600K 28 5 Logloss / AUC YearPredictionMSD Regression 515K 90 5 MSE / RMSE (yr) 
+
+Along the preferred path, the probability assigned at level i is σ(γi(x)). Therefore, 
+
+X 
+
+> e∈L (ur)
+
+m(D) 
+
+> e,t
+
+(x) = m(r) 
+
+> jr,t
+
+(x) = 
+
+> r−1
+
+Y
+
+> i=0
+
+σ(γi(x)) .
+
+Since the full leaf mask sums to one, 
+
+εr(x) = 1 −
+
+> r−1
+
+Y
+
+> i=0
+
+σ(γi(x)) .
+
+For numbers ai ∈ [0 , 1], 1 − Q
+
+> i
+
+(1 − ai) ≤ P 
+
+> i
+
+ai. Taking ai = σ(−γi(x)) gives 
+
+εr(x) ≤
+
+> r−1
+
+X
+
+> i=0
+
+σ(−γi(x)) ≤
+
+> r−1
+
+X
+
+> i=0
+
+e−γi(x),
+
+which proves Equation (44). Let 
+
+hr(x) := |S K (x) \ L (ur)|.
+
+Every selected leaf has probability at least τK (x), and hence 
+
+εr(x) ≥ X  
+
+> e∈S K(x)\L (ur)
+
+m(D) 
+
+> e,t
+
+(x) ≥ hr(x)τK (x).
+
+Because hr(x) is integer, this proves Equation (45). All selected experts inside L(ur) occupy one domain, and every selected expert outside it can add at most one further domain. Thus Nr(x) ≤ 1 + hr(x), while trivially Nr(x) ≤ K. This proves Equation (46). Finally, Equation (47) implies εr(x) < τ K (x). If a selected expert lay outside L(ur), its probability would be at least τK (x), which would contradict the definition of εr(x). Hence every selected expert lies in the same depth-r domain. 
+
+# B Experimental Details 
+
+B.1 Datasets 
+
+Table 3 summarizes the four benchmarks. Criteo is the primary large-scale task; the three UCI datasets are tabular benchmarks that admit many-seed replication at modest cost.    
+
+> 2The held-out split is exactly 4 .42M examples (one full evaluation pass of 2 ,158 steps at batch 2048). The training split is not counted directly: we infer ≈37M from the ratio of on-disk sizes (5 .93 GB train against 0 .71 GB held-out), which assumes a common mean record size across the two splits. All reported results depend on the training step count, not on this figure, so the corpus size should be read as approximate.
+
+20 Criteo. Each example comprises 13 integer (count) features and 26 categorical features, for 39 fields in total, with a binary click label. Categorical fields are mapped to integer IDs by a string lookup built from a vocabulary with a minimum-frequency cutoff of 100; post-cutoff vocabulary sizes V range from 4 to 20 ,136. Integer fields are discretized into 41 bins by the boundaries bi = 1 .5 i−1 − 0.49 for i = 0 , . . . , 39, converting magnitude into an ordered categorical ID. Embeddings are not shared across fields: integer fields use width 10, categorical fields use 
+
+df = min( ⌊6V 1/4 
+
+> f
+
+⌋, V f ) ∈ [4 , 71], and the concatenation yields a 1137-dimensional input. 
+
+UCI benchmarks. Forest Covertype (54 cartographic features, 7 cover classes, 80 /20 split) and HIGGS (28 particle-physics features, the first 600K of the 11M-event corpus, 500K/100K split) are standardized. YearPredictionMSD (90 timbre statistics) uses the canonical 463 ,715 /51 ,630 split, which prevents artist leakage; its features are likewise standardized, the target is the standardized release year, and we report unstandardized RMSE in years alongside the MSE objective. HIGGS and MSD inputs are additionally clipped at ±10 σ; Covertype inputs are not. On Forest Covertype one preprocessing detail proves critical: 40 of the 54 features are binary soil-type indicators, the rarest firing on only 2 of the 464 ,809 training rows. Standard z-scoring with an ϵ = 10 −7 denominator guard maps a column that is constant in the sample used to fit the normalizer to spikes of magnitude ∼ 10 7 on the rows where it does fire, which corrupts running statistics and induces bimodal expert collapse in tree routers. Pinning any column with adapted variance below 10 −4 to unit variance eliminates the collapse and reduces the seed-to-seed accuracy spread of BRANCH-MoE from 6 .2 to 0 .46 percentage points. 
+
+B.2 Baselines 
+
+We benchmark against four representative MoE routing paradigms, covering auxiliary-loss, auxiliary-loss-free, normalization-based, and deterministic mechanisms. 1. Top-K Softmax Routing (Switch). The canonical learned paradigm (Fedus et al., 2022): a learned gating matrix, a softmax, and top-K dispatch, with multiplicative uniform jitter [1 − ϵ, 1 + ϵ], ϵ = 10 −2, during training. Load balance is enforced by the auxiliary loss 
+
+Lbalance = αE P 
+
+> e
+
+fePe with α = 0 .01. 2. Auxiliary-Loss-Free Routing (DeepSeek-V3). Affinities are computed with an inde-pendent sigmoid per expert, so experts do not compete for probability mass (DeepSeek-AI, 2024). A non-trainable additive bias be enters top-K selection only and is updated after each step by a fixed increment γ = 10 −3 in the direction that relieves congestion; the combining gates remain the unbiased affinities. 3. Gating Logit Normalization (Skywork). Logits are standardized across the expert dimension before the softmax, which counteracts representation collapse and sharpens the gate distribution (Wei et al., 2024). A fixed auxiliary balancing coefficient is retained. We include this baseline because it proves to be the strongest competitor on two of the four benchmarks and ties Switch as the runner-up on a third. 4. Deterministic Balanced Routing (Hash). A fixed assignment mapping each example to experts by a 32-bit avalanche hash of its feature vector, following Hash Layers (Roller et al., 2021). The assignment is uniform by construction but carries no dependence on content beyond the hash, isolating the value of learned gating against a perfectly balanced but semantically uninformed one, at zero router parameter cost. 5. BRANCH-MoE (ours). The E experts are the leaves of a balanced binary tree of depth log 2 E. At internal node n the probability of branching right is σ(fn(x) − μn). During training μn is the arrival-weighted mean score of the current batch at n; at inference it is νn, a 21 non-trainable exponential moving average (decay 0 .99) of that batch mean, updated at every training step. Centering each split on the mean score of its own traffic places the decision boundary through the middle of the distribution actually arriving there, keeping both children populated without a balancing penalty. Leaf scores are products of branch probabilities along each root-to-leaf path; all E − 1 node scores are evaluated, and the products are formed in log 2 E vectorized steps. 
+
+B.3 Node Maps, Architecture, and Protocol 
+
+Node maps. The score fn at each node, and correspondingly the logit map of each flat router, is one of two forms, swept as a factor in its own right: 
+
+• Linear: fn(x) = w⊤ 
+
+> n
+
+x.
+
+• MLP: a two-layer network of hidden width h ∈ { 2, 4, 8} per node, fn(x) = v⊤ 
+
+> n
+
+ReLU( Unx+cn). This factor is swept across all four learned routers and the Hash control on the three UCI benchmarks, and across all four learned routers on Criteo. 
+
+Architecture and protocol. To isolate routing, we adopt a minimal backbone: an input stage, a single MoE block, and a linear head. On Criteo, the input stage projects the 39 embeddings to 256 dimensions, followed by SiLU and layer normalization; on the UCI datasets, it is a feature-standardization layer alone with no projection. The MoE block has no residual connection. Within this block, each expert is a SwiGLU network defined as down(SiLU(gate( x)) ⊙ up( x)), where the up layer expands the input into a higher-dimensional space and the down layer compresses it back to the baseline hidden size. Finally, a post-MoE layer normalization precedes the head on Criteo, HIGGS, and MSD (the Covertype model has none). All conditions use E = 16 and top-4 routing with capacity factor 1 .25, and differ only in the gate g(·), so comparisons are at matched capacity. Criteo trains for 37 ,500 steps at batch 2048 with Adam (lr = 5 × 10 −4), organized as 15 evaluation intervals of 2 ,500 steps; since an interval covers 5 .12M examples against a ≈37M training split, this is ≈2.1 passes over the data rather than 15. The UCI datasets train for 20 true epochs with Adam (lr = 10 −3) at batch 512 (Covertype) or 256 (HIGGS, MSD). Every condition is replicated over 5 seeds. On the UCI benchmarks the seed governs initialization but not the data order, which is shuffled without a seed; all arms within a dataset share the identical seed set, so comparisons are paired by seed. On Criteo the seed likewise governs initialization only, and TPU execution is not bitwise reproducible, so Criteo comparisons are unpaired (two-sided Welch t-tests). Re-running an identical Criteo configuration with the same seed changes held-out logloss about as much as changing the seed does (standard deviation 1 .5–2 .8 × 10 −4 within a seed against 1 .9–3 .0 × 10 −4
+
+across seeds). 
+
+B.4 Locality Metrics 
+
+For each token routed to experts ( i, j ) we measure two index-based distances, averaged over all  k
+
+> 2
+
+ co-selected pairs. 1. Tree distance L. Reading an expert index as a D-bit root-to-leaf path ( D = log 2 E), the number of levels to the lowest common ancestor is L(i, j ) = bit length( i ⊕ j) ∈ { 1, . . . , D }.Under block placement across P = 2 m devices, two experts share a device if and only if 
+
+L(i, j ) ≤ D − m, making L an exact topological proxy for cross-device fanout. 2. Index gap |i − j|. The linear gap between expert indices. 22 Table 4: Criteo, E = 16, top-4, capacity factor 1 .25, 5 seeds (mean ± std). Logloss is binary cross-entropy; logloss and AUC are the best held-out values over the 15 evaluations. Load CV and the normalized tree and index distances are training-time routing statistics; random baselines are 0 .8167 and 0 .3778. Upper block: every router with the linear node map. Lower block: the two routers whose lowest-loss node map is an MLP, at that map (for Skywork and Switch it is the linear map). Bold marks the best logloss and AUC. At 5 vs. 5 seeds, differences below ≈3.7 × 10 −4 in logloss or ≈2.7 × 10 −4 in AUC are not resolvable (Welch t-test, p < 0.05).                                                     
+
+> Method Best val. logloss ↓Best val. AUC ↑Load CV ↓Tree ↓Index ↓
+> Linear node map
+> Skywork 0.446034 0.805827 0.0040 0.8184 0.3778
+> ±0.000298 ±0.000184 DeepSeek-V3 0.446082 0.805799 0.0057 0.8188 0.3849
+> ±0.000270 ±0.000174 BRANCH-MoE (ours) 0.446149 0.805707 0.1152 0.8126 0.3843
+> ±0.000250 ±0.000175 Switch softmax 0.446226 0.805595 0.0025 0.8212 0.3812
+> ±0.000185 ±0.000204 Hash 0.447065 0.804716 0.0023 0.8167 0.3778
+> ±0.000277 ±0.000116
+> Best MLP node map
+> BRANCH-MoE ( h=4) 0.445959 0.805865 0.2676 0.7572 0.3255
+> ±0.000153 ±0.000022 DeepSeek-V3 ( h=8) 0.446049 0.805970 0.0038 0.8190 0.3824
+> ±0.000047 ±0.000100
+
+Both require a reference: for uniformly random distinct pairs, E[L] = ( D − 1 + 2 −D)/(1 − 2−D)and E[|i − j|] = ( E + 1) /3, giving 3 .2667 and 5 .6667 at E = 16 ( D = 4). Normalized by D and 
+
+E − 1 these are 0 .8167 and 0 .3778 — random routing already scores 0 .82 on the tree metric, so locality is only evidenced below these values, and an unreferenced number is uninterpretable. We also report the load coefficient of variation CV = std( f )/mean( f ) of the per-expert dispatch distribution. Tree distance is also the more sensitive of the two index-based measures: it separates power-of-two boundary pairs such as (7 , 8), which have |i − j| = 1 but lie at maximal tree separation, and which the index gap therefore scores as maximally local when they are maximally remote. 
+
+# C Additional Results 
+
+C.1 Criteo: Click-Through-Rate Prediction 
+
+Table 4 reports the benchmark. With the common linear node map, the four learned routers are statistically tied: their mean held-out logloss spans 1 .9 × 10 −4, about half of the smallest resolvable difference, and BRANCH-MoE ranks third, 1 .1 × 10 −4 behind Skywork (Welch 
+
+p = 0 .53). When each router uses its best node map, BRANCH-MoE with h = 4 has the lowest mean logloss, but its margins over Skywork (7 .5 × 10 −5, p = 0 .63) and DeepSeek-V3 at h = 8 (9 .0 × 10 −5, p = 0 .26) are well inside seed noise; choosing the best of four node maps after the fact also favours it, and DeepSeek-V3 at h = 8 has the higher AUC (+1 .05 × 10 −4, p = 0 .08). We therefore claim parity, not superiority. The only unambiguous gap is to Hash, which trails every other row of the table by 0 .0008–0 .0011 in logloss and 0 .0009–0 .0013 in AUC (Welch 
+
+p < 0.002 in every comparison). All Criteo tests are unpaired, because TPU execution is not bitwise reproducible (Section B.3). 23 Table 5: Forest Covertype, E = 16, top-4, 20 epochs, batch 512, 5 paired seeds (mean ± std). h
+
+is the MLP node-map hidden width (Section B.3). Hash ignores the node map by construction; its four arms are the same configuration run four times and serve as an exact negative control.                                         
+
+> Best val. cross-entropy ↓
+> Method linear h=2 h=4 h=8 BRANCH-MoE (ours) 0.25451 0.25206 0.24394 0.23720
+> ±0.00408 ±0.00487 ±0.00356 ±0.00125 Skywork 0.25862 0.25169 0.24277 0.24062
+> ±0.00365 ±0.00324 ±0.00494 ±0.00358 Switch softmax 0.26150 0.25646 0.24286 0.24062
+> ±0.00136 ±0.00713 ±0.00180 ±0.00281 DeepSeek-V3 0.27032 0.26620 0.25417 0.24207
+> ±0.00225 ±0.00301 ±0.00196 ±0.00326 Hash (control) 0.44665 0.44771 0.44707 0.44652
+> ±0.00087 ±0.00084 ±0.00162 ±0.00108
+
+Balance. BRANCH-MoE keeps every expert in use without an auxiliary loss or bias controller, but balances load less tightly than the flat routers: with the linear node map its load CV is 0.115 (largest and smallest expert shares 1 .17 × and 0 .72 × the mean), against at most 0 .006 for every flat router. At capacity factor 1 .25 this has no measurable cost: every linear-map condition drops at most 0 .11% of dispatches at capacity, and BRANCH-MoE drops 0 .08%. 
+
+Locality does not appear on Criteo. With the linear node map, BRANCH-MoE’s normal-ized tree distance is 0 .813 ± 0.012, indistinguishable from the 0 .8167 random baseline (one-sample 
+
+t-test, p = 0 .48), and its index distance (0 .384) is marginally above random ( p = 0 .04). The tree does not start at random: an untrained BRANCH-MoE scores 0 .725, and training moves it to the random value. The flat routers stay within 2% of both random baselines with linear node maps, as expected for arbitrary expert labels. Lower tree distances do appear with MLP node maps (0 .757 for BRANCH-MoE at h = 4), but they vary strongly across seeds, are lowest in the most imbalanced runs, and appear also for the flat Skywork router (0 .75–0 .77, p ≤ 0.05 at every width), whose expert indices carry no meaning. We have not diagnosed the Skywork effect; it points to an index-order artifact in expert selection, such as tie-breaking among exactly equal logits, and we read neither result as locality. Criteo is therefore the one benchmark on which the locality of Section C.4 does not replicate. It differs from the UCI benchmarks in input representation (learned embeddings of categorical fields), batch size (2048 against 256–512), and training length ( ≈2.1 passes over the data rather than 20 epochs); we have not isolated which of these is responsible. 
+
+C.2 Forest Covertype: Multi-Class Classification 
+
+Table 5 reports the node-map sweep. BRANCH-MoE with h = 8 is the best arm overall (0 .23720 cross-entropy, 90 .21% accuracy, best on both), but Skywork and Switch tie for second at the same h (0 .24062 each), and the margin of −0.00342 over them is not clean. Against Switch a paired t-test resolves it only marginally ( t4 = −2.86 against a critical value of 2 .776) and the unpaired Welch test does not ( t = −2.49); against Skywork neither test resolves it (paired 
+
+t4 = −1.64, Welch t = −2.01). The margin over DeepSeek-V3 at h = 8 is cleaner ( −0.00487, paired t4 = −3.25). With linear node maps BRANCH-MoE again has the lowest mean: its gap to Switch is larger and resolved ( −0.00699, paired t4 = −3.25), but its gap to Skywork, the runner-up, is not ( −0.00411, paired t4 = −1.26). At h = 2 and h = 4 Skywork has the lowest mean, by margins of 0 .0004 and 0 .0001 that are far inside seed noise. 24 Table 6: HIGGS (logloss) and YearPredictionMSD (MSE), E = 16, top-4, 5 paired seeds (mean 
+
+± std). Each router is shown at its best node map, given in parentheses; for BRANCH-MoE we show both h = 8 (best loss) and linear (best locality), since the two differ by 0 .0003 on HIGGS. Tree and index distances are normalized against the 0 .8167 / 0 .3778 random baselines. Hash ignores the node map, so its four arms are one configuration run four times; the best is shown.                                                                
+
+> HIGGS YearPredictionMSD Method Logloss ↓Tree ↓Index ↓MSE ↓Tree ↓Index ↓
+> Skywork 0.5247 (lin) 0.812 0.370 0.6757 (h=2) 0.813 0.365
+> ±0.0005 ±0.0015 BRANCH-MoE ( h=8) 0.5256 0.736 0.322 0.6767 0.749 0.324
+> ±0.0014 ±0.0027 BRANCH-MoE (linear) 0.5259 0.710 0.292 0.6843 0.718 0.301
+> ±0.0008 ±0.0035 DeepSeek-V3 0.5264 (lin) 0.816 0.380 0.6746 (h=8) 0.813 0.371
+> ±0.0013 ±0.0043 Switch softmax 0.5276 (h=4) 0.814 0.374 0.6766 (h=8) 0.800 0.365
+> ±0.0003 ±0.0038 Hash 0.5574 (h=4) 0.817 0.378 0.6899 (h=4) 0.817 0.378
+> ±0.0007 ±0.0024
+
+The four Hash arms are four runs of one identical configuration, so the spread of their seed means isolates pure run-to-run nondeterminism: sd = 0 .00053. The BRANCH-MoE-vs-Switch gap at h = 8 is well above this floor yet not resolved by the unpaired test, which is precisely why pairing is required to see it at all; the equal gap to Skywork is not resolved even with pairing. On balance BRANCH-MoE attains CV = 0 .093 with a 1 .174 × peak load at linear (0 .112 / 1.240 × at h = 8), against 0 .121 / 1 .210 × for Switch and 0 .248 / 1 .366 × for Skywork, the least balanced learned router at linear (0 .137 / 1 .247 × at h = 8); DeepSeek-V3’s controller is tighter still (0 .001 / 1 .002 ×), as expected from a mechanism that optimizes balance directly. The only dead experts (below 1% of uniform load) are Skywork’s at h = 2: 6 of its 80 expert slots across the five seeds. 
+
+C.3 HIGGS and YearPredictionMSD 
+
+Table 6 reports the two remaining benchmarks, and the outcome is different. On HIGGS BRANCH-MoE ranks second behind Skywork (+0 .0009, within the combined seed spread); on MSD it ranks fourth, behind DeepSeek-V3, Skywork, and Switch, though the four are separated by only 0 .0021 MSE — 0 .014 years of RMSE — against seed standard deviations of 0 .0015–0 .0043. The honest summary is that on these two datasets all learned routers are statistically tied, and BRANCH-MoE is not the best point estimate. 
+
+C.4 Routing Locality Across the Suite 
+
+The locality prediction of Section 4.4 is the claim that survives most cleanly. On all three UCI benchmarks BRANCH-MoE is the only router whose co-routing statistics depart materially from the random baseline (Table 7). On the three UCI datasets the reduction is 12–13% below baseline on tree distance for linear BRANCH-MoE (8–10% at h = 8) and 18–23% on index distance (12–15% at h = 8), while every flat router sits within 3 .5% of baseline on both — the negative control behaving exactly as expected, since for a flat router the expert index is an arbitrary label. Criteo is the exception: there BRANCH-MoE stays at the random baseline, and with MLP node maps even the flat Skywork router falls below it, an artifact discussed in Section C.1. 25 Table 7: Normalized co-routing distances ( E = 16, top-4; mean over 5 seeds). Flat routers: range over Switch, DeepSeek-V3, Skywork, and Hash, each at the arm shown in Table 2. Bold: most local.                                       
+
+> BRANCH-MoE (linear) BRANCH-MoE ( h=8) Flat routers Dataset Tree Index Tree Index Tree Index Forest Covertype 0.718 0.312 0.742 0.334 0.813–0 .819 0.371–0 .385 HIGGS 0.710 0.292 0.736 0.322 0.812–0 .817 0.370–0 .380 YearPredictionMSD 0.718 0.301 0.749 0.324 0.800–0 .817 0.365–0 .378 Criteo 0.813 0.384 0.804 0.370 0.817–0 .821 0.378–0 .382 Random baseline 0.817 0.378 0.817 0.378 0.817 0.378
+
+# D Description of Datasets 
+
+We evaluate the considered methods on four widely used tabular benchmarks spanning binary classification, multiclass classification, and regression. These datasets vary substantially in size, feature type, and prediction task. 
+
+Criteo. The Criteo 1TB Click Logs dataset is a large-scale benchmark for click-through-rate (CTR) prediction. Each instance corresponds to a display advertisement served by Criteo, and the binary label indicates whether the ad was clicked. The training data consist of 24 chronologically ordered daily files and contain 13 numerical, predominantly count-based features and 26 anonymized categorical features. The categorical values are hashed into 32-bit integers, and some entries may be missing. We use this dataset as a large-scale binary classification task (Criteo AI Lab, 2015). 
+
+Forest Covertype. The Forest Covertype dataset consists of 581 ,012 observations of 30 × 30 meter forest patches from the Roosevelt National Forest in Colorado. The task is to predict the dominant forest cover type among seven classes from 54 cartographic variables, including elevation, slope, aspect, hillshade measurements, wilderness-area indicators, and soil-type indicators. It therefore provides a multiclass classification benchmark with a mix of continuous and binary features (Blackard & Dean, 1999; Blackard, 1998). 
+
+HIGGS. The HIGGS dataset is a binary classification dataset derived from simulated high-energy particle-collision events. Its goal is to distinguish events corresponding to a signal process that produces Higgs bosons from background events. The dataset contains 11 million instances, each represented by 28 real-valued features: 21 low-level kinematic variables measured by particle detectors and seven high-level features derived from the low-level variables. This dataset is a standard large-scale benchmark for binary classification (Baldi et al., 2014; Whiteson, 2014). 
+
+YearPredictionMSD. The YearPredictionMSD dataset is a regression benchmark constructed from the Million Song Dataset. The task is to predict a song’s release year from 90 audio features that summarize timbre characteristics. It contains 515 ,345 songs, primarily Western commercial recordings released between 1922 and 2011. We use it to assess performance on a large-scale continuous prediction problem (Bertin-Mahieux et al., 2011; Bertin-Mahieux, 2011). 26

@@ -1,0 +1,69 @@
+{
+  "label": "2026-10-07",
+  "date": "2026-10-07",
+  "generated_at": "2026-10-07T23:31:26",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "202610/07/2610.02584v1-dense-mixture-of-experts-as-a-reparameterized-wide-ffn-a-granularity-sweep-at-fixed-compute",
+      "section": "quick",
+      "title_en": "Dense Mixture-of-Experts as a Reparameterized Wide FFN: A Granularity Sweep at Fixed Compute",
+      "authors": "Vu Quang Hoang, Nghia Hieu Nguyen",
+      "date": "2026-10-01",
+      "pdf": "https://arxiv.org/pdf/2610.02584v1",
+      "score": "6.0",
+      "evidence": "稠密MoE隔离动态专家组合与路由行为",
+      "tldr": "稀疏 MoE 通过路由选择专家，但其动态组合收益难以单独评估。本文在固定总 FFN 宽度下，用 K 个全激活 SwiGLU 专家加 softmax 门控构成稠密类比，并以 K=1 为基线。结果显示验证损失随 K 非单调：K=2 改善 0.0048，K=4 和 K=6 分别变差 0.0053 与 0.0197，K=2 最佳。作者还证明该结构等价于带 token 相关单纯形约束分组缩放的稠密 SwiGLU，提示固定算力下存在粒度甜点。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Sparse Mixture-of-Experts (MoE) models combine learned routing with selection from a large expert pool. We isolate the contribution of dynamic expert combination using a dense analogue: $K$ SwiGLU experts, all active for every token and combined by a softmax gate, at fixed total FFN width. With no larger pool or discrete selection, the dense baseline is the $K=1$ case. Validation loss varies non-monotonically with $K$: $K=2$ improves over the baseline by $0.0048$, whereas $K=4$ and $K=6$ worsen it by $0.0053$ and $0.0197$, respectively. Routing generally remains soft and expert usage balanced, except in the first layer of the $K=4$ model, where routing is nearly one-hot. Forcing this gate to uniform increases loss by $2.4$ nats on a diagnostic subset, indicating that its concentrated routing is functionally important. We further show that the architecture is exactly a dense SwiGLU with token-dependent, simplex-constrained group scaling and contains the dense baseline in its function class. These single-run results suggest a granularity sweet spot for always-active, softly gated FFNs at fixed width, with $K=2$ performing best among the configurations tested.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202610/07/2610.06725v1-branch-moe-balance-aware-tree-routing-for-large-embedding-models",
+      "section": "quick",
+      "title_en": "BRANCH-MoE: Balance-Aware Tree Routing for Large Embedding Models",
+      "authors": "Gang Fu, Adel Javanmard, MohammadHossein Bateni, Vahab Mirrokni",
+      "date": "2026-10-05",
+      "pdf": "https://arxiv.org/pdf/2610.06725v1",
+      "score": "6.0",
+      "evidence": "面向均衡专家利用的树形MoE路由",
+      "tldr": "MoE可提升容量却常因扁平路由导致专家利用不均，且专家索引缺少拓扑结构。BRANCH-MoE将E个专家置于深度log2E的二叉决策树叶子，内部节点用到达加权均值的指数滑动平均决定分支，无需辅助负载均衡损失。理论上给出噪声-滞后权衡，并证明可防路由质量坍塌、影响收敛与通信。在Criteo、Forest Covertype、HIGGS、YearPredictionMSD上，E=16、top-4、5个随机种子，保持任务质量与均衡利用，支持局部专家共激活并降低通信。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Mixture-of-experts (MoE) layers increase model capacity without a proportional increase in per-example computation. However, conventional flat routers can yield imbalanced expert utilization and treat experts as an unstructured collection, whose indices carry no topological meaning. We introduce {\\bf BRANCH-MoE}, a routing architecture that places \\(E\\) experts at the leaves of a binary decision tree of depth \\(\\log_2 E\\). At each internal node the branching probability is centered on the arrival-weighted mean score of the traffic reaching that node. This mean is estimated using an exponential moving average, which promotes utilization of both child subtrees without an auxiliary load-balancing loss. We show that this moving-average estimate admits an explicit noise-lag trade-off. We prove that for linear node maps and log-concave arrival distributions, this mechanism prevents routing-mass collapse. We further establish that, under a frozen router, an expert's execution frequency controls its stochastic-gradient convergence rate, and that confident decisions near the root bound cross-device communication when experts are assigned to devices by tree prefix. We evaluate BRANCH-MoE against Switch softmax, DeepSeek-V3 dynamic-bias, Skywork logit-normalized, and deterministic hash routing on Criteo click-through-rate prediction, Forest Covertype, HIGGS, and YearPredictionMSD, using \\(E=16\\), top-\\(4\\) routing, and five random seeds. Our results show that hierarchical routing can preserve task quality and balanced utilization while inducing a topology that supports localized expert co-activation and reduced communication.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202610/07/2610.07340v1-causalbind-causal-modeling-and-learning-for-protein-molecule-virtual-screening",
+      "section": "quick",
+      "title_en": "CausalBind: Causal Modeling and Learning for Protein-Molecule Virtual Screening",
+      "authors": "Loka Li, Jin Tian, Kun Zhang",
+      "date": "2026-10-05",
+      "pdf": "https://arxiv.org/pdf/2610.07340v1",
+      "score": "6.0",
+      "evidence": "因果建模分离不变结合决定因素以迁移到新靶点",
+      "tldr": "蛋白-分子虚拟筛选常被建模为共享嵌入空间中的表示学习，但现有方法做稠密整体对齐，会把不变的结合决定因素与虚假相关混在一起，难以迁移到新靶点。本文提出稀疏跨模态交互先验，用Heckman式选择下的V结构因果模型形式化，并给出可识别性理论。据此提出CausalBind及三个变体。在DUD-E和LIT-PCBA上一致超越强检索基线，早期富集提升最大，并泛化到靶点级与骨架级分布外划分。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Protein-molecule virtual screening is increasingly cast as a problem of representation learning in a shared embedding space. Existing methods rely on dense holistic alignment, entangling invariant binding determinants with nuisance correlations and limiting transfer to new targets. It has been noted that binding in protein-molecule systems involves sparse cross-modality interactions: binding is governed by a small contact interface and a few decisive local interactions (e.g., hydrogen bonds, hydrophobic contacts, and salt bridges) rather than the global structures of the protein and molecule. We hypothesize that uncovering and leveraging sparse interaction patterns is critical for generalization beyond the training data, as these patterns are reusable and expected to improve performance across different scenarios. In this paper, we aim to identify and leverage sparse interaction patterns, and verify our hypothesis. Since the training data contain only observed binding pairs, we formalize this prior via a V-structure causal model under Heckman-style selection, and establish three theoretical results: (i) the latent concepts of interacting proteins and molecules are not identifiable without appropriate sparsity constraints; (ii) these concepts and their sparse interactions are component-wise identifiable under structural sparsity conditions; and (iii) a low-rank relaxation of these conditions yields subspace identifiability of the concepts and interactions. Inspired by these principles, we propose CausalBind with three implementation variants. Extensive experiments on DUD-E and LIT-PCBA benchmarks show that all variants consistently outperform strong retrieval baselines, with the largest gains on LIT-PCBA early enrichment, and further generalize to target- and scaffold-level out-of-distribution splits. Code is available at https://github.com/lokali/CausalBind.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202610/07/2610.07712v1-mathematical-invariant-enabled-topological-neural-networks-for-molecular-and-materials-property-prediction",
+      "section": "quick",
+      "title_en": "Mathematical Invariant-Enabled Topological Neural Networks for Molecular and Materials Property Prediction",
+      "authors": "Yiming Ren, Xiang Liu, Mustafa Hajij, Pietro Liò, Guo-Wei Wei",
+      "date": "2026-10-06",
+      "pdf": "https://arxiv.org/pdf/2610.07712v1",
+      "score": "6.0",
+      "evidence": "面向分子性质预测的数学不变表示",
+      "tldr": "现有分子与材料学习常依赖有限结构表示，难以完整刻画复杂三维结构。本文提出MITNN，融合拓扑、谱论、交换代数、微分几何和离散曲率等多尺度数学不变量，并与拓扑神经网络结合。系统分析表明，数学表示与网络架构的配对方式显著影响性能，部分精选组合优于单一模型及全组件聚合。在蛋白-配体结合、MOF性质、突变蛋白溶解度和分子毒性预测中，MITNN均优于现有方法，确立了数学多模态科学机器学习框架。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Existing molecular and materials learning approaches often rely on a limited set of structural representations, which may capture only selected aspects of complex three-dimensional structure. Here, we introduce mathematical invariant-enabled topological neural networks (MITNNs), a framework that represents complex structures through multiple complementary mathematical views and integrates them with topological neural architectures. MITNNs combine multiscale invariants from topology, spectral theory, commutative algebra, differential geometry, and discrete curvature, capturing complementary structural information from the same system. Systematic invariant-subset, architecture-subset, and ensemble analyses show that predictive performance depends on how mathematical representations and neural architectures are paired, with selected combinations outperforming individual models and the aggregation of all available components. Across protein-ligand binding, metal-organic framework properties, mutation-induced protein solubility, and molecular toxicity prediction, MITNN consistently outperforms existing methods. These results establish MITNN as a mathematically multimodal framework for scientific machine learning.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

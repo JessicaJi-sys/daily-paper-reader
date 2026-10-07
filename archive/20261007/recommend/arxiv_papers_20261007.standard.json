@@ -1,0 +1,170 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-07T23:30:52.794874+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 4,
+    "quick_skim_target": 11,
+    "quick_selected": 4
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2610.02584v1",
+      "source": "arxiv",
+      "title": "Dense Mixture-of-Experts as a Reparameterized Wide FFN: A Granularity Sweep at Fixed Compute",
+      "abstract": "Sparse Mixture-of-Experts (MoE) models combine learned routing with selection from a large expert pool. We isolate the contribution of dynamic expert combination using a dense analogue: $K$ SwiGLU experts, all active for every token and combined by a softmax gate, at fixed total FFN width. With no larger pool or discrete selection, the dense baseline is the $K=1$ case. Validation loss varies non-monotonically with $K$: $K=2$ improves over the baseline by $0.0048$, whereas $K=4$ and $K=6$ worsen it by $0.0053$ and $0.0197$, respectively. Routing generally remains soft and expert usage balanced, except in the first layer of the $K=4$ model, where routing is nearly one-hot. Forcing this gate to uniform increases loss by $2.4$ nats on a diagnostic subset, indicating that its concentrated routing is functionally important. We further show that the architecture is exactly a dense SwiGLU with token-dependent, simplex-constrained group scaling and contains the dense baseline in its function class. These single-run results suggest a granularity sweet spot for always-active, softly gated FFNs at fixed width, with $K=2$ performing best among the configurations tested.",
+      "authors": [
+        "Vu Quang Hoang",
+        "Nghia Hieu Nguyen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-10-01T23:31:06+00:00",
+      "link": "https://arxiv.org/pdf/2610.02584v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "dense MoE isolates dynamic expert combination and routing behavior",
+      "llm_evidence_cn": "稠密MoE隔离动态专家组合与路由行为",
+      "llm_evidence": "稠密MoE隔离动态专家组合与路由行为",
+      "canonical_evidence": "稠密MoE隔离动态专家组合与路由行为",
+      "llm_tldr_en": "This work isolates the effect of dynamic expert combination in MoE by using K dense SwiGLU experts combined with a softmax gate at fixed compute, studying how routing granularity affects loss and expert usage.",
+      "llm_tldr_cn": "稀疏混合专家模型将学习路由与大专家池选择结合，但其动态专家组合本身的贡献难以隔离。本文提出稠密MoE类比，在固定总FFN宽度下使用K个全部激活的SwiGLU专家并由softmax门控组合，系统扫描不同粒度。结果显示验证损失随K非单调变化，路由总体偏软且专家使用均衡，个别层接近one-hot。该分析为理解动态专家组合与路由专门化提供了可迁移的方法论基础。",
+      "llm_tldr": "稀疏混合专家模型将学习路由与大专家池选择结合，但其动态专家组合本身的贡献难以隔离。本文提出稠密MoE类比，在固定总FFN宽度下使用K个全部激活的SwiGLU专家并由softmax门控组合，系统扫描不同粒度。结果显示验证损失随K非单调变化，路由总体偏软且专家使用均衡，个别层接近one-hot。该分析为理解动态专家组合与路由专门化提供了可迁移的方法论基础。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "mixture-of-experts architecture for drug pair modeling",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.06725v1",
+      "source": "arxiv",
+      "title": "BRANCH-MoE: Balance-Aware Tree Routing for Large Embedding Models",
+      "abstract": "Mixture-of-experts (MoE) layers increase model capacity without a proportional increase in per-example computation. However, conventional flat routers can yield imbalanced expert utilization and treat experts as an unstructured collection, whose indices carry no topological meaning. We introduce {\\bf BRANCH-MoE}, a routing architecture that places \\(E\\) experts at the leaves of a binary decision tree of depth \\(\\log_2 E\\). At each internal node the branching probability is centered on the arrival-weighted mean score of the traffic reaching that node. This mean is estimated using an exponential moving average, which promotes utilization of both child subtrees without an auxiliary load-balancing loss. We show that this moving-average estimate admits an explicit noise-lag trade-off. We prove that for linear node maps and log-concave arrival distributions, this mechanism prevents routing-mass collapse. We further establish that, under a frozen router, an expert's execution frequency controls its stochastic-gradient convergence rate, and that confident decisions near the root bound cross-device communication when experts are assigned to devices by tree prefix. We evaluate BRANCH-MoE against Switch softmax, DeepSeek-V3 dynamic-bias, Skywork logit-normalized, and deterministic hash routing on Criteo click-through-rate prediction, Forest Covertype, HIGGS, and YearPredictionMSD, using \\(E=16\\), top-\\(4\\) routing, and five random seeds. Our results show that hierarchical routing can preserve task quality and balanced utilization while inducing a topology that supports localized expert co-activation and reduced communication.",
+      "authors": [
+        "Gang Fu",
+        "Adel Javanmard",
+        "MohammadHossein Bateni",
+        "Vahab Mirrokni"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-10-05T17:15:19+00:00",
+      "link": "https://arxiv.org/pdf/2610.06725v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "tree-based MoE routing for balanced expert utilization",
+      "llm_evidence_cn": "面向均衡专家利用的树形MoE路由",
+      "llm_evidence": "面向均衡专家利用的树形MoE路由",
+      "canonical_evidence": "面向均衡专家利用的树形MoE路由",
+      "llm_tldr_en": "BRANCH-MoE places experts at leaves of a binary decision tree, centering branching probabilities on arrival-weighted moving-average scores to balance utilization without auxiliary loss, yielding structured routing.",
+      "llm_tldr_cn": "混合专家层能提升容量，但传统平面路由器易导致专家利用不均衡，并把专家当作无拓扑意义的无序集合。本文提出BRANCH-MoE，将E个专家置于深度为log2 E的二叉树叶节点，内部节点的分支概率以到达流量的加权均值（指数移动平均估计）为中心。该方法无需辅助负载均衡损失即可促进两棵子树利用，形成有结构的动态路由，为专家专门化与动态路由提供可迁移架构思路。",
+      "llm_tldr": "混合专家层能提升容量，但传统平面路由器易导致专家利用不均衡，并把专家当作无拓扑意义的无序集合。本文提出BRANCH-MoE，将E个专家置于深度为log2 E的二叉树叶节点，内部节点的分支概率以到达流量的加权均值（指数移动平均估计）为中心。该方法无需辅助负载均衡损失即可促进两棵子树利用，形成有结构的动态路由，为专家专门化与动态路由提供可迁移架构思路。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "sample-level and drug-pair-level dynamic expert routing",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.07340v1",
+      "source": "arxiv",
+      "title": "CausalBind: Causal Modeling and Learning for Protein-Molecule Virtual Screening",
+      "abstract": "Protein-molecule virtual screening is increasingly cast as a problem of representation learning in a shared embedding space. Existing methods rely on dense holistic alignment, entangling invariant binding determinants with nuisance correlations and limiting transfer to new targets. It has been noted that binding in protein-molecule systems involves sparse cross-modality interactions: binding is governed by a small contact interface and a few decisive local interactions (e.g., hydrogen bonds, hydrophobic contacts, and salt bridges) rather than the global structures of the protein and molecule. We hypothesize that uncovering and leveraging sparse interaction patterns is critical for generalization beyond the training data, as these patterns are reusable and expected to improve performance across different scenarios. In this paper, we aim to identify and leverage sparse interaction patterns, and verify our hypothesis. Since the training data contain only observed binding pairs, we formalize this prior via a V-structure causal model under Heckman-style selection, and establish three theoretical results: (i) the latent concepts of interacting proteins and molecules are not identifiable without appropriate sparsity constraints; (ii) these concepts and their sparse interactions are component-wise identifiable under structural sparsity conditions; and (iii) a low-rank relaxation of these conditions yields subspace identifiability of the concepts and interactions. Inspired by these principles, we propose CausalBind with three implementation variants. Extensive experiments on DUD-E and LIT-PCBA benchmarks show that all variants consistently outperform strong retrieval baselines, with the largest gains on LIT-PCBA early enrichment, and further generalize to target- and scaffold-level out-of-distribution splits. Code is available at https://github.com/lokali/CausalBind.",
+      "authors": [
+        "Loka Li",
+        "Jin Tian",
+        "Kun Zhang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-10-05T20:14:51+00:00",
+      "link": "https://arxiv.org/pdf/2610.07340v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "causal modeling disentangles invariant binding determinants from nuisance for transfer to new targets",
+      "llm_evidence_cn": "因果建模分离不变结合决定因素以迁移到新靶点",
+      "llm_evidence": "因果建模分离不变结合决定因素以迁移到新靶点",
+      "canonical_evidence": "因果建模分离不变结合决定因素以迁移到新靶点",
+      "llm_tldr_en": "CausalBind uses causal modeling to disentangle invariant binding determinants from nuisance correlations via sparse interactions, improving generalization to new targets.",
+      "llm_tldr_cn": "蛋白质-分子虚拟筛选常被建模为共享嵌入空间的表示学习，但现有方法依赖稠密整体对齐，将不变结合决定因素与干扰相关性纠缠，限制了对新靶点的迁移。作者假设结合由稀疏接触界面与少数决定性局部相互作用主导，提出CausalBind进行因果建模与学习。方法挖掘稀疏交互模式以提升训练数据之外的泛化能力。该不变因果表示思路可为药物级OOD泛化与冷启动预测提供直接方法借鉴。",
+      "llm_tldr": "蛋白质-分子虚拟筛选常被建模为共享嵌入空间的表示学习，但现有方法依赖稠密整体对齐，将不变结合决定因素与干扰相关性纠缠，限制了对新靶点的迁移。作者假设结合由稀疏接触界面与少数决定性局部相互作用主导，提出CausalBind进行因果建模与学习。方法挖掘稀疏交互模式以提升训练数据之外的泛化能力。该不变因果表示思路可为药物级OOD泛化与冷启动预测提供直接方法借鉴。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "invariant representation learning for stable drug generalization",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2610.07712v1",
+      "source": "arxiv",
+      "title": "Mathematical Invariant-Enabled Topological Neural Networks for Molecular and Materials Property Prediction",
+      "abstract": "Existing molecular and materials learning approaches often rely on a limited set of structural representations, which may capture only selected aspects of complex three-dimensional structure. Here, we introduce mathematical invariant-enabled topological neural networks (MITNNs), a framework that represents complex structures through multiple complementary mathematical views and integrates them with topological neural architectures. MITNNs combine multiscale invariants from topology, spectral theory, commutative algebra, differential geometry, and discrete curvature, capturing complementary structural information from the same system. Systematic invariant-subset, architecture-subset, and ensemble analyses show that predictive performance depends on how mathematical representations and neural architectures are paired, with selected combinations outperforming individual models and the aggregation of all available components. Across protein-ligand binding, metal-organic framework properties, mutation-induced protein solubility, and molecular toxicity prediction, MITNN consistently outperforms existing methods. These results establish MITNN as a mathematically multimodal framework for scientific machine learning.",
+      "authors": [
+        "Yiming Ren",
+        "Xiang Liu",
+        "Mustafa Hajij",
+        "Pietro Liò",
+        "Guo-Wei Wei"
+      ],
+      "primary_category": "q-bio.BM",
+      "categories": [
+        "q-bio.BM",
+        "cs.LG"
+      ],
+      "published": "2026-10-06T04:06:38+00:00",
+      "link": "https://arxiv.org/pdf/2610.07712v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "mathematical invariant representations for molecular property prediction",
+      "llm_evidence_cn": "面向分子性质预测的数学不变表示",
+      "llm_evidence": "面向分子性质预测的数学不变表示",
+      "canonical_evidence": "面向分子性质预测的数学不变表示",
+      "llm_tldr_en": "MITNN represents molecules via multiple complementary mathematical invariants integrated with topological neural networks for property prediction.",
+      "llm_tldr_cn": "现有分子与材料学习方法常依赖有限的结构表示，只能捕捉复杂三维结构的部分方面，难以全面刻画结构信息。作者提出数学不变量赋能的拓扑神经网络MITNN，通过拓扑、谱理论、交换代数、微分几何与离散曲率等多重互补数学视角表示结构，并与拓扑神经架构结合。系统的不变量子集、架构子集与集成分析显示多视图不变量能提升性质预测，为分子建模提供更丰富的不变表示。",
+      "llm_tldr": "现有分子与材料学习方法常依赖有限的结构表示，只能捕捉复杂三维结构的部分方面，难以全面刻画结构信息。作者提出数学不变量赋能的拓扑神经网络MITNN，通过拓扑、谱理论、交换代数、微分几何与离散曲率等多重互补数学视角表示结构，并与拓扑神经架构结合。系统的不变量子集、架构子集与集成分析显示多视图不变量能提升性质预测，为分子建模提供更丰富的不变表示。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "invariant representation learning for stable drug generalization",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
