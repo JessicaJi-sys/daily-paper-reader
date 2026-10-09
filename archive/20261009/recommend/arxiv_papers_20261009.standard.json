@@ -1,0 +1,97 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-10-09T00:07:53.809492+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 2,
+    "quick_skim_target": 11,
+    "quick_selected": 2
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2610.10349v1",
+      "source": "arxiv",
+      "title": "AutoAdapt: Automatic Domain Discovery Enables Low-Cost Extensibility",
+      "abstract": "Instruction-tuned models are deployed into environments where domains are heterogeneous and evolve, yet adding new domains or data typically requires costly retraining. We present AutoAdapt, a modular framework that incorporates new domains and data via targeted single-adapter training without modifying other adapters. The framework automatically discovers latent domains, uses them to train per-domain Low-Rank Adaptation (LoRA) adapters independently in parallel and performs parameter-free routing. Across 14 domain-specific benchmarks and GPT-4o pairwise judgements, AutoAdapt achieves parity with a LoRA adapter trained on all domains without requiring full-model retraining. We also find evidence of specialisation effect convergence across independent discovery methods. Overall, training each adapter on its own domain prevents domain interference by construction, thus enabling modular, taxonomy-free domain specialisation without aggregate performance loss or full model retraining.",
+      "authors": [
+        "Josh McGiff",
+        "Salma Mekaoui",
+        "Robert Shanahan",
+        "Nikola S. Nikolov"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-10-07T16:26:57+00:00",
+      "link": "https://arxiv.org/pdf/2610.10349v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "automatic latent domain discovery with per-domain adapters and parameter-free routing; specialization convergence",
+      "llm_evidence_cn": "自动发现潜在领域，按域适配器与无参路由，专门化效应收敛",
+      "llm_evidence": "自动发现潜在领域，按域适配器与无参路由，专门化效应收敛",
+      "canonical_evidence": "自动发现潜在领域，按域适配器与无参路由，专门化效应收敛",
+      "llm_tldr_en": "Deployed instruction-tuned models face heterogeneous evolving domains but adding domains requires costly retraining. AutoAdapt automatically discovers latent domains, trains per-domain LoRA adapters independently in parallel, and performs parameter-free routing, matching an all-domain adapter without full retraining.",
+      "llm_tldr_cn": "指令微调模型部署于异构且不断演化的领域环境中，新增领域或数据通常需要昂贵的重训练。作者提出AutoAdapt模块化框架，自动发现潜在领域，并行独立训练各领域LoRA适配器，并进行无参数路由，从而在不改动其他适配器的前提下低成本扩展。在14个领域基准与GPT-4o成对评判中达到与全领域联合训练适配器相当的效果，并观察到独立领域间的专门化效应收敛，为无人工定义语义的专家专门化提供了实证。",
+      "llm_tldr": "指令微调模型部署于异构且不断演化的领域环境中，新增领域或数据通常需要昂贵的重训练。作者提出AutoAdapt模块化框架，自动发现潜在领域，并行独立训练各领域LoRA适配器，并进行无参数路由，从而在不改动其他适配器的前提下低成本扩展。在14个领域基准与GPT-4o成对评判中达到与全领域联合训练适配器相当的效果，并观察到独立领域间的专门化效应收敛，为无人工定义语义的专家专门化提供了实证。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "How can mixture of experts models learn specialized knowledge integration strategies for different latent distribution regimes without manually defining expert semantics?",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2610.07809v1",
+      "source": "arxiv",
+      "title": "MASKerade: Token-Routed Mask Experts for Dense-to-MoE Upcycling",
+      "abstract": "Sparsely activated Mixture-of-Experts (MoE) models increase model capacity without a proportional increase in per-token computation. Dense-to-MoE upcycling reuses pretrained dense models to construct such systems, commonly by copying feed-forward networks (FFNs) into independently trained experts. We introduce MASKerade, a dense-to-MoE training method that instead learns experts as sparse subnetworks of a frozen pretrained FFN. Each expert is defined by a learned binary mask, and a token-level router selects which masked FFNs to execute and combine. The router and mask scores are optimized jointly, while the underlying FFN weight values remain unchanged. This formulation supports neuron-structured, semi-structured, and unstructured experts within the same routing architecture. Our main configuration uses four 2:4 experts with top-2 routing, where two half-dense expert passes have the nominal FFN arithmetic of one dense pass, without requiring independent expert weight matrices. On five vision-language benchmarks with Qwen and Gemma backbones, this configuration achieves the highest performance among the compared baselines. Comparisons across mask granularities, routing interventions, and compute-matched controls distinguish the effects of learned connectivity from expert activation count. These results establish mask learning over frozen weights as a practical alternative for constructing token-routed MoE experts.",
+      "authors": [
+        "Mingyuan Zhang",
+        "Yue Bai",
+        "Zhongruo Wang",
+        "Yupin Huang",
+        "Yiyang Huang",
+        "Hailing Wang",
+        "Huimin Zeng",
+        "Yun Fu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-10-06T06:04:38+00:00",
+      "link": "https://arxiv.org/pdf/2610.07809v1",
+      "tags": [
+        "keyword:DDI-MOE",
+        "query:DDI-MOE"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "mixture-of-experts with token-level router selecting and combining experts",
+      "llm_evidence_cn": "混合专家架构，token级路由器选择并组合专家",
+      "llm_evidence": "混合专家架构，token级路由器选择并组合专家",
+      "canonical_evidence": "混合专家架构，token级路由器选择并组合专家",
+      "llm_tldr_en": "Dense-to-MoE upcycling usually copies FFNs into independently trained experts. MASKerade instead learns each expert as a sparse subnetwork of a frozen pretrained FFN defined by a learned binary mask, with a token-level router jointly optimized to select and combine masked experts.",
+      "llm_tldr_cn": "稀疏激活的混合专家模型能在不显著增加单token计算的前提下扩大模型容量，但现有稠密转MoE方法通常把前馈网络复制为独立训练的专家，参数与训练成本高。作者提出MASKerade，将每个专家定义为一个冻结预训练前馈网络中的稀疏子网络，由可学习二值掩码刻画，并用token级路由器联合优化掩码分数与路由选择。该方法支持神经元级、半结构化与非结构化专家，为专家专门化与动态路由提供了新范式。",
+      "llm_tldr": "稀疏激活的混合专家模型能在不显著增加单token计算的前提下扩大模型容量，但现有稠密转MoE方法通常把前馈网络复制为独立训练的专家，参数与训练成本高。作者提出MASKerade，将每个专家定义为一个冻结预训练前馈网络中的稀疏子网络，由可学习二值掩码刻画，并用token级路由器联合优化掩码分数与路由选择。该方法支持神经元级、半结构化与非结构化专家，为专家专门化与动态路由提供了新范式。",
+      "llm_tags": [
+        "query:ddi-moe"
+      ],
+      "matched_query_tag": "query:ddi-moe",
+      "matched_query_text": "mixture-of-experts architecture for drug pair modeling",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

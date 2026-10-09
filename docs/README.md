@@ -48,17 +48,17 @@
 <section class="dpr-home-dashboard-card dpr-home-report-card">
   <div class="dpr-home-dashboard-header">
     <div>
-      <span class="dpr-home-dashboard-kicker">2026-10-07</span>
+      <span class="dpr-home-dashboard-kicker">2026-10-09</span>
       <h3 class="dpr-home-dashboard-title">今日汇总</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">共 4 篇</strong>
+    <strong class="dpr-home-dashboard-count">共 2 篇</strong>
   </div>
   <dl class="dpr-home-dashboard-stats">
     <div class="dpr-home-dashboard-stat"><dt>累计更新</dt><dd>1 次</dd></div>
     <div class="dpr-home-dashboard-stat"><dt>精读</dt><dd>0</dd></div>
-    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>4</dd></div>
+    <div class="dpr-home-dashboard-stat"><dt>速读</dt><dd>2</dd></div>
   </dl>
-  <p class="dpr-home-dashboard-body">最近更新：2026-10-07 23:31:21 UTC<br>状态：成功</p>
+  <p class="dpr-home-dashboard-body">最近更新：2026-10-09 00:08:14 UTC<br>状态：成功</p>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-brief-card">
   <div class="dpr-home-dashboard-header">
@@ -69,9 +69,7 @@
     <strong class="dpr-home-dashboard-count">AI</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<p>今日共生成 4 篇推荐（精读 0 篇，速读 4 篇）</p>
-<p>速读：《Dense Mixture-of-Experts as a Reparameterized Wide FFN: A Granularity Sweep at Fixed Compute》（6.0/10）, 《BRANCH-MoE: Balance-Aware Tree Routing for Large Embedding Models》（6.0/10）, 《CausalBind: Causal Modeling and Learning for Protein-Molecule Virtual Screening》（6.0/10）</p>
-<p>这些结果覆盖了当下较热的方向，建议先看精读区论文的关键问题与方法。</p>
+<p>今日速读两篇：AutoAdapt 用自动领域发现降低扩展成本，MASKerade 探索令牌路由的稠密到 MoE 升级路径。最值得关注的是 AutoAdapt 以 7.0 分领先，聚焦低成本领域自适应扩展。建议普通读者优先了解 AutoAdapt 的思路，再按需翻阅 MASKerade 的 MoE 升级机制。</p>
   </div>
 </section>
 <section class="dpr-home-dashboard-card dpr-home-deep-card">
@@ -93,12 +91,12 @@
       <span class="dpr-home-dashboard-kicker">今日累计</span>
       <h3 class="dpr-home-dashboard-title">速读推荐</h3>
     </div>
-    <strong class="dpr-home-dashboard-count">4 篇</strong>
+    <strong class="dpr-home-dashboard-count">2 篇</strong>
   </div>
   <div class="dpr-home-dashboard-body">
-<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="Dense Mixture-of-Experts as a Reparameterized Wide FFN: A Granularity Sweep at Fixed Compute">Dense Mixture-of-Experts as a Reparameterized Wide FFN: A Granularity Sweep at Fixed Compute</span></li><li><span class="dpr-home-dashboard-paper-title" title="BRANCH-MoE: Balance-Aware Tree Routing for Large Embedding Models">BRANCH-MoE: Balance-Aware Tree Routing for Large Embedding Models</span></li><li><span class="dpr-home-dashboard-paper-title" title="CausalBind: Causal Modeling and Learning for Protein-Molecule Virtual Screening">CausalBind: Causal Modeling and Learning for Protein-Molecule Virtual Screening</span></li></ul>
+<ul class="dpr-home-dashboard-paper-list"><li><span class="dpr-home-dashboard-paper-title" title="AutoAdapt: Automatic Domain Discovery Enables Low-Cost Extensibility">AutoAdapt: Automatic Domain Discovery Enables Low-Cost Extensibility</span></li><li><span class="dpr-home-dashboard-paper-title" title="MASKerade: Token-Routed Mask Experts for Dense-to-MoE Upcycling">MASKerade: Token-Routed Mask Experts for Dense-to-MoE Upcycling</span></li></ul>
   </div>
-  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>4</strong></span></div>
+  <div class="dpr-home-dashboard-tags"><span class="dpr-home-dashboard-tag">ddi-moe <strong>2</strong></span></div>
 </section>
 </div>
 

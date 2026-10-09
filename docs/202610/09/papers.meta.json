@@ -1,0 +1,39 @@
+{
+  "label": "2026-10-09",
+  "date": "2026-10-09",
+  "generated_at": "2026-10-09T00:08:15",
+  "count": 2,
+  "papers": [
+    {
+      "paper_id": "202610/09/2610.10349v1-autoadapt-automatic-domain-discovery-enables-low-cost-extensibility",
+      "section": "quick",
+      "title_en": "AutoAdapt: Automatic Domain Discovery Enables Low-Cost Extensibility",
+      "authors": "Josh McGiff, Salma Mekaoui, Robert Shanahan, Nikola S. Nikolov",
+      "date": "2026-10-07",
+      "pdf": "https://arxiv.org/pdf/2610.10349v1",
+      "score": "7.0",
+      "evidence": "自动发现潜在领域，按域适配器与无参路由，专门化效应收敛",
+      "tldr": "指令微调模型常部署在异构且持续演化的领域中，新增领域或数据通常需昂贵重训练。AutoAdapt 提出模块化框架，自动发现潜在领域，并行独立训练各领域 LoRA 适配器，并采用无参数路由集成新领域。在 14 个领域基准与 GPT-4o 成对评判中，其性能与全领域 LoRA 适配器持平，无需全模型重训练。该方法按构造避免领域干扰，实现免分类体系的模块化领域特化，且不损失总体性能。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Instruction-tuned models are deployed into environments where domains are heterogeneous and evolve, yet adding new domains or data typically requires costly retraining. We present AutoAdapt, a modular framework that incorporates new domains and data via targeted single-adapter training without modifying other adapters. The framework automatically discovers latent domains, uses them to train per-domain Low-Rank Adaptation (LoRA) adapters independently in parallel and performs parameter-free routing. Across 14 domain-specific benchmarks and GPT-4o pairwise judgements, AutoAdapt achieves parity with a LoRA adapter trained on all domains without requiring full-model retraining. We also find evidence of specialisation effect convergence across independent discovery methods. Overall, training each adapter on its own domain prevents domain interference by construction, thus enabling modular, taxonomy-free domain specialisation without aggregate performance loss or full model retraining.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202610/09/2610.07809v1-maskerade-token-routed-mask-experts-for-dense-to-moe-upcycling",
+      "section": "quick",
+      "title_en": "MASKerade: Token-Routed Mask Experts for Dense-to-MoE Upcycling",
+      "authors": "Mingyuan Zhang, Yue Bai, Zhongruo Wang, Yupin Huang, Yiyang Huang, Hailing Wang, Huimin Zeng, Yun Fu",
+      "date": "2026-10-06",
+      "pdf": "https://arxiv.org/pdf/2610.07809v1",
+      "score": "6.0",
+      "evidence": "混合专家架构，token级路由器选择并组合专家",
+      "tldr": "4专家和top-2路由，两次半稠密前向仅约一次稠密FFN算术量。在Qwen与Gemma五个视觉语言基准上取得最优，表明掩码学习可替代独立专家权重构建MoE。",
+      "tags": "query:ddi-moe",
+      "abstract_en": "Sparsely activated Mixture-of-Experts (MoE) models increase model capacity without a proportional increase in per-token computation. Dense-to-MoE upcycling reuses pretrained dense models to construct such systems, commonly by copying feed-forward networks (FFNs) into independently trained experts. We introduce MASKerade, a dense-to-MoE training method that instead learns experts as sparse subnetworks of a frozen pretrained FFN. Each expert is defined by a learned binary mask, and a token-level router selects which masked FFNs to execute and combine. The router and mask scores are optimized jointly, while the underlying FFN weight values remain unchanged. This formulation supports neuron-structured, semi-structured, and unstructured experts within the same routing architecture. Our main configuration uses four 2:4 experts with top-2 routing, where two half-dense expert passes have the nominal FFN arithmetic of one dense pass, without requiring independent expert weight matrices. On five vision-language benchmarks with Qwen and Gemma backbones, this configuration achieves the highest performance among the compared baselines. Comparisons across mask granularities, routing interventions, and compute-matched controls distinguish the effects of learned connectivity from expert activation count. These results establish mask learning over frozen weights as a practical alternative for constructing token-routed MoE experts.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
